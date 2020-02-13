@@ -1,14 +1,14 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 import openpyxl as op # not standard library
 import csv
 import re
 from collections import defaultdict
 from abc import ABC
-from exceptions import *
-from cellparser import CellParser
 from math import ceil
 import unidecode as uni #not standard
 
+from .exceptions import *
+from .cellparser import CellParser
 
 #replacing none values with ''
 replace_none = lambda x: "" if x == None else x
