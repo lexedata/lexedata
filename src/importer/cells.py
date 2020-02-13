@@ -182,9 +182,7 @@ class ConceptCell(Cell):
             raise ConceptIdError
 
 
-
-if __name__ == "__main__":
-
+def main():
     #path to excel file
     wb = op.load_workbook(filename="Copy of TG_comparative_lexical_online_MASTER.xlsx")
     sheets = wb.sheetnames
@@ -267,5 +265,7 @@ if __name__ == "__main__":
             #write to form_to_concept.csv
             formconcsv.writerow([con_id, ",".join(form_ids)])
         #print(CellParser._wrongorder)
-
 ##########################################################################
+
+if __name__ == "__main__":
+    main()

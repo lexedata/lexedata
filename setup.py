@@ -16,5 +16,10 @@ setup(
     platforms='any',
     install_requires=[
         "openpyxl",
-        "unidecode"]
-    )
+        "unidecode"],
+    entry_points={
+        'console_scripts': [
+            'import-data-mg = importer.cells:main',
+        ]
+    }
+)
