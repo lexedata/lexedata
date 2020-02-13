@@ -6,6 +6,9 @@ from collections import defaultdict
 from abc import ABC
 from math import ceil
 import unidecode as uni
+import argparse
+import pycldf
+import attr
 
 from .exceptions import *
 from .cellparser import CellParser
@@ -60,33 +63,35 @@ class Cell(ABC):
         s = "|".join(s)
         print(s)
 
-class LanguageCell(Cell):
-    """
-       a language element consists of 3 fields:
-           (language_id,language,curator, language_comment)
-       sharing language_id with a form element; language_comment being the comment of the excel cell
-       """
-    __language_pattern = re.compile(r"\W+")
-    __create_language_id = lambda x: uni.unidecode(LanguageCell.__language_pattern.sub("_", x)).lower()
+valid = re.compile(r"\W+")
+def create_id_from_string(string):
+    return uni.unidecode(valid.sub("_", string)).lower()
 
-    def __init__(self, languagecol):
-        """
-        creates a language cell out of a given languagecol
-        :param cell: column containing two cells
-        """
-        values = [cell.value for cell in languagecol]
-        language_id = LanguageCell.__create_language_id(values[0])
-        values.insert(0, language_id)
-        values.append(comment_getter(languagecol[1]))
-        super().__init__(values, size=4)
+
+@attr.s
+class LanguageCell:
+    """Metadata for a language"""
+    id = attr.ib()
+    name = attr.ib()
+    curator = attr.ib()
+    comments = attr.ib()
+
+    @classmethod
+    def from_column(k, column):
+        name, curator = [cell.value for cell in column]
+        id = create_id_from_string(name)
+        return k(id=id, name=name, curator=curator, comments="")
+
+    def get(self, property, default=None):
+        if property=="ID":
+            return self.id
+        elif property=="Name":
+            return self.name
+        return default
 
     def warn(self):
-        try:
-            if "???" in self._data[1]:
-                raise LanguageElementError(self._data)
-        except LanguageElementError as err:
-            print(err.message)
-            input()
+        if "???" in self.name:
+            raise LanguageElementError(self)
 
 class FormCell(Cell):
     """
@@ -183,27 +188,50 @@ class ConceptCell(Cell):
 
 
 def main():
-    #path to excel file
-    wb = op.load_workbook(filename="Copy of TG_comparative_lexical_online_MASTER.xlsx")
+    parser = argparse.ArgumentParser(description="Load a Maweti-Guarani-style dataset into CLDF")
+    parser.add_argument(
+        "path", nargs="?",
+        default="./Copy of TG_comparative_lexical_online_MASTER.xlsx",
+        help="Path to an Excel file containing the dataset")
+    parser.add_argument(
+        "output", nargs="?",
+        default="./",
+        help="Directory to create the output CLDF wordlist in")
+    parser.add_argument(
+        "--debug-level", type=int, default=0,
+        help="Debug level: Higher numbers are less forgiving")
+    args = parser.parse_args()
+
+    wb = op.load_workbook(filename=args.path)
     sheets = wb.sheetnames
 
     iter_forms = wb[sheets[0]].iter_rows(min_row=3, min_col=7, max_col=44) #iterates over rows with forms
 
     iter_concept = wb[sheets[0]].iter_rows(min_row=3, max_col=6) #iterates over rows with concepts
 
-    iter_language = wb[sheets[0]].iter_cols(min_row=1, max_row=2, min_col=7, max_col=44)  #iterates over language columns
-    lan_ids = [] #language ids are needed for form elements
+    dataset = pycldf.Wordlist.in_dir(args.output)
 
-##########################################
-    #create language csv and collect language ids
-    with open("languages.csv", "w", encoding="utf8", newline="") as lanout:
-        lancsv = csv.writer(lanout, quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        lancsv.writerow(header_languages)
-        for lan_col in iter_language:
-            c = LanguageCell(lan_col)
+    # Collect languages
+    languages = {}
+    # TODO: The following line contains a magic number, can we just iterate until we are done?
+    for lan_col in wb[sheets[0]].iter_cols(min_row=1, max_row=2, min_col=7, max_col=44):
+        #iterate over language columns
+        c = LanguageCell.from_column(lan_col)
+
+        # Switch to warnings module or something similar for this
+        if args.debug_level == 2:
             c.warn()
-            lan_ids.append(c._data[0])
-            c.write(lancsv)
+        elif args.debug_level == 1:
+            try:
+                c.warn()
+            except LanguageElementError:
+                continue
+
+        while c.id in languages:
+            c.id += "1"
+        languages[c.name] = c
+    dataset.add_component("LanguageTable")
+    dataset.write(LanguageTable=list(languages.values()))
 
 #########################################
     #create concept and form elements at the same time (for identical ids)
@@ -224,16 +252,17 @@ def main():
             c_con = ConceptCell(row_con)
             c_con.write(concsv)
             con_comment = comment_getter(row_con[1])
-            con_id = c._data[0]
+            con_id = c.id
 
             form_ids = [] #collect form_ids for form_to_concept csv
-            for f_cell in enumerate(row_forms):
-                if f_cell[1].value:
+            for i, f_cell in enumerate(row_forms):
+                if f_cell.value:
                     try:
-                        #csvlines = [] #collect all good form elements
-                        this_lan_id = lan_ids[f_cell[0]]
-                        f_comment = comment_getter(f_cell[1])
-                        for f_ele in enumerate(CellParser(f_cell[1]), start=1):
+                        # The following line is … ugh. It would be much nicer to take this from the first row of the current column.
+                        this_lan_name = list(languages)[0]
+                        this_lan_id = languages[this_lan_name].id
+                        f_comment = comment_getter(f_cell)
+                        for f_ele in enumerate(CellParser(f_cell), start=1):
                             #error is thrown in constructor of FormCell
                             c_form = FormCell(this_lan_id,con_id, con_comment, f_comment, f_ele[0], f_ele[1])
                             form_ids.append(c_form._data[0])
@@ -258,7 +287,7 @@ def main():
                     except FormCellError as err:
                         pass
                         #prints all error messages
-                        #print(f_cell[1].value)
+                        #print(f_cell.value)
                         #print(err.message)
                         #input()
 
