@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-import openpyxl as op # not standard library
+import openpyxl as op
 import csv
 import re
 from collections import defaultdict
 from abc import ABC
 from math import ceil
-import unidecode as uni #not standard
+import unidecode as uni
 
 from .exceptions import *
 from .cellparser import CellParser
