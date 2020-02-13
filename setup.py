@@ -10,7 +10,7 @@ setup(
     long_description_content_type='text/markdown',
     keywords='data linguistics',
     license='???',
-    url="https://gitlab.uzh.ch/gereonalexander.kaiping/editinglexicaldatasets"
+    url="https://gitlab.uzh.ch/gereonalexander.kaiping/editinglexicaldatasets",
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     platforms='any',
