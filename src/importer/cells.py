@@ -82,6 +82,9 @@ class LanguageCell:
         id = create_id_from_string(name)
         return k(id=id, name=name, curator=curator, comments="")
 
+    # pycldf.Dataset.write assumes a `get` method to access attributes, so we
+    # can make `LanguageCell` outputtable to CLDF by providing such a method,
+    # mapping attributes to CLDF column names
     def get(self, property, default=None):
         if property=="ID":
             return self.id
