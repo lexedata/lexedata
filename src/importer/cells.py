@@ -228,7 +228,8 @@ def main():
         elif args.debug_level == 1:
             try:
                 c.warn()
-            except LanguageElementError:
+            except LanguageElementError as E:
+                print(E)
                 continue
 
         while c.id in languages:
@@ -292,11 +293,12 @@ def main():
                         input()
 
                     except FormCellError as err:
-                        pass
-                        #prints all error messages
-                        #print(f_cell.value)
-                        #print(err.message)
-                        #input()
+                        # pass
+                        # prints all error messages
+                        cell_coordinates = "A1" # FIXME
+                        print("{:}: '{:}' – {:}".format(
+                            cell_coordinates, f_cell.value, err))
+                        # input()
 
             #write to form_to_concept.csv
             formconcsv.writerow([con_id, ",".join(form_ids)])
