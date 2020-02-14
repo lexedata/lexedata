@@ -253,11 +253,10 @@ def main():
             c_con = ConceptCell(row_con)
             c_con.write(concsv)
             con_comment = comment_getter(row_con[1])
-<<<<<<< HEAD
+
             con_id = c_con._data[0]
-=======
-            con_id = c.id
->>>>>>> d0a4fc03f0c342dd14e7287c554296ab1881893d
+            #con_id = c.id
+
 
             form_ids = [] #collect form_ids for form_to_concept csv
             for i, f_cell in enumerate(row_forms):
