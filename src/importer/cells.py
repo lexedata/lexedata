@@ -138,8 +138,9 @@ class FormCell(Cell):
         #subsitute empty source by {1}
         values[4] = "{1}" if values[4] == "" else values[4]
 
-        values.insert(0,language_id)
+
         values.insert(0, concept_id)
+        values.insert(0, language_id)
         values.insert(0, "_".join([language_id, concept_id, str(number)]))
         values.append(form_comment)
         values.append(cell_comment)
@@ -240,7 +241,7 @@ def main():
     #create concept and form elements at the same time (for identical ids)
     with open("forms.csv", "w", encoding="utf8", newline="") as formsout, \
             open("concepts.csv", "w", encoding="utf8", newline="") as conceptsout, \
-            open("form_to_cognate.csv", "w", encoding="utf8", newline="") as formsout2:
+            open("form_to_concept.csv", "w", encoding="utf8", newline="") as formsout2:
 
         formscsv = csv.writer(formsout, quotechar='"', quoting=csv.QUOTE_MINIMAL)
         formscsv.writerow(header_forms)
@@ -255,7 +256,10 @@ def main():
             c_con = ConceptCell(row_con)
             c_con.write(concsv)
             con_comment = comment_getter(row_con[1])
-            con_id = c.id
+
+            con_id = c_con._data[0]
+            #con_id = c.id
+
 
             form_ids = [] #collect form_ids for form_to_concept csv
             for i, f_cell in enumerate(row_forms):
