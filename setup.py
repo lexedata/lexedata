@@ -15,7 +15,9 @@ setup(
     package_dir={'': 'src'},
     platforms='any',
     install_requires=[
+        "attr",
         "openpyxl",
+        "pycldf",
         "unidecode"],
     entry_points={
         'console_scripts': [

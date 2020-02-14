@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 
 class Error(Exception):
    """Base class for other exceptions"""
@@ -10,8 +10,8 @@ class ConceptIdError(Error):
 
 class LanguageElementError(Error):
 
-    def __init__(self, language):
-        message = "\n" + language[1] + " this language cell contains ???"
+    def __init__(self, language=None):
+        message = "Unexpected language name element in {:}".format(language)
         self.message = message
         super().__init__(message) #desplay language name causing error
 
