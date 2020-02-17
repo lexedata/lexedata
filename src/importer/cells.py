@@ -22,7 +22,7 @@ comment_getter = lambda x: replace_none_comment(x.comment)
 
 
 #header for files
-header_forms = ["form_id", "language_id", "concept_id",
+header_forms = ["form_id", "language_id",
                 "phonemic", "phonetic", "orthography", "source", "form_comment",
                 "concept_comment"]
 
@@ -41,15 +41,16 @@ class Cell(ABC):
                                                  (str.count(opening) == str.count(closing) == nr)
     _comment_bracket = lambda str: str.count("(") == str.count(")")
 
-    def __init__(self, values, size):
+    def __init__(self):
+        pass
 
+    @staticmethod
+    def basic_tests(values, size):
         #basic test for all cells:
         #len of requiered cell type
         assert len(values) == size, "cell has not required size"
         #not all values empty, none or false
         assert any(values) == True, "cell is entirely empty"
-
-        self._data = tuple(values) #may not be changed anymore
 
     def __hash__(self):
         return self
@@ -95,57 +96,58 @@ class LanguageCell:
     def warn(self):
         if "???" in self.name:
             raise LanguageElementError(self)
-
+@attr.s
 class FormCell(Cell):
-    """
-       a form element consists of 10 fields:
-           (form_id,language_id,concept_id,
-           phonemic,phonetic,orthography,source,form_comment, #core values
-           concept_comment)
-       sharing concept_id and concept_comment with a concept element and language_id with a language element
-       concept_comment refers to te comment of the cell containing the english meaning
-       """
+
+    form_id = attr.ib() ###### id creation
+    language_id = attr.ib()
+
+    phonemic = attr.ib()
+    @phonemic.validator
+    def check(self, attribute, value):
+        if value != "" and value != "No value":
+            if not Cell._one_bracket("/", "/", value, 2):
+                raise FormCellError(value, "phonemic") ################# fix exceptions
+            else:
+                attribute = value.strip("/")
+
+    phonetic = attr.ib()
+    @phonetic.validator
+    def check(self, attribute, value):
+        if value != "" and value != "No value":
+            if not Cell._one_bracket("[", "]", value, 1):
+                raise FormCellError(value, "phonetic")
+            else:
+                attribute = value.strip("[").strip("]")
+
+    orthographic = atttr.ib()
+    @orthographic.validator
+    def check(self, attribute, value):
+        if value != "" and value != "No value":
+            if not Cell._one_bracket("<", ">", value, 1):
+                raise FormCellError(value, "orthographic")
+            else:
+                attribute = value.strip("<").strip(">")
+
+    source = attr.ib()
+    @source.validator
+    def check(self, attribute, value):
+        if value == "":
+            attribute = "{1}"
 
 
-    def __init__(self, language_id, concept_id, cell_comment, form_comment, number, values):
-        """
-        creates cell out of different parts, checks values for errors, creates id
-        :param language_id:
-        :param concept_id:
-        :param cell_comment:
-        :param form_comment:
-        :param number: number of form element contained in form cell
-        :param values: phonemic, phonetic, orthographic, comment, source
-        """
-        values = [replace_none(e) for e in values]
-        phonemic = values[0]
-        if phonemic != "" and phonemic != "No value":
-            if not Cell._one_bracket("/", "/", phonemic, 2):
-                raise FormCellError(values, "phonemic")
-        phonetic = values[1]
-        if phonetic != "" and phonetic != "No value":
-            if not Cell._one_bracket("[", "]", phonetic, 1):
-                raise FormCellError(values, "phonetic")
-        ortho = values[2]
-        if ortho != "" and ortho != "No value":
-            if not Cell._one_bracket("<", ">", ortho, 1):
-                raise FormCellError(values, "orthographic")
-        comment = values[3]
-        if comment != "" and comment != "No value":
-            if not Cell._comment_bracket(comment):
-                raise FormCellError(values, "comment")
+    form_comment = attr.ib()
+    @form_comment.validator
+    def check(self, attribute, value):
+        if value != "" and value != "No value":
+            if not Cell._comment_bracket(value):
+                raise FormCellError(value, "comment")
 
-        #subsitute empty source by {1}
-        values[4] = "{1}" if values[4] == "" else values[4]
+    concept_comment = attr.ib()
 
-
-        values.insert(0, concept_id)
-        values.insert(0, language_id)
-        values.insert(0, "_".join([language_id, concept_id, str(number)]))
-        values.append(form_comment)
-        values.append(cell_comment)
-        super().__init__(values, 10)
-
+ def get(self, property, default=None):
+     pass
+ 
 class ConceptCell(Cell):
     """
     a concept element consists of 8 fields:
