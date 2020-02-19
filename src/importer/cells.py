@@ -3,8 +3,6 @@ import openpyxl as op
 import csv
 import re
 from collections import defaultdict
-from abc import ABC
-from math import ceil
 import unidecode as uni
 import argparse
 import pycldf
@@ -20,54 +18,31 @@ replace_none = lambda x: "" if x == None else x
 replace_none_comment = lambda x: x.content if x  else ""
 comment_getter = lambda x: replace_none_comment(x.comment)
 
+# replacing none values with ''
+replace_none = lambda x: "" if x == None else x
 
-#header for files
+# lambda function for getting comment of excel cell if comment given
+replace_none_comment = lambda x: x.content if x else ""
+comment_getter = lambda x: replace_none_comment(x.comment)
+
+# functions for bracket checking
+one_bracket = lambda opening, closing, str, nr: str[0] == opening and str[-1] == closing and \
+                                                (str.count(opening) == str.count(closing) == nr)
+comment_bracket = lambda str: str.count("(") == str.count(")")
+
+# header for files
 header_forms = ["form_id", "language_id",
-                "phonemic", "phonetic", "orthography", "source", "form_comment",
+                "phonemic", "phonetic", "orthography", "variants", "source", "form_comment",
                 "concept_comment"]
 
 header_concepts = ["concept_id",
                    "set", "english", "english_strict", "spanish", "portuguese", "french", "concept_comment"]
 
 header_languages = ["language_id",
-                   "language", "curator", "language_comment"]
-header_form_concept = ["concept_id", "list_forms"]
+                    "language_name", "curator", "language_comment"]
 
 
-class Cell(ABC):
-
-    #class member functions for bracket checking
-    _one_bracket = lambda opening, closing, str, nr: str[0] == opening and str[-1] == closing and \
-                                                 (str.count(opening) == str.count(closing) == nr)
-    _comment_bracket = lambda str: str.count("(") == str.count(")")
-
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def basic_tests(values, size):
-        #basic test for all cells:
-        #len of requiered cell type
-        assert len(values) == size, "cell has not required size"
-        #not all values empty, none or false
-        assert any(values) == True, "cell is entirely empty"
-
-    def __hash__(self):
-        return self
-
-    def write(self, out):
-        """write to given csv.writer() out"""
-        out.writerow(self._data)
-
-    def print_cell(self):
-        s = [ele.ljust(10*ceil(len(ele)/10)) for ele in self._data]
-        s = "|".join(s)
-        print(s)
-
-valid = re.compile(r"\W+")
-def create_id_from_string(string):
-    return uni.unidecode(valid.sub("_", string)).lower()
-
+# header_form_concept = ["form_id", "concept_id"]
 
 @attr.s
 class LanguageCell:
@@ -76,104 +51,214 @@ class LanguageCell:
     name = attr.ib()
     curator = attr.ib()
     comments = attr.ib()
+    coordinates = attr.ib()
 
     @classmethod
     def from_column(k, column):
         name, curator = [cell.value for cell in column]
-        id = create_id_from_string(name)
-        return k(id=id, name=name, curator=curator, comments="")
+        id = LanguageCell.create_id_from_string(name)
+        return k(id=id, name=name, curator=curator, comments="", coordinates="??")
+
+    # id creation encapuslated
+    __valid = re.compile(r"\W+")
+    _languagedict = defaultdict(int)
+
+    @staticmethod
+    def create_id_from_string(string):
+        string = uni.unidecode(LanguageCell.__valid.sub("_", string)).lower()
+        # take only parts longer than 3
+        string = "_".join([ele for ele in string.split("_") if len(ele) > 3])
+        LanguageCell._languagedict[string] += 1
+        string += str(LanguageCell._languagedict[string])
+        return string
 
     # pycldf.Dataset.write assumes a `get` method to access attributes, so we
     # can make `LanguageCell` outputtable to CLDF by providing such a method,
     # mapping attributes to CLDF column names
     def get(self, property, default=None):
-        if property=="ID":
+        if property == "language_id" or property == "ID":
             return self.id
-        elif property=="Name":
+        elif property == "language_name" or property == "name":
             return self.name
+        elif property == "curator":
+            return self.curator
+        elif property == "language_comment" or property == "comments":
+            return self.comments
         return default
 
     def warn(self):
         if "???" in self.name:
-            raise LanguageElementError(self)
-@attr.s
-class FormCell(Cell):
+            raise LanguageElementError(coordinates, self.name)
 
-    form_id = attr.ib() ###### id creation
+
+@attr.s
+class FormCell():
+    form_id = attr.ib()
     language_id = attr.ib()
 
     phonemic = attr.ib()
-    @phonemic.validator
-    def check(self, attribute, value):
-        if value != "" and value != "No value":
-            if not Cell._one_bracket("/", "/", value, 2):
-                raise FormCellError(value, "phonemic") ################# fix exceptions
-            else:
-                attribute = value.strip("/")
-
     phonetic = attr.ib()
-    @phonetic.validator
-    def check(self, attribute, value):
-        if value != "" and value != "No value":
-            if not Cell._one_bracket("[", "]", value, 1):
-                raise FormCellError(value, "phonetic")
-            else:
-                attribute = value.strip("[").strip("]")
-
-    orthographic = atttr.ib()
-    @orthographic.validator
-    def check(self, attribute, value):
-        if value != "" and value != "No value":
-            if not Cell._one_bracket("<", ">", value, 1):
-                raise FormCellError(value, "orthographic")
-            else:
-                attribute = value.strip("<").strip(">")
-
+    orthographic = attr.ib()
+    variants = attr.ib()
+    comment = attr.ib()
     source = attr.ib()
-    @source.validator
-    def check(self, attribute, value):
-        if value == "":
-            attribute = "{1}"
-
 
     form_comment = attr.ib()
-    @form_comment.validator
-    def check(self, attribute, value):
-        if value != "" and value != "No value":
-            if not Cell._comment_bracket(value):
-                raise FormCellError(value, "comment")
-
     concept_comment = attr.ib()
+    coordinates = attr.ib()
 
- def get(self, property, default=None):
-     pass
- 
-class ConceptCell(Cell):
+    @classmethod
+    def create_form(klasse, lan_id, con_id, con_com, form_com, values, coordinates):
+        phonemic, phonetic, ortho, comment, source = values
+        form_id = FormCell.id_creator(lan_id, con_id)
+
+        variants = []
+        phonemic = FormCell.variants_separator(variants, phonemic)
+        phonetic = FormCell.variants_separator(variants, phonetic)
+        ortho = FormCell.variants_separator(variants, ortho)
+
+        if phonemic != "" and phonemic != "No value":
+            if not one_bracket("/", "/", phonemic, 2):
+                raise FormCellError(coordinates, phonemic, "phonemic")
+            # phonemic = phonemic.strip("/")
+
+        if phonetic != "" and phonetic != "No value":
+            if not one_bracket("[", "]", phonetic, 1):
+                raise FormCellError(coordinates, phonetic, "phonetic")
+            # phonetic = phonetic.strip("[").strip("]")
+
+        if ortho != "" and ortho != "No value":
+            if not one_bracket("<", ">", ortho, 1):
+                raise FormCellError(coordinates, ortho, "orthographic")
+            # ortho = ortho.strip("<").strip(">")
+
+        if comment != "" and comment != "No value":
+            if not comment_bracket(comment):
+                raise FormCellError(coordinates, comment, "comment")
+
+        # replace source if not given
+        source = "{1}" if source == "" else source
+
+        return klasse(form_id=form_id, language_id=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
+                      variants=variants, comment=comment, source=source,
+                      form_comment=form_com, concept_comment=con_com, coordinates=coordinates)
+
+    __variants_corrector = re.compile(r"^([</\[])(.+[^>/\]])$")
+    __variants_splitter = re.compile(r"^(.+?)\s?~\s?([</\[].+)$")
+
+    @staticmethod
+    def variants_scanner(string):
+        """copies string, inserting closing brackets if necessary"""
+        is_open = False
+        closers = {"<": ">", "[": "]", "/": "/"}
+        collector = ""
+        starter = ""
+
+        for char in string:
+
+            if char in closers and not is_open:
+                collector += char
+                is_open = True
+                starter = char
+
+            elif char == "~":
+                if is_open:
+                    collector += (closers[starter] + char + starter)
+                else:
+                    collector += char
+
+            elif char in closers.values():
+                collector += char
+                is_open = False
+                starter = ""
+
+            elif is_open:
+                collector += char
+
+        return collector
+
+    @staticmethod
+    def variants_separator(variants_list, string):
+        if "~" in string:
+            # force python to copy string
+            text = (string + "&")[:-1]
+            text = text.replace(" ", "")
+            text = text.replace(",", "")
+            text = text.replace(";", "")
+            values = FormCell.variants_scanner(text)
+
+            values = values.split("~")
+            first = values.pop(0)
+            variants_list += values
+            return first
+        else:
+            return string
+
+    __form_counter = defaultdict(int)
+
+    @staticmethod
+    def id_creator(lan_id, con_id):
+
+        FormCell.__form_counter[con_id] += 1  # increment
+        counter = str(FormCell.__form_counter[con_id]).ljust(3, "0")
+        return "_".join([lan_id, con_id, counter])
+
+    def get(self, property, default=None):
+        if property == "form_id" or property == "ID":
+            return self.form_id
+        elif property == "language_id" or property == "Language_ID":
+            return self.language_id
+        elif property == "phonemic":
+            return self.phonemic
+        elif property == "phonetic":
+            return self.phonetic
+        elif property == "orthographic":
+            return self.orthographic
+        elif property == "source":
+            return self.source
+        elif property == "comment":
+            return self.comment
+        elif property == "form_comment":
+            return self.form_comment
+        elif property == "concept_comment":
+            return self.concept_comment
+        elif property == "variants":
+            return self.variants
+        return default
+
+
+@attr.s
+class ConceptCell():
     """
     a concept element consists of 8 fields:
-        (concept_id,set,english,english_strict,spanish,portuguese,french,cell_comment)
+        (concept_id,set,english,english_strict,spanish,portuguese,french,concept_comment)
     sharing concept_id and concept_comment with a form element
-    cell_concept refers to te comment of the cell containing the english meaning
+    concept_comment refers to te comment of the cell containing the english meaning
     """
+    concept_id = attr.ib()
+    set = attr.ib()
+    english = attr.ib()
+    english_strict = attr.ib()
+    spanish = attr.ib()
+    portuguese = attr.ib()
+    french = attr.ib()
+    concept_comment = attr.ib()
+    coordinates = attr.ib()
 
-    #protected static class variable for creating unique ids, regex-pattern
+    @classmethod
+    def row_to_concept(klasse, conceptrow):
+        # values of cell
+        set, english, english_strict, spanish, portugese, french = [replace_none(cell.value) for cell in conceptrow]
+        # comment of cell
+        concept_comment = comment_getter(conceptrow[1])
+        # create id
+        concept_id = ConceptCell.create_id(english)
+        return klasse(concept_id=concept_id, set=set, english=english, english_strict=english_strict, spanish=spanish,
+                      portuguese=portugese, french=french, concept_comment=concept_comment, coordinates="??")
+
+    # protected static class variable for creating unique ids, regex-pattern
     _conceptdict = defaultdict(int)
     __id_pattern = re.compile(r"^(.+?)(?:[,\(\@](?:.+)?|)$")
-
-
-    def __init__(self, conceptrow):
-        """
-        creates a ConceptCell out of a given excel row
-        :param conceptcell: excel row containing a concept entry
-        """
-        #values of cell
-        values = [replace_none(cell.value) for cell in conceptrow]
-        #comment of cell
-        values.append(comment_getter(conceptrow[1]))
-        #create id
-        form_id = ConceptCell.create_id(values[1])
-        values.insert(0, form_id)
-        super().__init__(values, 8) #concept cell has length 8
 
     @staticmethod
     def create_id(meaning):
@@ -191,6 +276,23 @@ class ConceptCell(Cell):
             return mymatch
         else:
             raise ConceptIdError
+
+    def get(self, property, default=None):
+        if property == "concept_id":
+            return self.concept_id
+        elif property == "set":
+            return self.set
+        elif property == "english":
+            return self.english
+        elif property == "english_strict":
+            return self.english_strict
+        elif property == "spanish":
+            return self.spanish
+        elif property == "portuguese":
+            return self.portuguese
+        elif property == "french":
+            return self.french
+        return default
 
 
 def main():
@@ -211,101 +313,93 @@ def main():
     wb = op.load_workbook(filename=args.path)
     sheets = wb.sheetnames
 
-    iter_forms = wb[sheets[0]].iter_rows(min_row=3, min_col=7, max_col=44) #iterates over rows with forms
+    iter_forms = wb[sheets[0]].iter_rows(min_row=3, min_col=7, max_col=44)  # iterates over rows with forms
 
-    iter_concept = wb[sheets[0]].iter_rows(min_row=3, max_col=6) #iterates over rows with concepts
+    iter_concept = wb[sheets[0]].iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
 
-    dataset = pycldf.Wordlist.in_dir(args.output)
+    with open("forms_ms.csv", "w", encoding="utf8", newline="") as formsout, \
+            open("concepts_ms.csv", "w", encoding="utf8", newline="") as conceptsout, \
+            open("languages_ms.csv", "w", encoding="utf8", newline="") as lanout:
 
-    # Collect languages
-    languages = {}
-    # TODO: The following line contains a magic number, can we just iterate until we are done?
-    for lan_col in wb[sheets[0]].iter_cols(min_row=1, max_row=2, min_col=7, max_col=44):
-        #iterate over language columns
-        c = LanguageCell.from_column(lan_col)
+        formscsv = csv.DictWriter(formsout, header_forms, extrasaction="ignore", quotechar='"',
+                                  quoting=csv.QUOTE_MINIMAL)
+        formscsv.writeheader()
 
-        # Switch to warnings module or something similar for this
-        if args.debug_level == 2:
-            c.warn()
-        elif args.debug_level == 1:
-            try:
-                c.warn()
-            except LanguageElementError as E:
-                print(E)
-                continue
+        concsv = csv.DictWriter(conceptsout, header_concepts, extrasaction="ignore", quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL)
+        concsv.writeheader()
 
-        while c.id in languages:
-            c.id += "1"
-        languages[c.name] = c
-    dataset.add_component("LanguageTable")
-    dataset.write(LanguageTable=list(languages.values()))
+        lancsv = csv.DictWriter(lanout, header_languages, extrasaction="ignore", quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL)
+        lancsv.writeheader()
 
-#########################################
-    #create concept and form elements at the same time (for identical ids)
-    with open("forms.csv", "w", encoding="utf8", newline="") as formsout, \
-            open("concepts.csv", "w", encoding="utf8", newline="") as conceptsout, \
-            open("form_to_concept.csv", "w", encoding="utf8", newline="") as formsout2:
+        # Collect languages
+        languages = {}
+        # TODO: The following line contains a magic number, can we just iterate until we are done?
+        for lan_col in wb[sheets[0]].iter_cols(min_row=1, max_row=2, min_col=7, max_col=44):
+            # iterate over language columns
+            lan_cell = LanguageCell.from_column(lan_col)
 
-        formscsv = csv.writer(formsout, quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        formscsv.writerow(header_forms)
+            # Switch to warnings module or something similar for this
+            if args.debug_level >= 2:
+                lan_cell.warn()
+            elif args.debug_level == 1:
+                try:
+                    lan_cell.warn()
+                except LanguageElementError as E:
+                    print(E)
+                    continue
 
-        concsv = csv.writer(conceptsout, quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        concsv.writerow(header_concepts)
+            languages[lan_cell.name] = lan_cell
 
-        formconcsv = csv.writer(formsout2, quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        formconcsv.writerow(header_form_concept)
+            lancsv.writerow(lan_cell)
 
+        formcells = []
         for row_forms, row_con in zip(iter_forms, iter_concept):
-            c_con = ConceptCell(row_con)
-            c_con.write(concsv)
-            con_comment = comment_getter(row_con[1])
 
-            con_id = c_con._data[0]
-            #con_id = c.id
+            concept_cell = ConceptCell.row_to_concept(row_con)
+            con_id = concept_cell.concept_id
+            con_comment = concept_cell.concept_comment
 
+            concsv.writerow(concept_cell)
 
-            form_ids = [] #collect form_ids for form_to_concept csv
             for i, f_cell in enumerate(row_forms):
                 if f_cell.value:
+
+                    # you can access the cell's column letter and just add 1
+                    this_lan_name = wb[sheets[0]][(f_cell.column_letter + "1")].value
+                    this_lan_id = languages[this_lan_name].id
+                    f_comment = comment_getter(f_cell)
+
                     try:
-                        # The following line is … ugh. It would be much nicer to take this from the first row of the current column.
-                        this_lan_name = list(languages)[0]
-                        this_lan_id = languages[this_lan_name].id
-                        f_comment = comment_getter(f_cell)
-                        for f_ele in enumerate(CellParser(f_cell), start=1):
-                            #error is thrown in constructor of FormCell
-                            c_form = FormCell(this_lan_id,con_id, con_comment, f_comment, f_ele[0], f_ele[1])
-                            form_ids.append(c_form._data[0])
 
-                            #c_form.print_cell()
-                            c_form.write(formscsv) #activate and all correct form elements are written out
-                            #csvlines.append(c_form)
-
-                        #no CellError til here, all fine, write lines
-                        #for cell in csvlines:
-                        #    cell.write(formscsv)
+                        for f_ele in CellParser(f_cell):
+                            f_ele = [replace_none(e) for e in f_ele]
+                            c_form = FormCell.create_form(this_lan_id, con_id, con_comment, f_comment, f_ele,
+                                                          f_cell.coordinate)
+                            formcells.append(c_form)
+                            formscsv.writerow(c_form)
 
                     except CellParsingError as err:
                         print("CellParsingError - somethings quite wrong")
                         print(err.message)
                         input()
 
-                    except TypeError:
-                        print("Type Error - None might be a problem")
-                        input()
+
 
                     except FormCellError as err:
-                        # pass
-                        # prints all error messages
-                        cell_coordinates = "A1" # FIXME
-                        print("{:}: '{:}' – {:}".format(
-                            cell_coordinates, f_cell.value, err))
-                        # input()
+                        print(("original cell content: - " + f_cell.value))
+                        print(("failed form element: - " + str(f_ele)))
+                        print(err)
+                        input()
 
-            #write to form_to_concept.csv
-            formconcsv.writerow([con_id, ",".join(form_ids)])
-        #print(CellParser._wrongorder)
-##########################################################################
+        #################################################
+        # create cldf
+        dataset = pycldf.Wordlist.in_dir(args.output)
+
+        dataset.add_component("LanguageTable")
+        dataset.write(LanguageTable=list(languages.values()), FormTable=formcells)
+
 
 if __name__ == "__main__":
     main()
