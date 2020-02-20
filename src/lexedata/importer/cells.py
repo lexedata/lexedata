@@ -66,6 +66,7 @@ class Language(Base):
     @classmethod
     def from_column(k, column):
         name, curator = [cell.value for cell in column]
+        
         id = k.create_id_from_string(name)
         return k(id=id, name=name, curator=curator, comments="", coordinates="??")
 
