@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="lexicaldatabase",
+    name="lexedata",
     version="0.1",
     description="Tools for editing lexical databases for historical linguistics",
     author="Melvin Steiger, Gereon A. Kaiping",
@@ -18,6 +18,7 @@ setup(
         "attr",
         "openpyxl",
         "pycldf",
+        "sqlalchemy",
         "unidecode"],
     entry_points={
         'console_scripts': [

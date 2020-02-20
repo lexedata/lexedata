@@ -7,9 +7,17 @@ import unidecode as uni
 import argparse
 import pycldf
 import attr
+import sqlalchemy as sa
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 from .exceptions import *
 from .cellparser import CellParser
+
+# Initialize the SQL Alchemy
+engine = sa.create_engine('sqlite:///cldf.sqlite', echo=True) # Create an SQLite database in this directory
+Base = declarative_base()
+session = sessionmaker(bind=engine)()
 
 #replacing none values with ''
 replace_none = lambda x: "" if x == None else x
@@ -44,32 +52,33 @@ header_languages = ["language_id",
 
 # header_form_concept = ["form_id", "concept_id"]
 
-@attr.s
-class LanguageCell:
+valid_id_elements = re.compile(r"\W+")
+
+class Language(Base):
+    __tablename__ = "language"
     """Metadata for a language"""
-    id = attr.ib()
-    name = attr.ib()
-    curator = attr.ib()
-    comments = attr.ib()
-    coordinates = attr.ib()
+    id = sa.Column(sa.String, primary_key=True)
+    name = sa.Column(sa.String)
+    curator = sa.Column(sa.String)
+    comments = sa.Column(sa.String)
+    coordinates = sa.Column(sa.String)
 
     @classmethod
     def from_column(k, column):
         name, curator = [cell.value for cell in column]
-        id = LanguageCell.create_id_from_string(name)
+        id = k.create_id_from_string(name)
         return k(id=id, name=name, curator=curator, comments="", coordinates="??")
 
     # id creation encapuslated
-    __valid = re.compile(r"\W+")
     _languagedict = defaultdict(int)
 
-    @staticmethod
-    def create_id_from_string(string):
-        string = uni.unidecode(LanguageCell.__valid.sub("_", string)).lower()
+    @classmethod
+    def create_id_from_string(k, string):
+        string = uni.unidecode(valid_id_elements.sub("_", string)).lower()
         # take only parts longer than 3
         string = "_".join([ele for ele in string.split("_") if len(ele) > 3])
-        LanguageCell._languagedict[string] += 1
-        string += str(LanguageCell._languagedict[string])
+        k._languagedict[string] += 1
+        string += str(k._languagedict[string])
         return string
 
     # pycldf.Dataset.write assumes a `get` method to access attributes, so we
@@ -317,6 +326,8 @@ def main():
 
     iter_concept = wb[sheets[0]].iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
 
+    Base.metadata.create_all(engine, checkfirst=True)
+
     with open("forms_ms.csv", "w", encoding="utf8", newline="") as formsout, \
             open("concepts_ms.csv", "w", encoding="utf8", newline="") as conceptsout, \
             open("languages_ms.csv", "w", encoding="utf8", newline="") as lanout:
@@ -338,7 +349,8 @@ def main():
         # TODO: The following line contains a magic number, can we just iterate until we are done?
         for lan_col in wb[sheets[0]].iter_cols(min_row=1, max_row=2, min_col=7, max_col=44):
             # iterate over language columns
-            lan_cell = LanguageCell.from_column(lan_col)
+            lan_cell = Language.from_column(lan_col)
+            session.add(lan_cell)
 
             # Switch to warnings module or something similar for this
             if args.debug_level >= 2:
@@ -353,6 +365,7 @@ def main():
             languages[lan_cell.name] = lan_cell
 
             lancsv.writerow(lan_cell)
+        session.commit()
 
         formcells = []
         for row_forms, row_con in zip(iter_forms, iter_concept):
@@ -402,4 +415,5 @@ def main():
 
 
 if __name__ == "__main__":
+    __package__ = "lexedata.importer"
     main()
