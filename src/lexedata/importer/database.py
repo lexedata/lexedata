@@ -40,12 +40,12 @@ class DatabaseObjectWithUniqueStringID:
                 invalid_id_elements.sub("_", string)).lower())
 
     @classmethod
-    def register_new_id(cl, id, session):
+    def register_new_id(cl, id):
         assert id == cl.string_to_id(id)
         try:
             registry = cl.__registry
         except AttributeError:
-            registry = set(o.id for o in session.query(cl.id))
+            registry = set(o.id for o in cl.session.query(cl.id))
         i = 1
         while "{:s}{:d}".format(id, i) in registry:
             i += 1
@@ -59,7 +59,10 @@ def create_db_session(location='sqlite:///cldf.sqlite'):
         os.remove("cldf.sqlite")
     except FileNotFoundError:
         pass
-    engine = sa.create_engine(location, echo=True) # Create an SQLite database in this directory
+    engine = sa.create_engine(location, echo=False) # Create an SQLite database in this directory
+    # use `echo=True` to see the SQL stamenets echoed
+
     session = sessionmaker(bind=engine)()
+    DatabaseObjectWithUniqueStringID.session = session
     DatabaseObjectWithUniqueStringID.metadata.create_all(engine, checkfirst=True)
     return session

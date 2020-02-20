@@ -10,8 +10,7 @@ import attr
 from .exceptions import *
 from .cellparser import CellParser
 from .database import create_db_session, as_declarative, DatabaseObjectWithUniqueStringID, sa
-
-session = create_db_session()
+from .objects import Language, Form, Concept, FormConceptAssociation
 
 #replacing none values with ''
 replace_none = lambda x: "" if x == None else x
@@ -46,218 +45,63 @@ header_languages = ["language_id",
 
 # header_form_concept = ["form_id", "concept_id"]
 
+session = create_db_session()
 
-class Language(DatabaseObjectWithUniqueStringID):
-    """Metadata for a language"""
-    name = sa.Column(sa.String)
-    curator = sa.Column(sa.String)
-    comments = sa.Column(sa.String)
-    coordinates = sa.Column(sa.String)
-
-    @classmethod
-    def from_column(k, column):
-        name, curator = [cell.value for cell in column]
-        id = k.register_new_id(k.string_to_id(name), session)
-        return k(id=id, name=name, curator=curator, comments="", coordinates="??")
-
-    # pycldf.Dataset.write assumes a `get` method to access attributes, so we
-    # can make `LanguageCell` outputtable to CLDF by providing such a method,
-    # mapping attributes to CLDF column names
-    def get(self, property, default=None):
-        if property == "language_id" or property == "ID":
-            return self.id
-        elif property == "language_name" or property == "name":
-            return self.name
-        elif property == "curator":
-            return self.curator
-        elif property == "language_comment" or property == "comments":
-            return self.comments
-        return default
-
-    def warn(self):
-        if "???" in self.name:
-            raise LanguageElementError(coordinates, self.name)
+def row_to_concept(conceptrow):
+    # values of cell
+    set, english, english_strict, spanish, portugese, french = [cell.value for cell in conceptrow]
+    # comment of cell
+    concept_comment = comment_getter(conceptrow[1])
+    # create id
+    concept_id = Concept.register_new_id(Concept.string_to_id(english))
+    return Concept(id=concept_id, set=set, english=english,
+                   english_strict=english_strict, spanish=spanish,
+                   portuguese=portugese, french=french,
+                   concept_comment=concept_comment, coordinates="??")
 
 
-class Form(DatabaseObjectWithUniqueStringID):
-    language_id = sa.Column(sa.String)
-    # FIXME: Use an actual foreign-key relationship here.
+def create_form(form_id, lan_id, con_com, form_com, values, coordinates):
+    phonemic, phonetic, ortho, comment, source = values
 
-    phonemic = sa.Column(sa.String)
-    phonetic = sa.Column(sa.String)
-    orthographic = sa.Column(sa.String)
-    variants = sa.Column(sa.String)
-    comment = sa.Column(sa.String)
-    source = sa.Column(sa.String)
+    variants = []
+    phonemic = Form.variants_separator(variants, phonemic)
+    phonetic = Form.variants_separator(variants, phonetic)
+    ortho = Form.variants_separator(variants, ortho)
 
-    form_comment = sa.Column(sa.String)
+    if phonemic != "" and phonemic != "No value":
+        if not one_bracket("/", "/", phonemic, 2):
+            raise FormCellError(coordinates, phonemic, "phonemic")
+        # phonemic = phonemic.strip("/")
 
-    @classmethod
-    def create_form(klasse, form_id, lan_id, con_com, form_com, values, coordinates):
-        phonemic, phonetic, ortho, comment, source = values
+    if phonetic != "" and phonetic != "No value":
+        if not one_bracket("[", "]", phonetic, 1):
+            raise FormCellError(coordinates, phonetic, "phonetic")
+        # phonetic = phonetic.strip("[").strip("]")
 
-        variants = []
-        phonemic = klasse.variants_separator(variants, phonemic)
-        phonetic = klasse.variants_separator(variants, phonetic)
-        ortho = klasse.variants_separator(variants, ortho)
+    if ortho != "" and ortho != "No value":
+        if not one_bracket("<", ">", ortho, 1):
+            raise FormCellError(coordinates, ortho, "orthographic")
+        # ortho = ortho.strip("<").strip(">")
 
-        if phonemic != "" and phonemic != "No value":
-            if not one_bracket("/", "/", phonemic, 2):
-                raise FormCellError(coordinates, phonemic, "phonemic")
-            # phonemic = phonemic.strip("/")
+    if comment != "" and comment != "No value":
+        if not comment_bracket(comment):
+            raise FormCellError(coordinates, comment, "comment")
 
-        if phonetic != "" and phonetic != "No value":
-            if not one_bracket("[", "]", phonetic, 1):
-                raise FormCellError(coordinates, phonetic, "phonetic")
-            # phonetic = phonetic.strip("[").strip("]")
+    # replace source if not given
+    source = "{1}" if source == "" else source
 
-        if ortho != "" and ortho != "No value":
-            if not one_bracket("<", ">", ortho, 1):
-                raise FormCellError(coordinates, ortho, "orthographic")
-            # ortho = ortho.strip("<").strip(">")
-
-        if comment != "" and comment != "No value":
-            if not comment_bracket(comment):
-                raise FormCellError(coordinates, comment, "comment")
-
-        # replace source if not given
-        source = "{1}" if source == "" else source
-
-        return klasse(id=form_id, language_id=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
-                      variants=variants, comment=comment, source=source,
-                      form_comment=form_com)
-
-    __variants_corrector = re.compile(r"^([</\[])(.+[^>/\]])$")
-    __variants_splitter = re.compile(r"^(.+?)\s?~\s?([</\[].+)$")
-
-    @staticmethod
-    def variants_scanner(string):
-        """copies string, inserting closing brackets if necessary"""
-        is_open = False
-        closers = {"<": ">", "[": "]", "/": "/"}
-        collector = ""
-        starter = ""
-
-        for char in string:
-
-            if char in closers and not is_open:
-                collector += char
-                is_open = True
-                starter = char
-
-            elif char == "~":
-                if is_open:
-                    collector += (closers[starter] + char + starter)
-                else:
-                    collector += char
-
-            elif char in closers.values():
-                collector += char
-                is_open = False
-                starter = ""
-
-            elif is_open:
-                collector += char
-
-        return collector
-
-    @classmethod
-    def variants_separator(klasse, variants_list, string):
-        if "~" in string:
-            # force python to copy string
-            text = (string + "&")[:-1]
-            text = text.replace(" ", "")
-            text = text.replace(",", "")
-            text = text.replace(";", "")
-            values = klasse.variants_scanner(text)
-
-            values = values.split("~")
-            first = values.pop(0)
-            variants_list += values
-            return first
-        else:
-            return string
-
-    __form_counter = defaultdict(int)
-
-    @classmethod
-    def id_creator(klasse, lan_id, con_id):
-        return klasse.string_to_id("{:s}_{:s}_".format(lan_id, con_id))
-
-    def get(self, property, default=None):
-        if property == "form_id" or property == "ID":
-            return self.id
-        elif property == "language_id" or property == "Language_ID":
-            return self.language_id
-        elif property == "phonemic":
-            return self.phonemic
-        elif property == "phonetic":
-            return self.phonetic
-        elif property == "orthographic":
-            return self.orthographic
-        elif property == "source":
-            return self.source
-        elif property == "comment":
-            return self.comment
-        elif property == "form_comment":
-            return self.form_comment
-        elif property == "variants":
-            return self.variants
-        return default
+    return Form(id=form_id, language_id=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
+                    variants=variants, comment=comment, source=source,
+                    form_comment=form_com)
 
 
-class Concept(DatabaseObjectWithUniqueStringID):
-    """
-    a concept element consists of 8 fields:
-        (concept_id,set,english,english_strict,spanish,portuguese,french,concept_comment)
-    sharing concept_id and concept_comment with a form element
-    concept_comment refers to te comment of the cell containing the english meaning
-    """
-    set = sa.Column(sa.String)
-    english = sa.Column(sa.String)
-    english_strict = sa.Column(sa.String)
-    spanish = sa.Column(sa.String)
-    portuguese = sa.Column(sa.String)
-    french = sa.Column(sa.String)
-    concept_comment = sa.Column(sa.String)
-    coordinates = sa.Column(sa.String)
-
-    @classmethod
-    def row_to_concept(klasse, conceptrow):
-        # values of cell
-        set, english, english_strict, spanish, portugese, french = [replace_none(cell.value) for cell in conceptrow]
-        # comment of cell
-        concept_comment = comment_getter(conceptrow[1])
-        # create id
-        concept_id = klasse.register_new_id(klasse.string_to_id(english), session)
-        return klasse(id=concept_id, set=set, english=english, english_strict=english_strict, spanish=spanish,
-                      portuguese=portugese, french=french, concept_comment=concept_comment, coordinates="??")
+def language_from_column(column):
+    name, curator = [cell.value for cell in column]
+    id = Language.register_new_id(Language.string_to_id(name))
+    return Language(id=id, name=name, curator=curator, comments="", coordinates="??")
 
 
-    def get(self, property, default=None):
-        if property == "concept_id":
-            return self.id
-        elif property == "set":
-            return self.set
-        elif property == "english":
-            return self.english
-        elif property == "english_strict":
-            return self.english_strict
-        elif property == "spanish":
-            return self.spanish
-        elif property == "portuguese":
-            return self.portuguese
-        elif property == "french":
-            return self.french
-        return default
 
-
-@as_declarative()
-class FormConceptAssociation():
-    __tablename__ = 'form_to_concept'
-    id = sa.Column(sa.String, primary_key=True)
-    concept_id = sa.Column(sa.String, sa.ForeignKey(Concept.id), primary_key=True)
-    form_id = sa.Column(sa.String, sa.ForeignKey(Form.id), primary_key=True)
 
 def main():
     parser = argparse.ArgumentParser(description="Load a Maweti-Guarani-style dataset into CLDF")
@@ -323,7 +167,7 @@ def main():
         formcells = []
         for row_forms, row_con in zip(iter_forms, iter_concept):
 
-            concept_cell = Concept.row_to_concept(row_con)
+            concept_cell = row_to_concept(row_con)
             con_comment = concept_cell.concept_comment
 
             concsv.writerow(concept_cell)
@@ -343,7 +187,7 @@ def main():
 
                             form_id = Form.id_creator(this_lan_id, concept_cell.id)
 
-                            c_form = Form.create_form(
+                            c_form = create_form(
                                 form_id = form_id,
                                 lan_id = this_lan_id,
                                 con_com = con_comment,
@@ -373,10 +217,17 @@ def main():
         dataset.add_component("LanguageTable")
         dataset.write(LanguageTable=list(languages.values()), FormTable=formcells)
 
-
-if __name__ == "__main__":
+if False:
     # For debugging purposes:
+    import sys
+    import importlib
+    import lexedata.importer.database
+    import lexedata.importer.objects
     __package__ = "lexedata.importer"
     sys.argv = ["x", "../../../Copy of TG_comparative_lexical_online_MASTER.xlsx"]
 
+    importlib.reload(lexedata.importer.database)
+    importlib.reload(lexedata.importer.objects)
+
+if __name__ == '__main__':
     main()
