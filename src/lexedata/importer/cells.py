@@ -3,27 +3,15 @@ import openpyxl as op
 import csv
 import re
 from collections import defaultdict
-import unidecode as uni
 import argparse
 import pycldf
 import attr
-import sqlalchemy as sa
-from sqlalchemy.ext.declarative import as_declarative, declared_attr
-from sqlalchemy.orm import sessionmaker
 
 from .exceptions import *
 from .cellparser import CellParser
+from .database import create_db_session, as_declarative, DatabaseObjectWithUniqueStringID, sa
 
-# Initialize the SQL Alchemy
-import os
-try:
-    os.remove("cldf.sqlite")
-except FileNotFoundError:
-    pass
-
-engine = sa.create_engine('sqlite:///cldf.sqlite', echo=True) # Create an SQLite database in this directory
-
-session = sessionmaker(bind=engine)()
+session = create_db_session()
 
 #replacing none values with ''
 replace_none = lambda x: "" if x == None else x
@@ -58,48 +46,6 @@ header_languages = ["language_id",
 
 # header_form_concept = ["form_id", "concept_id"]
 
-invalid_id_elements = re.compile(r"\W+")
-
-
-@as_declarative()
-class DatabaseObjectWithUniqueStringID:
-    @declared_attr
-    def __tablename__(cls):
-        return cls.__name__.lower()
-
-    id = sa.Column(sa.String, primary_key=True)
-
-    @staticmethod
-    def string_to_id(string):
-        """
-
-        >>> string_to_id("trivial")
-        "trivial"
-        >>> string_to_id("just 4 non-alphanumerical characters.")
-        >>> string_to_id("Это русский.")
-        >>> string_to_id("该语言有一个音节。")
-        >>> string_to_id("この言語には音節があります。")
-
-        """
-        # We nee to run this through valid_id_elements twice, because some word
-        # characters (eg. Chinese) are unidecoded to contain non-word characters.
-        return valid_id_elements.sub("_", uni.unidecode(valid_id_elements.sub("_", string)).lower())
-
-    @classmethod
-    def register_new_id(cl, id):
-        assert id == cl.string_to_id(id)
-        try:
-            registry = cl.__registry
-        except AttributeError:
-            registry = set(o.id for o in session.query(cl.id))
-        i = 1
-        while "{:s}{:d}".format(id, i) in registry:
-            i += 1
-        unique = "{:s}{:d}".format(id, i)
-        registry.add(unique)
-        return unique
-
-print(DatabaseObjectWithUniqueStringID.string_to_id("教育部重編國語辭典修訂本xtxexsxtxâxäxγxωxまxax字x-xまx‿x۳xqxaxaxlxixaxtxex xwx–xaxшxnx੩xnx"))
 
 class Language(DatabaseObjectWithUniqueStringID):
     """Metadata for a language"""
@@ -111,7 +57,7 @@ class Language(DatabaseObjectWithUniqueStringID):
     @classmethod
     def from_column(k, column):
         name, curator = [cell.value for cell in column]
-        id = k.register_new_id(k.string_to_id(name))
+        id = k.register_new_id(k.string_to_id(name), session)
         return k(id=id, name=name, curator=curator, comments="", coordinates="??")
 
     # pycldf.Dataset.write assumes a `get` method to access attributes, so we
@@ -143,8 +89,6 @@ class Form(DatabaseObjectWithUniqueStringID):
     variants = sa.Column(sa.String)
     comment = sa.Column(sa.String)
     source = sa.Column(sa.String)
-
-    meanings = relationship('Concept', secondary='form_to_concept')
 
     form_comment = sa.Column(sa.String)
 
@@ -285,7 +229,7 @@ class Concept(DatabaseObjectWithUniqueStringID):
         # comment of cell
         concept_comment = comment_getter(conceptrow[1])
         # create id
-        concept_id = klasse.register_new_id(klasse.string_to_id(english))
+        concept_id = klasse.register_new_id(klasse.string_to_id(english), session)
         return klasse(id=concept_id, set=set, english=english, english_strict=english_strict, spanish=spanish,
                       portuguese=portugese, french=french, concept_comment=concept_comment, coordinates="??")
 
@@ -314,9 +258,6 @@ class FormConceptAssociation():
     id = sa.Column(sa.String, primary_key=True)
     concept_id = sa.Column(sa.String, sa.ForeignKey(Concept.id), primary_key=True)
     form_id = sa.Column(sa.String, sa.ForeignKey(Form.id), primary_key=True)
-
-DatabaseObjectWithUniqueStringID.metadata.create_all(engine, checkfirst=True)
-
 
 def main():
     parser = argparse.ArgumentParser(description="Load a Maweti-Guarani-style dataset into CLDF")
@@ -434,5 +375,8 @@ def main():
 
 
 if __name__ == "__main__":
+    # For debugging purposes:
     __package__ = "lexedata.importer"
+    sys.argv = ["x", "../../../Copy of TG_comparative_lexical_online_MASTER.xlsx"]
+
     main()
