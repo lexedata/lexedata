@@ -41,16 +41,11 @@ class DatabaseObjectWithUniqueStringID:
 
     @classmethod
     def register_new_id(cl, id):
-        assert id == cl.string_to_id(id)
-        try:
-            registry = cl.__registry
-        except AttributeError:
-            registry = set(o.id for o in cl.session.query(cl.id))
         i = 1
-        while "{:s}{:d}".format(id, i) in registry:
+        while cl.session.query(cl.id).filter(
+                cl.id == "{:s}{:d}".format(id, i)).one_or_none():
             i += 1
         unique = "{:s}{:d}".format(id, i)
-        registry.add(unique)
         return unique
 
 
