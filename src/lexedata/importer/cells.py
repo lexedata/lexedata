@@ -8,15 +8,21 @@ import argparse
 import pycldf
 import attr
 import sqlalchemy as sa
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.orm import sessionmaker
 
 from .exceptions import *
 from .cellparser import CellParser
 
 # Initialize the SQL Alchemy
+import os
+try:
+    os.remove("cldf.sqlite")
+except FileNotFoundError:
+    pass
+
 engine = sa.create_engine('sqlite:///cldf.sqlite', echo=True) # Create an SQLite database in this directory
-Base = declarative_base()
+
 session = sessionmaker(bind=engine)()
 
 #replacing none values with ''
@@ -52,12 +58,51 @@ header_languages = ["language_id",
 
 # header_form_concept = ["form_id", "concept_id"]
 
-valid_id_elements = re.compile(r"\W+")
+invalid_id_elements = re.compile(r"\W+")
 
-class Language(Base):
-    __tablename__ = "language"
-    """Metadata for a language"""
+
+@as_declarative()
+class DatabaseObjectWithUniqueStringID:
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
+
     id = sa.Column(sa.String, primary_key=True)
+
+    @staticmethod
+    def string_to_id(string):
+        """
+
+        >>> string_to_id("trivial")
+        "trivial"
+        >>> string_to_id("just 4 non-alphanumerical characters.")
+        >>> string_to_id("Это русский.")
+        >>> string_to_id("该语言有一个音节。")
+        >>> string_to_id("この言語には音節があります。")
+
+        """
+        # We nee to run this through valid_id_elements twice, because some word
+        # characters are unidecoded to contain non-word characters.
+        return valid_id_elements.sub("_", uni.unidecode(valid_id_elements.sub("_", string)).lower())
+
+    @classmethod
+    def register_new_id(cl, id):
+        assert id == cl.string_to_id(id)
+        try:
+            registry = cl.__registry
+        except AttributeError:
+            registry = set(o.id for o in session.query(cl.id))
+        i = 1
+        while "{:s}{:d}".format(id, i) in registry:
+            i += 1
+        unique = "{:s}{:d}".format(id, i)
+        registry.add(unique)
+        return unique
+
+print(DatabaseObjectWithUniqueStringID.string_to_id("教育部重編國語辭典修訂本xtxexsxtxâxäxγxωxまxax字x-xまx‿x۳xqxaxaxlxixaxtxex xwx–xaxшxnx੩xnx"))
+
+class Language(DatabaseObjectWithUniqueStringID):
+    """Metadata for a language"""
     name = sa.Column(sa.String)
     curator = sa.Column(sa.String)
     comments = sa.Column(sa.String)
@@ -66,21 +111,8 @@ class Language(Base):
     @classmethod
     def from_column(k, column):
         name, curator = [cell.value for cell in column]
-        
-        id = k.create_id_from_string(name)
+        id = k.register_new_id(k.string_to_id(name))
         return k(id=id, name=name, curator=curator, comments="", coordinates="??")
-
-    # id creation encapuslated
-    _languagedict = defaultdict(int)
-
-    @classmethod
-    def create_id_from_string(k, string):
-        string = uni.unidecode(valid_id_elements.sub("_", string)).lower()
-        # take only parts longer than 3
-        string = "_".join([ele for ele in string.split("_") if len(ele) > 3])
-        k._languagedict[string] += 1
-        string += str(k._languagedict[string])
-        return string
 
     # pycldf.Dataset.write assumes a `get` method to access attributes, so we
     # can make `LanguageCell` outputtable to CLDF by providing such a method,
@@ -101,31 +133,26 @@ class Language(Base):
             raise LanguageElementError(coordinates, self.name)
 
 
-@attr.s
-class FormCell():
-    form_id = attr.ib()
-    language_id = attr.ib()
+class Form(DatabaseObjectWithUniqueStringID):
+    language_id = sa.Column(sa.String)
 
-    phonemic = attr.ib()
-    phonetic = attr.ib()
-    orthographic = attr.ib()
-    variants = attr.ib()
-    comment = attr.ib()
-    source = attr.ib()
+    phonemic = sa.Column(sa.String)
+    phonetic = sa.Column(sa.String)
+    orthographic = sa.Column(sa.String)
+    variants = sa.Column(sa.String)
+    comment = sa.Column(sa.String)
+    source = sa.Column(sa.String)
 
-    form_comment = attr.ib()
-    concept_comment = attr.ib()
-    coordinates = attr.ib()
+    form_comment = sa.Column(sa.String)
 
     @classmethod
-    def create_form(klasse, lan_id, con_id, con_com, form_com, values, coordinates):
+    def create_form(klasse, form_id, lan_id, con_com, form_com, values, coordinates):
         phonemic, phonetic, ortho, comment, source = values
-        form_id = FormCell.id_creator(lan_id, con_id)
 
         variants = []
-        phonemic = FormCell.variants_separator(variants, phonemic)
-        phonetic = FormCell.variants_separator(variants, phonetic)
-        ortho = FormCell.variants_separator(variants, ortho)
+        phonemic = klasse.variants_separator(variants, phonemic)
+        phonetic = klasse.variants_separator(variants, phonetic)
+        ortho = klasse.variants_separator(variants, ortho)
 
         if phonemic != "" and phonemic != "No value":
             if not one_bracket("/", "/", phonemic, 2):
@@ -149,9 +176,9 @@ class FormCell():
         # replace source if not given
         source = "{1}" if source == "" else source
 
-        return klasse(form_id=form_id, language_id=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
+        return klasse(id=form_id, language_id=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
                       variants=variants, comment=comment, source=source,
-                      form_comment=form_com, concept_comment=con_com, coordinates=coordinates)
+                      form_comment=form_com)
 
     __variants_corrector = re.compile(r"^([</\[])(.+[^>/\]])$")
     __variants_splitter = re.compile(r"^(.+?)\s?~\s?([</\[].+)$")
@@ -187,15 +214,15 @@ class FormCell():
 
         return collector
 
-    @staticmethod
-    def variants_separator(variants_list, string):
+    @classmethod
+    def variants_separator(klasse, variants_list, string):
         if "~" in string:
             # force python to copy string
             text = (string + "&")[:-1]
             text = text.replace(" ", "")
             text = text.replace(",", "")
             text = text.replace(";", "")
-            values = FormCell.variants_scanner(text)
+            values = klasse.variants_scanner(text)
 
             values = values.split("~")
             first = values.pop(0)
@@ -206,16 +233,13 @@ class FormCell():
 
     __form_counter = defaultdict(int)
 
-    @staticmethod
-    def id_creator(lan_id, con_id):
-
-        FormCell.__form_counter[con_id] += 1  # increment
-        counter = str(FormCell.__form_counter[con_id]).ljust(3, "0")
-        return "_".join([lan_id, con_id, counter])
+    @classmethod
+    def id_creator(klasse, lan_id, con_id):
+        return klasse.string_to_id("{:s}_{:s}_".format(lan_id, con_id))
 
     def get(self, property, default=None):
         if property == "form_id" or property == "ID":
-            return self.form_id
+            return self.id
         elif property == "language_id" or property == "Language_ID":
             return self.language_id
         elif property == "phonemic":
@@ -230,30 +254,26 @@ class FormCell():
             return self.comment
         elif property == "form_comment":
             return self.form_comment
-        elif property == "concept_comment":
-            return self.concept_comment
         elif property == "variants":
             return self.variants
         return default
 
 
-@attr.s
-class ConceptCell():
+class Concept(DatabaseObjectWithUniqueStringID):
     """
     a concept element consists of 8 fields:
         (concept_id,set,english,english_strict,spanish,portuguese,french,concept_comment)
     sharing concept_id and concept_comment with a form element
     concept_comment refers to te comment of the cell containing the english meaning
     """
-    concept_id = attr.ib()
-    set = attr.ib()
-    english = attr.ib()
-    english_strict = attr.ib()
-    spanish = attr.ib()
-    portuguese = attr.ib()
-    french = attr.ib()
-    concept_comment = attr.ib()
-    coordinates = attr.ib()
+    set = sa.Column(sa.String)
+    english = sa.Column(sa.String)
+    english_strict = sa.Column(sa.String)
+    spanish = sa.Column(sa.String)
+    portuguese = sa.Column(sa.String)
+    french = sa.Column(sa.String)
+    concept_comment = sa.Column(sa.String)
+    coordinates = sa.Column(sa.String)
 
     @classmethod
     def row_to_concept(klasse, conceptrow):
@@ -262,34 +282,17 @@ class ConceptCell():
         # comment of cell
         concept_comment = comment_getter(conceptrow[1])
         # create id
-        concept_id = ConceptCell.create_id(english)
-        return klasse(concept_id=concept_id, set=set, english=english, english_strict=english_strict, spanish=spanish,
+        concept_id = klasse.register_new_id(klasse.string_to_id(english))
+        return klasse(id=concept_id, set=set, english=english, english_strict=english_strict, spanish=spanish,
                       portuguese=portugese, french=french, concept_comment=concept_comment, coordinates="??")
 
     # protected static class variable for creating unique ids, regex-pattern
     _conceptdict = defaultdict(int)
     __id_pattern = re.compile(r"^(.+?)(?:[,\(\@](?:.+)?|)$")
 
-    @staticmethod
-    def create_id(meaning):
-        """
-        creates unique id out of given english meaning
-        :param meaning: str
-        :return: unique id (str)
-        """
-        mymatch = ConceptCell.__id_pattern.match(meaning)
-        if mymatch:
-            mymatch = mymatch.group(1)
-            mymatch = mymatch.replace(" ", "")
-            ConceptCell._conceptdict[mymatch] += 1
-            mymatch += str(ConceptCell._conceptdict[mymatch])
-            return mymatch
-        else:
-            raise ConceptIdError
-
     def get(self, property, default=None):
         if property == "concept_id":
-            return self.concept_id
+            return self.id
         elif property == "set":
             return self.set
         elif property == "english":
@@ -303,6 +306,8 @@ class ConceptCell():
         elif property == "french":
             return self.french
         return default
+
+DatabaseObjectWithUniqueStringID.metadata.create_all(engine, checkfirst=True)
 
 
 def main():
@@ -326,8 +331,6 @@ def main():
     iter_forms = wb[sheets[0]].iter_rows(min_row=3, min_col=7, max_col=44)  # iterates over rows with forms
 
     iter_concept = wb[sheets[0]].iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
-
-    Base.metadata.create_all(engine, checkfirst=True)
 
     with open("forms_ms.csv", "w", encoding="utf8", newline="") as formsout, \
             open("concepts_ms.csv", "w", encoding="utf8", newline="") as conceptsout, \
@@ -371,8 +374,7 @@ def main():
         formcells = []
         for row_forms, row_con in zip(iter_forms, iter_concept):
 
-            concept_cell = ConceptCell.row_to_concept(row_con)
-            con_id = concept_cell.concept_id
+            concept_cell = Concept.row_to_concept(row_con)
             con_comment = concept_cell.concept_comment
 
             concsv.writerow(concept_cell)
@@ -389,8 +391,16 @@ def main():
 
                         for f_ele in CellParser(f_cell):
                             f_ele = [replace_none(e) for e in f_ele]
-                            c_form = FormCell.create_form(this_lan_id, con_id, con_comment, f_comment, f_ele,
-                                                          f_cell.coordinate)
+
+                            form_id = Form.id_creator(this_lan_id, concept_cell.id)
+
+                            c_form = Form.create_form(
+                                form_id = form_id,
+                                lan_id = this_lan_id,
+                                con_com = con_comment,
+                                form_com = f_comment,
+                                values = f_ele,
+                                coordinates = f_cell.coordinate)
                             formcells.append(c_form)
                             formscsv.writerow(c_form)
 
