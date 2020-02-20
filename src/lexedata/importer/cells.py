@@ -31,20 +31,6 @@ one_bracket = lambda opening, closing, str, nr: str[0] == opening and str[-1] ==
                                                 (str.count(opening) == str.count(closing) == nr)
 comment_bracket = lambda str: str.count("(") == str.count(")")
 
-# header for files
-header_forms = ["form_id", "language_id",
-                "phonemic", "phonetic", "orthography", "variants", "source", "form_comment",
-                "concept_comment"]
-
-header_concepts = ["concept_id",
-                   "set", "english", "english_strict", "spanish", "portuguese", "french", "concept_comment"]
-
-header_languages = ["language_id",
-                    "language_name", "curator", "language_comment"]
-
-
-# header_form_concept = ["form_id", "concept_id"]
-
 session = create_db_session()
 
 def row_to_concept(conceptrow):
@@ -60,7 +46,7 @@ def row_to_concept(conceptrow):
                    concept_comment=concept_comment, coordinates="??")
 
 
-def create_form(form_id, lan_id, con_com, form_com, values, coordinates):
+def create_form(form_id, lan_id, form_com, values, coordinates):
     phonemic, phonetic, ortho, comment, source = values
 
     variants = []
@@ -91,7 +77,7 @@ def create_form(form_id, lan_id, con_com, form_com, values, coordinates):
     source = "{1}" if source == "" else source
 
     return Form(id=form_id, language_id=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
-                    variants=variants, comment=comment, source=source,
+                    variants=", ".join(variants), comment=comment, source=source,
                     form_comment=form_com)
 
 
@@ -125,28 +111,15 @@ def main():
 
     iter_concept = wb[sheets[0]].iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
 
-    with open("forms_ms.csv", "w", encoding="utf8", newline="") as formsout, \
-            open("concepts_ms.csv", "w", encoding="utf8", newline="") as conceptsout, \
-            open("languages_ms.csv", "w", encoding="utf8", newline="") as lanout:
-
-        formscsv = csv.DictWriter(formsout, header_forms, extrasaction="ignore", quotechar='"',
-                                  quoting=csv.QUOTE_MINIMAL)
-        formscsv.writeheader()
-
-        concsv = csv.DictWriter(conceptsout, header_concepts, extrasaction="ignore", quotechar='"',
-                                quoting=csv.QUOTE_MINIMAL)
-        concsv.writeheader()
-
-        lancsv = csv.DictWriter(lanout, header_languages, extrasaction="ignore", quotechar='"',
-                                quoting=csv.QUOTE_MINIMAL)
-        lancsv.writeheader()
+    # Instead, just generate a database that can be exported into CLDF later.
+    if True:
 
         # Collect languages
         languages = {}
         # TODO: The following line contains a magic number, can we just iterate until we are done?
         for lan_col in wb[sheets[0]].iter_cols(min_row=1, max_row=2, min_col=7, max_col=44):
             # iterate over language columns
-            lan_cell = Language.from_column(lan_col)
+            lan_cell = language_from_column(lan_col)
             session.add(lan_cell)
 
             # Switch to warnings module or something similar for this
@@ -161,16 +134,13 @@ def main():
 
             languages[lan_cell.name] = lan_cell
 
-            lancsv.writerow(lan_cell)
         session.commit()
 
         formcells = []
         for row_forms, row_con in zip(iter_forms, iter_concept):
 
             concept_cell = row_to_concept(row_con)
-            con_comment = concept_cell.concept_comment
-
-            concsv.writerow(concept_cell)
+            session.add(concept_cell)
 
             for i, f_cell in enumerate(row_forms):
                 if f_cell.value:
@@ -185,22 +155,21 @@ def main():
                         for f_ele in CellParser(f_cell):
                             f_ele = [replace_none(e) for e in f_ele]
 
-                            form_id = Form.id_creator(this_lan_id, concept_cell.id)
+                            form_id = Form.register_new_id(
+                                Form.id_creator(this_lan_id, concept_cell.id))
 
                             c_form = create_form(
                                 form_id = form_id,
                                 lan_id = this_lan_id,
-                                con_com = con_comment,
                                 form_com = f_comment,
                                 values = f_ele,
                                 coordinates = f_cell.coordinate)
                             formcells.append(c_form)
-                            formscsv.writerow(c_form)
+                            session.add(c_form)
 
                     except CellParsingError as err:
                         print("CellParsingError - somethings quite wrong")
                         print(err.message)
-                        input()
 
 
 
@@ -208,12 +177,12 @@ def main():
                         print(("original cell content: - " + f_cell.value))
                         print(("failed form element: - " + str(f_ele)))
                         print(err)
-                        input()
 
         #################################################
         # create cldf
         dataset = pycldf.Wordlist.in_dir(args.output)
 
+        session.commit()
         dataset.add_component("LanguageTable")
         dataset.write(LanguageTable=list(languages.values()), FormTable=formcells)
 
