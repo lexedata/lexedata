@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 
 
 class Error(Exception):
@@ -31,7 +31,7 @@ class CellError(Error):
     """base class for formatting errors inside an element"""
 
     def __init__(self, coordinates, values, type):
-        message = "in cell:{}\nvalues:\n{}caused a {} error".format(coordinates, values, type)
+        message = "{}: value '{}' caused a {} error".format(coordinates, values, type)
         self.message = message
         message = "\n" + message
         super().__init__(message)
