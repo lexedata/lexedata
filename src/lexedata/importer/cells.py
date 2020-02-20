@@ -82,7 +82,7 @@ class DatabaseObjectWithUniqueStringID:
 
         """
         # We nee to run this through valid_id_elements twice, because some word
-        # characters are unidecoded to contain non-word characters.
+        # characters (eg. Chinese) are unidecoded to contain non-word characters.
         return valid_id_elements.sub("_", uni.unidecode(valid_id_elements.sub("_", string)).lower())
 
     @classmethod
@@ -135,6 +135,7 @@ class Language(DatabaseObjectWithUniqueStringID):
 
 class Form(DatabaseObjectWithUniqueStringID):
     language_id = sa.Column(sa.String)
+    # FIXME: Use an actual foreign-key relationship here.
 
     phonemic = sa.Column(sa.String)
     phonetic = sa.Column(sa.String)
@@ -142,6 +143,8 @@ class Form(DatabaseObjectWithUniqueStringID):
     variants = sa.Column(sa.String)
     comment = sa.Column(sa.String)
     source = sa.Column(sa.String)
+
+    meanings = relationship('Concept', secondary='form_to_concept')
 
     form_comment = sa.Column(sa.String)
 
@@ -286,9 +289,6 @@ class Concept(DatabaseObjectWithUniqueStringID):
         return klasse(id=concept_id, set=set, english=english, english_strict=english_strict, spanish=spanish,
                       portuguese=portugese, french=french, concept_comment=concept_comment, coordinates="??")
 
-    # protected static class variable for creating unique ids, regex-pattern
-    _conceptdict = defaultdict(int)
-    __id_pattern = re.compile(r"^(.+?)(?:[,\(\@](?:.+)?|)$")
 
     def get(self, property, default=None):
         if property == "concept_id":
@@ -306,6 +306,14 @@ class Concept(DatabaseObjectWithUniqueStringID):
         elif property == "french":
             return self.french
         return default
+
+
+@as_declarative()
+class FormConceptAssociation():
+    __tablename__ = 'form_to_concept'
+    id = sa.Column(sa.String, primary_key=True)
+    concept_id = sa.Column(sa.String, sa.ForeignKey(Concept.id), primary_key=True)
+    form_id = sa.Column(sa.String, sa.ForeignKey(Form.id), primary_key=True)
 
 DatabaseObjectWithUniqueStringID.metadata.create_all(engine, checkfirst=True)
 
