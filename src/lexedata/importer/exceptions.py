@@ -30,36 +30,35 @@ class CellParsingError(Error):
 class CellError(Error):
     """base class for formatting errors inside an element"""
 
-    def __init__(self, coordinates, values, type):
-        message = "{}: value '{}' caused a {} error".format(coordinates, values, type)
+    def __init__(self, values, type):
+        message = "Value '{}' caused a {} error".format(values, type)
         self.message = message
-        message = "\n" + message
         super().__init__(message)
 
 
 class LanguageCellError(CellError):
 
-    def __init__(self, coordinates, values, type="language"):
+    def __init__(self, values, type="language"):
 
-        super().__init__(coordinates, values, type)
+        super().__init__(values, type)
 
 
 class FormCellError(CellError):
     # phonemic, phonetic usf.
-    def __init__(self, coordinates, values, type):
-        super().__init__(coordinates, values, type)
+    def __init__(self, values, type):
+        super().__init__(values, type)
 
 
 class CognateCellError(CellError):
 
-    def __init__(self, coordinates, values, type="cognate"):
-        super().__init__(coordinates, values, type)
+    def __init__(self, values, type="cognate"):
+        super().__init__(values, type)
 
 
 class CellParsingError(CellError):
 
-    def __init__(self, coordinates, values, type="parsing"):
-        super().__init__(coordinates, values, type)
+    def __init__(self, values, type="parsing"):
+        super().__init__(values, type)
 
 
 if __name__ == "__main__":

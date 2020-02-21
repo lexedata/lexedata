@@ -31,8 +31,6 @@ one_bracket = lambda opening, closing, str, nr: str[0] == opening and str[-1] ==
                                                 (str.count(opening) == str.count(closing) == nr)
 comment_bracket = lambda str: str.count("(") == str.count(")")
 
-session = create_db_session()
-
 def row_to_concept(conceptrow):
     # values of cell
     set, english, english_strict, spanish, portugese, french = [cell.value for cell in conceptrow]
@@ -40,13 +38,13 @@ def row_to_concept(conceptrow):
     concept_comment = comment_getter(conceptrow[1])
     # create id
     concept_id = Concept.register_new_id(english)
-    return Concept(id=concept_id, set=set, english=english,
+    return Concept(ID=concept_id, set=set, english=english,
                    english_strict=english_strict, spanish=spanish,
                    portuguese=portugese, french=french,
-                   concept_comment=concept_comment, coordinates="??")
+                   concept_comment=concept_comment)
 
 
-def create_form(form_id, lan_id, form_com, values, coordinates):
+def create_form(form_id, lan_id, form_com, values):
     phonemic, phonetic, ortho, comment, source = values
 
     variants = []
@@ -56,35 +54,34 @@ def create_form(form_id, lan_id, form_com, values, coordinates):
 
     if phonemic != "" and phonemic != "No value":
         if not one_bracket("/", "/", phonemic, 2):
-            raise FormCellError(coordinates, phonemic, "phonemic")
+            raise FormCellError(phonemic, "phonemic")
         # phonemic = phonemic.strip("/")
 
     if phonetic != "" and phonetic != "No value":
         if not one_bracket("[", "]", phonetic, 1):
-            raise FormCellError(coordinates, phonetic, "phonetic")
+            raise FormCellError(phonetic, "phonetic")
         # phonetic = phonetic.strip("[").strip("]")
 
     if ortho != "" and ortho != "No value":
         if not one_bracket("<", ">", ortho, 1):
-            raise FormCellError(coordinates, ortho, "orthographic")
+            raise FormCellError(ortho, "orthographic")
         # ortho = ortho.strip("<").strip(">")
 
     if comment != "" and comment != "No value":
         if not comment_bracket(comment):
-            raise FormCellError(coordinates, comment, "comment")
+            raise FormCellError(comment, "comment")
 
     # replace source if not given
     source = "{1}" if source == "" else source
 
-    return Form(id=form_id, language_id=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
-                    variants=", ".join(variants), comment=comment, source=source,
-                    form_comment=form_com)
+    return Form(ID=form_id, Language_ID=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
+                    variants=", ".join(variants), comment="{:}\n{:}".format(comment, form_com), source=source)
 
 
 def language_from_column(column):
     name, curator = [cell.value for cell in column]
     id = Language.register_new_id(name)
-    return Language(id=id, name=name, curator=curator, comments="", coordinates="??")
+    return Language(ID=id, name=name, curator=curator, comments="")
 
 
 
@@ -96,6 +93,10 @@ def main():
         default="./Copy of TG_comparative_lexical_online_MASTER.xlsx",
         help="Path to an Excel file containing the dataset")
     parser.add_argument(
+        "db", nargs="?",
+        default="sqlite:///",
+        help="Where to store the temp DB")
+    parser.add_argument(
         "output", nargs="?",
         default="./",
         help="Directory to create the output CLDF wordlist in")
@@ -104,14 +105,18 @@ def main():
         help="Debug level: Higher numbers are less forgiving")
     args = parser.parse_args()
 
+    # The Input
     wb = op.load_workbook(filename=args.path)
     sheets = wb.sheetnames
 
+    # The Intermediate Storage, in a in-memory DB
+    session = create_db_session(args.db)
+
+    # Start loading the data.
     iter_forms = wb[sheets[0]].iter_rows(min_row=3, min_col=7, max_col=44)  # iterates over rows with forms
 
     iter_concept = wb[sheets[0]].iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
 
-    # Instead, just generate a database that can be exported into CLDF later.
     if True:
 
         # Collect languages
@@ -147,7 +152,7 @@ def main():
 
                     # you can access the cell's column letter and just add 1
                     this_lan_name = wb[sheets[0]][(f_cell.column_letter + "1")].value
-                    this_lan_id = languages[this_lan_name].id
+                    this_lan_id = languages[this_lan_name].ID
                     f_comment = comment_getter(f_cell)
 
                     try:
@@ -156,14 +161,13 @@ def main():
                             f_ele = [replace_none(e) for e in f_ele]
 
                             form_id = Form.register_new_id(
-                                Form.id_creator(this_lan_id, concept_cell.id))
+                                Form.id_creator(this_lan_id, concept_cell.ID))
 
                             c_form = create_form(
                                 form_id = form_id,
                                 lan_id = this_lan_id,
                                 form_com = f_comment,
-                                values = f_ele,
-                                coordinates = f_cell.coordinate)
+                                values = f_ele)
                             formcells.append(c_form)
                             session.add(c_form)
 
@@ -174,25 +178,28 @@ def main():
 
 
                     except FormCellError as err:
-                        print(("original cell content: - " + f_cell.value))
-                        print(("failed form element: - " + str(f_ele)))
-                        print(err)
+                        print("Error in cell {:} with content {!r:}: {:}".format(
+                            f_cell.coordinate, f_cell.value, err))
 
-        #################################################
-        # create cldf
-        dataset = pycldf.Wordlist.in_dir(args.output)
+    #################################################
+    # create cldf
+    session.commit()
+    dataset = pycldf.Wordlist.from_metadata("Wordlist-metadata.json")
 
-        session.commit()
-        dataset.add_component("LanguageTable")
-        dataset.write(LanguageTable=list(languages.values()), FormTable=formcells)
+    db = pycldf.db.Database(dataset, fname=args.db)
+    db.to_cldf("from_db/")
+    dataset.add_component("LanguageTable")
+    dataset.write(LanguageTable=list(languages.values()), FormTable=formcells)
+
+
 
 if False:
     # For debugging purposes:
-    import sys
     import importlib
     import lexedata.importer.database
     import lexedata.importer.objects
     __package__ = "lexedata.importer"
+    import sys
     sys.argv = ["x", "../../../Copy of TG_comparative_lexical_online_MASTER.xlsx"]
 
     importlib.reload(lexedata.importer.database)

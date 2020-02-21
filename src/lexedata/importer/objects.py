@@ -8,29 +8,15 @@ class Language(DatabaseObjectWithUniqueStringID):
     name = sa.Column(sa.String)
     curator = sa.Column(sa.String)
     comments = sa.Column(sa.String)
-    coordinates = sa.Column(sa.String)
+    iso639p3 = sa.Column(sa.String)
 
-    # pycldf.Dataset.write assumes a `get` method to access attributes, so we
-    # can make `LanguageCell` outputtable to CLDF by providing such a method,
-    # mapping attributes to CLDF column names
-    def get(self, property, default=None):
-        if property == "language_id" or property == "ID":
-            return self.id
-        elif property == "language_name" or property == "name":
-            return self.name
-        elif property == "curator":
-            return self.curator
-        elif property == "language_comment" or property == "comments":
-            return self.comments
-        return default
-
-    def warn(self):
-        if "???" in self.name:
-            raise LanguageElementError(coordinates, self.name)
-
+association_table = sa.Table('FormTable_SourceTable', Base.metadata,
+    sa.Column('left_id', sa.Integer),
+    sa.Column('right_id', sa.Integer)
+)
 
 class Form(DatabaseObjectWithUniqueStringID):
-    language_id = sa.Column(sa.String)
+    Language_ID = sa.Column(sa.String)
     # FIXME: Use an actual foreign-key relationship here.
 
     phonemic = sa.Column(sa.String)
@@ -39,8 +25,6 @@ class Form(DatabaseObjectWithUniqueStringID):
     variants = sa.Column(sa.String)
     comment = sa.Column(sa.String)
     source = sa.Column(sa.String)
-
-    form_comment = sa.Column(sa.String)
 
     __variants_corrector = re.compile(r"^([</\[])(.+[^>/\]])$")
     __variants_splitter = re.compile(r"^(.+?)\s?~\s?([</\[].+)$")
@@ -101,7 +85,7 @@ class Form(DatabaseObjectWithUniqueStringID):
 
     def get(self, property, default=None):
         if property == "form_id" or property == "ID":
-            return self.id
+            return self.ID
         elif property == "language_id" or property == "Language_ID":
             return self.language_id
         elif property == "phonemic":
@@ -135,12 +119,11 @@ class Concept(DatabaseObjectWithUniqueStringID):
     portuguese = sa.Column(sa.String)
     french = sa.Column(sa.String)
     concept_comment = sa.Column(sa.String)
-    coordinates = sa.Column(sa.String)
 
 
     def get(self, property, default=None):
         if property == "concept_id":
-            return self.id
+            return self.ID
         elif property == "set":
             return self.set
         elif property == "english":
@@ -158,7 +141,8 @@ class Concept(DatabaseObjectWithUniqueStringID):
 
 class FormConceptAssociation(Base):
     __tablename__ = 'form_to_concept'
-    id = sa.Column(sa.String, primary_key=True)
-    concept_id = sa.Column(sa.String, sa.ForeignKey(Concept.id), primary_key=True)
-    form_id = sa.Column(sa.String, sa.ForeignKey(Form.id), primary_key=True)
+    ID = sa.Column(sa.String, primary_key=True)
+    concept_id = sa.Column(sa.String, sa.ForeignKey(Concept.ID), primary_key=True)
+    form_id = sa.Column(sa.String, sa.ForeignKey(Form.ID), primary_key=True)
+
 

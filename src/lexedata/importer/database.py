@@ -34,14 +34,14 @@ class DatabaseObjectWithUniqueStringID(Base):
     >>> class ObjectWithID(DatabaseObjectWithUniqueStringID):
     ...   pass
     >>> session = create_db_session(location='sqlite:///:memory:')
-    >>> ObjectWithID(id="this")
-    <ObjectWithID(id='this')>
+    >>> ObjectWithID(ID="this")
+    <ObjectWithID(ID='this')>
     >>> session.connection().engine.dispose()
 
     '''
     __abstract__ = True
     session = None # These objects need a database session to look up existing IDs
-    id = sa.Column(sa.String, primary_key=True)
+    ID = sa.Column(sa.String, primary_key=True)
 
     def __repr__(self):
         return '<{:}({:})>'.format(
@@ -88,19 +88,19 @@ class DatabaseObjectWithUniqueStringID(Base):
         >>> class Ex(DatabaseObjectWithUniqueStringID):
         ...   pass
         >>> session = create_db_session(location='sqlite:///:memory:')
-        >>> session.add(Ex(id=Ex.register_new_id("unique")))
-        >>> session.add(Ex(id=Ex.register_new_id("unique")))
+        >>> session.add(Ex(ID=Ex.register_new_id("unique")))
+        >>> session.add(Ex(ID=Ex.register_new_id("unique")))
         >>> list(session.query(Ex))
-        [<Ex(id='unique1')>, <Ex(id='unique2')>]
+        [<Ex(ID='unique1')>, <Ex(ID='unique2')>]
         >>> session.connection().engine.dispose()
 
         """
-        id = cl.string_to_id(string)
+        ID = cl.string_to_id(string)
         i = 1
-        while cl.session.query(cl.id).filter(
-                cl.id == "{:s}{:d}".format(id, i)).one_or_none():
+        while cl.session.query(cl.ID).filter(
+                cl.ID == "{:s}{:d}".format(ID, i)).one_or_none():
             i += 1
-        unique = "{:s}{:d}".format(id, i)
+        unique = "{:s}{:d}".format(ID, i)
         return unique
 
 
