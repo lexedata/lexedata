@@ -74,8 +74,11 @@ def create_form(form_id, lan_id, form_com, values):
     # replace source if not given
     source = "{1}" if source == "" else source
 
-    return Form(ID=form_id, Language_ID=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
-                    variants=", ".join(variants), comment="{:}\n{:}".format(comment, form_com), source=source)
+    return Form(ID=form_id, Language_ID=lan_id, phonemic=phonemic,
+                phonetic=phonetic, orthographic=ortho,
+                variants=", ".join(variants),
+                comment="{:}\n{:}".format(comment, form_com).strip(),
+                source=source)
 
 
 def language_from_column(column):
@@ -168,8 +171,22 @@ def main():
                                 lan_id = this_lan_id,
                                 form_com = f_comment,
                                 values = f_ele)
-                            formcells.append(c_form)
-                            session.add(c_form)
+
+                            already_existing = session.query(Form).filter(
+                                Form.Language_ID == c_form.Language_ID,
+                                Form.orthographic == c_form.orthographic,
+                                Form.phonemic == c_form.phonemic,
+                                Form.orthographic == c_form.orthographic).one_or_none()
+                            if already_existing is None:
+                                formcells.append(c_form)
+                                session.add(c_form)
+                                form = c_form
+                            else:
+                                # Comments might still differ
+                                form = already_existing
+                                if c_form.comment != form.comment:
+                                    print("Original comment {!r:} will be ignored, because existing form has comment {!r}.".format(c_form.comment, form.comment))
+                            concept_cell.forms.append(form)
 
                     except CellParsingError as err:
                         print("CellParsingError - somethings quite wrong")
@@ -186,7 +203,11 @@ def main():
     session.commit()
     dataset = pycldf.Wordlist.from_metadata("Wordlist-metadata.json")
 
-    db = pycldf.db.Database(dataset, fname=args.db)
+    if args.db.startswith("sqlite:///"):
+        db_path = args.db[len("sqlite:///"):]
+        if db_path == '':
+            db_path = ':memory:'
+    db = pycldf.db.Database(dataset, fname=db_path)
     db.to_cldf("from_db/")
     dataset.add_component("LanguageTable")
     dataset.write(LanguageTable=list(languages.values()), FormTable=formcells)
@@ -200,7 +221,7 @@ if False:
     import lexedata.importer.objects
     __package__ = "lexedata.importer"
     import sys
-    sys.argv = ["x", "../../../Copy of TG_comparative_lexical_online_MASTER.xlsx"]
+    sys.argv = ["x", "../../../Copy of TG_comparative_lexical_online_MASTER.xlsx", "sqlite:///here.sqlite"]
 
     importlib.reload(lexedata.importer.database)
     importlib.reload(lexedata.importer.objects)

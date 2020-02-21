@@ -10,10 +10,18 @@ class Language(DatabaseObjectWithUniqueStringID):
     comments = sa.Column(sa.String)
     iso639p3 = sa.Column(sa.String)
 
-association_table = sa.Table('FormTable_SourceTable', Base.metadata,
-    sa.Column('left_id', sa.Integer),
-    sa.Column('right_id', sa.Integer)
+form_meanings = sa.Table('form_meanings', Base.metadata,
+    sa.Column('FormTable_cldf_id', sa.Integer, sa.ForeignKey("form.ID")),
+    sa.Column('SourceTable_id', sa.Integer, sa.ForeignKey("concept.ID"))
 )
+
+form_sources = sa.Table('FormTable_SourceTable', Base.metadata,
+    sa.Column('FormTable_cldf_id', sa.Integer, sa.ForeignKey("form.ID")),
+    sa.Column('SourceTable_id', sa.Integer, sa.ForeignKey("source.ID"))
+)
+
+class Source(DatabaseObjectWithUniqueStringID):
+    ...
 
 class Form(DatabaseObjectWithUniqueStringID):
     Language_ID = sa.Column(sa.String)
@@ -25,6 +33,11 @@ class Form(DatabaseObjectWithUniqueStringID):
     variants = sa.Column(sa.String)
     comment = sa.Column(sa.String)
     source = sa.Column(sa.String)
+    concepts = sa.orm.relationship(
+        "Concept",
+        secondary=form_meanings,
+        back_populates="forms"
+    )
 
     __variants_corrector = re.compile(r"^([</\[])(.+[^>/\]])$")
     __variants_splitter = re.compile(r"^(.+?)\s?~\s?([</\[].+)$")
@@ -120,6 +133,11 @@ class Concept(DatabaseObjectWithUniqueStringID):
     french = sa.Column(sa.String)
     concept_comment = sa.Column(sa.String)
 
+    forms = sa.orm.relationship(
+        "Form",
+        secondary=form_meanings,
+        back_populates="concepts"
+    )
 
     def get(self, property, default=None):
         if property == "concept_id":
