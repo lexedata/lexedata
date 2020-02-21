@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 
-from .database import create_db_session, as_declarative, DatabaseObjectWithUniqueStringID, sa
+from .database import create_db_session, Base, DatabaseObjectWithUniqueStringID, sa
 
 class Language(DatabaseObjectWithUniqueStringID):
     """Metadata for a language"""
@@ -156,8 +156,7 @@ class Concept(DatabaseObjectWithUniqueStringID):
         return default
 
 
-@as_declarative()
-class FormConceptAssociation():
+class FormConceptAssociation(Base):
     __tablename__ = 'form_to_concept'
     id = sa.Column(sa.String, primary_key=True)
     concept_id = sa.Column(sa.String, sa.ForeignKey(Concept.id), primary_key=True)

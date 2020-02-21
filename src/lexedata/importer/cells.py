@@ -9,7 +9,7 @@ import attr
 
 from .exceptions import *
 from .cellparser import CellParser
-from .database import create_db_session, as_declarative, DatabaseObjectWithUniqueStringID, sa
+from .database import create_db_session, DatabaseObjectWithUniqueStringID, sa
 from .objects import Language, Form, Concept, FormConceptAssociation
 
 #replacing none values with ''
@@ -39,7 +39,7 @@ def row_to_concept(conceptrow):
     # comment of cell
     concept_comment = comment_getter(conceptrow[1])
     # create id
-    concept_id = Concept.register_new_id(Concept.string_to_id(english))
+    concept_id = Concept.register_new_id(english)
     return Concept(id=concept_id, set=set, english=english,
                    english_strict=english_strict, spanish=spanish,
                    portuguese=portugese, french=french,
@@ -83,7 +83,7 @@ def create_form(form_id, lan_id, form_com, values, coordinates):
 
 def language_from_column(column):
     name, curator = [cell.value for cell in column]
-    id = Language.register_new_id(Language.string_to_id(name))
+    id = Language.register_new_id(name)
     return Language(id=id, name=name, curator=curator, comments="", coordinates="??")
 
 
