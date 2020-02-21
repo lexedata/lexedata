@@ -174,7 +174,7 @@ def main():
 
                             already_existing = session.query(Form).filter(
                                 Form.Language_ID == c_form.Language_ID,
-                                Form.orthographic == c_form.orthographic,
+                                Form.phonetic == c_form.phonetic,
                                 Form.phonemic == c_form.phonemic,
                                 Form.orthographic == c_form.orthographic).one_or_none()
                             if already_existing is None:
@@ -185,7 +185,11 @@ def main():
                                 # Comments might still differ
                                 form = already_existing
                                 if c_form.comment != form.comment:
-                                    print("Original comment {!r:} will be ignored, because existing form has comment {!r}.".format(c_form.comment, form.comment))
+                                    print(
+                                        "{:}: Original comment {!r:} will be ignored, because this form was already encountered, and there it had the comment {!r}.".format(
+                                            f_cell.coordinate,
+                                            c_form.comment,
+                                            form.comment))
                                 # FIXME: Also output cell coordinates
                                 # FIXME: Also compare the *set* of variant forms
                             concept_cell.forms.append(form)
@@ -193,8 +197,6 @@ def main():
                     except CellParsingError as err:
                         print("CellParsingError - somethings quite wrong")
                         print(err.message)
-
-
 
                     except FormCellError as err:
                         print("Error in cell {:} with content {!r:}: {:}".format(
