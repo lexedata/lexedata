@@ -186,6 +186,8 @@ def main():
                                 form = already_existing
                                 if c_form.comment != form.comment:
                                     print("Original comment {!r:} will be ignored, because existing form has comment {!r}.".format(c_form.comment, form.comment))
+                                # FIXME: Also output cell coordinates
+                                # FIXME: Also compare the *set* of variant forms
                             concept_cell.forms.append(form)
 
                     except CellParsingError as err:
