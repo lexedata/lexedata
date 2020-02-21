@@ -14,15 +14,17 @@ import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import sessionmaker
 
-# Initialize the SQL Alchemy
 import os
 
-invalid_id_elements = re.compile(r"\W+")
 
 @declarative_base
 class Base(object):
     """Database declarative base class"""
     pass
+
+
+invalid_id_elements = re.compile(r"\W+")
+
 
 class DatabaseObjectWithUniqueStringID(Base):
     '''An ORM base class for objects with string IDs.
@@ -102,7 +104,8 @@ class DatabaseObjectWithUniqueStringID(Base):
         return unique
 
 
-def create_db_session(location='sqlite:///cldf.sqlite'):
+def create_db_session(location='sqlite:///:memory:'):
+    # FIXME: Give this a parameter to decide whether or not an existing DB should be overwritten
     try:
         os.remove("cldf.sqlite")
     except FileNotFoundError:
