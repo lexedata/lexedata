@@ -168,10 +168,14 @@ def main():
                                 lan_id = this_lan_id,
                                 values = f_ele)
 
+                            source_id = Source.string_to_id(source_id)
                             source = session.query(Source).filter(
                                 Source.ID == source_id).one_or_none()
                             if source is None:
-                                source = Source(ID=source_id)
+                                source = Source(
+                                    ID=source_id,
+                                    genre="misc")
+                                session.add(source)
 
                             c_form.sources.append(source)
 
@@ -179,7 +183,8 @@ def main():
                                 Form.Language_ID == c_form.Language_ID,
                                 Form.phonetic == c_form.phonetic,
                                 Form.phonemic == c_form.phonemic,
-                                Form.orthographic == c_form.orthographic).one_or_none()
+                                Form.orthographic == c_form.orthographic,
+                                Form.sources.contains(c_form.sources[0])).one_or_none()
                             if already_existing is None:
                                 session.add(c_form)
                                 form = c_form
@@ -191,8 +196,6 @@ def main():
                                             f_cell.coordinate,
                                             c_form.variants,
                                             form.variants))
-                                form.sources = list(
-                                    set(form.sources) | set(c_form.sources))
                                 # FIXME: Compare the *set* of variant forms
                             if session.query(FormMeaningAssociation).filter(
                                     FormMeaningAssociation.form==form.ID,
@@ -226,6 +229,7 @@ def main():
         if db_path == '':
             db_path = ':memory:'
     db = pycldf.db.Database(dataset, fname=db_path)
+    db.tables[2].many_to_many["Concept_IDs"].name = "FormTable_ParameterTable"
     db.to_cldf("from_db/")
 
 

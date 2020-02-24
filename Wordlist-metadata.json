@@ -32,12 +32,19 @@
                     },
                     {
                         "datatype": "string",
-                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#form",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#parameterReference",
+                        "required": false,
+                        "separator": ";",
+                        "name": "Concept_IDs"
+                    },
+                    {
+                        "datatype": "string",
                         "required": false,
                         "name": "Phonemic_Transcription"
                     },
                     {
                         "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#form",
                         "required": false,
                         "name": "Phonetic_Transcription"
                     },
@@ -82,6 +89,17 @@
                                 "ID"
                             ]
                         }
+                    },
+                    {
+                        "columnReference": [
+                            "Concept_IDs"
+                        ],
+                        "reference": {
+                            "resource": "concepts.csv",
+                            "columnReference": [
+                                "ID"
+                            ]
+                        }
                     }
                 ],
                 "primaryKey": [
@@ -89,6 +107,63 @@
                 ]
             },
             "url": "forms.csv"
+        },
+        {
+            "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#ParameterTable",
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": {
+                            "base": "string",
+                            "format": "[a-zA-Z0-9_\\-]+"
+                        },
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+                        "required": true,
+                        "name": "ID"
+                    },
+                    {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#name",
+                        "required": true,
+                        "name": "English"
+                    },
+                    {
+                        "datatype": "string",
+                        "required": false,
+                        "name": "Set"
+                    },
+                    {
+                        "datatype": "string",
+                        "required": false,
+                        "name": "English_Strict"
+                    },
+                    {
+                        "datatype": "string",
+                        "required": false,
+                        "name": "Spanish"
+                    },
+                    {
+                        "datatype": "string",
+                        "required": false,
+                        "name": "French"
+                    },
+                    {
+                        "datatype": "string",
+                        "required": false,
+                        "name": "Portuguese"
+                    },
+                    {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
+                        "required": false,
+                        "name": "Comment"
+                    }
+                ],
+                "primaryKey": [
+                    "ID"
+                ]
+            },
+            "url": "concepts.csv"
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#LanguageTable",

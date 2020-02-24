@@ -5,31 +5,39 @@ from .database import create_db_session, Base, DatabaseObjectWithUniqueStringID,
 
 class Language(DatabaseObjectWithUniqueStringID):
     """Metadata for a language"""
-    name = sa.Column(sa.String)
-    curator = sa.Column(sa.String)
-    comments = sa.Column(sa.String)
-    iso639p3 = sa.Column(sa.String)
+    __tablename__ = "LanguageTable"
+    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
+    name = sa.Column(sa.String, name="cldf_name")
+    curator = sa.Column(sa.String, name="Curator")
+    comments = sa.Column(sa.String, name="cldf_comment")
+    iso639p3 = sa.Column(sa.String, name="cldf_iso639p3code")
 
+from pycldf.db import BIBTEX_FIELDS
 
 class Source(DatabaseObjectWithUniqueStringID):
-    ...
+    __tablename__ = "SourceTable"
+    ID = sa.Column(sa.String, name="id", primary_key=True)
+for source_col in ['genre'] + BIBTEX_FIELDS:
+    setattr(Source, source_col, sa.Column(sa.String, name=source_col, default=""))
+
 
 class Form(DatabaseObjectWithUniqueStringID):
-    ID = sa.Column(sa.String, name="FormTable_cldf_id", primary_key=True)
-    Language_ID = sa.Column(sa.String, name="FormTable_cldf_languageReference")
+    __tablename__ = "FormTable"
+    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
+    Language_ID = sa.Column(sa.String, name="cldf_languageReference")
     # FIXME: Use an actual foreign-key relationship here.
 
-    phonemic = sa.Column(sa.String)
-    phonetic = sa.Column(sa.String)
-    orthographic = sa.Column(sa.String)
-    variants = sa.Column(sa.String)
+    phonemic = sa.Column(sa.String, name="Phonemic_Transcription")
+    phonetic = sa.Column(sa.String, name="cldf_form")
+    orthographic = sa.Column(sa.String, name="Orthographic_Transcription")
+    variants = sa.Column(sa.String, name="Variants_of_Form_given_by_Source")
     sources = sa.orm.relationship(
         "Source",
         secondary="FormTable_SourceTable"
     )
     concepts = sa.orm.relationship(
         "Concept",
-        secondary='formmeaning',
+        secondary='FormTable_ParameterTable',
         back_populates="forms"
     )
 
@@ -119,17 +127,20 @@ class Concept(DatabaseObjectWithUniqueStringID):
     sharing concept_id and concept_comment with a form element
     concept_comment refers to te comment of the cell containing the english meaning
     """
-    set = sa.Column(sa.String)
-    english = sa.Column(sa.String)
-    english_strict = sa.Column(sa.String)
-    spanish = sa.Column(sa.String)
-    portuguese = sa.Column(sa.String)
-    french = sa.Column(sa.String)
-    concept_comment = sa.Column(sa.String)
+    __tablename__ = "ParameterTable"
+
+    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
+    set = sa.Column(sa.String, name="Set")
+    english = sa.Column(sa.String, name="cldf_name")
+    english_strict = sa.Column(sa.String, name="English_Strict")
+    spanish = sa.Column(sa.String, name="Spanish")
+    portuguese = sa.Column(sa.String, name="Portuguese")
+    french = sa.Column(sa.String, name="French")
+    concept_comment = sa.Column(sa.String, name="cldf_comment")
 
     forms = sa.orm.relationship(
         "Form",
-        secondary='formmeaning',
+        secondary='FormTable_ParameterTable',
         back_populates="concepts"
     )
 
@@ -152,15 +163,20 @@ class Concept(DatabaseObjectWithUniqueStringID):
 
 
 class FormMeaningAssociation(Base):
-    __tablename__ = 'formmeaning'
-    form = sa.Column('FormTable_cldf_formReference',
+    __tablename__ = 'FormTable_ParameterTable'
+    # Actually pycldf looks for 'forms.csv_concepts.csv', there could probably
+    # be a translation in pycldf to tie it to the 'conformsTo' objects.
+    # Previous line kept for posterity.
+    form = sa.Column('forms.csv_ID',
                      sa.Integer, sa.ForeignKey(Form.ID), primary_key=True)
-    concept = sa.Column('ConceptTable_cldf_parameterReference',
+    concept = sa.Column('concepts.csv_ID',
                         sa.Integer, sa.ForeignKey(Concept.ID), primary_key=True)
-    comment = sa.Column('Comment', sa.String)
+    context = sa.Column('context', sa.String)
     procedural_comment = sa.Column('Internal_Comment', sa.String)
 
-form_sources = sa.Table('FormTable_SourceTable', Base.metadata,
-    sa.Column('FormTable_cldf_id', sa.Integer, sa.ForeignKey(Form.ID)),
-    sa.Column('SourceTable_id', sa.Integer, sa.ForeignKey(Source.ID))
+form_sources = sa.Table(
+    'FormTable_SourceTable', Base.metadata,
+    sa.Column('FormTable_cldf_id', sa.String, sa.ForeignKey(Form.ID)),
+    sa.Column('SourceTable_id', sa.String, sa.ForeignKey(Source.ID)),
+    sa.Column('context', sa.String),
 )
