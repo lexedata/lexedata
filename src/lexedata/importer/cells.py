@@ -10,7 +10,7 @@ import attr
 from .exceptions import *
 from .cellparser import CellParser
 from .database import create_db_session, DatabaseObjectWithUniqueStringID, sa
-from .objects import Language, Form, Concept, FormConceptAssociation
+from .objects import Language, Form, Concept, FormMeaningAssociation, Source
 
 #replacing none values with ''
 replace_none = lambda x: "" if x == None else x
@@ -44,7 +44,7 @@ def row_to_concept(conceptrow):
                    concept_comment=concept_comment)
 
 
-def create_form(form_id, lan_id, form_com, values):
+def create_form(form_id, lan_id, values):
     phonemic, phonetic, ortho, comment, source = values
 
     variants = []
@@ -72,13 +72,11 @@ def create_form(form_id, lan_id, form_com, values):
             raise FormCellError(comment, "comment")
 
     # replace source if not given
-    source = "{1}" if source == "" else source
+    source_id = lan_id + ("{1}" if source == "" else source).strip()
 
     return Form(ID=form_id, Language_ID=lan_id, phonemic=phonemic,
                 phonetic=phonetic, orthographic=ortho,
-                variants=", ".join(variants),
-                comment="{:}\n{:}".format(comment, form_com).strip(),
-                source=source)
+                variants=", ".join(variants)), comment.strip(), source_id
 
 
 def language_from_column(column):
@@ -144,7 +142,6 @@ def main():
 
         session.commit()
 
-        formcells = []
         for row_forms, row_con in zip(iter_forms, iter_concept):
 
             concept_cell = row_to_concept(row_con)
@@ -166,11 +163,17 @@ def main():
                             form_id = Form.register_new_id(
                                 Form.id_creator(this_lan_id, concept_cell.ID))
 
-                            c_form = create_form(
+                            c_form, comment, source_id = create_form(
                                 form_id = form_id,
                                 lan_id = this_lan_id,
-                                form_com = f_comment,
                                 values = f_ele)
+
+                            source = session.query(Source).filter(
+                                Source.ID == source_id).one_or_none()
+                            if source is None:
+                                source = Source(ID=source_id)
+
+                            c_form.sources.append(source)
 
                             already_existing = session.query(Form).filter(
                                 Form.Language_ID == c_form.Language_ID,
@@ -178,21 +181,30 @@ def main():
                                 Form.phonemic == c_form.phonemic,
                                 Form.orthographic == c_form.orthographic).one_or_none()
                             if already_existing is None:
-                                formcells.append(c_form)
                                 session.add(c_form)
                                 form = c_form
                             else:
-                                # Comments might still differ
                                 form = already_existing
-                                if c_form.comment != form.comment:
+                                if c_form.variants != form.variants:
                                     print(
                                         "{:}: Original comment {!r:} will be ignored, because this form was already encountered, and there it had the comment {!r}.".format(
                                             f_cell.coordinate,
-                                            c_form.comment,
-                                            form.comment))
-                                # FIXME: Also output cell coordinates
-                                # FIXME: Also compare the *set* of variant forms
-                            concept_cell.forms.append(form)
+                                            c_form.variants,
+                                            form.variants))
+                                form.sources = list(
+                                    set(form.sources) | set(c_form.sources))
+                                # FIXME: Compare the *set* of variant forms
+                            if session.query(FormMeaningAssociation).filter(
+                                    FormMeaningAssociation.form==form.ID,
+                                    FormMeaningAssociation.concept==concept_cell.ID) is None:
+                                session.add(FormMeaningAssociation(
+                                    form=form.ID,
+                                    concept=concept_cell.ID,
+                                    comment=comment,
+                                    procedural_comment=f_comment))
+                            # Otherwise, the only change necessary will be the
+                            # adding of a source, and that just happened.
+                            session.commit()
 
                     except CellParsingError as err:
                         print("CellParsingError - somethings quite wrong")
@@ -205,7 +217,9 @@ def main():
     #################################################
     # create cldf
     session.commit()
-    dataset = pycldf.Wordlist.from_metadata("Wordlist-metadata.json")
+    dataset = pycldf.Wordlist.from_metadata(
+        "Wordlist-metadata.json",
+    )
 
     if args.db.startswith("sqlite:///"):
         db_path = args.db[len("sqlite:///"):]
@@ -213,8 +227,6 @@ def main():
             db_path = ':memory:'
     db = pycldf.db.Database(dataset, fname=db_path)
     db.to_cldf("from_db/")
-    dataset.add_component("LanguageTable")
-    dataset.write(LanguageTable=list(languages.values()), FormTable=formcells)
 
 
 
