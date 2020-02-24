@@ -29,10 +29,11 @@ class CellParser():
 
     #pattern for splitting form cell into various form elements
     form_separator = re.compile(r"""
-    \s*         # Any amount of spaces
-    [,;]        # Some separator
-    \s*         # Any amount of spaces
-    (?=[</\[])  # Followed by the beginnig of any transcription, but don't consume that bit""",
+    (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
+    \s*               # Any amount of spaces
+    [,;]              # Some separator
+    \s*               # Any amount of spaces
+    (?=[</\[])        # Followed by the beginnig of any transcription, but don't consume that bit""",
         re.VERBOSE)
     # pattern for parsing content of cell
     __cell_value_pattern = re.compile(r"^(/.+?/)?\s?(\[.+?\])?\s?(<.+?>)?\s?(\(.+\))?\s?(\{.+\})?$")
