@@ -229,6 +229,8 @@ def main():
         if db_path == '':
             db_path = ':memory:'
     db = pycldf.db.Database(dataset, fname=db_path)
+    # I have submitted https://github.com/cldf/pycldf/issues/105 concerning the
+    # necessity to do this.
     db.tables[2].many_to_many["Concept_IDs"].name = "FormTable_ParameterTable"
     db.to_cldf("from_db/")
 
