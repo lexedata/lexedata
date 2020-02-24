@@ -75,7 +75,7 @@ class DatabaseObjectWithUniqueStringID(Base):
         # characters (eg. Chinese) are unidecoded to contain non-word characters.
         return invalid_id_elements.sub(
             "_", uni.unidecode(
-                invalid_id_elements.sub("_", string)).lower())
+                invalid_id_elements.sub("_", string)).lower()).strip("_")
 
     @classmethod
     def register_new_id(cl, string):
@@ -96,12 +96,13 @@ class DatabaseObjectWithUniqueStringID(Base):
 
         """
         ID = cl.string_to_id(string)
-        i = 1
+        i = 0
+        candidate = ID
         while cl.session.query(cl.ID).filter(
-                cl.ID == "{:s}{:d}".format(ID, i)).one_or_none():
+                cl.ID == candidate).one_or_none():
             i += 1
-        unique = "{:s}{:d}".format(ID, i)
-        return unique
+            candidate = "{:s}{:d}".format(ID, i)
+        return candidate
 
 
 def create_db_session(location='sqlite:///:memory:'):
