@@ -10,7 +10,7 @@ class CellParser():
     _wrongorder = [] #just for checking correct parsing
 
     #pattern for splitting form cell into various form elements
-    __line_separator = re.compile(r"^(.+[\]\}\>\)/])[,;]\s?([<{/[].+)$")
+    __line_separator = re.compile(r"^(.+[\]\}\>\)/])\s*[,;]\s*([<{/[].+)$")
     # pattern for parsing content of cell
     __cell_value_pattern = re.compile(r"^(/.+?/)?\s?(\[.+?\])?\s?(<.+?>)?\s?(\(.+\))?\s?(\{.+\})?$")
     __special_pattern = [re.compile(e) for e in [r"^.*(/.+/).*$",
