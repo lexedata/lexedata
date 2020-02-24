@@ -10,32 +10,26 @@ class Language(DatabaseObjectWithUniqueStringID):
     comments = sa.Column(sa.String)
     iso639p3 = sa.Column(sa.String)
 
-form_meanings = sa.Table('form_meanings', Base.metadata,
-    sa.Column('FormTable_cldf_id', sa.Integer, sa.ForeignKey("form.ID")),
-    sa.Column('SourceTable_id', sa.Integer, sa.ForeignKey("concept.ID"))
-)
-
-form_sources = sa.Table('FormTable_SourceTable', Base.metadata,
-    sa.Column('FormTable_cldf_id', sa.Integer, sa.ForeignKey("form.ID")),
-    sa.Column('SourceTable_id', sa.Integer, sa.ForeignKey("source.ID"))
-)
 
 class Source(DatabaseObjectWithUniqueStringID):
     ...
 
 class Form(DatabaseObjectWithUniqueStringID):
-    Language_ID = sa.Column(sa.String)
+    ID = sa.Column(sa.String, name="FormTable_cldf_id", primary_key=True)
+    Language_ID = sa.Column(sa.String, name="FormTable_cldf_languageReference")
     # FIXME: Use an actual foreign-key relationship here.
 
     phonemic = sa.Column(sa.String)
     phonetic = sa.Column(sa.String)
     orthographic = sa.Column(sa.String)
     variants = sa.Column(sa.String)
-    comment = sa.Column(sa.String)
-    source = sa.Column(sa.String)
+    sources = sa.orm.relationship(
+        "Source",
+        secondary="FormTable_SourceTable"
+    )
     concepts = sa.orm.relationship(
         "Concept",
-        secondary=form_meanings,
+        secondary='formmeaning',
         back_populates="forms"
     )
 
@@ -135,7 +129,7 @@ class Concept(DatabaseObjectWithUniqueStringID):
 
     forms = sa.orm.relationship(
         "Form",
-        secondary=form_meanings,
+        secondary='formmeaning',
         back_populates="concepts"
     )
 
@@ -157,10 +151,16 @@ class Concept(DatabaseObjectWithUniqueStringID):
         return default
 
 
-class FormConceptAssociation(Base):
-    __tablename__ = 'form_to_concept'
-    ID = sa.Column(sa.String, primary_key=True)
-    concept_id = sa.Column(sa.String, sa.ForeignKey(Concept.ID), primary_key=True)
-    form_id = sa.Column(sa.String, sa.ForeignKey(Form.ID), primary_key=True)
+class FormMeaningAssociation(Base):
+    __tablename__ = 'formmeaning'
+    form = sa.Column('FormTable_cldf_formReference',
+                     sa.Integer, sa.ForeignKey(Form.ID), primary_key=True)
+    concept = sa.Column('ConceptTable_cldf_parameterReference',
+                        sa.Integer, sa.ForeignKey(Concept.ID), primary_key=True)
+    comment = sa.Column('Comment', sa.String)
+    procedural_comment = sa.Column('Internal_Comment', sa.String)
 
-
+form_sources = sa.Table('FormTable_SourceTable', Base.metadata,
+    sa.Column('FormTable_cldf_id', sa.Integer, sa.ForeignKey(Form.ID)),
+    sa.Column('SourceTable_id', sa.Integer, sa.ForeignKey(Source.ID))
+)
