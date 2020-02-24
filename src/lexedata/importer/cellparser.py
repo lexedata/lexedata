@@ -32,7 +32,7 @@ class CellParser():
     \s*         # Any amount of spaces
     [,;]        # Some separator
     \s*         # Any amount of spaces
-    (?=[</\[]) # Followed by any entry, but don't consume that bit""",
+    (?=[</\[])  # Followed by the beginnig of any transcription, but don't consume that bit""",
         re.VERBOSE)
     # pattern for parsing content of cell
     __cell_value_pattern = re.compile(r"^(/.+?/)?\s?(\[.+?\])?\s?(<.+?>)?\s?(\(.+\))?\s?(\{.+\})?$")
@@ -102,7 +102,7 @@ class CellParser():
 
     @staticmethod
     def wrong_order(formele, cellsize=5):
-        # checks if values of cells not in expected order, extract each value
+        """checks if values of cells not in expected order, extract each value"""
         ele = (formele + ".")[:-1] #force python to hard copy string
         empty_cell = [None] * cellsize
         for i, pat in enumerate(CellParser.__special_pattern):
