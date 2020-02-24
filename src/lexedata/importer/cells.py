@@ -167,7 +167,7 @@ def main():
                                 session.add(FormMeaningAssociation(
                                     form=form.ID,
                                     concept=concept_cell.ID,
-                                    comment=comment,
+                                    context=comment,
                                     procedural_comment=f_comment))
                             # Otherwise, the only change necessary will be the
                             # adding of a source, and that just happened.
