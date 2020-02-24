@@ -12,9 +12,6 @@ from .cellparser import CellParser
 from .database import create_db_session, DatabaseObjectWithUniqueStringID, sa
 from .objects import Language, Form, Concept, FormMeaningAssociation, Source
 
-#replacing none values with ''
-replace_none = lambda x: "" if x == None else x
-
 #lambda function for getting comment of excel cell if comment given
 replace_none_comment = lambda x: x.content if x  else ""
 comment_getter = lambda x: replace_none_comment(x.comment)
@@ -43,40 +40,6 @@ def row_to_concept(conceptrow):
                    portuguese=portugese, french=french,
                    concept_comment=concept_comment)
 
-
-def create_form(form_id, lan_id, values):
-    phonemic, phonetic, ortho, comment, source = values
-
-    variants = []
-    phonemic = Form.variants_separator(variants, phonemic)
-    phonetic = Form.variants_separator(variants, phonetic)
-    ortho = Form.variants_separator(variants, ortho)
-
-    if phonemic != "" and phonemic != "No value":
-        if not one_bracket("/", "/", phonemic, 2):
-            raise FormCellError(phonemic, "phonemic")
-        # phonemic = phonemic.strip("/")
-
-    if phonetic != "" and phonetic != "No value":
-        if not one_bracket("[", "]", phonetic, 1):
-            raise FormCellError(phonetic, "phonetic")
-        # phonetic = phonetic.strip("[").strip("]")
-
-    if ortho != "" and ortho != "No value":
-        if not one_bracket("<", ">", ortho, 1):
-            raise FormCellError(ortho, "orthographic")
-        # ortho = ortho.strip("<").strip(">")
-
-    if comment != "" and comment != "No value":
-        if not comment_bracket(comment):
-            raise FormCellError(comment, "comment")
-
-    # replace source if not given
-    source_id = lan_id + ("{1}" if source == "" else source).strip()
-
-    return Form(ID=form_id, Language_ID=lan_id, phonemic=phonemic,
-                phonetic=phonetic, orthographic=ortho,
-                variants=", ".join(variants)), comment.strip(), source_id
 
 
 def language_from_column(column):
@@ -131,7 +94,7 @@ def main():
             # Switch to warnings module or something similar for this
             if args.debug_level >= 2:
                 lan_cell.warn()
-            elif args.debug_level == 1:
+            elif args.debug_level == 1
                 try:
                     lan_cell.warn()
                 except LanguageElementError as E:
@@ -157,17 +120,7 @@ def main():
 
                     try:
 
-                        for f_ele in CellParser(f_cell):
-                            f_ele = [replace_none(e) for e in f_ele]
-
-                            form_id = Form.register_new_id(
-                                Form.id_creator(this_lan_id, concept_cell.ID))
-
-                            c_form, comment, source_id = create_form(
-                                form_id = form_id,
-                                lan_id = this_lan_id,
-                                values = f_ele)
-
+                        for c_form, comment, source_id in CellParser(f_cell, this_lan_id):
                             source_id = Source.string_to_id(source_id)
                             source = session.query(Source).filter(
                                 Source.ID == source_id).one_or_none()
@@ -190,12 +143,23 @@ def main():
                                 form = c_form
                             else:
                                 form = already_existing
-                                if c_form.variants != form.variants:
+                                existing_variants = form.variants.split(";")
+                                new_variants = form.variants.split(";")
+                                if set(new_variants) - set(existing_variants):
                                     print(
-                                        "{:}: Original comment {!r:} will be ignored, because this form was already encountered, and there it had the comment {!r}.".format(
+                                        "{:}: Variants {:} of form {:} were not mentioned earlier. Adding them to the form nonetheless".format(
                                             f_cell.coordinate,
-                                            c_form.variants,
-                                            form.variants))
+                                            set(new_variants) - set(existing_variants),
+                                            c_form,
+                                            ))
+                                    form.variants = ";".join(set(new_variants) | set(existing_variants))
+                                if set(existing_variants) - set(new_variants):
+                                    print(
+                                        "{:}: Variants {:} of form {:} were not mentioned here.".format(
+                                            f_cell.coordinate,
+                                            set(existing_variants) - set(new_variants),
+                                            c_form,
+                                            ))
                                 # FIXME: Compare the *set* of variant forms
                             if session.query(FormMeaningAssociation).filter(
                                     FormMeaningAssociation.form==form.ID,
