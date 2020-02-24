@@ -163,7 +163,7 @@ def main():
                                 # FIXME: Compare the *set* of variant forms
                             if session.query(FormMeaningAssociation).filter(
                                     FormMeaningAssociation.form==form.ID,
-                                    FormMeaningAssociation.concept==concept_cell.ID) is None:
+                                    FormMeaningAssociation.concept==concept_cell.ID).one_or_none() is None:
                                 session.add(FormMeaningAssociation(
                                     form=form.ID,
                                     concept=concept_cell.ID,
