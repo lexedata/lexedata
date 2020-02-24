@@ -38,7 +38,7 @@ class CellParser():
                                                 r"^.*(\{.+?\}).*$"]
                        ]
 
-    def __init__(self, cell, lan_id):
+    def __init__(self, cell, lan_id, concept):
         values = cell.value
 
         elements = CellParser.separator(values)
@@ -52,6 +52,7 @@ class CellParser():
 
         self._elements = iter(elements)
         self.lan_id = lan_id
+        self.concept = concept
 
     @staticmethod
     def separator(values):
@@ -118,15 +119,15 @@ class CellParser():
 
     def __next__(self):
         ele = next(self._elements)
-        return create_form(CellParser.parsecell(ele), self.lan_id)
+        return create_form(CellParser.parsecell(ele), self.lan_id, self.concept)
 
-def create_form(f_ele, lan_id):
+def create_form(f_ele, lan_id, concept):
     f_ele = [e or '' for e in f_ele]
 
     phonemic, phonetic, ortho, comment, source = f_ele
 
     form_id = Form.register_new_id(
-        Form.id_creator(lan_id, ortho or phonemic or phonetic))
+        Form.id_creator(lan_id, concept.ID))
 
     variants = []
     phonemic = Form.variants_separator(variants, phonemic)

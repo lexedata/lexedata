@@ -94,7 +94,7 @@ def main():
             # Switch to warnings module or something similar for this
             if args.debug_level >= 2:
                 lan_cell.warn()
-            elif args.debug_level == 1
+            elif args.debug_level == 1:
                 try:
                     lan_cell.warn()
                 except LanguageElementError as E:
@@ -120,7 +120,7 @@ def main():
 
                     try:
 
-                        for c_form, comment, source_id in CellParser(f_cell, this_lan_id):
+                        for c_form, comment, source_id in CellParser(f_cell, this_lan_id, concept_cell):
                             source_id = Source.string_to_id(source_id)
                             source = session.query(Source).filter(
                                 Source.ID == source_id).one_or_none()
