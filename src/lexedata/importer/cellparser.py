@@ -28,7 +28,12 @@ class CellParser():
     _wrongorder = [] #just for checking correct parsing
 
     #pattern for splitting form cell into various form elements
-    __line_separator = re.compile(r"^(.+[\]\}\>\)/])\s*[,;]\s*([<{/[].+)$")
+    form_separator = re.compile(r"""
+    \s*         # Any amount of spaces
+    [,;]        # Some separator
+    \s*         # Any amount of spaces
+    (?=[</\[]) # Followed by any entry, but don't consume that bit""",
+        re.VERBOSE)
     # pattern for parsing content of cell
     __cell_value_pattern = re.compile(r"^(/.+?/)?\s?(\[.+?\])?\s?(<.+?>)?\s?(\(.+\))?\s?(\{.+\})?$")
     __special_pattern = [re.compile(e) for e in [r"^.*(/.+/).*$",
@@ -41,7 +46,7 @@ class CellParser():
     def __init__(self, cell, lan_id, concept):
         values = cell.value
 
-        elements = CellParser.separator(values)
+        elements = CellParser.separate(values)
 
         if len(elements) == 0: #check that not empty
             raise CellParsingError(values)
@@ -54,15 +59,20 @@ class CellParser():
         self.lan_id = lan_id
         self.concept = concept
 
-    @staticmethod
-    def separator(values):
+    @classmethod
+    def separate(cl, values):
+        """Splits the content of a form cell into single form descriptions
+
+        >>> CellParser.separate("<jaoca> (apartar-se, separar-se){2}")
+        ['<jaoca> (apartar-se, separar-se){2}']
+        >>> CellParser.separate("<eruguasu> (adj); <eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water){2}; <beyiruubu tuti> (tasty (re: meat with salt, honey, all good things)){2}; <eniacõ> (tasty (re: eggnog with flavoring)){2}; <eracũpũ> (tasty, good re: taste of honey, smell of flowers)){2}; <eribia tuti> (very tasty){2}; <ericute~ecute> (tasty, good (boiled foods)){2}; <eriya sui tuti> (very tasty, re: fermented fruit){2}; <erochĩpu> (good, tasty (re: tembe, pig meat)){2}; <ichẽẽ> (tasty (taste of roasted meat)){2}")[1]
+        '<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water){2}'
+
+        Returns
+        =======
+        list of form strings
         """
-        splits a form cell into single form elements
-        returns list of form strings
-        """
-        while CellParser.__line_separator.match(values):
-            values = CellParser.__line_separator.sub(r"\1&&\2", values)
-        return values.split("&&")
+        return re.split(cl.form_separator, values)
 
     @staticmethod
     def parsecell(ele, cellsize=5):
