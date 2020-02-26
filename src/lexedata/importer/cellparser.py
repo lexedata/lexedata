@@ -49,12 +49,12 @@ class CellParser():
 
         elements = CellParser.separate(values)
 
-        if len(elements) == 0: #check that not empty
+        if len(elements) == 0: # check that not empty
             raise CellParsingError(values)
 
         # clean elements list
         elements = [e.rstrip(" ").lstrip(" ") for e in elements]  # no tailing white spaces
-        elements[-1] = elements[-1].rstrip("\n").rstrip(",").rstrip(";") #remove possible line break and ending commas
+        elements[-1] = elements[-1].rstrip("\n").rstrip(",").rstrip(";") # remove possible line break and ending commas
 
         self._elements = iter(elements)
         self.lan_id = lan_id
@@ -104,18 +104,18 @@ class CellParser():
     @staticmethod
     def wrong_order(formele, cellsize=5):
         """checks if values of cells not in expected order, extract each value"""
-        ele = (formele + ".")[:-1] #force python to hard copy string
+        ele = (formele + ".")[:-1] # force python to hard copy string
         empty_cell = [None] * cellsize
         for i, pat in enumerate(CellParser.__special_pattern):
             mymatch = pat.match(ele)
             if mymatch:
-                # delet match in cell
+                # delete match in cell
                 empty_cell[i] = mymatch.group(1)
                 ele = pat.sub("", ele)
 
-        #check that ele was parsed entirely
-        #add wrong ordered cell to error messag of CellParser
-        #raise error
+        # check that ele was parsed entirely
+        # add wrong ordered cell to error messag of CellParser
+        # raise error
         ele = ele.strip(" ")
         if not ele == "":
 

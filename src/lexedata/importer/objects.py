@@ -12,6 +12,7 @@ class Language(DatabaseObjectWithUniqueStringID):
     comments = sa.Column(sa.String, name="cldf_comment")
     iso639p3 = sa.Column(sa.String, name="cldf_iso639p3code")
 
+#what is this?
 from pycldf.db import BIBTEX_FIELDS
 
 class Source(DatabaseObjectWithUniqueStringID):

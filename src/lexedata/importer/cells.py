@@ -125,9 +125,7 @@ def main():
                             source = session.query(Source).filter(
                                 Source.ID == source_id).one_or_none()
                             if source is None:
-                                source = Source(
-                                    ID=source_id,
-                                    genre="misc")
+                                source = Source(ID=source_id, genre="misc")
                                 session.add(source)
 
                             c_form.sources.append(source)
