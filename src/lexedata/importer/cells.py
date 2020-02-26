@@ -7,10 +7,10 @@ import argparse
 import pycldf
 import attr
 
-from .exceptions import *
-from .cellparser import CellParser
-from .database import create_db_session, DatabaseObjectWithUniqueStringID, sa
-from .objects import Language, Form, Concept, FormMeaningAssociation, Source
+from exceptions import *
+from cellparser import CellParser
+from database import create_db_session, DatabaseObjectWithUniqueStringID, sa
+from objects import Language, Form, Concept, FormMeaningAssociation, Source
 
 #lambda function for getting comment of excel cell if comment given
 replace_none_comment = lambda x: x.content if x  else ""
@@ -68,7 +68,7 @@ def main():
         "--debug-level", type=int, default=0,
         help="Debug level: Higher numbers are less forgiving")
     args = parser.parse_args()
-
+    args.path = r"C:\Users\walter.fuchs\Desktop\outofasia\stuff\Copy of TG_comparative_lexical_online_MASTER.xlsx"
     # The Input
     wb = op.load_workbook(filename=args.path)
     sheets = wb.sheetnames
@@ -165,7 +165,7 @@ def main():
                                 session.add(FormMeaningAssociation(
                                     form=form.ID,
                                     concept=concept_cell.ID,
-                                    comment=comment,
+                                    context=comment,
                                     procedural_comment=f_comment))
                             # Otherwise, the only change necessary will be the
                             # adding of a source, and that just happened.
@@ -181,6 +181,7 @@ def main():
 
     #################################################
     # create cldf
+    # For Gereon: error, because is wrong path to file
     session.commit()
     dataset = pycldf.Wordlist.from_metadata(
         "Wordlist-metadata.json",

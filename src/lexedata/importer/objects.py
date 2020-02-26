@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 
-from .database import create_db_session, Base, DatabaseObjectWithUniqueStringID, sa
+from database import create_db_session, Base, DatabaseObjectWithUniqueStringID, sa
 
 class Language(DatabaseObjectWithUniqueStringID):
     """Metadata for a language"""
@@ -42,8 +42,6 @@ class Form(DatabaseObjectWithUniqueStringID):
         back_populates="forms"
     )
 
-    __variants_corrector = re.compile(r"^([</\[])(.+[^>/\]])$")
-    __variants_splitter = re.compile(r"^(.+?)\s?~\s?([</\[].+)$")
 
     @staticmethod
     def variants_scanner(string):
@@ -88,6 +86,9 @@ class Form(DatabaseObjectWithUniqueStringID):
 
             values = values.split("~")
             first = values.pop(0)
+
+            #add rest to variants prefixed with ~
+            values = [("~"+e) for e in values]
             variants_list += values
             return first
         else:
@@ -99,26 +100,6 @@ class Form(DatabaseObjectWithUniqueStringID):
     def id_creator(klasse, lan_id, con_id):
         return klasse.string_to_id("{:s}_{:s}_".format(lan_id, con_id))
 
-    def get(self, property, default=None):
-        if property == "form_id" or property == "ID":
-            return self.ID
-        elif property == "language_id" or property == "Language_ID":
-            return self.language_id
-        elif property == "phonemic":
-            return self.phonemic
-        elif property == "phonetic":
-            return self.phonetic
-        elif property == "orthographic":
-            return self.orthographic
-        elif property == "source":
-            return self.source
-        elif property == "comment":
-            return self.comment
-        elif property == "form_comment":
-            return self.form_comment
-        elif property == "variants":
-            return self.variants
-        return default
 
 
 class Concept(DatabaseObjectWithUniqueStringID):
@@ -145,29 +126,16 @@ class Concept(DatabaseObjectWithUniqueStringID):
         back_populates="concepts"
     )
 
-    def get(self, property, default=None):
-        if property == "concept_id":
-            return self.ID
-        elif property == "set":
-            return self.set
-        elif property == "english":
-            return self.english
-        elif property == "english_strict":
-            return self.english_strict
-        elif property == "spanish":
-            return self.spanish
-        elif property == "portuguese":
-            return self.portuguese
-        elif property == "french":
-            return self.french
-        return default
 
 
 class FormMeaningAssociation(Base):
-    __tablename__ = 'FormTable_ParameterTable'
+    __tablename__ = 'FormTable_ParameterTable' # no such table....
     # Actually pycldf looks for 'forms.csv_concepts.csv', there could probably
     # be a translation in pycldf to tie it to the 'conformsTo' objects.
     # Previous line kept for posterity.
+
+    # gereon, why are ids here integers?
+    # why parameter names context and internal/procedural_comment?
     form = sa.Column('forms.csv_ID',
                      sa.Integer, sa.ForeignKey(Form.ID), primary_key=True)
     concept = sa.Column('concepts.csv_ID',
@@ -175,6 +143,7 @@ class FormMeaningAssociation(Base):
     context = sa.Column('context', sa.String)
     procedural_comment = sa.Column('Internal_Comment', sa.String)
 
+# why here no indent?
 form_sources = sa.Table(
     'FormTable_SourceTable', Base.metadata,
     sa.Column('FormTable_cldf_id', sa.String, sa.ForeignKey(Form.ID)),
