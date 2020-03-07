@@ -161,16 +161,20 @@ def main():
                                             c_form,
                                             ))
                                 # FIXME: Compare the *set* of variant forms
-                            if session.query(FormMeaningAssociation).filter(
+                            fma = session.query(FormMeaningAssociation).filter(
                                     FormMeaningAssociation.form==form.ID,
-                                    FormMeaningAssociation.concept==concept_cell.ID).one_or_none() is None:
+                                    FormMeaningAssociation.concept==concept_cell.ID).one_or_none()
+                            if fma is None:
                                 session.add(FormMeaningAssociation(
                                     form=form.ID,
                                     concept=concept_cell.ID,
                                     context=comment,
                                     procedural_comment=f_comment))
-                            # Otherwise, the only change necessary will be the
-                            # adding of a source, and that just happened.
+                            else:
+                                # Otherwise,  comments might differ
+                                fma.context += ";\t" + comment
+                                fma.procedural_comment += ";\t" + f_comment
+
                             session.commit()
 
                     except CellParsingError as err:
@@ -196,6 +200,7 @@ def main():
     # I have submitted https://github.com/cldf/pycldf/issues/105 concerning the
     # necessity to do this.
     db.tables[2].many_to_many["Concept_IDs"].name = "FormTable_ParameterTable"
+    import pdb; pdb.set_trace()
     db.to_cldf("from_db/")
 
 
