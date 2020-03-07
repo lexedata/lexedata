@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
 
-from .exceptions import *
-from .objects import Form
+from exceptions import *
+from objects import Form
 
 #lambda function for getting comment of excel cell if comment given
 replace_none_comment = lambda x: x.content if x  else ""
@@ -28,20 +28,21 @@ class CellParser():
     _wrongorder = [] #just for checking correct parsing
 
     #pattern for splitting form cell into various form elements
-    form_separator = re.compile(r"""
-    (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
+    form_separator = re.compile(r"""(?<=[}\)>/\]])                # The end of an element of transcription, not consumed
+    \s*                 # Any amount of spaces
+    [,;]                # Some separator
     \s*               # Any amount of spaces
-    [,;]              # Some separator
-    \s*               # Any amount of spaces
-    (?=[</\[])        # Followed by the beginnig of any transcription, but don't consume that bit""",
-        re.VERBOSE)
-    # pattern for parsing content of cell
+    (?=[</\[])        # Followed by the beginnig of any transcription, but don't consume that bit""", re.VERBOSE)
+
+    __line_separator = re.compile(r"^(.+[}\]>)/])[,;]\s?([<{/[].+)$")
+    # pattern for parsing content of supposedly well formatted cell
+    # /./ [.] <.> () {}
     __cell_value_pattern = re.compile(r"^(/.+?/)?\s?(\[.+?\])?\s?(<.+?>)?\s?(\(.+\))?\s?(\{.+\})?$")
-    __special_pattern = [re.compile(e) for e in [r"^.*(/.+/).*$",
-                                                r"^.*(\[.+?\]).*$",
-                                                r"^.*(<.+?>).*$",
-                                                r"^.*(\(.+\)).*$",
-                                                r"^.*(\{.+?\}).*$"]
+    __special_pattern = [re.compile(e) for e in [r"^.*(/.+/).*$", # phonemic
+                                                r"^.*(\[.+?\]).*$", # phonetic
+                                                r"^.*(<.+?>).*$", # orthographic
+                                                r"^.*(\(.+\)).*$", # comment
+                                                r"^.*(\{.+?\}).*$"] # source
                        ]
 
     def __init__(self, cell, lan_id, concept):
@@ -49,12 +50,12 @@ class CellParser():
 
         elements = CellParser.separate(values)
 
-        if len(elements) == 0: #check that not empty
+        if len(elements) == 0: # check that not empty
             raise CellParsingError(values)
 
         # clean elements list
         elements = [e.rstrip(" ").lstrip(" ") for e in elements]  # no tailing white spaces
-        elements[-1] = elements[-1].rstrip("\n").rstrip(",").rstrip(";") #remove possible line break and ending commas
+        elements[-1] = elements[-1].rstrip("\n").rstrip(",").rstrip(";") # remove possible line break and ending commas
 
         self._elements = iter(elements)
         self.lan_id = lan_id
@@ -73,7 +74,10 @@ class CellParser():
         =======
         list of form strings
         """
-        return re.split(cl.form_separator, values)
+        while cl.__line_separator.match(values):
+            values = cl.__line_separator.sub(r"\1&&\2", values)
+        return values.split("&&")
+
 
     @staticmethod
     def parsecell(ele, cellsize=5):
@@ -104,18 +108,18 @@ class CellParser():
     @staticmethod
     def wrong_order(formele, cellsize=5):
         """checks if values of cells not in expected order, extract each value"""
-        ele = (formele + ".")[:-1] #force python to hard copy string
+        ele = (formele + ".")[:-1] # force python to hard copy string
         empty_cell = [None] * cellsize
         for i, pat in enumerate(CellParser.__special_pattern):
             mymatch = pat.match(ele)
             if mymatch:
-                # delet match in cell
+                # delete match in cell
                 empty_cell[i] = mymatch.group(1)
                 ele = pat.sub("", ele)
 
-        #check that ele was parsed entirely
-        #add wrong ordered cell to error messag of CellParser
-        #raise error
+        # check that ele was parsed entirely
+        # add wrong ordered cell to error message of CellParser
+        # raise error
         ele = ele.strip(" ")
         if not ele == "":
 
