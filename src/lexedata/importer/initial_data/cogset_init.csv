@@ -1,0 +1,1267 @@
+ID,Set,Description
+ONE1,,"a ""pe"" set: this is explicitly not considering the mo- and -ete morphology. -VMW"
+ONE2,"COMPLEX, MED",a 'peten' set -- LDM
+ONE3,"COMPLEX, MED",a 'oyepe' set -- LDM
+ONE4,,
+ONE5,,
+ONE6,,
+ONE7,,
+ONE8,,
+TWO1,,
+TWO2,,
+TWO3,,
+TWO4,,
+TWO5,,
+TWO6,,
+TWO7,,
+TWO8,,
+TWO9,,
+TWO10,,
+TWO11,,
+THREE1,,
+THREE2,,
+THREE3,,
+THREE4,,
+THREE5,,
+THREE6,,
+THREE7,,
+THREE8,,
+THREE9,,
+FOUR1,,
+FOUR2,,
+FOUR3,,
+FOUR5,,
+FOUR6,,
+FOUR7,,
+FOUR8,,
+FIVE2,"COMPOUND, IND",a 'pandepo' set -- LDM
+FIVE3,,
+FIVE4,,
+FIVE5,,
+FIVE6,,
+FIVE7,,
+FIVE1,LOAN,post-POK Quechua loan -- LDM
+FIVE8,LOAN,post-POK Quechua loan -- LDM
+HEAD1,"COMPOUND, GEN","An ""ʔa+kaŋ"" round classifier (FRUIT)+BONE compound set.  Change of ã>ɨ observed in some languages in 'head' is always attested under 'bone', as are odd palatalization processes such as in Araweté.  All HEAD1 forms copied to BONE1 and FRUIT2-- ZJO"
+HEAD2,"COMPOUND, GEN","compound of FRUIT2 (round thing classifier and SCRAPE~SCRATCH1. - NCP 
+Most probably originally meant shave head and came to mean head in some languages and hair in Yuki. - NCP"
+HEAD3,,
+HEAD4,,
+HEAD5,,
+BONE1,,"In languages that show an ã>ɨ shift, the compounded form TIRED does not show this shift.  I take this as evidence that this sound change targeted the word for 'bone' after 'tired' was reinterpreted as not derivative from it, but, crucially, while 'head' was still interpreted as HAIR+BONE -- ZJO"
+BONE2X,,
+BONE3,,
+BRAIN2,"COMPOUND, GEN","An ""apɨɾ+uʔum"" crown of head + rotten/mushy compound set.   -- NCP"
+BRAIN1,"COMPOUND, IND","An ""akaŋ+apytuʔum"" compound set -- ZJO"
+HAIR1,,"An ap ~ aba set; with final consonant loss in some cases, e.g. due to consonant cluster resolution with the nominal past -- LDM"
+HAIR2,,
+HAIR3,,
+HAIR4,,
+FACE1,,"An ""oβá"" set -- ZJO"
+FACE2,"COMPOUND, GEN",eye + bone - NCP
+FACE3,,
+CHEEK1,"COMPOUND, GEN","A ""toβa+ɨke"" FACE+SIDE set -- ZJO
+"
+CHEEK2,"COMPLEX, MED","A toβa+pe ""FACE+LOC"" set -- ZJO"
+CHEEK3,,"An ""atɨpɨ"" set -- ZJO"
+CHEEK4,,
+CHEEK5,,
+CHEEK6,,
+CHEEK7,,
+CHEEK8,"COMPOUND, GEN",mouth + ? - SM
+MOUTH1,,
+MOUTH2,,
+MOUTH3,,
+MOUTH4,,
+MOUTH5,,
+MOUTH6X,,
+TOOTH1,,
+TOOTH2X,,These words mean mollar -- ZJO
+LIP1,,this is an embe set.  - NCP
+LIP2.5X,,"An *apuã set, Xd b/c not caught in time for deep drilling -- ZJO"
+LIP3,,
+LIP4,"COMPOUND, GEN",A MOUTH+EDGE compound set -- ZJO
+LIP5,"COMPOUND, GEN",A MOUTH+SKIN compound set -- ZJO
+LIP6,"COMPOUND, GEN",A MOUTH+? compound set -- ZJO
+LIP7X,"COMPOUND, GEN",A ?+SKIN compound set that originally meant 'foreskin'; Xd b/c not caught in time for deep drilling -- ZJO
+LIP8,,
+LIP9,,
+TONGUE1,,a ku set -- LDM
+TONGUE2,"COMPOUND, MED",an apeku set -- LDM
+TONGUE3,"COMPOUND, GEN",
+TONGUE4,,
+TONGUE5,,
+THROAT1,,
+THROAT2,"COMPOUND, GEN ","An ""ase+ʔok"" compound set, with occasional loss of intervocalic fricative -- ZJO"
+THROAT3,"COMPOUND, MED","An ""ase+ʔok+kwaɾ"" ?+HOUSE+HOLE compound set -- ZJO"
+THROAT4,,
+THROAT5,,
+THROAT6,,
+THROAT7,,
+THROAT8,,
+THROAT9,,
+THROAT11,,
+THROAT12,,
+THROAT13,,
+THROAT14,"COMPOUND, MED","An ""aj+kwaɾ"" ?+HOLE compound set -- ZJO"
+THROAT15,"COMPOUND, MED",NECK+HOLE -- ZJO
+THROAT16,,
+NECK1,,"An ""ajuɾ"" set -- ZJO"
+NECK2,,"An ""upɨ"" set -- ZJO"
+NECK3,"COMPOUND, MED","An ""ajuɾ+upɨ"" compound set -- ZJO"
+NECK4,"COMPOUND, MED","An ""ajuɾ+ɨβ"" compound set, neck and trunk-- ZJO"
+NECK5,,
+NECK6,,
+EYE1,,"An ""esá"" set -- ZJO"
+EYE3,"COMPOUND, GEN","A ""tsitsa+sai"" FACE+SEED compound set -- ZJO"
+EYE4,"COMPOUND, MED",tsitsa+kuara: face + hole - NCP
+EYEBROW1,,"A ""tɨβɨtaβ"" set -- ZJO"
+EYEBROW2,"COMPOUND, MED","A ""esa+apɨɾ"" EYE+EXTREMUM compound set -- ZJO"
+EYEBROW3,"COMPOUND, MED","An ""esa+apɨɾ+kaŋ"" EYE+EXTREMUM+BONE compound set -- ZJO"
+EYEBROW4,"COMPOUND, MED","An ""esa+apɨɾ+kaŋ+aβ"" EYE+EXTREMUM+BONE+HAIR compound set -- ZJO"
+EYEBROW6 ,"COMPOUND, GEN","A ""sisa+sawa"" EYE+HAIR compound -- ZJO"
+EYEBROW7 ,"COMPOUND, GEN",
+EYEBROW9 ,,"An ""ope"" set -- ZJO"
+EYEBROW10 ,"COMPOUND, MED","An ""ope+pi+kɨŋ"" ?+?+BONE compound set -- ZJO"
+EYEBROW11,"COMPOUND, MED","An ""ope+ap"" ?+HAIR compound set -- ZJO"
+EYEBROW12,"COMPOUND, GEN","An ""esa+?+kaŋ+aβ"" EYE+?+BONE+HAIR set -- ZJO"
+EYEBROW13,"COMPOUND, GEN",
+EYEBROW14,"COMPOUND, GEN","An ""esa+kaŋ"" EYE+BONE set -- ZJO"
+EYEBROW15,,
+EYEBROW16,"COMPOUND, GEN",
+EYEBROW17,"COMPOUND, GEN",
+EYEBROW18,"COMPOUND, GEN",
+NOSE1,,"A ""tĩ"" set -- ZJO"
+NOSE2,,"An ""apɨɲ"" set, possibly a compound set with ""apɨɾ+?"" EXTREMUM+?, as would then NOSE5 be -- ZJO"
+NOSE3,,"An ""ã"" set -- ZJO"
+NOSE4,,
+NOSE5,"COMPOUND, MED","An ""apɨɲ+kwar"" NOSE+HOLE compound set -- ZJO"
+NOSE6,"COMPOUND, IND","An ""ã+kwar"" ?+HOLE compound set -- ZJO"
+NOSE7,,
+NOSE8,LOAN? ,
+NOSE9,,
+EAR1,,
+EAR2,,
+EAR3,,"probably meant inner ear, the word meaning deaf is formed from this root. - NCP"
+BREAST1,,
+BREAST2,,"Probable borrowing from Cariban (/susu/, /huhu/ is a frequent Guianan Cariban word for 'breast' or 'milk'; Émérillon, and perhaps Wayãpi, are known to have borrowed Cariban words recently (cf. Françoise Rose on the plural marker /kom/). - SM
+
+At present, I can't tell. Wayãpi and Émérillon aren't that far apart, so even if it happened at the time of the common ancestor, this wouldn't be very long ago (a few hundred years). But it is not clear where this ancestor was spoken: if in the same general area, the borrowing could have happened then; but if it was much more to the south, then this ancestor would not have been in contact with local Cariban languages (yet) and the borrowing would have to have happened independently in Wayãpi and in Émérillon.
+
+So, in sum: I can't tell. My gut feeling is that the borrowing occurred at the time of the ancestor (why would both languages borrow a word for 'breast/milk'?), but it's only a gut feeling with nothing to support it. -SM"
+BREAST3,,
+CHEST1,,
+CHEST2,,
+CHEST3 ,LOAN,
+CHEST4,,
+CHEST5X,,
+CHEST6,LOAN,
+LUNG1,,
+LUNG2,,
+LUNG3,,
+LUNG5,,
+LUNG6,,
+LUNG7,,
+HEART1,,
+HEART2,,
+HEART3,,
+HEART4,,
+HEART5,,
+HEART6,,
+HEART7,LOAN,
+LIVER1,,
+SPLEEN1,,
+SPLEEN2X,,
+SPLEEN3,,
+SPLEEN4,,
+BELLY1,,
+BELLY2,,"An ""ewek"" set -- ZJO"
+BELLY3,,
+BELLY4,,"An ""akapé"" set that probably referred to the abdominal wall, cf. TPN -- ZJO"
+BELLY5,,
+BELLY6,,
+BELLY7,,
+BELLY9,,
+BELLY11,,
+BELLY12X,"COMPOUND, GEN",prob. feces-liver - SM
+BELLY13,,
+BELLY14,,
+BELLY15,LOAN,
+BELLY16,,
+STOMACH1,,
+STOMACH2,,
+STOMACH3,,
+STOMACH5,,
+STOMACH6,,
+STOMACH7,,
+STOMACH8,,"A ""tɨʔá"" set -- ZJO"
+STOMACH9,,
+INTESTINES1,,"An ""ɨʔé~ɨwé~ɨyé"" set -- ZJO"
+INTESTINES2,,
+INTESTINES3,,
+INTESTINES4,,"An ""ɨke"" set -- ZJO"
+INTESTINES5,,
+INTESTINES6,,
+INTESTINES8,,
+KIDNEY1,,"A ""kɨtiʔi"" -- ZJO"
+KIDNEY2,"COMPOUND, GEN",compound of pɨrɨ + kɨtɨʔi. NCP
+KIDNEY3X,,
+RIB1,"COMPOUND, GEN","An ""aru+kaŋ"" compound set -- ZJO"
+RIB2,,
+RIB3,,
+RIB4,,
+RIB5,,
+BACK1,,
+BACK2,,"A ""kupé"" set -- ZJO
+this probably meant back in the general sense like any flat ""dorsal"" surface, back of spoon, back of foot (top of foot) etc. - NCP"
+BACK3,"COMPOUND, MED","An ""atu+kupe"" NAPE+BACK compound set -- ZJO"
+BACK5,,
+BACK6,,
+BACK7,,
+BACK8,,
+BACK9,,
+BACK10,,
+BACK11X,,
+NAPE1,,"An ""atu"" set -- ZJO"
+NAPE2,,
+NAPE3,,
+NAPE4,,
+NAPE5,,
+BELLY BUTTON1,,a puruʔã set -- LDM
+BELLY BUTTON2,,
+TESTICLES1,"COMPOUND, GEN","Compound of ""api+ʔa"", former unknown, latter small-fruit-like classifier; not copied b/c everything already attested there -- ZJO"
+TESTICLES2,,
+TESTICLES3,"COMPOUND, IND",testicles1 + seed1
+PENIS1,"COMPOUND, GEN","An ""ẽ+po"" ?+ROPE compound, where latter was originally some classifier-like element (appears in several other compounds); copied to ROPE1 -- ZJO"
+PENIS2,"COMPOUND, GEN","this is a GROIN + TOOTH compound; we have considered a number of other alternatives, including SHARP (i.e. prominence) + TOOTH. The GROIN + TOOTH compound is a little semantically expected, but the sound correspondences work out perfectly. The compound presumably is based on some notion of sex as eating, cutting, or piercing. See also discussion under PENIS 2.5. 
+
+The compounds exhibit different phonological reductions of the two components: gliding of /o/ in /ako/ 'groin' or reduction of /ãj/ 'tooth'
+
+-- LDM"
+PENIS2.5,"COMPOUND, GEN",A GROIN+SEED set -- ZJO
+PENIS2.75,,
+PENIS3,LOAN,
+PENIS4,LOAN,
+PENIS5,,
+PENIS6,"COMPOUND, GEN","Compound with ""juru"" MOUTH, and instrumental nominalizer? -- ZJO"
+PENIS7,,
+PENIS8,,
+PENIS9,,
+VAGINA1,,
+VAGINA2,,"An ""am(b)a"" set -- ZJO"
+VAGINA3,"COMPOUND, MED","A ""ama+tiá"" compound set -- ZJO"
+VAGINA4,,
+VAGINA5,LOAN,A 'piʃa' set -- ZJO
+VAGINA6,LOAN,
+VAGINA7,,
+VAGINA8,,
+VAGINA9,,
+VAGINA10,,
+VAGINA11,,
+VAGINA12,,
+VAGINA13,,
+VAGINA14,,
+GROIN1,,An *ako set -- ZJO
+GROIN2,"COMPOUND, GEN","An ""ambe+ɨpɨ"" BELLY+BEGINNING compound set -- ZJO"
+GROIN3,,
+GROIN4,,
+GROIN5,,
+GROIN7,,
+GROIN8X,,"A GROIN+HAIR set, lax -- ZJO"
+BUTTOCKS1,,"An ""eβiɾ"" set -- ZJO"
+BUTTOCKS2,,"An ""umbɨ"" set -- ZJO"
+BUTTOCKS3,,
+BUTTOCKS4,,
+BUTTOCKS5,,
+BUTTOCKS6,,"A ""puni"" set -- ZJO"
+BUTTOCKS7,,"A ""kuʔa"" set -- ZJO"
+BUTTOCKS8,,
+BUTTOCKS9,,
+BUTTOCKS10,,
+BUTTOCKS11,,
+BUTTOCKS12,,
+ANUS1,"COMPOUND, MED",A BUTT+HOLE compound set -- ZJO
+ANUS2,"COMPOUND, IND","A ""kwar+ɨpɨ"" set - NCP"
+ANUS3,,
+ANUS4,"COMPOUND, GEN","A ""tʃika+kwar"" ?+HOLE compound set -- ZJO"
+ANUS5,"COMPOUND, GEN","A ""?+kwar"" ?+HOLE compound set -- ZJO"
+ANUS6,,
+SHOULDER1,,"An ""atɨʔɨβ"" set, likely a compound, but components undetermined so agnostic -- ZJO"
+SHOULDER2,"COMPLEX, MED","A ""yɨβá+pe"" ARM+LOC complex set -- ZJO"
+SHOULDER3,"COMPOUND, IND","A ""yɨβá+pe+kaŋ"" ARM+LOC+BONE compound set -- ZJO"
+SHOULDER4,"COMPOUND, MED","A ""yɨβá+ɨpɨ"" ARM+BEGINNING compound set, where latter is often used to refer to 'bases', e.g. -- ZJO"
+SHOULDER5,"COMPOUND, MED","A ""yɨβá+ɨpɨ+kaŋ"" ARM+BEGINNING+BONE compound set.  Only COD shows last form as simplex -- ZJO"
+SHOULDER6,,
+ARM1,,"A ""jɨβá"" set -- ZJO"
+ARM2,,
+ARM3X,,
+BEARD1,"COMPOUND, GEN",A LIP+HAIR compound set -- ZJO
+BEARD2,,"An ""amotaβ"" set -- ZJO
+(Probably ""amo(t)"" '?' + *Tap 'hair' --SM); probably the same ""amo(t)"" as in 'foreskin' -- ZJO
+"
+BEARD4X,"COMPOUND, MED","An ""apuã+aβ"" UPPER.LIP+HAIR -- ZJO"
+BEARD5,"COMPOUND, GEN",A CHIN+HAIR compound set -- ZJO
+BEARD6,"COMPOUND, GEN",A MOUTH+HAIR compound set -- ZJO
+BEARD7,,
+BEARD8,"COMPOUND, GEN",A MOUTH+CHIN set -- ZJO
+BEARD9,"COMPOUND, GEN",A MOUTH+SKIN+HAIR compound set -- ZJO
+BEARD10,"COMPOUND, GEN",A NOSE+HAIR compound set -- ZJO
+JAW1,"COMPOUND, MED","A ""ayɨβ+kaŋ"" ?+BONE compound set -- ZJO"
+JAW2,,"An ""ayɨβ"" set, possibly a TOOTH+TRUNK compound but nasality over initial /a/ is not there as it should be if that were true  -- ZJO"
+JAW3,,
+JAW5,,
+JAW6,"COMPLEX, GEN",tooth + ? - SM
+CHIN1,,"An ""endɨβá"" set, see ELBOW -- ZJO"
+CHIN3X,,
+CHIN4,,
+ELBOW1,"COMPOUND, GEN",An ARM+KNEE(JOINT) compound set -- ZJO
+ELBOW2,"COMPOUND, GEN","An ARM+BASE compound set; latter form not in cognate sets, but cf. POK *tsapɨta 'base' -- ZJO"
+ELBOW3,"COMPOUND, GEN","A ""yɨβ+βaŋ"" ARM+BENT(?) set -- ZJO"
+ELBOW4,"COMPOUND, MED","An ""endɨ+βaŋ"" ?+BENT(?) compound set; first element possibly related to CHIN but not copied there b/c uncertain -- ZJO"
+ELBOW5,,
+ELBOW6,"COMPOUND, GEN",An ARM+? compound set -- ZJO
+ELBOW7,"COMPOUND, MED",An ARM+? compound set -- ZJO
+ELBOW8,,"A ""mutʃuɾi"" set, which means 'joint' in Kokama, but not in Omagua -- ZJO"
+ELBOW9,,
+ELBOW10,"COMPOUND, GEN",An ARM+? compound set -- ZJO
+ELBOW11,"COMPOUND, GEN",An ARM+? compound set -- ZJO
+ELBOW12,,
+ELBOW13,"COMPLEX, GEN",par + shoulder - NCP
+ELBOW14,,
+ELBOW15,"COMPOUND, GEN","A ""po + (pɨ+ʔakaŋ)"" hand/arm + knee (which is also a compound)-- NCP
+"
+ELBOW17X,,
+KNEE1X,,
+KNEE2,,
+KNEE3,,"A ""pɨʔã"" set.  Is this the same ""ã"" as in FINGER that was compounded with ""po"" 'hand'? -- ZJO"
+KNEE4,"COMPOUND, MED","An ""endɨpɨʔã"" set -- ZJO"
+KNEE7,,
+KNEE8,,
+KNEE9,,
+KNEE10,"COMPOUND, GEN",pɨ + ʔakaŋ + ʔa compound set. foot/leg + head + round object. - NCP
+KNEE5,,"A ""penaraŋ"" set that meant 'kneecap' -- ZJO"
+KNEE11X,,"An ""andawɨr"" set that meant 'knee pit' -- ZJO"
+HAND1,,
+HAND2,LOAN,
+FINGER1,,"A ""pwã/kwã"" set -- ZJO"
+FINGER2,,
+FINGER3,"COMPOUND, MED",A FINGER+BONE compound set -- ZJO
+FINGER4,"COMPOUND, IND","A ""po+akam"" HAND+BRANCH set -- ZJO"
+FINGER5,"COMPOUND, IND","A more compositional compound than FINGER4, in which second component has possessive marking -- ZJO"
+FINGER6,,
+FINGER7,,
+FINGER8X,,
+FINGER9X,,
+FINGER10X,,
+FINGER11,LOAN? ,
+FINGERNAIL1,,"A ɡeneral ""apẽ"" set, different from BACK b/c of nasal vowel -- ZJO"
+FINGERNAIL2,"COMPOUND, GEN","A ""[po+ã]+apẽ"" FINGER+? compound set.  Forms not copied to FINGER b/c these forms, if I am correct in assuming FINGER component, did not undergo *pw>kw sound change alluded to in FINGER1.  (If it's based on HAND then these forms will need to be copied there.) -- ZJO
+
+Could it be that they didn't undergo the pw> kw change because they were compound?
+ - NCP"
+FINGERNAIL4,,
+FINGERNAIL5,,
+FINGERNAIL6,,
+FOOT1,,"A ""pɨ"" set -- ZJO"
+HEEL1,"COMPOUND, GEN","A ""pɨ+tá"" FOOT+? compound set -- ZJO
+The Aweti cognate suggests that there are two forms here, /pɨa/ and /pɨta/ -- maybe split into two sets? (Could also be /pɨ/ + /apɨta/.) --SM"
+HEEL2,,a pɨa set - NCP
+TOE1,"COMPOUND, GEN","A ""pɨ+sã"" FOOT+? compound set -- ZJO"
+TOE2,"COMPOUND, IND","A ""pɨ+akã"" FOOT+BRANCH set -- ZJO"
+TOE3,,"A ""pɨsi"" set -- ZJO"
+TOE4,"COMPOUND, GEN",A FOOT+BACK compound -- ZJO
+TOE5,"COMPOUND, GEN",foot + branch - NCP
+TOE6,"COMPOUND, GEN",foot + son - NCP
+TOE7,"COMPOUND, GEN",FOOT + FINGERNAIL. - NCP
+TOE8,"COMPOUND, GEN",foot and bone - NCP
+TOE9,"COMPOUND, GEN",A FOOT+? compound set -- ZJO
+TOE10,"COMPOUND, GEN",A FOOT+FINGER compound set -- ZJO
+TOENAIL1,"COMPOUND, GEN","A ""pɨsã+apẽ"" TOE+? compound set; copied to general ""apẽ"" set under FINGERNAIL, but I think these are unrelated to ""apé"" BACK b/c of nasal vowel here -- ZJO
+I think the apẽ part means simply nail. Have we ever tried to see if we can get it in isolation? - NCP"
+TOENAIL2,"COMPOUND, GEN","A ""pɨsã+?"" TOE+? compound set -- ZJO"
+TOENAIL3,,
+TOENAIL4,,
+ANKLE1,"COMPOUND, GEN",
+ANKLE2,"COMPOUND, GEN","A ""pɨ+ɲuʔã"" FOOT+? compound set -- ZJO"
+ANKLE3,,
+ANKLE4,"COMPOUND, GEN",foot + elbow compound set (not that pɨta meaning foot in Kokama is cognate with heel1) - NCP
+ANKLE5,"COMPOUND, GEN",A FOOT+? compound set -- ZJO
+ANKLE6,"COMPOUND, GEN",A FOOT+? compound set -- ZJO
+ANKLE7,,
+ANKLE8,,
+ANKLE9,,
+LEG1,,"An ""etɨmã"" set -- ZJO"
+LEG2,"COMPLEX, GEN",involves stick akã - NCP
+LEG3,,
+LEG4X,,
+LEG5X,,
+THIGH1,,"An ""uβ"" set that probably meant 'leg above knee' -- ZJO"
+THIGH2,,"A ""kupɨ"" set that probably meant 'inner thigh' -- ZJO"
+THIGH3,,
+THIGH4,,
+THIGH5,,
+BLOOD1,,"An ""uwɨ"" set -- ZJO"
+BLOOD2,,
+BLOOD4,,
+BLOOD5,LOAN,
+BLOOD7,LOAN,
+VEIN1,,"An ""ajɨk"" set -- ZJO"
+VEIN2,"COMPOUND, IND",Compound BLOOD+PATH -- ZJO
+VEIN3,"COMPOUND, IND",Compound BLOOD+CONTAINER (under CLOTH) -- ZJO
+VEIN5,"COMPOUND, GEN",
+VEIN7,,
+SKIN1,,"A ""piɾ"" set, with much (typical) loss of final /r/ -- ZJO"
+SKIN2,,
+SKIN3,,
+SKIN4,,
+CORN1,,
+CORN2,"COMPOUND, MED","An ""awati+ki"" set -- ZJO"
+CORN3,,
+CORN5X,,
+MANIOC1,,"A ""mandi"" set; Sirionoide languages show reduced form, but crucially initial sequences like <di> show trace of *mandi root -- ZJO"
+MANIOC2,"COMPOUND, GEN","Compound of ""mandi+ok"", with latter set moved to HOUSE1, which likely had some classifier-like function -- ZJO"
+MANIOC3,"COMPOUND, IND",
+MANIOC6,,
+MANIOC7,,
+MANIOC8,,
+MANIOC9,,
+PLANTAIN1,,"A ""pakoβ"" set -- ZJO"
+PLANTAIN2,,
+PLANTAIN3,,
+PLANTAIN4,,
+PLANTAIN5,,
+PLANTAIN6,,
+BANANA1X,,
+BANANA2,LOAN,
+BANANA4,,
+BANANA5,,
+BANANA6X,,
+BANANA7X,,
+BANANA8X,,
+BANANA9X,,
+BANANA10,LOAN,
+BANANA11,LOAN,
+BANANA12X,,
+BANANA13,"COMPOUND, GEN",thing + bent - NCP
+BANANA14X,,
+PINEAPPLE1,,
+PINEAPPLE3,,
+PINEAPPLE4,,"/nana/ is also a frequentlly occurring local Cariban (and, I once heard, also Arawakan?) word for pineapple -- borrowing? - SM"
+PINEAPPLE5,,
+PINEAPPLE6,,
+PINEAPPLE7X,,
+TOBACCO1,,
+TOBACCO2,,
+TOBACCO3,,
+TOBACCO4,,
+TOBACCO5,,
+TOBACCO6,,
+TOBACCO7X,,
+TOBACCO8X,,
+TOBACCO9X,,
+TOBACCO10X,"COMPOUND, IND",mouth + fire - NCP
+TOBACCO11X,,
+PEPPER1,,
+PEPPER2,,
+PEPPER4,,
+PEPPER5X,,
+PEPPER6X,,
+PEPPER7,,
+PEPPER8,,
+FRUIT1,"COMPOUND, GEN","An ""ɨβ+á"" TRUNK(?)+FRUIT compound set; forms must show medial bilabial for membership.  The ""ɨβ"" set is TRUNK1.  ""ɨβ"" seems to have meant 'tree' historically (cf. Mawe) and these show that old meaning, i.e., 'tree fruit' -- ZJO"
+FRUIT2,,"An ""á"" 'small.fruit/seed' set that enters into compounds in FRUIT1 & SEED1 -- ZJO"
+FRUIT3,,
+FRUIT4,,
+FRUIT5,,
+GOURD2,"COMPOUND, GEN","An ""ʔɨ+ʔa"" WATER(?)+FRUIT compound set; member forms show medial glottal stop or presumably have one that is not indicated -- ZJO
+
+UNDO compound here per LDM and ZJO's discussion
+
+
+compare with cup6, could some of the forms there belong here? -NCP"
+GOURD22,,
+GOURD1,,"An ""an(d)ai"" set -- ZJO"
+GOURD23,,
+GOURD5,,
+GOURD7,,
+GOURD8,,
+GOURD9,,
+GOURD3,,"A ""kuj"" set -- ZJO
+
+According to the Warazu source, this is Crescentia cujete, unrelated to the Cucurbitaceae calabash, but with the same common name. - NCP"
+GOURD13,,
+GOURD14,,
+GOURD15,,
+GOURD16,,
+GOURD17,,
+GOURD18,,
+GOURD20,,
+GOURD21,,
+GOURD24,,
+GOURD35,,
+GOURD26X,,
+GOURD27X,,
+GOURD28X,,
+FOOD1,,
+FOOD2,,"an ""upɨ(ha)ra"" set -- VMW"
+FOOD3,"COMPLEX, MED","A ""u+pɨr"" EAT+NOMZ complex set -- ZJO"
+FOOD4,,
+FOOD5,,
+FOOD6 ,,
+FOOD7,,
+FOOD8X,,
+FOOD9X,,
+FOOD10X,,
+FOOD11,,
+LARD1,,
+LARD2,,
+LARD3X,,
+LARD4,,
+LARD5,,
+LARD6X,,
+LARD7X,,
+LARD8X,,
+LARD9,,
+MASATO1,,"A ""kawĩ"" set that probably meant 'fermented beverage' -- ZJO"
+MASATO2,,
+MASATO3,,
+MASATO4,,/kasiri/ is found in several Guianan Cariban languages -- maybe a borrowinging.- SM
+MASATO5,,
+MASATO6,LOAN,
+CORN DRINK1,,
+CORN DRINK2,,
+CORN DRINK3,LOAN,
+CORN DRINK4,,
+CORN DRINK5X,,
+HONEY1,,"An ""eʔiɾ"" set -- ZJO"
+HONEY2,,
+HONEY3,,"An ""ɨʔapiɾ"" set -- ZJO"
+HONEY4,,
+HONEY5,,
+HONEY6,,
+HONEY7,,"Maybe a X + /hy/ 'liquid' set? --SM
+"
+HONEY8,,
+HONEY9,,
+HONEY9.5,,
+HONE9.75X,,
+HONEY10X,,
+HONEY11X,,
+HONEY12X,,"An ""ɨʃa"" set -- ZJO"
+HONEY13X,,
+HONEY14X,,
+HONEY15X,,
+HONEY16X,,
+HONEY17X,,
+HONEY18X,,
+HONEY19X,,"A ""nebe"" set -- ZJO"
+HONEY20X,,
+HONEY21X,,
+HONEY22,LOAN,
+HONEY23X,,
+HONEY24,,
+HONEY25X,,
+HONEY26X,,
+HONEY27,,
+HONEY28X,,
+SALT1,,
+SALT2,,
+SALT3,,
+SALT4,"COMPOUND, GEN","compound of (ita + kɨ) + iro
+stone + grind+ bitter - NCP"
+SALT5,LOAN,
+SALT6,LOAN,
+SALT7,LOAN,
+SALT8X,LOAN,
+SALT9,,
+MEAT1,,"An *(r)a'o set, with assimilation of the vowels over the glottal stop -- ZJO"
+MEAT1.5,,Reflexes of purported *so'o -- ZJO
+MEAT2,"COMPOUND, GEN","An old nominalization with 'emi-' of *aɾ, which has cognates under COLLECT/GATHER -- ZJO"
+MEAT3X,,
+MEAT4,,
+MEAT6,,
+MEAT8,,
+SALIVA1,,"An ""endɨ"" set -- ZJO"
+SALIVA2,,
+SALIVA3,"COMPOUND, GEN",mouth + ? - NCP
+SALIVA5,"COMPOUND, MED",
+SALIVA6X,,
+SALIVA7X,,
+SALIVA8,,
+AGUAJE1,,
+AGUAJE2X,,
+AGUAJE3,,
+FLOUR1,,"An ""uʔí"" set -- ZJO"
+FLOUR2,"COMPOUND, IND","An ""uʔí+tĩ"" FLOUR+WHITE compound set -- ZJO
+"
+FLOUR4,,
+FLOUR7,,
+FLOUR8,,
+FLOUR9,,
+FLOUR10,,
+FLOUR11,LOAN,
+FLOUR12X,,
+FLOUR13X,,
+FLOUR14X,LOAN,
+FLOUR15X,,
+FLOUR16X,,
+FLOUR17X,,
+FLOUR18X,,
+SWEET POTATO1,,"A ""jetɨk"" set -- ZJO"
+SWEET POTATO2,,
+SWEET POTATO4,,
+ACHIOTE1,,
+ACHIOTE2,,
+ACHIOTE3,,
+ACHIOTE4,,
+ACHIOTE5,,
+MANIOC TYPE1X,,
+MANIOC TYPE2X,,
+PEANUT1,,
+PEANUT2,,
+PEANUT3,,
+PEANUT4,,
+PEANUT5X,,
+PEANUT6,,
+PEANUT7,,
+PASSION FRUIT1,,
+PASSION FRUIT2,,
+PASSION FRUIT3,,
+PASSION FRUIT4,"COMPOUND, GEN",humming bird + alcoholic drink - ZJO
+PASSION FRUIT5X,,
+PASSION FRUIT6,,
+PASSION FRUIT7X,,
+PASSION FRUIT8X,,
+PASSION FRUIT9,,
+SUGAR CANE1,"COMPOUND, MED","A ""takwaɾ+eʔẽ"" BAMBOO+SWEET set -- ZJO"
+SUGAR CANE4,"COMPLEX, GEN","An ""uwa+kɨɾa"" ARROW+DIM complex set.  This probably dates from a period in which the word for arrow actually meant 'cane', which is a shared retention only visible in these two languages in TPN (see ARROW) -- ZJO"
+SUGAR CANE5,LOAN,
+SUGAR CANE6,LOAN,
+SUGAR CANE7,LOAN,
+SUGAR CANE7.5,LOAN,
+SUGAR CANE8,,
+SUGAR CANE9,,
+SUGAR CANE10,,
+SUGAR CANE11,,
+SUGAR CANE12,,
+SUGAR CANE13X,,
+SUGAR CANE14X,,
+SNAKE1,,
+SNAKE2X,,
+SNAKE4X,,probably Bothrops spp. - SM
+SNAKE5X,,"probably Lachesis muta, Crotalidae - SM
+in Mawe it means anaconda - NCP"
+SNAKE6X,,
+SNAKE8,,
+SNAKE9,,
+SNAKE10,,
+SNAKE13X,,
+SNAKE14X,,
+SNAKE15X,,
+SNAKE16X,,Boa constrictor in Wayampi - NCP
+AGOUTI1,,
+AGOUTI2,"COMPLEX, IND",
+AGOUTI3,,
+AGOUTI4,,
+MONKEY1,,"A ""kaʔí"" set; in OMG this refers to the capuchin genus Cebus -- ZJO"
+MONKEY1.5X,,
+MONKEY2,,
+MONKEY3,,
+MONKEY4X,,
+MONKEY5,,
+MONKEY6X,,
+MONKEY8X,,Probably genus Aotus -- ZJO
+MONKEY9X,,
+MONKEY23X,,
+MONKEY24X,,
+MONKEY12X,,"Possible borrowing from Cariban -- in a few languages (Katxuyana, Hixkaryana, Tiriyó) there is a term /witxa/, /wixa/, /iiso(-imë)/ for a species of monkey.- SM"
+MONKEY12.5X,,
+MONKEY10X,,Possible borrowing from Cariban -- /arawata/ is a frequent word for a species of monkey in Guianan Cariban languages.- SM
+MONKEY11X,,
+MONKEY13X,,
+MONKEY14X,,
+MONKEY15X,,"Wayampi Chiropotes chiropotes - NCP
+saki monkey - SM"
+MONKEY17X,,Wayampi Pithecia pithecia - NCP
+MONKEY19X,,
+MONKEY20X,,
+MONKEY21X,,
+MONKEY22X,,
+HOWLER MONKEY1,,"A ""kaɾajá"" set -- ZJO"
+HOWLER MONKEY3,,"A ""waɾiβ"" set, probably Alouatta  -- ZJO"
+HOWLER MONKEY2,,
+HOWLER MONKEY4,,"An ""akɨkɨ"" set, probably Alouatta seniculus -- ZJO"
+HOWLER MONKEY5,,
+HOWLER MONKEY6,,
+HOWLER MONKEY7,,
+HOWLER MONKEY8X,,
+SPIDER MONKEY1,,
+SPIDER MONKEY1.5,,
+SPIDER MONKEY2,,
+SPIDER MONKEY3,"COMPOUND, GEN","A ""kaʔí+?"" MONKEY+? compound set -- ZJO"
+SPIDER MONKEY 4,,
+SPIDER MONKEY6,,
+SPIDER MONKEY7,,
+SPIDER MONKEY8,,
+SPIDER MONKEY9,,
+SLOTH1,,"An ""aʔɨ"" set -- ZJO"
+SLOTH2,,
+SLOTH3,,
+SLOTH4,"COMPOUND, GEN",compound monkey + lazy
+TAPIR1,,
+TAPIR2,,
+TAPIR3,,
+TAPIR4,,
+TAPIR5,,
+TAPIR6,,
+TAPIR7,,
+TAPIR8,,
+TAPIR9,,
+JAGUAR1,,
+JAGUAR2,,
+JAGUAR5.5,,
+JAGUAR3X,,
+JAGUAR4X,,
+JAGUAR5X,,
+JAGUAR6X,,
+JAGUAR7X,,
+JAGUAR8,,
+MAJAS1,,
+MAJAS2,,
+MAJAS3,,
+MAJAS4,,
+MAJAS5,,
+MAJAS6,,
+MAJAS7,"COMPLEX, MED","A ""karu+ar+usu+ EAT+AGT+AUG complex set -- ZJO"
+BIRD1,,
+BIRD1.5,,
+BIRD2,,
+BIRD3,,
+BIRD4X,,
+BIRD5X,,
+BIRD6X,,
+BIRD7X,,
+BIRD8X,,
+BIRD9X,,
+BIRD10X,,
+BIRD11X,,
+BIRD12X,,
+BIRD13X,,
+BIRD14X,,
+BIRD15X,,
+BIRD16X,,
+BIRD17X,,
+BIRD18X,,
+BIRD19X,,
+BIRD21X,,
+BIRD22X,,
+BIRD23X,,
+BIRD24X,,
+BIRD25X,,
+BIRD26X,,
+BIRD27X,,
+BIRD28X,,
+ANT1,,
+ANT1.25,,
+ANT2,,
+ANT3,,
+ANT3.25X,,
+ANT3.5X,,
+ANT4,,
+ANT5,,
+ANT6X,,
+ANT7X,,
+ANT8X,,
+ANT9,,
+ANT11X,,
+ANT12X,,
+ANT13X,,
+ANT14X,,
+ANT15X,,
+ANT16X,,
+ANT17X,,
+ANT18X,,
+ANT19X,,
+ANT20X,,
+ANT21X,,
+ANT23X,,
+ANT24X,,
+CAIMAN1,,
+CAIMAN2,,
+CAIMAN3,,
+CAIMAN4,,
+CAIMAN5,,
+CAIMAN6,,
+CAIMAN7,,
+CAIMAN8,,
+CAIMAN9,,
+LIZARD1,,"A ""teyu"" set -- ZJO"
+LIZARD2,,
+LIZARD3,,
+LIZARD4,,
+LIZARD5X,,"A ""tarapo"" set -- ZJO"
+LIZARD6X,,
+LIZARD7,,this is a tara set - NCP
+LIZARD8X,,
+LIZARD10X,,
+LIZARD11X,,
+LIZARD12,,
+LIZARD13X,,
+LIZARD14,,
+LIZARD15,,
+LIZARD17X,,"a yawa set, members of the family Geckonidae in Wayampi - NCP"
+LIZARD18X,,a yamaka set. Iguana in Wayampi - NCP
+LIZARD20,,"A ""taɾawɨɾ"" set -- ZJO
+Wayampi genus Anolis, Iguanidae - NCP"
+LIZARD21,,"An ""ambeɾe"" set -- ZJO"
+LIZARD22,,
+LIZARD23,,
+LIZARD24,,
+LIZARD25,,
+LIZARD26,,
+LIZARD27X,,
+LIZARD29X,,
+LIZARD30X,,
+CHAMELEON1,,
+CHAMELEON2,,
+CHAMELEON3,,
+CHAMELEON5,,
+ARMADILLO1,,
+ARMADILLO2X,COMPLEX,
+ARMADILLO3X,COMPLEX,
+ARMADILLO4X,COMPLEX,
+ARMADILLO5X,COMPLEX,
+ARMADILLO6X,COMPLEX,
+TURTLE1,,
+TURTLE3,,
+TURTLE4,,
+TURTLE5,,
+TURTLE6X,,
+TURTLE7X,,
+TURTLE8,,
+TURTLE9,,
+TURTLE10X,,
+TURTLE11,,
+TURTLE12,,
+TURTLE14,,
+TURTLE16,,
+TURTLE17,,
+TURTLE18,,
+TURTLE 19,,
+TURTLE20X,,
+TURTLE21X,,
+TURTLE22,,
+TURTLE23,,
+TURTLE24X,,
+TURTLE25,,
+TURTLE26,,tarikaya - ZJO
+VULTURE1,,
+VULTURE3X,,
+VULTURE4,,
+VULTURE6,,
+VULTURE7,,
+VULTURE8,,
+VULTURE9,,
+VULTURE10,,
+VULTURE11,,
+TERMITE1,,
+TERMITE2,,
+TERMITE3,,
+TERMITE4X,"COMPOUND, IND",A TREE+DUST compound set -- ZJO
+TERMITE5X,,
+FROG1,,"A ""juʔí"" set -- ZJO"
+FROG2,,"A ""kururu"" set -- ZJO"
+FROG3,,
+FROG4,,"An ""aru"" set -- ZJO"
+FROG5,,
+FROG6,,
+FROG7,,
+FROG8X,,
+FROG9X,,
+FROG10X,,
+FROG11X,,
+FROG12X,,
+FROG13X,,
+FROG14X,,
+FROG15X,,
+FROG16X,,
+FROG17X,,
+FROG18X,,
+FROG19X,,
+FROG20X,,
+FROG23X,,
+FROG26X,,
+FROG27X,,
+FROG28X,,
+FROG29X,,
+FROG30X,,
+FROG31X,,
+FROG32X,,
+FROG33X,,
+FROG34X,,
+FROG35X,,
+FROG36X,,
+FROG37X,,
+DEER1,,"An ""ɨsɨ ~ ɨtɨ"" set -- ZJO"
+DEER2,,"this is a wasu set that means deer. At some point the wasu meaning big,  became the word for deer (""the big one""). This is different than the addition of the augmentative suffix. - NCP"
+DEER3,"COMPOUND, MED","an ""ɨsɨ+wasu"" set -- VMW
+deer + big, large
+"
+DEER3.25,,this is a tu set - NCP
+DEER3.5,,
+DEER4,,"A ""kika/jika"" set -- ZJO"
+DEER4.5,"COMPLEX, IND",DEER4 + augmentative -- ZJO
+DEER4.75,,
+DEER5,,
+DEER6,,
+DEER7,,
+DEER8,,"An ""aɾapuha"" set -- ZJO"
+DEER9,,
+DEER10,,
+DEER11,,
+DEER12X,,
+DEER13X,,
+DEER14X,,
+DEER15X,,
+DEER16X,,
+SPIDER1,,
+SPIDER2,,
+SPIDER3,,
+SPIDER4,,
+SPIDER5X,,
+WASP1,,
+WASP2X,,
+WASP3,,
+WASP4,,
+BEE1,"COMPOUND, GEN","An old compound ""eʔiɾ+uβ"" set ('honey father') -- ZJO"
+BEE1.5,,
+BEE2,,"A ""kawi"" set unrelated to ""kawĩ"" in CORN DRINK -- ZJO"
+BEE3,,
+BEE4,,
+BEE5 ,,
+BEE6 ,"COMPOUND, GEN",compound wasp + honey - NCP
+BEE7X,,
+BEE8X,,
+BEE9X,,
+BEE10X,,
+BEE11X,,"A ""manɡanɡa"" set -- ZJO"
+BEE12X,,
+BEE13X,,
+BEE14X,,"An ""uβe/uβi"" set -- ZJO"
+BEE15X,,"An ""ɨβa"" set -- ZJO"
+BEE16X,,
+BEE27X,,
+BEE28X,,
+BEE29X,,
+BEE37X,,
+BEE38,,
+BEE39X,,
+BEE40X,,
+BEE41,,
+LOUSE1,,
+LOUSE2,,
+LOUSE3,,
+LOUSE4,,
+LOUSE5,,
+LOUSE6X,,
+MOSQUITO1,,"A ""ɲatiʔũ"" set -- ZJO"
+MOSQUITO2,,
+MOSQUITO3,,
+GNAT1,,"A ""ɲetiŋ"" set -- ZJO"
+GNAT2,,
+GNAT3,,
+GNAT4,,
+FLY1,,"An ""mbeɾu"" set -- ZJO"
+FLY2,,
+FLY3,,
+FLY4X,,
+SANDFLY1,,"A ""maɾiwí"" set -- ZJO"
+SANDFLY3,,
+SANDFLY4,,
+SANDFLY5,,"a ""pi'u"" set --SM
+I expect there to be more cognates. I note Portuguese <pium> is missing from the translations column; maybe looking for <pium> would yield more cognates (e.g.,  maybe in Tupinambá? --SM"
+SANDFLY6,,
+HORSEFLY1,,
+HORSEFLY2,,
+HORSEFLY3X,,
+HORSEFLY4,,
+TICK1,,"A ""jateβuk"" set -- ZJO"
+TICK2,,
+TICK3,,
+TICK4,,
+TICK5,,
+TICK6X,,
+TICK7,,
+CHIGOE1,,"A ""tuŋ"" set -- ZJO"
+CHIGOE2,,
+CHIGOE5,,
+CHIGOE4,"COMPOUND, GEN","A ""pɨ+asok"" FOOT+LARVA compound -- NCP"
+FLEA1,"COMPOUND, GEN","A ""kɨ+wo"" LOUSE+? compound set -- ZJO"
+FLEA2,"COMPOUND, IND","A ""jawaɾ+kɨβ"" JAGUAR+LOUSE compound set -- ZJO"
+FLEA3,"COMPLEX, MED","A ""tuŋ+usu"" CHIGGER+AUG complex set -- ZJO"
+FLEA4,,
+FLEA5,,
+FLEA7,"COMPOUND, IND","A ""tuŋ+ɨ"" CHIGGER+? compound set -- ZJO"
+FLEA8,"COMPOUND, IND",A LOUSE+? compound set -- ZJO
+FLEA9,,
+COCKROACH1,,"there are a number of unexpected and likely sporadic sound changes in this row -- LDM
+
+A form /arawe/ 'cockroach' is also attested in Guianan Cariban languages... Borrowing?- SM"
+COCKROACH2,,
+COCKROACH3,,
+COCKROACH4,,
+GRASSHOPPER1,,a 'tuku' set --KCB
+GRASSHOPPER2,,
+GRASSHOPPER3,,
+GRASSHOPPER4X,,
+GRASSHOPPER5X,,
+GRASSHOPPER6X,,
+GRASSHOPPER7X,,
+GRASSHOPPER8,,
+GRASSHOPPER9,,
+GRASSHOPPER10,,
+GRASSHOPPER11,,
+CRICKET1,,
+CRICKET2,,
+CRICKET3X,,
+CRICKET4X,,
+CRICKET5X,,
+CRICKET6X,,
+CRICKET7,,
+CRICKET8,,
+CICADA1,,
+CICADA2,,
+CICADA3,,
+CICADA4,"COMPOUND, GEN",dry season + master - NCP
+CICADA5X,,
+CICADA6X,,
+CICADA7X,,
+CICADA8X,,
+CICADA9X,,
+CICADA10X,,
+CICADA11X,,
+CICADA12X,,
+CICADA13X,,
+CICADA14X,,
+CICADA15X,,
+CICADA16,,
+CICADA17,,
+CICADA18,,
+CICADA19,,
+CICADA20X,,
+CICADA21,,
+MACAW1,,"An ""arar"" set -- ZJO"
+MACAW2,"COMPLEX, MED",arara + ka -- LDM
+MACAW3,,"A ""(g)waká"" set -- ZJO"
+MACAW4,,"A ""kaninde"" set -- ZJO"
+MACAW5,,
+MACAW7X,,
+MACAW8,,
+MACAW9,,
+MACAW10X,,
+MACAW11,,
+PARROT1,,"An ""ayuɾu"" set -- ZJO"
+PARROT2,,"A ""maɾakanã"" set -- ZJO"
+PARROT3 ,,"A ""parakaw"" set -- ZJO; a form /parawa/ is also common in Guianan Cariban languages as the name of a species of parrot. Borrowing? - SM
+
+"
+PARROT3.5X,,"A ""parawá"" set -- ZJO"
+PARROT4,,
+PARROT4.25,,
+PARROT4.5,,
+PARROT5X,,
+PARROT6,,
+PARROT11X,,
+PARROT12X,,
+PARROT13X,,
+PARROT14X,,
+PARROT15X,,
+PARROT16X,,
+PARROT18X,,
+PARROT19X,,
+PARROT20X,,
+PARAKEET1,,
+PARAKEET1.5,,
+PARAKEET2,,
+PARAKEET3,,
+PARAKEET4X,,
+PARAKEET5,,
+PARAKEET6,,
+PARAKEET7,,
+PARAKEET8,,
+FISH1,,
+FISH1.5,LOAN,
+FISH2X,,
+FISH3X,,
+FISH4X,,
+FISH5X,,
+FISH7X,,
+FISH8X,,"ZJO search for cognates of FISH8X-11X in Guarayú and Tupinambá.
+
+Also found in some Guianan Cariban languages -- borrowing?- SM
+"
+FISH9X,,
+FISH10X,,
+FISH11X,,
+FISH12X,,"Likely referring to 'zúngaro' -- ZJO
+
+Also found in several Guianan Cariban languages -- borrowing?- SM"
+FISH13X,,"Forms typically denoting the 'paco' -- ZJO
+Also found in several Guianan Cariban languages -- possible borrowing- SM
+"
+FISH14X,,Forms denoting catfish hypernym -- ZJO
+FISH15.5X,,
+FISH16X,,
+FISH17X,,
+FISH18X,,
+FISH19X,,
+FISH20X,,
+FISH21X,,
+FISH22X,,
+FISH23X,,
+FISH24X,,
+FISH25X,,
+PIRANHA1,"COMPOUND, GEN","A ""pirá+ãj"" FISH+TOOTH compound set-- ZJO"
+PIRANHA2,,
+PIRANHA3,,
+PIRANHA4,,
+PIRANHA5,,
+PIRANHA6,,
+PIRANHA7,,
+EARTHWORM1,,
+EARTHWORM2,,
+EARTHWORM4,,
+EARTHWORM4,,
+EARTHWORM5,,
+BOTFLY1,,"An ""ur"" set-- ZJO"
+BOTFLY2,,
+LARVA1,,"An ""asok"" set; probably a kind of blowfly that nests in meats, fruits, etc. -- ZJO"
+LARVA2,,"A ""jaratitá"" set, probably a kind of weevil -- ZJO"
+LARVA4,,
+LARVA5 ,,
+LARVA6 ,,
+LARVA7 ,,
+LARVA8X,,
+LARVA12X,,
+CATERPILLAR1,,"An ""ɨtsok"" set; non-biting caterpillar -- ZJO"
+CATERPILLAR2,,"An ""mbiɾ"" set; appears to be a biting caterpillar -- ZJO"
+CATERPILLAR3,,
+CATERPILLAR4,,
+CATERPILLAR5,,
+CATERPILLAR6X,,
+CATERPILLAR7,,
+CENTIPEDE1,,
+CENTIPEDE3,,
+CENTIPEDE4,,
+CENTIPEDE5,,
+CENTIPEDE6,,
+CENTIPEDE7X,,
+CENTIPEDE8,,
+MILLIPEDE1,,"An ""ambuʔá"" set; perhaps a species of biting centipede -- ZJO
+At least in my dialect of Portuguese, <embuá> is not a biting centipede, but the quite harmless millipede, with which I used to play as a kid. --SM
+I can't resist preserving the above notes! Sergio is right, this is a millipede or the cover term for millipede! - NCP
+I suspect that there is some connection between millipede and firefly, but ok for now. - LDM"
+MILLIPEDE2,,
+MILLIPEDE3,,
+FIREFLY1,,"we believe that there was a sporadic sound change here that resulted in gw -> m in the nasal environment. -- LDM
+
+
+A ""gwã"" set -- ZJO"
+FIREFLY3,,
+FIREFLY4,,
+FIREFLY5,,
+FIREFLY6,,
+FIREFLY7,,
+FIREFLY8,,
+FIREFLY9,,
+COATI1,,"A ""kwati"" set -- ZJO
+NG: ti 'nose'"
+COATI2,,
+COATI3,,
+COATI4,,
+COATI5,,
+COATI6,,
+COATI7,,
+MOUSE~RAT1,,"An ""aŋɡujá"" set -- ZJO"
+MOUSE~RAT2,,
+MOUSE~RAT3,,
+MOUSE~RAT4,,
+MOUSE~RAT5,,
+MOUSE~RAT7,,
+MOUSE~RAT8X,,
+MOUSE~RAT9X,,
+MOUSE~RAT10X,,
+MOUSE~RAT11X,,
+MOUSE~RAT12X,,
+ANTEATER6,,
+ANTEATER1,,
+ANTEATER2,,
+ANTEATER7,,
+ANTEATER3,,
+ANTEATER4,,
+ANTEATER5,,
+ANTEATER8,,
+ANTEATER10,,
+ANTEATER11,"COMPLEX, GEN",An ANT+NOMZ complex set -- ZJO
+ANTEATER12,,
+ANTEATER13,,
+ANTEATER14,,
+ANTEATER9X,,
+BAT1,,
+BAT2,,
+BAT3,,
+BAT4,,
+BAT5,,
+BUTTERFLY1,,
+BUTTERFLY2,,
+BUTTERFLY3X,,
+BUTTERFLY4,,
+BUTTERFLY5,,
+BUTTERFLY6,,
+BUTTERFLY7,,
+BUTTERFLY8X,,
+BUTTERFLY9,,
+COLLARED PECCARY1,,Sirionoide forms show apocope + reanalysis of -te -- ZJO
+COLLARED PECCARY2,,
+COLLARED PECCARY3,,
+COLLARED PECCARY4,,
+COLLARED PECCARY5,,
+COLLARED PECCARY6,,
+COLLARED PECCARY7,,
+WHITE-LIPPED PECCARY1,,Is this a compound with tai+asu where the first referred to peccaries in general? -- ZJO
+WHITE-LIPPED PECCARY2,LOAN,
+WHITE-LIPPED PECCARY3,,
+WHITE-LIPPED PECCARY4,,
+TAIL1,,Is this a compound with tai+asu where the first referred to peccaries in general? -- ZJO
+TAIL2,,
+TAIL3,,
+TAIL4,,
+FEATHER1,,
+HORN1,"COMPLEX, GEN","An ""a+tĩ"" CL:round+NOSE complex set -- ZJO
+
+isn't that farfetched semantically?
+this set has been deep drilled and should be brown
+Also, we added with sergio a mawe possible cognate"
+HORN2,,
+HORN3,,
+HORN4,,
+HORN5,,
+HORN7,,
+HORN8,,
+EGG1,"COMPOUND, GEN","An ""upi+ʔa"" compound, with former unknown (too old) plus small-fruit-like classifier; not copied to latter b/c everything already attested there -- ZJO"
+WING1,,
+ANIMAL1,,
+ANIMAL2,,
+ANIMAL4,"COMPOUND, GEN",A THING+? compound set -- ZJO
+ANIMAL5,,
+ANIMAL6X,,
+DOMESTICATED ANIMAL1,,
+DOMESTICATED ANIMAL2X,,
+DOMESTICATED ANIMAL3,,
+DOMESTICATED ANIMAL4,,
+DOMESTICATED ANIMAL5,"COMPLEX, GEN","An ""emi-mo-xe'ow"" complex set -- ZJO"
+DOMESTICATED ANIMAL6,,
+BEAK1,"COMPOUND, IND","A ""wɨɾa+tĩ"" bird + nose compound set -- ZJO"
+BEAK2X,,
+BEAK3X,,
+BEAK4,,
