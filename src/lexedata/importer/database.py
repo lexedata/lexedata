@@ -9,10 +9,11 @@ True
 import re
 import attr
 import unidecode as uni
-
+from pathlib import Path
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import sessionmaker
+
 
 import os
 
@@ -43,12 +44,25 @@ class DatabaseObjectWithUniqueStringID(Base):
     session = None # These objects need a database session to look up existing IDs
     ID = sa.Column(sa.String, primary_key=True)
 
+    def __init__(self, *initial_data, **kwargs):
+        for dictionary in initial_data:
+            for key in dictionary:
+                setattr(self, key, dictionary[key])
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
     def __repr__(self):
         return '<{:}({:})>'.format(
             self.__class__.__name__,
             ', '.join("{:s}={!r:}".format(attr, val)
                       for attr, val in vars(self).items()
                       if not attr.startswith("_")))
+
+    def get(self, property, default=None):
+        for ele in dir(self):
+            if ele == property:
+                return getattr(self, ele)
+        return default
 
     @declared_attr
     def __tablename__(cls):
@@ -98,8 +112,7 @@ class DatabaseObjectWithUniqueStringID(Base):
         ID = cl.string_to_id(string)
         i = 0
         candidate = ID
-        while cl.session.query(cl.ID).filter(
-                cl.ID == candidate).one_or_none():
+        while cl.session.query(cl.ID).filter(cl.ID == candidate).one_or_none():
             i += 1
             candidate = "{:s}{:d}".format(ID, i)
         return candidate
@@ -111,10 +124,40 @@ def create_db_session(location='sqlite:///:memory:'):
         os.remove("cldf.sqlite")
     except FileNotFoundError:
         pass
-    engine = sa.create_engine(location, echo=False) # Create an SQLite database in this directory
+    dir_path = Path.cwd() / "initial_data"
+    if not dir_path.exists():
+        print("Initialize fromexcel.py first")
+        exit()
+    engine = sa.create_engine(location, echo=True) # Create an SQLite database in this directory
     # use `echo=True` to see the SQL stamenets echoed
 
     session = sessionmaker(bind=engine)()
     DatabaseObjectWithUniqueStringID.session = session
     DatabaseObjectWithUniqueStringID.metadata.create_all(engine, checkfirst=True)
+    #session.commit()
     return session
+
+
+def connect_engine():
+    dir_path = Path.cwd() / "initial_data"
+    db_path = dir_path / "lexedata.db"
+    if not db_path.exists():
+        print("Initialize_db first")
+        exit()
+    db_path = "sqlite:///" + str(db_path)
+    db_path = db_path.replace("\\", "\\\\")
+
+    # create database
+    engine = sa.create_engine(db_path, echo=False)  # Create an SQLite database in this directory
+    # use `echo=True` to see the SQL stamenets echoed
+    return engine
+
+def connect_session():
+
+    engine = connect_engine()
+    session = sessionmaker(bind=engine)()
+    return session
+
+
+
+

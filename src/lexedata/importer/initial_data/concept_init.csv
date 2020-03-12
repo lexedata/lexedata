@@ -1,0 +1,1158 @@
+ID,Set,English,English_Strict,Spanish,Portuguese,French
+one1,TG100,one,,uno,"um, uma","un, une"
+one2,,one@,,,,
+two1,TG100,two,,dos,"dois, duas",deux
+two2,,two@,,,,
+three1,TG200,three,,tres,três,trois
+three2,,three@,,,,
+four1,TG200,four ,,cuatro,quatro,quatre
+four2,,four@,,,,
+five1,,five,,cinco,cinco,cinq
+head1,TG100,head,,cabeza,cabeça,tête
+head2,,head@,,,,
+brain1,,brain,,cerebro,cérebro,"cerveau, cervelle"
+brain2,,brain@,,,,
+hair1,TG100,hair,,cabello (pelo),cabelos,"cheveux (hair on the head collectively), poil (one hair)"
+hair2,,hair@,,,,
+face1,,face,,cara (rastro),"face, cara, rosto",visage
+face2,,face@,,,,
+cheek1,TG100,cheek,,mejilla,bochecha,joue
+mouth1,TG100,mouth,,boca,boca,bouche
+mouth2,,mouth@,,,,
+teeth1,TG100,"teeth, tooth",,diente (muela),dente,"dent, dents"
+teeth2,,"teeth, tooth@",,,,
+lip1,,lip,,labio,lábio,lèvre
+lip2,,lip@,,,,
+tongue1,TG100,tongue,,lengua,língua,langue
+throat1,TG200,throat,,garganta,garganta,gorge
+throat2,,throat@,,,,
+neck1,TG100,neck,,cuello,pescoço,cou
+neck2,,neck@,,,,
+eye1,TG100,eye,,ojo,olho,oeil
+eyebrow1,TG200,eyebrow,,ceja,sobrancelha,sourcil
+eyebrow2,,eyebrow@,,,,
+nose1,TG100,nose,,nariz,nariz,nez
+nose2,,nose@,,,,
+ear1,TG100,ear,,oreja (oído),"orelha, ouvido",oreille
+ear2,,ear@,,,,
+beard1,,"beard, moustache, facial hair","beard, barba, barca",barba,barba,barbe
+beard2,,"beard, moustache, facial hair@",,,,
+jaw1,,jaw,,mandíbula,"mandíbula, maxilar",mâchoire
+jaw2,,jaw@,,,,
+chin1,TG200,chin,,barbilla (cachete),queixo,menton
+chin2,,chin@,,,,
+breast1,TG100,breast,,mama (seno),seio,sein
+breast2,,breast@,,,,
+chest1,,chest,,pecho,peito,poitrine
+chest2,,chest@,,,,
+lung1,,lung,,pulmón,pulmão,poumon
+lung2,,lung@,,,,
+heart1,TG100,heart,,corazón,coração,coeur
+heart2,,heart@,,,,
+belly1,TG100,belly,,vientre (barriga),barriga (ventre),ventre
+belly2,,belly@,,,,
+stomach1,,stomach,,estómago,estômago,estomac
+stomach2,,stomach@,,,,
+intestines1,TG200,"intestines, guts",,intestino (entrañas),"intestinos, entranhas","entrailles, intestins"
+intestines2,,"intestines, guts@",,,,
+kidney1,,kidney,,riñón,rins,rein
+kidney2,,kidney@,,,,
+liver1,TG100,liver,,hígado,fígado,foie
+spleen1,,spleen,,bazo,baço,rate
+spleen2,,spleen@,,,,
+rib1,,rib,,costilla,costela,côte
+rib2,,rib@,,,,
+back1,TG200,back,,espalda,costas/dorso,dos
+back2,,back@,,,,
+nape1,,"nape, back of neck",,nuca,"nuca, cogote, cangote",nuque
+nape2,,"nape, back of neck@",,,,
+bellybutton1,,belly button,,ombligo,umbigo,nombril
+bellybutton2,,belly button@,,,,
+testicles1,,testicles,,testiculo,testículos,testicule
+testicles2,,testicles@,,,,
+penis1,TG200,penis,,pene,pênis,pénis
+penis2,,penis@,,,,
+vagina1,TG200,vagina,,vagina,vagina,"vagin, vulve "
+vagina2,,vagina@,,,,
+groin1,,groin,,"ingle, entrepierna","virilha, entrepernas",aine
+buttocks1,,buttocks,,"nalga, culo","nádega, trazeiro, anca",fesse
+buttocks2,,buttocks@,,,,
+anus1,,anus,,ano,ânus,anus
+anus2,,anus@,,,,
+shoulder1,TG200,shoulder,,hombro,ombro,épaule
+shoulder2,,shoulder@,,,,
+arm1,,arm,,brazo,braço,bras (including avant-bras) (avant-bras is the lower part of the arm)
+arm2,,arm@,,,,
+elbow1,,elbow,,codo,cotovelo,coude
+elbow2,,elbow@,,,,
+hand1,TG100,hand,,mano,mão,main
+finger1,,finger,,dedo,dedo,doigt
+finger2,,finger@,,,,
+fingernail1,TG100,fingernail,,uña ,unha,ongle
+fingernail2,,fingernail@,,,,
+foot1,TG100,foot,,pie,pé,pied
+foot2,,foot@,,,,
+heel1,,heel,,talón,calcanhar,talon
+toe1,,toe,,dedo de pie,dedo do pé,"orteil, doigt de pied"
+toe2,,toe@,,,,
+toenail1,,toenail,,uña de pie,unha do pé,ongle de pied
+leg1,TG200,leg,,pierna,perna,jambe
+leg2,,leg@,,,,
+thigh1,,thigh,,muslo,coxa,cuisse
+thigh2,,thigh@,,,,
+knee1,TG100,knee,,rodilla,joelho,genou
+knee2,,knee@,,,,
+ankle1,,ankle,,tobillo,tornozelo,cheville
+ankle2,,ankle@,,,,
+blood1,TG100,blood,,sangre,sangue,sang
+vein1,,"vein, artery",,"vena, arteria","veia, artéria","veine, artère"
+vein2,,"vein, artery@",,,,
+skin1,TG100,skin,,piel,pele,peau
+skin2,,skin@,,,,
+bone1,TG100,bone,,hueso,osso,os
+bone2,,bone@,,,,
+corn1,PLANT,corn,,maíz,milho,maïs
+corn2,,corn@,,,,
+manioc1,PLANT,manioc,,yuca,mandioca,manioc
+manioc2,,manioc@,,,,
+plantains1,PLANT,plantains,,plátano,"banana-da-terra, tachagem",plantain
+plantains2,,plantains@,,,,
+banana1,PLANT,banana,,banana,banana,banane
+banana2,,banana@,,,,
+pineapple1,PLANT,pineapple,,piña,abacaxí (ananás),ananas
+pineapple2,,pineapple@,,,,
+tobacco1,TG200,tobacco,"the lax row contains mainly verbs meaning smoke cigarettes, smoke tobacco",tabaco,tabaco,tabac
+tobacco2,,tobacco@,,,,
+ají1,,"ají, pepper",,"ají, pimiento, chile",pimenta,piment
+ají2,,"ají, pepper@",,,,
+fruit1,TG200,fruit,,fruta (huayo),fruta,fruit
+fruit2,,fruit@,,,,
+gourd1,PLANT,"gourd, pumpkin, squash","gourd, calabaza, cabaça",calabaza (zapallo),"abóbora, cabaça","gourde, citrouille"
+gourd2,,"gourd, pumpkin, squash@",,,,
+food1,,food,,comida,comida,nourriture
+food2,,food@,,,,
+fat1,"TG100, CULTURE",fat (lard),,manteca,banha,"matière grasse, graisse, gras"
+fat2,,fat (lard)@,,,,
+maniocbeer1,CULTURE,manioc beer,,masato (chicha),cauim,cachiri
+maniocbeer2,,manioc beer@,,,,
+honey1,TG200,honey,,miel,mel,miel
+honey2,,honey@,,,,
+salt1,"TG200, CULTURE",salt,,sal,sal,sel
+salt2,,salt@,,,,
+meat1,TG100,meat,,carne,carne,viande
+meat2,,meat@,,,,
+corndrink1,CULTURE,corn drink,,chicha de maíz,"bebida de milho, chicha",cachiri de mais
+corndrink2,,corn drink@,,,,
+saliva1,,saliva,,saliva,saliva/baba,salive
+saliva2,,saliva@,,,,
+"Sp.""aguaje""1",PLANT,"Sp. ""aguaje"" (Mauritia flexuosa)",,aguaje,buriti,palmier-bâche
+"Sp.""aguaje""2",,"Sp. ""aguaje"" (Mauritia flexuosa)@",,,,
+flour/maniocflour1,CULTURE,flour/manioc flour,,harina,farinha,farine
+flour/maniocflour2,,flour/manioc flour@,,,,
+sweetpotato1,PLANT,sweet potato,,camote (batata),batata doce,patate douce
+sweetpotato2,,sweet potato@,,,,
+achiote1,"PLANT, CULTURE",achiote,,achiote (urucu),urucum,"Bixa orellana, roucou"
+achiote2,,achiote@,,,,
+manioctype1,,manioc type@,,,maniva,
+peanut1,PLANT,peanut,,maní (cacahuete),amendoim,"Arachis hypogeaea, arachide"
+peanut2,,peanut@,,,,
+passionfruit1,PLANT,passion fruit,,granadilla (maracuyá),maracujá,"Passiflora edulis, fruit de la Passion"
+passionfruit2,,passion fruit@,,,,
+sugarcane1,PLANT,sugar cane,,caña de azucar,cana de açúcar,"Saccharum officinarum, canne à sucre"
+sugarcane2,,sugar cane@,,,,
+snake1,TG200,snake,,"culebra, serpiente (víbora)","cobra (víbora, serpente)",serpent
+snake2,,snake@,,,,
+agouti1,ANIMAL,agouti,,añuje,"cutia, cotia","Dasyprocta, Myoprocta, Cuniculus sp., agouti"
+monkey1,,monkey,,mono,macaco,singe
+monkey2,,monkey@,,,,
+howlermonkey1,,howler monkey,Alouatta spp.,"mono aullador, mono coto","bugio, macaco-uivador, guariba",singe hurleur
+spidermonkey1,,spider monkey,Ateles spp.,"mono araña, maquisapa","macaco-aranha, coatá","singe atèle, atèle"
+sloth1,,sloth,"Bradypus spp. (Bradypodidae), Choloepus spp. (Megalonychidae)","perezoso, pelejo, perico",preguiça,"paresseux (NCP: this also means lazy), ais (Bradypodidae), unaus (Megalonychidae)"
+tapir1,"TG100, ANIMAL",tapir,,tapira (sachavaca),anta,"Tapirus terrestris, tapir"
+jaguar1,ANIMAL,jaguar,,"tigre, jaguar",onça,Panthera onca
+jaguar2,,jaguar@,,,,
+majás1,"TG100, ANIMAL",majás (paca),,"paca, majás",paca,Cuniculus paca
+bird1,TG100,bird,,pájaro (ave),pássaro (ave),oiseau
+bird2,,bird@,,,,
+ant1,,ant,,hormiga,formiga,fourmi
+ant2,,ant@,,,,
+caiman1,"TG200, ANIMAL",caiman,,"caimán, lagarto",caimão/jacaré (alligator),"genera Caiman, Melanosuchus, Paleosuchus"
+caiman2,,caiman@,,,,
+lizard1,"ANIMAL, EXCL","lizard, gecko, iguana",Put any lizard in here with as much information as possible (and scientific name if you have it). We are going to split them up afterwards,"lagarto, geco, lagartija, lagartijo, iguana","lagarto, lagartixa, taruíra, briba, crocodilinho-de-parede, osga, labigó, iguana, teiú, lagartiu, teju, tegu, jacuraru, jacuaru, jacuruaru, caruaru, calango","lézard, gecko"
+lizard2,,"lizard, gecko, iguana@",,,,
+chameleon1,"ANIMAL, EXCL",chameleon,,camaleón,"camaleão, sinibu",caméléon
+armadillo1,ANIMAL,armadillo,,"armadillo, carachupa",tatu,"tatou, family Dasypodidae"
+armadillo2,,armadillo@,,,,
+turtle/tortoise1,"ANIMAL, EXCL",turtle/tortoise,Both land turtle and water turtle are considered strict,"tortuga, motelo","tartaruga, jabuti, jaboti","tortue marine, tortue, tortue (family Testudinidae)"
+turtle/tortoise2,,turtle/tortoise@,,,,
+vulture1,ANIMAL,vulture,,"buitre, gallinazo",urubu,"vautour, family Cathartidae"
+vulture2,,vulture@,,,,
+termite1,,termite,,comején,cupim,termite
+termite2,,termite@,,,,
+frog1,"ANIMAL, EXCL","frog, toad",Put any Anuran terms you find here with as good glosses as possible (and scientific names if you have them). We are going to split them up later,"rana, sapo, escuerzo","rã, sapo, perereca, raineta, rela, tanoeiro, jia","grenouille, rainette, crapaud (in Creole, the term crapaud can be referring to rainettes, family Hylidae)"
+frog2,,"frog, toad@",,,,
+deer1,TG200,deer,,"venado, ciervo",veado,"cerf, family Cervidae"
+deer2,,deer@,,,,
+spider1,TG200,spider,,araña,aranha,araignée
+spider2,,spider@,,,,
+wasp1,,wasp,,avispa,vespa,guêpe
+wasp2,,wasp@,,,,
+bee1,ANIMAL,bee,,abeja,abelha,abeille
+bee2,,bee@,,,,
+louse1,TG100,louse,,piojo,piolho,pou
+louse2,,louse@,,,,
+mosquito1,,mosquito,Culicidae. In some cases it can be that pernilongo and mosquito are referring to different genera of the family Culicidae (Culex and Aedes respectively).,zancudo,"pernilongo, carapanã, mosquito",moustique
+mosquito2,,mosquito@,,,,
+gnat1,,gnat,Simulidae,jején,"mosquitinho, pium, borrachudo",moucheron
+fly1,,fly,,mosca,mosca,mouche
+fly2,,fly@,,,,
+sandfly1,,sandfly,Ceratopogonidae ; This is a potentially misleading common term in english. Outside the US it probably refers to Diptera: Psychodidae: Phlebotominae,manta blanca,"maruim, pium",phlébotome
+sandfly2,,sandfly@,,,,
+horsefly1,,horsefly,Tabanidae,tábano,"mutuca, butuca, moscardo",taon
+horsefly2,,horsefly@,,,,
+tick1,,tick,,garrapata,carrapato,"Acari, Ixodidae"
+tick2,,tick@,,,,
+chigoeflea1,,chigoe flea,Tunga penetrans,nigua,bicho-do-pé,"aoûtat, rouget, vendangeon"
+flea1,,flea,,pulga,pulga,puce
+flea2,,flea@,,,,
+cockroach1,,cockroach,,cucaracha,barata,"cafard, blatte, family Blattidae"
+cockroach2,,cockroach@,,,,
+grasshopper1,,grasshopper,Orthoptera: Caelifera,saltamontes,gafanhoto,"criquet (suborder Caelifera), sauterelle (suborder Ensifera) (NCP: the subordere Ensifera are katydids or bush crickets, but occasionally the common name sauterelle is used for the suborder Caelifera too)"
+grasshopper2,,grasshopper@,"Orthoptera: Ensifera (common names: katydids, bush crickets)",,esperança,sauterelle (suborder Ensifera)
+cricket1,,cricket,Orthoptera: Grylloidea: Gryllidae,grillo,grilo,grillon
+cricket2,,cricket@,,,,
+cicada1,,cicada,Hemiptera: Cicadoidea,"cigarra, chicharra","cigarra, cigarrinha",cigale
+cicada2,,cicada@,,,,
+macaw1,"ANIMAL, EXCL",macaw,,guacamayo,arara,"ara, genus Ara"
+macaw2,,macaw@,,,,
+parrot1,"ANIMAL, EXCL",parrot,,papagayo (loro),papagaio,"perroquet, order Psittaciformes"
+parrot2,,parrot@,,,,
+parakeet1,"ANIMAL, EXCL",parakeet,The english term is for any small parrot really. Put any small parrots you find in here and we are going to separate them out later.,"periquito, aratinga, pihuicho","periquito, tui, jandaia, aratinga",perruche
+parakeet2,,parakeet@,,,,
+fish1,TG100,fish,,pez (pescado),peixe,poisson
+fish2,,fish@,,,,
+piranha1,ANIMAL,piranha,Characidae: Serrasalminae: Piranha (tribe),"piraña, paña, palometa",piranha,pirais
+earthworm1,,earthworm,,lombriz,minhoca,ver de terre
+earthworm2,,earthworm@,,,,
+botflylarva1,,botfly larva,Dermatobia hominis,gusano,berne,(ver macaque)
+larva1,EXCL,"larva, maggot, grub","maggot, gusano (de mosca), verme (mosca)","larva, gusano, suri","larva, berne, verme, gongo, coró",asticot
+larva2,,"larva, maggot, grub@",,,,
+caterpillar1,,caterpillar,,oruga,lagarta,chenille
+caterpillar2,,caterpillar@,,,,
+centipede1,,centipede,Chilopoda. They bite and have venom. Also have less legs than a millipede (1 pair of legs for each segment). http://en.wikipedia.org/wiki/Centipede,ciempiés (escolopendra),"lacraia, centopéia","scolopendre, mille pattes (NCP: mille pattes can refer to both centipedes and millipedes), chilopodes, centipèdes"
+centipede2,,centipede@,,,,
+millipede1,,millipede,Diplopoda. They are harmless. They curl up to defend themselves. They have 2 pairs of legs at each segment. http://en.wikipedia.org/wiki/Millipede,"ciempiés, milpiés","centopéia, piolho-de-cobra, milípede","mille-pattes (NCP: mille pattes can refer to both centipedes and millipedes), diplopode"
+millipede2,,millipede@,,,,
+firefly1,,firefly,Lampyridae (beetle family),luciérnaga,"vaga-lume, pirilampo","luciole, lampyre"
+firefly2,,firefly@,,,,
+coati1,ANIMAL,coati,,coati (achuni),quati,coati
+coati2,,coati@,,,,
+mouse1,ANIMAL,"mouse, rat",,"ratón, rata","camundongo/camondongo, rato","souris, rat"
+mouse2,,"mouse, rat@",,,,
+anteater1,"TG200, ANIMAL",anteater,,oso hormiguero,tamanduá,fourmilier
+anteater2,,anteater@,,,,
+bat1,TG200,bat,,murciélago,morcego,Chauve-souris
+bat2,,bat@,,,,
+butterfly1,,butterfly,,mariposa,borboleta,papillon
+butterfly2,,butterfly@,,,,
+collaredpeccary1,"TG200, ANIMAL",collared peccary (Pecari tajacu),,sajino,caititu,pécari à collier
+white-lippedpeccary1,"TG200, ANIMAL",white-lipped peccary (Tayassu pecari),,huangana,"queixada, taiaçu",pécari à lèvres blanches
+tail1,TG100,tail,,"cola, rabo","cauda, rabo",queue
+tail2,,tail@,,,,
+feather1,TG100,feather,,pluma,pena (pluma),plume
+feather2,,feather@,,,,
+horn1,TG100,horn,,cuerno (cacho),chifre,corne
+horn2,,horn@,,,,
+claw1,,claw@,,garra ,garra,"griffe, serre (rapace)"
+claw2,,claw@,,,,
+egg1,TG100,egg,,huevo,ovo,oeuf
+egg2,,egg@,,,,
+wing1,TG200,wing,,ala,asa,aile
+wing2,,wing@,,,,
+animal1,TG200,animal,,animal,animal,animal
+animal2,,animal@,,,,
+domesticatedanimal1,,"domesticated animal, pet",,"animal domesticado, mascota",animal domesticado,"animal domestique, animal familier"
+domesticatedanimal2,,"domesticated animal, pet@",,,,
+beak1,,beak,,pico,bico,bec
+beak2,,beak@,,,,
+mother1,"TG200, KINSHIP",mother,,madre,mãe,mère
+mother2,,mother@,,,,
+father1,"TG200, KINSHIP",father,,padre ,pai,père
+father2,,father@,,,,
+son1,"KINSHIP, EXCL",son,,hijo ,filho,fils
+son2,,son@,,,,
+daughter1,"KINSHIP, EXCL",daughter,,hija ,filha,fille
+daughter2,,daughter@,,,,
+brother1,"KINSHIP, EXCL",brother ,,hermano ,irmão,frère
+brother2,,brother@,,,,
+sister1,"KINSHIP, EXCL",sister,,hermana,irmã,soeur
+sister2,,sister@,,,,
+cousin1,"KINSHIP, EXCL",cousin (male),,primo,primo,cousin
+cousin2,,cousin (male)@,,,,
+cousin3,"KINSHIP, EXCL",cousin (female),,prima,prima,cousine
+cousin4,,cousin (female)@,,,,
+nephew1,"KINSHIP, EXCL",nephew,,sobrino,sobrinho,neveu
+nephew2,,nephew@,,,,
+niece1,"KINSHIP, EXCL",niece,,sobrina,sobrinha,nièce
+niece2,,niece@,,,,
+aunt1,"KINSHIP, EXCL",aunt,,tía,tia,tante
+aunt2,,aunt@,,,,
+uncle1,"KINSHIP, EXCL",uncle,,tío,tio,oncle
+uncle2,,uncle@,,,,
+husband1,"TG200, KINSHIP",husband,,"marido, esposo","marido, esposo","mari, époux"
+husband2,,husband@,,,,
+wife1,"TG200, KINSHIP",wife,,esposa,esposa,"épouse, femme"
+wife2,,wife@,,,,
+brother-in-law1,"KINSHIP, EXCL",brother-in-law,,cuñado,cunhado,beau-frère
+brother-in-law2,,brother-in-law@,,,,
+sister-inlaw1,"KINSHIP, EXCL",sister-in law,,cuñada,cunhada,belle-soeur
+sister-in-law1,,sister-in-law@,,,,
+mother-in-law1,"KINSHIP, EXCL",mother-in-law,,suegra,sogra,belle-mère
+mother-in-law2,,mother-in-law@,,,,
+father-in-law1,"KINSHIP, EXCL",father-in-law,,suegro,sogro,beau-père
+father-in-law2,,father-in-law@,,,,
+son-in-law1,"KINSHIP, EXCL",son-in-law,,yerno ,genro,gendre
+son-in-law2,,son-in-law@,,,,
+daughter-in-law1,"KINSHIP, EXCL",daughter-in-law,,nuera ,nora,bru
+daughter-in-law2,,daughter-in-law@,,,,
+grandchildmaleego1,KINSHIP,grandchild male ego,,"nieto, nieta","neto, neta","Petit-fils, Petite-fille"
+grandchildfemaleego1,KINSHIP,grandchild female ego,,"nieto, nieta","neto, neta","Petit-fils, Petite-fille"
+grandchild1,KINSHIP,grandchild,This contains words meaning grandchild without a distrinction in ego,,,
+grandchild2,,grandchild@,,,,
+grandmother1,KINSHIP,grandmother,,abuela,avó,Grande-mère
+grandmother2,,grandmother@,,,,
+grandfather1,KINSHIP,grandfather,,abuelo,avô,Grand-père
+grandfather2,,grandfather@,,,,
+godmother1,"KINSHIP, EXCL",godmother,,madrina,madrinha,marraine
+godmother2,,godmother@,,,,
+godfather1,"KINSHIP, EXCL",godfather,,padrino,padrinho,parrain
+man1,TG100,man ,,hombre,homem,homme
+man2,,man@,,,,
+woman1,TG100,woman,,mujer,mulher,femme
+woman2,,woman@,,,,
+oldwoman1,,old woman,,"vieja, mujer vieja","velha, mulher velha",vieille femme
+oldwoman2,,old woman@,,,,
+person1,TG100,"person, human",,"persona, humano","pessoa, ser humano, humano","personne, être humain"
+person2,,"person, human@",,,,
+whiteperson1,,"white person, non-Indian",,"persona blanca, blanco, extranjero, foráneo","pessoa branca, branco, estrangeiro, forâneo",personne de race blanche
+whiteperson2,,white person@,,,,
+youngman1,,young man,,joven,rapaz,jeune homme
+youngman2,,young man@,,,,
+youngwoman1,,young woman,,"señorita, jovencita",moça,jeune femme
+youngwoman2,,young woman@,, ,,
+child1,,child,not as a kinship term,,criança,
+child2,,child@,,,,
+boy1,,"boy, male child",,"muchacho, niño","moço, garoto, menino",garçon
+boy2,,"boy, male child@",,,,
+girl1,,"girl, female child",,"chica, niña (muchacha)","moça, menina, criança",fille
+girl2,,"girl, female child@",,,,
+minga1,,minga,,minga,mutirão,
+orphan1,,orphan,,huérfano,orfão,orphelin
+orphan2,,orphan@,,,,
+owner1,CULTURE,"owner, boss (master)","owner, dueño, dono","dueño, propietario",dono (propietário),"propriétaire, maître"
+owner2,,"owner, boss, master@",,,,
+spirit1,CULTURE,spirit (soul),,espíritu (alma),espírito (alma),esprit
+spirit2,,spirit (soul)@,,,,
+friend1,,friend@,"old strict row, excluded because meaning doesn't exist in TG",amigo,amigo,ami
+friend2,,friend@,old lax row of friend,,,
+companion1,TG200,companion,,compañero,companheiro,(compagnon)
+companion2,,companion@,,,,
+witch1,,"witch, shaman, healer","witch, brujo, bruxo~pajé","brujo, bruja, shamán, hechicero, hechicera, curandero, médico","bruxo, bruxa, pajé, feiticeiro, feiticeira, curandeiro","sorcier, sorcière, chamane"
+witch2,,"witch, shaman, healer@",,,,
+chief1,CULTURE,chief (leader),,"jefe (cacique, apu)",chefe; cacique,chef
+chief2,,chief (leader)@,,,,
+red1,TG100,red,,rojo,vermelho (m.),rouge
+red2,,red@,,,,
+ripe1,,ripe,,maduro,maduro,mûr
+ripe2,,ripe@,,,,
+white1,TG100,white,,blanco,branco,blanc
+white2,,white@,,,,
+black1,TG100,black,,negro,preto,noir
+black2,,black@,,,,
+dark1,,dark,,oscuro,escuro,sombre
+dark2,,dark@,,,,
+unripe1,,unripe,,"no maduro, verde, flaco","não maduro, verde","vert (NCP: this also means green), immature, pas mûr"
+unripe2,,unripe@,,,,
+green1,TG100,green,,verde,verde,vert
+green2,,green@,,,,
+blue1,,blue,,azul,azul,bleu
+blue2,,blue@,,,,
+grue1,,grue,,,,glauque
+yellow1,TG100,yellow,,amarillo,amarelo,jaune
+yellow2,,yellow@,,,,
+yesterday1,,yesterday,,ayer,ontem,hier
+yesterday2,,yesterday@,,,,
+tomorrow1,,tomorrow,,mañana,amanhã,demain
+tomorrow2,,tomorrow@,,,,
+now1,FUNCT,now,,ahora,agora,maintenant
+now2,,now@,,,,
+day1,TG200,day,,día,dia,jour
+day2,,day@,,,,
+today1,,today,,hoy, hoje,aujourd' hui
+today2,,today@,,,,
+longtimeago1,,long time ago,,"hace mucho tiempo, antiguamente","há muito tempo, antigamente","il y a longtemps, jadis"
+longtimeago2,,long time ago@,,,,
+year1,,year,,año,ano,"an, année"
+year2,,year@,,,,
+before1,FUNCT,before,,antes,antes,avant
+before2,,before@,,,,
+after1,FUNCT,after,,despues,"após, depois",après
+after2,,after@,,,,
+already1,FUNCT,already,,ya,já,déjà
+already2,,already@,,,,
+always1,"TG200, FUNCT",always,,siempre,sempre,"tous les jours, toujours"
+always2,,always@,,,,
+night1,TG100,night (evening),,noche,noite,"nuit, soir"
+night2,,night (evening)@,,,,
+dawn1,,dawn,,amanecer,amanhecer,"aube, aurore"
+dawn2,,dawn@,,,,
+morning1,,morning,,mañana,manhã,matin
+morning2,,morning@,,,,
+early1,FUNCT,early,,temprano,cedo,tôt
+afternoon1,,afternoon,,tarde,tarde,après-midi
+afternoon2,,afternoon@,,,,
+later1,FUNCT,later,,más tarde,mais tarde,plus tard
+later2,,later@,,,,
+river1,TG200,river,,rio,rio,"rivière, fleuve"
+river2,,river@,,,,
+water1,TG100,water,,agua,água,eau
+water2,,water@,,,,
+rain1,TG100,rain,,lluvia,chuva,pluie
+rain2,,rain@,,,,
+lake1,TG200,lake,,lago (cocha),lago,"lac, mare"
+lake2,,lake@,,,,
+stream1,,stream,,"quebrada, arroyo (riachuelo)","riacho, ribeiro",ruisseau
+stream2,,stream@,,,,
+shore1,,"shore, bank","river shore~river bank, orilla, margem (do río)","orilla (banda, margen)","costa, margem (ribanceira)","bord, berge"
+shore2,,"shore, bank@",,,,
+forest1,TG200,forest (jungle),,selva (bosque),mato,forêt
+forest2,,forest (jungle)@,,,,
+root1,TG100,root,,raíz,raiz,racine
+root2,,root@,,,,
+tree1,TG100,tree,,árbol ,árvore,arbre
+tree2,,tree@,,,,
+branch1,,branch,,rama,"ramo, galho",branche
+branch2,,branch@,,,,
+bark1,TG100,bark,,corteza,casca de ávore,écorce
+bark2,,bark@,,,,
+trunk1,TG200,trunk,,tronco,tronco,tronc
+trunk2,,trunk@,,,,
+flower1,TG200,flower,,flor,flor,fleur
+flower2,,flower@,,,,
+leaf1,TG100,leaf,,hoja,folha,feuille
+leaf2,,leaf@,,,,
+bamboo1,PLANT,bamboo,things glossed as caña are strict,"bambú, caña",bambu,bambou
+bamboo2,,bamboo@,,,,
+grass1,TG200,grass,,hierba,"capim, grama, gramado",herbe
+grass2,,grass@,,,,
+weed1,,weed,,maleza,erva daninha,mauvaise herbe
+weed2,,weed@,,,,
+vine1,PLANT,vine,,soga,cipó,"liane, plante grimpante"
+vine2,,vine@,,,,
+land1,TG100,"land, ground, earth","earth (i.e. soil), tierra, terra",tierra,terra,terre
+land2,,"land, ground, earth@",,,,
+island1,,island,,isla,ilha,île
+shadow1,,"shadow, shade","shadow, sombra, sombra",sombra,sombra,ombre
+shadow2,,"shadow, shade@",,,,
+mud1,,mud,,"barro (barreal, fango)",lama,"boue, vase"
+mud2,,mud@,,,,
+dirt1,,dirt,,suciedad,sujeira,"saleté, crasse"
+dirt2,,dirt@,,,,
+dust1,,dust,,polvo,poeira,poussière
+dust2,,dust@,,,,
+sand1,,sand,,arena,areia,sable
+sand2,,sand@,,,,
+cotton1,"PLANT, ARTIFACT",cotton,,algodón,algodão,coton
+cotton2,,cotton@,,,,
+cloud1,TG100,cloud,,nube,nuvem,nuage
+cloud2,,cloud@,,,,
+thunder1,TG100,thunder,Both nouns and verbs,"trueno, tronar","trovão, trovejar","tonnerre, tonner"
+thunder2,,thunder@,,,,
+sky1,TG200,sky,,cielo,céu,ciel
+sky2,,sky@,,,,
+sun1,TG100,sun,,sol,sol,soleil
+sun2,,sun@,,,,
+moon1,TG100,moon,,luna,lua,lune
+moon2,,moon@,,,,
+star1,TG100,star,,estrella,estrela,étoile
+star2,,star@,,,,
+Pleiades1,,Pleiades,,Pléyades,Pleiades,Pléiades
+Pleiades2,,Pleiades@,,,,
+seed1,TG100,seed ,,semilla,semente,graine
+seed2,,seed@,,,,
+stone1,TG100,"stone, rock",,piedra (roca),pedra (rocha),pierre
+stone2,,"stone, rock@",,,,
+wind1,TG200,wind,,viento,vento,vent
+wind2,,wind@,,,,
+hill1,,hill,,colina (altura),"morro, colina",colline
+hill2,,hill@,,,,
+cutbank1,,"cutbank, cliff, bluff",,"barranco, acantilado, precipicio","barranco, penhasco, falésia","falaise, escarpement"
+hole1,,hole,,hueco,buraco,trou
+hole2,,hole@,,,,
+candela1,"TG100, ARTIFACT",candela,,fuego (candela),fogo,feu
+candela2,,candela@,,,,
+ashes1,TG100,ashes,,cenizas,cinza,cendre
+ashes2,,ashes@,,,,
+smoke1,TG100,smoke (n.),,humo,fumaça,fumée
+smoke2,,smoke (n.)@,,,,
+sap1,ARTIFACT,sap (resin),,resina (brea),seiva (resina),sève
+sap2,,sap (resin)@,,,,
+canoe1,ARTIFACT,canoe,,canoa,canoa,canot
+canoe2,,canoe@,,,,
+prow1,ARTIFACT,prow,,proa,proa,proue
+prow2,,prow@,,,,
+hammock1,"TG100, ARTIFACT",hammock,,hamaca,rede,hamac
+hammock2,,hammock@,,,,
+grill1,ARTIFACT,"grill, barbeque",,"parilla, barbacoa",grelha/churrasco (jirau),"gril, boucan"
+grill2,,"grill, barbeque@",,,,
+wall1,ARTIFACT,"wall, fence","fence, cerco, cerca","pared, cerca","parede, cerca","mur, clôture, barrière"
+wall2,,"wall, fence@",,,,
+door1,ARTIFACT,door,,puerta,porta,porte
+door2,,door@,,,,
+house1,ARTIFACT,house,,casa,casa,maison
+house2,,house@,,,,
+tambo1,ARTIFACT,"tambo, shelter",,tambo,"abrigo, tambo",chapeau
+tambo2,LDMREVUPTOHERE,"tambo, shelter@",,,,
+patio1,ARTIFACT,patio (porch),,patio,patio,"patio, cour"
+patio2,,patio (porch)@,,,,
+beach1,,beach,,playa,praia,plage
+beach2,,beach@,,,,
+village1,ARTIFACT,village,,pueblo,aldeia,village
+village2,,village@,,,,
+port1,ARTIFACT,port,,puerto,porto,port
+port2,,port@,,,,
+path1,"TG100, ARTIFACT","path, road",,camino,caminho (trilha),chemin
+path2,,"path, road@",,,,
+chacra1,ARTIFACT,chacra,,chacra,roça,"champ, potager, jardin, abbatis (plantation)"
+chacra2,,chacra@,,,,
+cure1,CULTURE,"cure, medicine",,remedio,remédio,remède
+cure2,,"cure, medicine@",,,,
+wound1,TG100,wound,,herida,ferida,"blessure, plaie"
+wound2,,wound@,,,,
+flute1,ARTIFACT,flute,,"flauta, pífano",flauta,flûte
+flute2,,flute@,,,,
+fan1,ARTIFACT,fan,,ventilador (abanico),"leque, ventilador",éventail
+fan2,,fan@,,,,
+bead1,ARTIFACT,bead,,"abalario, mostacilla",miçanga,perle (de verre)
+bead2,,bead@,,,,
+broom1,ARTIFACT,broom,,escoba,vassoura,balai
+broom2,,broom@,,,,
+diggingstick1,"TG100, ARTIFACT",digging stick,,azada,enxada,"bâton à creuser, houe"
+diggingstick2,,digging stick@,,,,
+paddle1,,paddle (n.),,remo,remo,pagaie
+cloth1,ARTIFACT,cloth,,paño (tela),pano,tissu
+cloth2,,cloth@,,,,
+garbage1,,garbage,,basura,lixo,ordures
+garbage2,,garbage@,,,,
+firewood1,,firewood,,leña,lenha,"bois de chauffage, bois à brûler"
+firewood2,,firewood@,,,,
+grindstone1,ARTIFACT,grindstone,,piedra de moler,pedra de amolar,meule
+mortar1,ARTIFACT,mortar,,"mortero, pilón","pilão, almofariz (in Brazilian Portuguese) (NCP: see Sérgio's note in this cell if you are working with a Portuguese source)",mortier (Pilon in Créole)
+pestle1,ARTIFACT,pestle,,"mano de mortero, mazo","mão de pilão, (NCP: see Sérgio's note in this cell if you are working with a Portuguese source)",pilon (Bâton-pilon in Créole)
+thread1,ARTIFACT,thread,,hilo,linha (fio),fil
+thread2,LDM PG rev up to here,thread@,,,,
+rattle1,ARTIFACT,"rattle, maraca","rattle, maraca, maracá~chocalho","maraca, sonaja, sonajero, shacapa","maracá, chocalho",hochet
+rattle2,,"rattle, maraca@",,,,
+rope1,"TG200, ARTIFACT",rope,,cuerda,corda,corde
+rope2,,rope@,,,,
+fishingnet1,ARTIFACT,fishing net,,"red de pescar, tarrafa",rede de pescar,filet de pêche
+fishingnet2,,fishing net@,,,,
+poison1,,poison,,veneno,veneno,poison
+poison2,,poison@,,,,
+fishpoison1,,fish poison,,barbasco,timbó,poison à pêcher
+fishpoison2,,fish poison@,,,,
+fishhook1,"TG100, ARTIFACT",fish hook,,anzuelo,anzol,hameçon
+fishhook2,,fish hook@,,,,
+spear1,ARTIFACT,spear,,lanza,lança,"lance (sagaie, javelot)"
+spear2,,spear@,,,,
+axe1,ARTIFACT,axe,,hacha,machado,hache
+axe2,,axe@,,,,
+bow1,ARTIFACT,bow,,arco,arco,arc
+bow2,,bow@,,,,
+arrow1,ARTIFACT,arrow,,flecha,flecha,flèche
+arrow2,,arrow@,,,,
+knife1,ARTIFACT,knife,,cuchillo,faca,couteau
+knife2,,knife@,,,,
+cup1,ARTIFACT,cup,,"copa (huingo, cuya)",copo (cuia),tasse
+cup2,,cup@,,,,
+crock1,ARTIFACT,crock (earthenware),,"cántaro, tinaja","cântaro, pote","cruche, pichet, pot"
+crock2,,crock@,,,,
+pot1,ARTIFACT,pot,,olla,panela,marmite
+pot2,,pot@,,,,
+sieve1,ARTIFACT,sieve (strainer),,"tamiz, cernidor, colador",peneira,tamis
+sieve2,,sieve (strainer)@,,,,
+basket1,ARTIFACT,basket,,"cesto, canasta",cesto (canasta),panier
+basket2,,basket@,,,,
+thorn1,,thorn,,espina,espinho,épine
+thorn2,,thorn@,,,,
+pain1,,pain (n.),,dolor,dor,douleur
+pain2,,pain (n.)@,,,,
+work1,,work (n),,trabajo,trabalho,travail
+work2,,work (n)@,,,,
+amount1,,amount,,"cantidad, porción",porção,quantité
+amount2,,amount@,,,,
+beginning1,,beginning,,comienzo,começo,début
+thing1,,thing,,cosa,coisa,chose
+thing2,,thing@,,,,
+name1,TG100,name (n.),"The verb name is in the lax row. (We initially had a meaning name (v) glossed in Spanish and Portuguese as llamar and chamar, the exact same glosses for call. Most of the items in the old name (v) meaning were identical with call, and were moved there. The ones that were not identical were moved in the lax row here with name (v) as their gloss. Their original gloss could be llamar or chamar and they could actually mean call and not name, but we need to look at the original source for that)",nombre,nome,nom
+name2,,name (n.)@,,,,
+story1,CULTURE,story,,"cuento, historia","conta, estória",histoire
+story2,,story@,,,,
+good1,TG100,good,,bueno,"bom, boa",bon
+good2,,good@,,,,
+ugly1,,ugly,,feo,feio,laid
+ugly2,,ugly@,,,,
+bad1,TG200,bad,,mal,ruim (mau),"mauvais, méchant"
+bad2,,bad@,,,,
+big1,"TG100, FUNCT","big, large",,grande,grande,"grand, gros"
+big2,,"big, large@",,,,
+small1,TG100,small,,pequeño,pequeno,petit
+small2,,small@,,,,
+fat3,,fat,,gordo,gordo,gros
+fat4,,fat@,,,,
+narrow1,TG200,narrow,,"estrecho, angosto",estreito,étroit
+narrow2,,narrow@,,,,
+skinny1,TG200,"skinny, thin",,flaco,magro,"maigre, mince, fin (for things)"
+skinny2,,"skinny, thin@",,,,
+dirty1,TG200,dirty,,sucio,sujo,sale
+dirty2,,dirty@,"Items from old dirty, soil (v) row are here",,,
+clean1,,clean,,limpio,limpo,propre
+clean2,,clean@,,,,
+wet1,TG200,wet,,mojado,molhado,mouillé
+wet2,,wet@,,,,
+dry1,,dry,,seco,seco,sec
+dry2,,dry@,,,,
+slow1,,slow,,lento,"lento, devagar",lent
+slow2,,slow@,,,,
+fast1,,fast,,rápido,rápido,rapide
+fast2,,fast@,,,,
+cold1,TG100,cold,,frío,frio,froid
+cold2,,cold@,,,,
+hot1,,hot,,caliente,quente,chaud
+hot2,,hot@,,,,
+new1,TG100,new,,nuevo,novo,"nouveau, neuf"
+new2,,new@,,,,
+old1,TG200,old,,viejo (anciano),velho,vieux
+old2,,old@,,,,
+short1,TG200,short,,"corto, bajo","curto, baixo","court, petit"
+short2,,short@,,,,
+long1,TG100,long,,largo,comprido,long
+long2,,long@,,,,
+heavy1,TG200,heavy,,pesado,pesado,lourd
+heavy2,,heavy@,,,,
+spicy1,CULTURE,spicy,,picante,picante,"épicé, piquant, pimenté"
+spicy2,,spicy@,,,,
+sour1,CULTURE,sour,,agrio,azedo,aigre
+bitter1,CULTURE,bitter,,amargo,amargo,amer
+sweet1,CULTURE,sweet,,dulce,doce,doux
+sweet2,,sweet@,,,,
+tasty1,,tasty,,sabroso,saboroso,savoureux
+tasty2,,tasty@,,,,
+rotten1,TG200,rotten,,podrido,podre,pourri
+rotten2,,rotten@,,,,
+full1,TG100,full,,lleno,cheio,plein
+full2,,full@,,,,
+hungry1,,hungry,,tener hambre (hambriento),"faminto, estar com fome/ter fome",avoir faim
+hungry2,,hungry@,,,,
+tired1,,tired,,cansado,cansado,fatigué
+tired2,,tired@,,,,
+quiet1,,"quiet, calm","quiet, quieto~callado, quieto","tranquilo, calmado (tranquilo, callado)","quieto, calmo",calme
+quiet2,,"quiet, calm@",,,,
+sick1,TG100,sick,,enfermo,doente,malade
+sick2,,sick@,,,,
+lazy1,,lazy,,"perezoso, flojo",preguiçoso,paresseux
+lazy2,,lazy@,,,,
+poor1,,poor,,pobre,"pobre, coitado",pauvre
+poor2,,poor@,,,,
+drunk1,,drunk,,borracho,bêbado,ivre
+drunk2,,drunk@,,,,
+naked1,,naked,,desnudo,"nu, despido",nu
+naked2,,naked@,,,,
+angry1,TG100,"angry, mad, be angry (intr)","be.angry, estar.enojado~rabioso, estar.zangado~com.ravia","enojado (rabiado, fastidiado), enojarse (rabiarse, fastidiarse)","zangado, com haiva, furioso, ficar com raiva (estar irritado)","fâché, furieux, être en colère, être fâché"
+angry2,,"angry, mad, be angry (intr)@",,,,
+happy1,,happy,,"alegre, feliz, contento","feliz, alegre, contente","heureux, gai"
+happy2,,happy@,,,,
+weak1,TG200,weak (feeble),,débil,fraco,faible
+weak2,,weak (feeble)@,,,,
+strong1,,strong,,fuerte,forte,fort
+strong2,,strong@,,,,
+hard1,,hard,,duro,"robusto, duro",dur
+hard2,,hard@,,,,
+thick1,TG200,thick,,grueso,grosso,épais
+thick2,,thick@,,,,
+round1,TG100,round,,redondo,redondo,rond
+round2,,round@,,,,
+straight1,,straight,,"recto, ser recto (derecho)","reto, direito","droit, être droit"
+straight2,,straight@,,,,
+right1,,right,,derecha,(a direita),(droite)
+right2,,right@,old right hand items are here,,,
+left1,,left,,izquierda,esquerda,gauche
+left2,,left@,,,,
+bent1,TG200,"bent, twisted","2 meanings: 1) bent, tuerto, torto; 2) twisted, torcido, torcido",torcido,torcido,"courbé, tordu"
+bent2,,"bent, twisted@",,,,
+far1,TG200,far,,lejos,longe,loin
+far2,,far@,,,,
+near1,TG200,near (nearby),,cerca,perto,près
+near2,,near (nearby)@,,,,
+open1,,open,,abierto,aberto,ouvert
+wide1,TG200,wide,,"amplio, ancho","largo, amplo",large
+wide2,,wide@,,,,
+painted1,CULTURE,painted (spotted),,pintado,pintado,peint
+painted2,,painted (spotted)@,,,,
+dull1,,dull,,"desafilado, romo, embotado","sem corte, cego (blunt)",émoussé
+dull2,,dull@,,,,
+sharp1,,sharp,,afilado,afiado,"affûté, tranchant, effilé, pointu"
+sharp2,,sharp@,,,,
+smooth1,TG200,smooth,,"suave, liso","liso, macio","lisse, doux"
+smooth2,,smooth@,,,,
+murky1,,murky,,turbio,turvo,boueux
+murky2,,murky@,,,,
+correct1,,correct,,correcta,correto,correct
+correct2,,correct@,,,,
+highup1,,high up (adv.),,"arriba, en el alto",no alto,en haut
+highup2,,high up (adv.)@,,,,
+high1,,"high, tall",tall,alto,alto,"grand, haut"
+high2,,"high, tall@",,,,
+deep1,,deep,,hondo,fundo,profond
+deep2,,deep@,,,,
+deaf1,,deaf,,sordo,surdo,sourd
+blind1,,blind,,ciego,cegos,aveugle
+blind2,,blind@,,,,
+again1,FUNCT,again,,"otra vez (de nuevo, nuevamente)","de novo (outra vez, novamente)","encore, de nouveau"
+again2,,again@,,,,
+still1,FUNCT,still,,todavía,ainda,encore 
+still2,,still@,,,,
+also1,FUNCT,also,,también,também,aussi
+also2,,also@,,,,
+more1,FUNCT,more,,más,mais,plus
+more2,,more@,,,,
+other1,"TG200, FUNCT",other,,otro,outro,autre
+other2,,other@,,,,
+many1,"TG100, FUNCT",many (much),,muchos,muito,beaucoup de
+many2,,many (much)@,,,,
+all1,"TG100, FUNCT",all,,todo,todo,"tous, tout"
+all2,,all@,,,,
+some1,FUNCT,some,,algun(os),alguns,"quelques uns, certains"
+some2,,some@,,,,
+few1,"TG200, FUNCT",few (a little),,poco(s),pouco(s),peu (un)
+few2,,few (a little)@,,,,
+first1,FUNCT,first,,primero,primeiro,premier
+first2,,first@,,,,
+yes1,FUNCT,yes@,,sí ,sim,oui
+no1,FUNCT,no,,no ,não,non
+no2,,no@,,,,
+side1,,side,,lado,lado,côté
+side2,,side@,,,,
+go1,,go,,ir ,ir,aller
+go2,,go@,,,,
+go3,,go (IMP),,ir (IMP),ir (IMP) = vá,vas
+come1,TG100,come (intr),,venir ,vir,venir
+come2,,come (intr)@,,,,
+arrive1,TG100,arrive (intr),,llegar,chegar,arriver
+arrive2,,arrive (intr)@,,,,
+leavefrom1,TG100,leave from (intr),,salir,sair,"sortir, partir"
+leavefrom2,,leave from (intr)@,,,,
+return1,,return (intr),,"regresar, volver","voltar, retornar","retourner, revenir"
+return2,,return (intr)@,,,,
+stop1,,"stop (intr, trans)",parar also means stand,parar,parar,"arrêter, s' arreter"
+stop2,,"stop (intr, trans)@",,,,
+stay1,,stay (intr),"not stay permanently, live",quedar,ficar,rester
+stay2,,stay (intr)@,,,,
+walk1,TG100,walk (intr),,"caminar, andar","andar, caminhar",marcher
+walk2,,walk (intr)@,,,,
+run1,,run (intr),,correr,correr,courir
+run2,,run (intr)@,,,,
+swim1,TG100,swim (intr),,nadar,nadar,nager
+swim2,,swim (intr)@,,,,
+float1,,float,,"flotar, boyar","boiar, flutuar","flotter, faire la planche (expression)"
+float2,,float@,,,,
+plant1,,plant (trans),,"plantar, sembrar",plantar,planter
+plant2,,plant (trans)@,,,,
+bury1,,bury (trans),,enterrar,enterrar,enterrer
+bury2,,bury (trans)@,,,,
+steal1,,steal (trans),,robar,roubar,voler
+steal2,,steal (trans)@,,,,
+hide1,,"hide (intr, trans)",,esconder (ocultar),esconder (ocultar),"cacher, se cacher"
+hide2,,"hide (intr, trans)@",,,,
+cultivate1,CULTURE,cultivate (trans),,cultivar,cultivar,cultiver
+cultivate2,,cultivate@,,,,
+dig1,"TG200, CULTURE",dig (trans),,"excavar (cavar, huequear)","cavar, escavar",creuser
+dig2,,dig (trans)@,,,,
+drip1,,drip (intr),,gotear,gotejar,goutter
+drip2,,drip (intr)@,,,,
+flow1,,"flow, run off (liquids)","flow, fluir~escurrir (but not 'derramar' sense), fluir~escorrer (but not 'derramar' sense)","fluír, escurrir","fluir, escorrer","s' écouler, couler (NCP: couler un navire means sink)"
+flow2,,flow@,,,,
+slip1,,slip (intr),,resbalarse,escorregar,glisser
+slip2,,slip (intr)@,,,,
+sweat1,,sweat (intr),,sudar,suar,"suer, transpirer"
+sweat2,,sweat (intr)@,,,,
+borrow1,,borrow,,tomar/pedir prestado,tomar/pegar/pedir emprestado,emprunter
+borrow2,,borrow@,,,,
+live1,TG200,live (intr),,vivir,viver,vivre
+live2,,live (intr)@,,,,
+die1,TG100,die (intr),,morir,morrer,mourir
+die2,,die (intr)@,,,,
+kill1,TG100,kill (trans),,matar,matar,tuer
+kill2,,kill (trans)@,,,,
+fly3,TG100,fly (intr),,volar,voar,voler
+fly4,,fly (intr)@,,,,
+climb1,,climb (trans),,subir,subir,monter
+climb2,,climb (trans)@,,,,
+cut1,TG200,"cut, cut down, fell tree (trans)","cut, cortar, cortar","cortar (rebanar, tumbar, derrumbar)","cortar, derrumbar","couper, abattre, couper"
+cut2,,"cut, cut down, fell tree (trans)@",,,,
+break1,,break (trans),,"romper, quebrar",quebrar,casser
+break2,,break (trans)@,,,,
+split1,TG200,split (trans),,partir(se),"partir, rachar",fendre
+split2,,split (trans)@,,,,
+divide1,,"divide, separate","divide, dividir, dividir~partilhar","dividir, separar","dividir, separar, repartir","partager, diviser, séparer"
+divide2,,"divide, separate@",,,,
+burst1,,"burst, break open","burst, reventar, rebentar~estourar","reventar, estallar","rebentar, arrebentar, estourar, estalar",éclater
+fish3,CULTURE,fish (trans),,pescar,pescar,pêcher
+fish4,,fish (trans)@,,,,
+hunt1,"TG200, CULTURE","hunt (intr, trans)",,cazar (mitayar),caçar,chasser
+hunt2,,hunt@,,,,
+sweep1,,"sweep (intr, trans)",,barrer,varrer,balayer
+shake1,,"shake (intr, trans)",,"sacudir, agitar","sacudir, agitar","agiter, secouer"
+shake2,,"shake (intr, trans)@",,,,
+rain3,,rain (v.) (intr),,llover,chover,pleuvoir
+rain4,,rain (v.) (intr)@,,,,
+flood1,,"flood (intr, trans)",,inundar,"inundar, transbordar",inonder
+flood2,,"flood (intr, trans)@",,,,
+drown1,,drown (intr),,ahogarse,afogar-se,noyer
+drown2,,drown (intr)@,,,,
+sink1,,sink (intr),,hundirse,afundar,couler (un canot)
+sink2,,sink (intr)@,,,,
+breathe1,,breathe (intr),,respirar,respirar,respirer
+breathe2,,breathe (intr)@,,,,
+yawn1,,yawn (intr),,bostezar,bocejar,bâiller
+vomit1,TG200,vomit (intr),,vomitar,vomitar,vomir
+vomit2,,vomit (intr)@,,,,
+lieonasurface1,TG100,lie on a surface (intr),,"echarse, acostarse",deitar(-se),"se coucher, s' allonger"
+lieonasurface2,,lie on a surface (intr)@,,,,
+put1,,put (ditr),,poner (colocar),"pôr, colocar",mettre
+put2,,put (ditr)@,,,,
+turn1,TG200,"turn (intr, trans)",,girar,virar,"tourner, retourner"
+turn2,,"turn (intr, trans)@",,,,
+twist1,,"twist (intr, trans)",,torcer,torcer,tordre
+twist2,,"twist (intr, trans)@",,,,
+escape1,,escape (intr),,escapar(se),escapar,s' échapper
+escape2,,escape (intr)@,,,,
+leave1,,leave (trans),,dejar,deixar,"quitter, laisser"
+leave2,,leave (trans)@,,,,
+enter1,,enter (intr),,entrar,entrar,entrer
+enter2,,enter (intr)@,,,,
+cough1,,cough(intr),,toser,tossir,tousser
+cough2,,cough(intr)@,,,,
+swallow1,,"swallow (intr, trans)",,tragar,engolir,avaler
+swallow2,,swallow@,,,,
+capture1,,capture (trans),,capturar,capturar,"capturer, prendre"
+capture2,,capture (trans)@,,,,
+appear1,,appear (intr),,aparecer,aparecer,apparaître
+appear2,,appear (intr)@,,,,
+disappear1,,disappear (intr),,desaparecer,sumir,disparaître
+disappear2,,disappear (intr)@,,,,
+loseway1,,lose way,,errar,errar o caminho,
+loseway2,,lose way@,,,,
+lose1,,lose (oneself) (intr),,perderse (errar),"perder-se, errar","être perdu, se perdre"
+help1,,help (trans),,ayudar,ajudar,aider
+help2,,help (trans)@,,,,
+fear1,TG200,"fear (n.), be scared (v.)","fear(n.), meido, medo","miedo, tender miedo","medo, temer, ter medo","peur, avoir peur"
+fear2,,"fear (n.), be scared (v.)@",,,,
+scare1,,scare (trans),,asustar (espantar),"assustar, espantar",faire peur
+scare2,,scare (trans)@,,,,
+beableto1,,be able to (trans),,poder,poder,pouvoir
+beableto2,,be able to (trans)@,,,,
+bring1,,bring (trans),,traer,trazer,"apporter, amener"
+bring2,,bring (trans)@,,,,
+pull1,TG200,pull (trans),,jalar,puxar,tirer
+pull2,,pull (trans)@,,,,
+shoot1,"TG200, CULTURE",shoot (trans),,disparar (flechar),"disparar, flechar (atirar)",tirer (au fusil)
+shoot2,,shoot (trans)@,,,,
+grab1,,grab (trans),This includes the motion meaning of take as well (e.g. take something from somebody's hands). Tomar in spanish and portuguese and prendre in french.,"agarrar, arrancar","agarrar, arrancar","attraper, saisir, prendre"
+grab2,,grab (trans)@,,,,
+takeout1,,"take out, remove (trans)","take out, sacar, tirar",sacar,"tirar, sacar","enlever, arracher, "
+takeout2,,"take out, remove@",,,,
+beat1,TG200,"beat, hit (trans)","hit, pegar~golpear, bater, frapper","pegar, golpear","bater, acertar","battre, frapper"
+beat2,,"beat, hit (trans)@",,,,
+reach1,,reach (trans),,alcanzar,alcançar,atteindre
+reach2,,reach (trans)@,,,,
+haber1,,haber,"there is, there are",haber ,ter,il y a
+haber2,,haber@,,,,
+have1,,have (trans),,tener,ter,avoir
+have2,,have (trans)@,,,,
+give1,TG100,give (ditr),,dar,dar,donner
+give2,,give (ditr)@,,,,
+throw1,TG200,"throw, throw away (trans)","throw, botar(throw)~tirar(throw), jogar(throw)~lançar","botar, tirar, arrojar (echar)","jogar, jogar fora","jeter, lancer"
+throw2,,"throw, throw away (trans)@",,,,
+getusedto1,,get used to (trans),,acostumbrarse,acostumar-se ,s' habituer
+getusedto2,,get used to (trans)@,,,,
+lieto1,TG100,"lie to, deceive (trans)","lie, mentir, mentir",mentir (engañar),mentir (enganar),mentir
+lieto2,,"lie to, deceive (trans)@",,,,
+sharpen1,,sharpen (trans)@,,afilar,afiar,"affiler, aiguiser, affuter"
+forget1,,forget (trans),,olvidar,"esquecer, olvidar",oublier
+forget2,,forget (trans)@,,,,
+know1,TG100,know (trans),,saber (conocer),saber,savoir
+know2,,know (trans)@,,,,
+lookfor1,TG100,look for (trans),,buscar,"procurar, buscar",chercher
+lookfor2,,look for (trans)@,,,,
+look1,,look (intr),,mirar,olhar,regarder
+look2,,look (intr)@,,,,
+see1,TG100,"see (intr, trans)",,ver,ver,voir
+see2,,"see (intr, trans)@",,,,
+order1,,"order, command","order~command, ordenar~mandar, ordenar~(co)manda","ordenar, (co)mandar","ordenar, (co)mandar","commander, donner ordres"
+order2,,"order, command@",,,,
+meet1,,"meet, encounter, come across, find","encounter~come across~find, encontrar~hallar, encontrar","encontrar(se), hallar","encontrar(-se), deparar(-se), achar~achar","rencontrer, trouver"
+meet2,,"meet, encounter@",,,,
+remember1,,remember (trans),,"acordarse de, recordar(se) (de)",lembrar,se souvenir
+remember2,,remember (trans)@,,,,
+think1,TG200,"think (intr, trans)",,pensar,"achar, pensar",penser
+think2,,"think (intr, trans)@",,,,
+want/like/love1,,want/like/love,,,,
+want/like/love2,,want/like/love@,,,,
+want1,,want (trans)@,,querer,querer,vouloir
+liketrans)1,,like trans)@,,gustar,gostar,aimer
+love1,,love (trans)@,,amar,amar,aimer
+copulate1,,"copulate, have sex with",,"copular, tener relaciones sexuales, aparear","copular, ter relações sexuais","copuler, faire l' amour, coucher avec qqn"
+copulate2,,"copulate, have sex with@",,,,
+believe1,,"believe (trans, comp)",,creer,acreditar,croire
+believe2,,believe@,,,,
+obey1,,obey (trans),,obedecer,obedecer,obéir
+obey2,,obey (trans)@,,,,
+hear1,TG100,hear (trans),,"escuchar, oír","escutar, ouvir",entendre
+hear2,,hear (trans)@,,,,
+fight1,TG200,fight (trans),,"luchar, pelear","lutar, brigar",combattre
+fight2,,fight (trans)@,,,,
+follow1,,follow (trans),,seguir,seguir,suivre
+follow2,,follow (trans)@,,,,
+respond1,,respond (trans),,responder,responder,répondre
+respond2,,respond (trans)@,,,,
+sing1,"TG200, CULTURE",sing (intr),,cantar,cantar,chanter
+sing2,,sing (intr) @,,,,
+askfor1,,ask for (ditr?),,pedir,pedir,demander
+askfor2,,ask for (ditr?)@,,,,
+ask1,,ask (trans),,preguntar,perguntar,demander
+ask2,,ask (trans)@,,,,
+call1,,call (trans),"Call to, grab attention (not give name)",llamar a,chamar,appeler
+call2,,call (trans)@,,,,
+converse1,,converse (trans),,conversar,conversar,"discuter, parler avec quelqu'un"
+converse2,,converse (trans)@,,,,
+tell1,CULTURE,tell (a story) (trans),,contar (narrar),contar (narrar),raconter
+tell2,,tell (a story) (trans)@,,,,
+say1,TG100,say (trans),,decir,dizer,dire
+say2,,say (trans)@,,,,
+speak1,,speak (utter words) (intrans),,hablar,falar,parler
+speak2,,speak (utter words) (intrans)@,,,,
+emitnoise1,,"emit noise, sound","emit noise, sonar, soar",sonar,soar,"sonner, faire du bruit"
+emitnoise2,,"emit noise, sound@",,,,
+imitate1,,"imitate, represent, signal","imitate, imitar, imitar","imitar, representar, ser un señal","imitar, representar, sinalizar","imiter, representer, symbolizer"
+imitate2,,"imitate, represent, signal@",,,,
+dance1,CULTURE,dance (intr),,bailar,dançar,danser
+dance2,,dance@,,,,
+wakeup1,,wake up (intr),,despertarse,despertar-se,se réveiller
+wakeup2,,wake up (intr)@,,,,
+sleep1,TG100,sleep (intr),,dormir,dormir,dormir
+sleep2,,sleep (intr)@,,,,
+laugh1,TG200,laugh (intr),,reir,rir,rire
+laugh2,,laugh (intr)@,,,,
+smile1,,smile (intr),,sonreír,sorrir,sourire
+smile2,,smile@,,,,
+cry1,CULTURE,cry (intr),,llorar,chorar,pleurer
+cry2,,cry (intr)@,,,,
+mourn1,,mourn,,"lamentar, lloriquear, sollozar","prantear, lamentar, chorar","lamenter, faire un deuil, pleurer pour un deuil"
+mourn2,,mourn@,,,,
+besad1,,be sad (intr),,estar triste,estar triste,être triste
+besad2,,be sad@,,,,
+bethirsty1,,be thirsty (intr),,tener sed,estar com sede,avoir soif
+bethirsty2,,be thirsty (intr)@,,,,
+defecate1,,defecate (intr),,defecar,defecar,"déféquer, chier"
+defecate2,,defecate (intr)@,,,,
+urinate1,,urinate (intr),,orinar,urinar,uriner
+urinate2,,urinate (intr)@,,,,
+cook1,,"cook (intr, trans)",,cocinar (cocer),cozinhar,"cuisiner, cuire"
+cook2,,"cook (intr, trans)@",,,,
+eat1,TG100,"eat (intr, trans)",,comer,comer,manger
+eat2,,"eat (intr, trans)@",,,,
+drink1,TG100,"drink (intr, trans)",,beber,beber,boire
+drink2,,"drink (intr, trans)@",,,,
+drinkalcohol1,,drink alcohol,any alcoholic drink,tomar/beber alcohol,tomar/beber alcohol,"boire du cachiri, boire de boisson alcoolisée, boire d' alcool"
+drinkalcohol2,,drink alcohol@,,,,
+roast1,CULTURE,roast (trans),,asar ,assar,"griller, rôtir"
+roast2,,roast (trans)@,,,,
+roastfariña1,CULTURE,roast fariña (trans),,turrar,torrar,griller
+toast1,CULTURE,"toast, brown (trans)@","toast, tostar, (portuguese unclear)",tostar,"fazer torrado?, fazer marrom?",griller
+smokefood1,CULTURE,smoke food,"This is only for smoking food. For smoking tobacco and cigarettes, put them in the lax row of tobacco.",ahumar,"defumar, moquear, afumar","fumer, boucaner"
+smokefood2,,smoke food@,Here are also the items of the old smoked thing row. ,,,
+burn1,,burn,as in burning something and also something is burning.,quemar(se),queimar(-se),brûler
+burn2,,burn@,,,,
+flame1,,"flame (v.), shine (as in giving off light)","flame, arder, arder; with the fire in subject position, as in giving off light (note: 'flame' and 'give off light' really aren't the same thing -- LDM)",arder,arder,"brûler, éclairer"
+flame2,,flame (v.)@,,,,
+light1,,light (v.),,encender,acender,allumer
+light2,,light (v.)@,,,,
+shine1,,shine,as in reflect light,brillar,brilhar,"briller, eclairer"
+shine2,,shine@,,,,
+illuminate1,,"illuminate, shine light on","illuminate, iluminar~alumbrar, iluminar","iluminar, alumbrar",iluminar,"illuminer, éclairer"
+illuminate2,,"illuminate, shine light on@",,,,
+fry1,CULTURE,fry (trans),,freír,fritar,frire
+boil1,,boil (trans),,hervir ,ferver,bouillir
+boil2,,boil (trans)@,,,,
+bubble1,,bubble,not foam and froth,"borbotar, borbotear, burbujar","borbotar, borbulhar",bouilloner
+bubble2,,bubble@,,,,
+swell1,TG200,swell (intr),,hincharse,inchar,"gonfler, enfler"
+swell2,,swell (intr)@,,,,
+strain1,,strain (trans),,colar (cernir),"coar, peneirar",égoutter
+strain2,,strain (trans)@,,,,
+mix1,,mix (trans),,"mezclar, batir",misturar,mélanger
+mix2,,mix (trans)@,,,,
+draw1,"TG200, CULTURE","draw (intr, trans)",,dibujar,desenhar,dessiner
+draw2,,draw@,,,,
+paint1,"TG200, CULTURE","paint (intr, trans)",,pintar,pintar,peindre
+paint2,,"paint (intr, trans)@",,,,
+dye1,,dye,,teñir,tingir,"teindre, colorer"
+dye2,,dye@,,,,
+adorn1,,"adorn, decorate","adorn~decorate, adornar(se)~decorar(se), adornar(-se)~decorar(-se)","adornar, decorar, engalanar","adornar, decorar, enfeitar","décorer, orner"
+adorn2,,"adorn, decorate@",,,,
+grow1,,"grow (intr, trans)",,crecer,crescer,grandir
+grow2,,"grow (intr, trans)@",,,,
+heal1,"TG200, CULTURE","heal (intr, trans)",,sanar,sarar,guérir
+heal2,,"heal (intr, trans)@",,,,
+pass1,,pass (trans),,pasar,passar,passer
+pass2,,pass (trans)@,,,,
+cross1,,"cross, go across","cross, cruzar~atravesar, cruzar~atravessar","cruzar, atravesar, vadear","cruzar, atravessar, vadear",traverser
+cross2,,"cross, go across@",,,,
+stab1,,stab (trans)@,,apuñalar,apunhalar,"poignarder, donner un coup de couteau"
+pierce1,,pierce (trans),,perforar,furar,"percer, transpercer"
+pierce2,,pierce (trans)@,,,,
+sew1,"TG200, CULTURE",sew (trans),,coser,costurar,coudre
+sew2,,sew (trans)@,,,,
+weave1,,weave,,"tejer, trenzar","tecer, trançar",tisser
+weave2,,weave@,,,,
+play1,TG200,"play (intr, trans)",,jugar,"brincar, jogar (game), folgar",jouer
+play2,,"play (intr, trans)@",,,,
+spill1,c,"spill, pour",,derramar (verter),derramar (verter),"renverser, se renverser"
+spill2,,"spill, pour@",,,,
+jump1,,jump (intr),,saltar (brincar),pular,sauter
+jump2,,jump (intr)@,,,,
+push1,TG200,push (trans),,empujar,empurrar,pousser
+push2,,push (trans)@,,,,
+rub1,TG200,rub (trans),,sobar,esfregar,frotter
+rub2,,rub (trans)@,,,,
+scrape1,TG200,"scrape, scratch (trans)","scratch, arañar, arranhar~coçar","raspar, arañar","arranhar, coçar","ɡratter, racler"
+scrape2,,"scrape, scratch (trans)@",,,,
+grind1,,grind (trans),,moler,"moer, trituar",moudre
+grind2,,grind (trans)@,,,,
+spin1,CULTURE,spin (thread) (trans),,hilar,fiar,filer
+spin2,,spin (thread) (trans)@,,,,
+sit1,TG100,sit (intr),,sentarse,sentar-se,s' asseoir
+sit2,,sit (intr)@,,,,
+stand1,TG100,"stand, stand up (intr)","be.standing; (previous comment, to be ignored for GA coding: Includes both standing (state) and stand up (changing of state))","estar de pie (pararse), levantarse","ficar de pé, estar de pé, levantar-se (Note: in Portuguese ficar means stay and not stand)",être debout
+stand2,,"stand, stand up (intr)@",,,,
+smell1,TG200,"smell (intr, trans)",,oler ,"farejar, cheirar",sentir
+smell2,,"smell (intr, trans)@",,,,
+beodorous1,,be odorous (fragrant) (intr),,estar oloroso,estar cheiroso,sentir bon
+beodorous2,,be odorous (fragrant) (intr)@,,,,
+bestinky1,,be stinky (smell bad) (intr),,apestar (heder),feder,puer
+bestinky2,,be stinky (smell bad) (intr)@,,,,
+squeeze1,TG200,squeeze (trans),,comprimir (estrujar),"comprimir, espremer",presser
+squeeze2,,squeeze (trans)@,,,,
+tighten1,,tighten (trans),,apretar (asegurar),apertar,"serrer, resserrer"
+tighten2,,tighten (trans)@,,,,
+stretch1,,stretch,,"estirar, alargar","espichar, esticar, alongar, distender","s' étirer, tendre, s' étendre, distendre"
+stretch2,,stretch@,,,,
+paddle2,TG200,paddle (intr),,remar (bogar),remar,pagayer
+paddle3,,paddle (intr)@,,,,
+goupriver1,,go upriver (intr),,surcar (ir aguas arriba),ir na contracorrente/sembem o rio,"remonter le fleuve, monter la riviere"
+goupriver2,,go upriver (intr)@,,,,
+godownriver1,,go downriver (intr),,bajar (ir aguas abajo),ir rio abaixo,"aller en aval, descendre le courant"
+godownriver2,,go downriver@,,,,
+godown1,,go down (intr),,bajar (descender),descer,descendre
+godown2,,go down (intr)@,,,,
+bepregnant1,,be pregnant (intr),,"estar embarazada, estar preñada",estar grávida,être enceinte
+bepregnant2,,be pregnant@,,,,
+fallfromaheight1,,fall from a height (intr),"I'm not convinced we can really distinguish the two 'fall' meanings; it seems to me that many things in this row that are most clearly distinct from 'fall over, fall down' are really 'fall off' referring to fruits, leaves, and the like.",caer del alto,cair do alto,tomber de haut
+fallfromaheight2,,fall from a height (intr)@,,,,
+fallover1,TG200,"fall over, fall down (intr)",see note under fall from a height,caer,cair,tomber
+fallover2,,"fall over, fall down (intr)@",,,,
+givebirthto1,,give birth to (trans),,dar a luz a (parir),dar á luz a,"donner naissance, accoucher"
+givebirthto2,,give birth to (trans)@,,,,
+beborn1,,be born (intr),,nacer,nascer,naître
+beborn2,,be born (intr)@,,,,
+breastfeed1,,breastfeed (trans),,mamar,mamar,allaiter
+breastfeed2,,breastfeed (trans)@,,,,
+suck1,TG200,suck (trans),,chupar,chupar,sucer
+bite1,TG100,bite (trans),,morder,morder,mordre
+bite2,,bite (trans)@,,,,
+spit1,TG200,spit (intr),,escupir,cuspir,cracher
+spit2,,spit@,,,,
+blow1,"TG200, CULTURE",blow (trans),,soplar,soprar,souffler
+blow2,,blow (trans)@,,,,
+wet3,,"wet, dampen (trans)","make.wet~dampen, mojar, molhar",mojar,molhar,mouiller
+wet4,,"wet, dampen (trans)@",,,,
+dry3,,"dry (intr, trans)",,secar,secar,sécher
+dry4,,"dry (intr, trans)@",,,,
+await1,,await (trans),,esperar,esperar,attendre
+await2,,await (trans)@,,,,
+hurt1,,"hurt, wound","injure~wound, herir, ferir; Words that mean feel pain, should be in lax under pain (n)","herir(se), lastimar(se)","ferir(-se), machucar(-se)",blesser
+hurt2,,"hurt, wound@",,,,
+dock1,,"dock (V trans, intr)",,atracar (a tierra),atracar,mettre a quai
+dock2,,"dock (V trans, intr)@",,,,
+attach1,,"attach, adhere, stick to","stick to, pegar/aderir, aderir(se)/colar","sujetar(se), pegar(se), adherir(se), arrimar(se)","aderir(-se), colar, grudar","attacher, lier, adhérer, coller"
+attach2,,attach@,,,,
+join1,,"join, (put together, attach) (trans)","join, unir, juntar","juntar, unir",juntar,"joindre, unir, raccorder, lier, attacher"
+join2,,"join, (put together, attach) (trans)@",,,,
+tie1,TG200,tie (trans),,"amarrar, atar",amarrar (atar),"nouer, lier, attacher"
+tie2,,tie (trans)@,,,,
+untie1,,untie (trans),,desatar,"desatar, desamarrar","défaire, dénouer"
+untie2,,untie (trans)@,,,,
+gather1,,"gather, harvest (trans)","harvest, cosechar, colher",cosechar (recoger),"recolher, juntar","ramasser, cueillir, moissonner"
+gather2,,"gather, harvest (trans)@",,,,
+finish1,,finish (trans),,"acabar, terminar (completar)",acabar,finir
+finish2,,finish (trans)@,,,,
+begin1,,"begin (v.) (trans, comp)",,"empezar, comenzar",começar,commencer
+begin2,,"begin (v.) (trans, comp)@",,,,
+feed1,,"feed, offer food (trans)",feed,alimentar,alimentar,"nourrir, donner à manger"
+feed2,,"feed, offer food (trans)@",,,,
+weed3,CULTURE,"weed (intr, trans)",,desyerbar,capinar,désherber
+weed4,,"weed (intr, trans)@",,,,
+rest1,,rest (intr),,descansar,descançar,se reposer
+rest2,,rest (intr)@,,,,
+carry1,,carry (trans),,"cargar, amarcar (acarrear)",carregar,porter
+carry2,,carry (trans)@,,,,
+takealong1,,take along (trans),"The opposite of bring, not the grabbing hand motion meaning of take.",llevar,levar,"emporter (objects), emmener (people)"
+takealong2,,take along (trans)@,,,,
+lift1,,lift (trans),,levantar (alzar),"levantar, erguer","soulever, lever"
+lift2,,lift (trans)@,,,,
+marry1,CULTURE,marry (trans),,casar,casar,"épouser, se marier"
+close1,,close (v.) (trans),,cerrar,fechar,fermer
+close2,,close (v.) (trans)@,,,,
+open2,,open (trans),,abrir,abrir,ouvrir
+open3,,open (trans)@,,,,
+peel1,,peel (trans),,pelar,descascar,"peler, éplucher"
+peel2,,peel (trans)@,,,,
+offend1,,offend (trans),,ofender,ofender,"offenser, injurier"
+fill1,,fill (trans),,llenar,encher,remplir
+fill2,,fill (trans)@,,,,
+shout1,,"shout, yell (intr)",,gritar,gritar,crier
+shout2,,"shout, yell (intr)@",,,,
+getdressed1,CULTURE,get dressed (intr),,vestirse (ponerse ropa),vestir-se,s' habiller
+getdressed2,,get dressed (intr)@,,,,
+invite1,,invite (trans),,invitar,convidar,inviter
+invite2,,invite (trans)@,,,,
+clean3,TG200,clean (v) (trans),,limpiar,limpar,nettoyer
+clean4,,clean (v) (trans)@,,,,
+wash1,TG200,wash (trans),,lavar,lavar,laver
+wash2,,wash (trans)@,,,,
+bathe1,,bathe (intr),,bañarse,banhar-se,"se baigner, se laver"
+bathe2,,bathe (intr)@,,,,
+touch1,,touch (trans),,tocar,"tocar, apalpar",toucher
+touch2,,touch (trans)@,,,,
+embrace1,,"embrace, hug (trans)",,abrazar,abraçar,étreindre
+embrace2,,"embrace, hug (trans)@",,,,
+wrap1,,wrap (trans),,envolver,"embrulhar, envolver",envelopper
+wrap2,,wrap (trans)@,,,,
+cover1,,cover (trans),,cubrir (tapar),"cobrir, tapar","couvrir, recouvrir"
+cover2,,cover (trans)@,,,,
+work3,,work (intr),,trabajar,trabalhar,travailler
+work4,,work (intr)@,,,,
+do1,,do (trans),,hacer,fazer,faire
+do2,,do (trans)@,,,,
+teach1,,teach,,enseñar,ensinar,

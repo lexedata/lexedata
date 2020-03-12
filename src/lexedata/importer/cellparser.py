@@ -2,18 +2,7 @@
 import re
 
 from exceptions import *
-from objects import Form
 
-#lambda function for getting comment of excel cell if comment given
-replace_none_comment = lambda x: x.content if x  else ""
-comment_getter = lambda x: replace_none_comment(x.comment)
-
-# replacing none values with ''
-replace_none = lambda x: "" if x == None else x
-
-# lambda function for getting comment of excel cell if comment given
-replace_none_comment = lambda x: x.content if x else ""
-comment_getter = lambda x: replace_none_comment(x.comment)
 
 # functions for bracket checking
 one_bracket = lambda opening, closing, str, nr: str[0] == opening and str[-1] == closing and \
@@ -25,7 +14,6 @@ class CellParser():
     """
     Iterator class over all form elements contained in a form cell
     """
-    _wrongorder = [] #just for checking correct parsing
 
     #pattern for splitting form cell into various form elements
     form_separator = re.compile(r"""(?<=[}\)>/\]])                # The end of an element of transcription, not consumed
@@ -45,21 +33,21 @@ class CellParser():
                                                 r"^.*(\{.+?\}).*$"] # source
                        ]
 
-    def __init__(self, cell, lan_id, concept):
+    def __init__(self, cell):
         values = cell.value
+        self.coordinate = cell.coordinate
 
         elements = CellParser.separate(values)
 
         if len(elements) == 0: # check that not empty
-            raise CellParsingError(values)
+            raise CellParsingError(values, cell.coordinate)
 
         # clean elements list
         elements = [e.rstrip(" ").lstrip(" ") for e in elements]  # no tailing white spaces
         elements[-1] = elements[-1].rstrip("\n").rstrip(",").rstrip(";") # remove possible line break and ending commas
 
         self._elements = iter(elements)
-        self.lan_id = lan_id
-        self.concept = concept
+
 
     @classmethod
     def separate(cl, values):
@@ -78,35 +66,60 @@ class CellParser():
             values = cl.__line_separator.sub(r"\1&&\2", values)
         return values.split("&&")
 
-
-    @staticmethod
-    def parsecell(ele, cellsize=5):
+    @classmethod
+    def parsecell(cls, ele, coordinates, cellsize=5):
         """
         :param ele: is a form string; form string referring to a possibly (semicolon or)comma separated string of a form cell
         :return: list of cellsize containing parsed data of form string
         """
-        mymatch = CellParser.__cell_value_pattern.match(ele)
+        mymatch = cls.__cell_value_pattern.match(ele)
 
         # check for match
         if mymatch:
             mymatch = list(mymatch.groups())  # tuple of all matches, None if empty
-            return mymatch
 
-        #check for exceptions
+        # check for exceptions
         else:
             if ele == "...":
-                ele = ["No value"] * cellsize
-                return ele
+                mymatch = ["No value"] * cellsize
 
-            elif len(ele) > 3: #cell not None nor ..., could be in wrong order
-                ele= CellParser.wrong_order(ele, cellsize=cellsize)
-                return ele
+            elif len(ele) > 3: # cell not None nor ..., could be in wrong order
+                mymatch = CellParser.wrong_order(ele, coordinates, cellsize=cellsize)
 
-            else: #cell cannot be parsed
-                raise CellParsingError(ele)
+            else: # cell cannot be parsed
+                raise CellParsingError(ele, coordinates)
+
+        mymatch = [e or '' for e in mymatch]
+        phonemic, phonetic, ortho, comment, source = mymatch
+
+        variants = []
+        phonemic = cls.variants_separator(variants, phonemic)
+        phonetic = cls.variants_separator(variants, phonetic)
+        ortho = cls.variants_separator(variants, ortho)
+        variants = ",".join(variants)
+        if phonemic != "" and phonemic != "No value":
+            if not one_bracket("/", "/", phonemic, 2):
+                raise FormCellError(phonemic, "phonemic", coordinates)
+            # phonemic = phonemic.strip("/")
+
+        if phonetic != "" and phonetic != "No value":
+            if not one_bracket("[", "]", phonetic, 1):
+                raise FormCellError(phonetic, "phonetic", coordinates)
+            # phonetic = phonetic.strip("[").strip("]")
+
+        if ortho != "" and ortho != "No value":
+            if not one_bracket("<", ">", ortho, 1):
+                raise FormCellError(ortho, "orthographic", coordinates)
+            # ortho = ortho.strip("<").strip(">")
+
+        if comment != "" and comment != "No value":
+            if not comment_bracket(comment):
+                raise FormCellError(comment, "comment", coordinates)
+
+        return [phonemic, phonetic, ortho, comment, source, variants]
 
     @staticmethod
-    def wrong_order(formele, cellsize=5):
+    def wrong_order(formele, coordinates, cellsize=5):
         """checks if values of cells not in expected order, extract each value"""
         ele = (formele + ".")[:-1] # force python to hard copy string
         empty_cell = [None] * cellsize
@@ -122,10 +135,8 @@ class CellParser():
         # raise error
         ele = ele.strip(" ")
         if not ele == "":
-
-            errmessage = formele +"\n" + str(empty_cell)
-            CellParser._wrongorder.append(errmessage)
-            raise CellParsingError(errmessage, comment="in wrong order: ")
+            errmessage = formele +" led to representation: " + str(empty_cell)
+            raise FormCellError(errmessage, "wrong order or illegal content", coordinates)
 
         return empty_cell
 
@@ -134,43 +145,72 @@ class CellParser():
 
     def __next__(self):
         ele = next(self._elements)
-        return create_form(CellParser.parsecell(ele), self.lan_id, self.concept)
+        return CellParser.parsecell(ele, self.coordinate)
 
-def create_form(f_ele, lan_id, concept):
-    f_ele = [e or '' for e in f_ele]
+    @staticmethod
+    def variants_scanner(string):
+        """copies string, inserting closing brackets if necessary"""
+        is_open = False
+        closers = {"<": ">", "[": "]", "/": "/"}
+        collector = ""
+        starter = ""
 
-    phonemic, phonetic, ortho, comment, source = f_ele
+        for char in string:
 
-    form_id = Form.register_new_id(
-        Form.id_creator(lan_id, concept.ID))
+            if char in closers and not is_open:
+                collector += char
+                is_open = True
+                starter = char
 
-    variants = []
-    phonemic = Form.variants_separator(variants, phonemic)
-    phonetic = Form.variants_separator(variants, phonetic)
-    ortho = Form.variants_separator(variants, ortho)
+            elif char == "~":
+                if is_open:
+                    collector += (closers[starter] + char + starter)
+                else:
+                    collector += char
 
-    if phonemic != "" and phonemic != "No value":
-        if not one_bracket("/", "/", phonemic, 2):
-            raise FormCellError(phonemic, "phonemic")
-        # phonemic = phonemic.strip("/")
+            elif char in closers.values():
+                collector += char
+                is_open = False
+                starter = ""
 
-    if phonetic != "" and phonetic != "No value":
-        if not one_bracket("[", "]", phonetic, 1):
-            raise FormCellError(phonetic, "phonetic")
-        # phonetic = phonetic.strip("[").strip("]")
+            elif is_open:
+                collector += char
 
-    if ortho != "" and ortho != "No value":
-        if not one_bracket("<", ">", ortho, 1):
-            raise FormCellError(ortho, "orthographic")
-        # ortho = ortho.strip("<").strip(">")
+        return collector
 
-    if comment != "" and comment != "No value":
-        if not comment_bracket(comment):
-            raise FormCellError(comment, "comment")
+    @classmethod
+    def variants_separator(klasse, variants_list, string):
 
-    # replace source if not given
-    source_id = lan_id + ("{1}" if source == "" else source).strip()
+        if "~" in string:
+            # force python to copy string
+            text = (string + "&")[:-1]
+            text = text.replace(" ", "")
+            text = text.replace(",", "")
+            text = text.replace(";", "")
+            values = klasse.variants_scanner(text)
 
-    return Form(ID=form_id, Language_ID=lan_id, phonemic=phonemic,
-                phonetic=phonetic, orthographic=ortho,
-                variants=";".join(variants)), comment.strip(), source_id
+            values = values.split("~")
+            first = values.pop(0)
+
+            # add rest to variants prefixed with ~
+            values = [("~" + e) for e in values]
+            variants_list += values
+            return first
+
+        # inconsistent variants
+        elif ("," not in string and ";" not in string) and \
+                (string.count("[") >= 2 or string.count("<") >= 2 or string.count("/") > 3):
+            string = string.replace(" ", "")
+            string = string.replace("><", ">&&<")
+            string = string.replace("][", "]&&[")
+            string = string.replace("//", "/&&/")
+
+            values = string.split("&&")
+            first = values.pop(0)
+
+            # add rest to variants prefixed with %
+            values = [("%" + e) for e in values]
+            variants_list += values
+            return first
+        else:
+            return string

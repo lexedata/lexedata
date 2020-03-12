@@ -30,14 +30,14 @@ comment_bracket = lambda str: str.count("(") == str.count(")")
 
 def row_to_concept(conceptrow):
     # values of cell
-    set, english, english_strict, spanish, portugese, french = [cell.value for cell in conceptrow]
+    set, english, english_strict, spanish, portuguese, french = [cell.value for cell in conceptrow]
     # comment of cell
     concept_comment = comment_getter(conceptrow[1])
     # create id
     concept_id = Concept.register_new_id(english)
     return Concept(ID=concept_id, set=set, english=english,
                    english_strict=english_strict, spanish=spanish,
-                   portuguese=portugese, french=french,
+                   portuguese=portuguese, french=french,
                    concept_comment=concept_comment)
 
 
@@ -68,11 +68,10 @@ def main():
         "--debug-level", type=int, default=0,
         help="Debug level: Higher numbers are less forgiving")
     args = parser.parse_args()
-    args.path = r"C:\Users\walter.fuchs\Desktop\outofasia\stuff\Copy of TG_comparative_lexical_online_MASTER.xlsx"
     # The Input
     wb = op.load_workbook(filename=args.path)
     sheets = wb.sheetnames
-
+    wb = wb[sheets[0]]
     # The Intermediate Storage, in a in-memory DB
     session = create_db_session(args.db)
 
@@ -129,7 +128,7 @@ def main():
                                 session.add(source)
 
                             c_form.sources.append(source)
-
+                            # here using logical and
                             already_existing = session.query(Form).filter(
                                 Form.Language_ID == c_form.Language_ID,
                                 Form.phonetic == c_form.phonetic,
