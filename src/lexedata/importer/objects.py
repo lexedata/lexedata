@@ -80,7 +80,7 @@ class Form(DatabaseObjectWithUniqueStringID):
 
     #melvin
     Form_Comment = attr.ib()
-    Source = attr.ib()
+    Source = sa.Column(sa.String, name="Source")
     Concept_ID = attr.ib()
     Procedural_Comment = attr.ib()
     Procedural_Comment_Concept = attr.ib()
@@ -200,14 +200,15 @@ class Cognate(DatabaseObjectWithUniqueStringID):
     __tablename__ = 'CognateTable'
 
     ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    Language_Id = sa.Column(sa.String, name="Language_ID")
+    Language_ID = sa.Column(sa.String, name="Language_ID")
     CogSet_ID = sa.Column(sa.String, name="cldf_cognatesetReference")
     Form_ID = sa.Column(sa.String, name="cldf_formReference")
     Cognate_Comment = sa.Column(sa.String, name="Cognate_Comment")
     Phonemic = sa.Column(sa.String, name="Phonemic")
     Phonetic = sa.Column(sa.String, name="Phonetic")
     Orthographic = sa.Column(sa.String, name="Orthographic")
-    Source = attr.ib()
+    Source = sa.Column(sa.String, name="Source")
+    Comment = sa.Column(sa.String, name="Comment")
 
     __cog_counter = defaultdict(int)
 
@@ -224,8 +225,9 @@ class Cognate(DatabaseObjectWithUniqueStringID):
         id = cls.create_id(cogset_id)
         form_id = ""
         cog_com = comment_getter(cog_cell)
-        return cls(ID=id, Language_id=lan_id, CogSet_ID=cogset_id, Form_Id=form_id, Cognate_Comment=cog_com,
-                   Phonemic=phonemic, Phonetic=phonetic, Orthographic=ortho, Source=source)
+        source = lan_id + ("{1}" if source == "" else source).strip()
+        return cls(ID=id, Language_ID=lan_id, CogSet_ID=cogset_id, Form_ID=form_id, Cognate_Comment=cog_com,
+                   Phonemic=phonemic, Phonetic=phonetic, Orthographic=ortho, Source=source, Comment=comment)
 
     # ________________________________________________________________________
     #gereon

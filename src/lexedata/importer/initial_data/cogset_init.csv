@@ -412,7 +412,8 @@ VEIN5,"COMPOUND, GEN",
 VEIN7,,
 SKIN1,,"A ""piɾ"" set, with much (typical) loss of final /r/ -- ZJO"
 SKIN2,,
-SKIN3,,
+SKIN3,,"lev thinks (and I agree) that skin3, skin4 and back1 should be merged
+	-pagouritsa itsnoneofyourbusiness"
 SKIN4,,
 CORN1,,
 CORN2,"COMPOUND, MED","An ""awati+ki"" set -- ZJO"
@@ -468,8 +469,16 @@ PEPPER5X,,
 PEPPER6X,,
 PEPPER7,,
 PEPPER8,,
-FRUIT1,"COMPOUND, GEN","An ""ɨβ+á"" TRUNK(?)+FRUIT compound set; forms must show medial bilabial for membership.  The ""ɨβ"" set is TRUNK1.  ""ɨβ"" seems to have meant 'tree' historically (cf. Mawe) and these show that old meaning, i.e., 'tree fruit' -- ZJO"
-FRUIT2,,"An ""á"" 'small.fruit/seed' set that enters into compounds in FRUIT1 & SEED1 -- ZJO"
+FRUIT1,"COMPOUND, GEN","An ""ɨβ+á"" TRUNK(?)+FRUIT compound set; forms must show medial bilabial for membership.  The ""ɨβ"" set is TRUNK1.  ""ɨβ"" seems to have meant 'tree' historically (cf. Mawe) and these show that old meaning, i.e., 'tree fruit' -- ZJO
+----
+Maybe this compound needs revisiting, in combination with TREE1
+	-pagouritsa itsnoneofyourbusiness"
+FRUIT2,,"An ""á"" 'small.fruit/seed' set that enters into compounds in FRUIT1 & SEED1 -- ZJO
+----
+Is this the ʔa round classifier or something different? I think we need to reconsider these compounds.
+	-pagouritsa itsnoneofyourbusiness
+Note that the head compound and the apin compound were added after the comment above.
+	-pagouritsa itsnoneofyourbusiness"
 FRUIT3,,
 FRUIT4,,
 FRUIT5,,
@@ -980,7 +989,8 @@ SANDFLY3,,
 SANDFLY4,,
 SANDFLY5,,"a ""pi'u"" set --SM
 I expect there to be more cognates. I note Portuguese <pium> is missing from the translations column; maybe looking for <pium> would yield more cognates (e.g.,  maybe in Tupinambá? --SM"
-SANDFLY6,,
+SANDFLY6,,"according to Warazu source compound of tatu and louse
+	-pagouritsa itsnoneofyourbusiness"
 HORSEFLY1,,
 HORSEFLY2,,
 HORSEFLY3X,,
@@ -1008,7 +1018,8 @@ COCKROACH1,,"there are a number of unexpected and likely sporadic sound changes 
 
 A form /arawe/ 'cockroach' is also attested in Guianan Cariban languages... Borrowing?- SM"
 COCKROACH2,,
-COCKROACH3,,
+COCKROACH3,,"this looks suspiciously similar to cockroach1. maybe sporadic sound change?
+	-pagouritsa itsnoneofyourbusiness"
 COCKROACH4,,
 GRASSHOPPER1,,a 'tuku' set --KCB
 GRASSHOPPER2,,
@@ -1265,3 +1276,4828 @@ BEAK1,"COMPOUND, IND","A ""wɨɾa+tĩ"" bird + nose compound set -- ZJO"
 BEAK2X,,
 BEAK3X,,
 BEAK4,,
+MOTHER1,,
+MOTHER2,,"An ""aʔi"" set (nb. no glottal stop indicated Guarayú source) -- ZJO"
+MOTHER2.5,,
+MOTHER3,,"An ""apĩ"" set -- ZJO"
+MOTHER4,,
+MOTHER5,,Forms in this row appear to double as inherently 1st person possessed and vocative forms.  They're included here because of their referential properties with the former use -- ZJO
+MOTHER6,,
+MOTHER7,LOAN,
+MOTHER8,LOAN,
+MOTHER9X,LOAN,
+MOTHER10,LOAN,
+MOTHER11,LOAN,
+FATHER1,,"An ""(ɾ)uβ"" set -- ZJO"
+FATHER2,,
+FATHER4,LOAN,
+FATHER5,LOAN,
+FATHER6X,LOAN,
+FATHER7,LOAN,
+FATHER8,LOAN,
+FATHER9,,
+FATHER10X,,
+FATHER11,,
+FATHER13X,,
+FATHER14X,,
+SON1,,"An ""aʔɨɾ"" set. Most forms mean ""son.MALE.EGO"" -- ZJO"
+SON2,,"Generally means ""son.female ego""-- ZJO"
+SON3,,
+SON4,,
+SON5,,
+SON6,,
+SON7,,
+SON8,,
+SON9X,,
+SON10X,,
+SON11X,,
+SON12,,
+SON13,,
+SON14,,
+DAUGHTER1,,"Often ""male"" ego - VMW
+
+An ""ajɨɾ"" set, distinguished from SON ""aʔɨɾ"" set -- ZJO"
+DAUGHTER2,,
+DAUGHTER3,,
+DAUGHTER4,,
+DAUGHTER5,,
+DAUGHTER6,,
+DAUGHTER7,,
+DAUGHTER8X,,
+DAUGHTER9X,,
+DAUGHTER10X,,
+BROTHER1 ,,"An ""ɨkeʔɨ"" set -- ZJO
+This typically ""elder brother male ego"" -- ZJO"
+BROTHER2,,"An ""ɨwɨɾ"" set. This typically means ""younger brother male ego"" -- ZJO"
+BROTHER3,,"A ""kɨwɨɾ"" set -- ZJO. This typically means ""brother female ego"" -- ZJO"
+BROTHER4,,
+BROTHER5,,
+BROTHER6,,
+BROTHER7,,
+BROTHER9,,
+BROTHER10,,
+BROTHER11,,
+BROTHER12,,
+BROTHER13,,
+BROTHER14X,,
+BROTHER15,,
+BROTHER16,,
+BROTHER17,,
+BROTHER18,,
+BROTHER19,,
+BROTHER20,,
+BROTHER21,,
+BROTHER22,,
+BROTHER23X,,
+BROTHER24,"COMPOUND, GEN",sibling + man - KCB
+SISTER1 ,,"An ""ɨkeɾ"" set. This typically means ""elder sister female ego"" -- ZJO"
+SISTER2,,"A ""pɨkɨʔɨɾ"" set. This typically means ""younger sister female ego"" -- ZJO
+
+I think if anything the metathesis is in the opposite direction, since Mawe is kp and not pk. Maybe the most conservative is to collapse everything in one cognate set. what do you think? - NCP"
+SISTER3,,"An ""enɨɾ"" set. This typically means ""sister male ego"" -- ZJO"
+SISTER4,,
+SISTER5,,
+SISTER9,,
+SISTER10,,
+SISTER11,,
+SISTER12,,
+SISTER13,,
+SISTER14,,
+SISTER15,"COMPOUND, GEN",sibling + woman - NCP
+SISTER16,,
+SISTER17,,
+SISTER18,,
+COUSIN.MALE1X,"COMPOUND, GEN",uncle + son - NCP
+COUSIN.MALE2,,
+COUSIN.MALE3,,
+COUSIN.MALE4,,
+COUSIN.FEMALE1,,
+COUSIN.FEMALE2,,
+COUSIN.FEMALE3,,
+NEPHEW1,,"An ""iʔɨɾ"" set -- ZJO"
+NEPHEW2,,"A ""peŋ"" set -- ZJO"
+NEPHEW3,,
+NEPHEW5,,
+NEPHEW6,"COMPOUND, GEN",compound of uncle5 + son - NCP
+NEPHEW7,,
+NEPHEW8X,,
+NEPHEW9X,,
+NIECE1,,"An ""(e)tipeɾ"" set -- ZJO"
+NIECE2,,
+NIECE3 ,,tatɨ set -- NCP
+NIECE4X,,
+AUNT1,"COMPOUND, MED","A ""sɨʔɨɾ"" MOTHER+? compound set -- ZJO"
+AUNT2,,Often father's sister -- ZJO
+AUNT3,,
+AUNT4,,
+AUNT5,,
+AUNT5.5,,
+AUNT6,,
+AUNT7,,
+AUNT8X,,
+AUNT9,,
+AUNT10,"COMPOUND, IND",mother + small - NCP
+AUNT11,"COMPOUND, IND",mother + grown
+AUNT12,LOAN,
+UNCLE1,,"A ""tutɨɾ"" set -- ZJO"
+UNCLE2,"COMPOUND, MED","An ""uβɨɾ"" FATHER+? compound set -- ZJO"
+UNCLE3,,
+UNCLE4,,
+UNCLE5,,
+UNCLE6,,
+UNCLE7,,
+UNCLE8,,
+UNCLE9,,
+UNCLE11,,
+UNCLE12X,,
+HUSBAND1,,
+HUSBAND2,,
+HUSBAND3,,
+HUSBAND4,,
+HUSBAND5,,
+WIFE1,"COMPLEX, GEN","An ""emi-reko"" 'that which I have/own' set -- ZJO"
+WIFE2,,"An ""atɨ"" set -- ZJO"
+WIFE4,,"I think this should be merged with NEAR
+	-pagouritsa itsnoneofyourbusiness"
+WIFE5,,
+WIFE6,,
+WIFE7,,
+WIFE8,,
+WIFE9,,
+WIFE10X,,
+WIFE11,,
+BROTHER-IN-LAW1,"COMPOUND, GEN","Also means 'enemy' in many languages b/c war captives were married off to sisters, thus becoming a brother-in-law; compound of *oB 'face' and *jara 'master,' referencing old TG practices of acquiring names and faces through war captive taking -- ZJO
+----
+check relationship with FACE1, there may be some cases where things need to be moved if we accept this compound
+	-pagouritsa itsnoneofyourbusiness"
+BROTHER-IN-LAW2,"COMPOUND, IND",
+BROTHER-IN-LAW3,"COMPOUND, IND","A ""rendyr + sawa'e"" SISTER + BROTHER set - WNS"
+BROTHER-IN-LAW4,"COMPOUND, IND",
+BROTHER-IN-LAW5,"COMPOUND, IND",
+BROTHER-IN-LAW6,,
+BROTHER-IN-LAW7,,
+BROTHER-IN-LAW8,"COMPOUND, IND",
+BROTHER-IN-LAW9,,
+BROTHER-IN-LAW10,"COMPOUND, IND",
+BROTHER-IN-LAW11,,
+BROTHER-IN-LAW12,"COMPLEX, IND",
+BROTHER-IN-LAW13,"COMPOUND, IND",
+BROTHER-IN-LAW14,"COMPOUND, IND",
+BROTHER-IN-LAW15,,
+BROTHER-IN-LAW16,,
+SISTER-IN-LAW1,,
+SISTER-IN-LAW2,"COMPOUND, IND",
+SISTER-IN-LAW4,"COMPOUND, IND",
+SISTER-IN-LAW5,"COMPOUND, IND",
+SISTER-IN-LAW6,"COMPOUND, IND",
+SISTER-IN-LAW9,"COMPOUND, IND",
+SISTER-IN-LAW10,"COMPOUND, IND",
+SISTER-IN-LAW10.5,"COMPOUND, IND",
+SISTER-IN-LAW11X,,
+SISTER-IN-LAW12X,,
+MOTHER-IN-LAW1,,"An ""aiʃó"" set -- ZJO"
+MOTHER-IN-LAW2,"COMPOUND, IND","A ""mend+ɨ"" HUSBAND+MOTHER compound set, that appears to be older than the one below, given morphological integration of the compound -- ZJO"
+MOTHER-IN-LAW3,"COMPOUND, IND","A ""men+sɨ"" HUSBAND+MOTHER compound set (see note above) -- ZJO"
+MOTHER-IN-LAW3X,"COMPOUND, IND","A ""sawa'e + mãi"" HUSBAND+MOTHER compound set - WNS"
+MOTHER-IN-LAW4,,
+MOTHER-IN-LAW5,,
+MOTHER-IN-LAW6,,
+MOTHER-IN-LAW7,,
+FATHER-IN-LAW1,"COMPOUND, IND","A ""men+ruβ"" HUSBAND+FATHER compound set, that appears to ""newer"" than the one below given the degree of morphological integration (also see two sets under MOTHER-IN-LAW) -- ZJO"
+FATHER-IN-LAW2,"COMPOUND, IND","A ""mend+uβ"" HUSBAND+FATHER set (see note above) -- ZJO"
+FATHER-IN-LAW2X,"COMPOUND, IND","A ""sawa'e + pai"" HUSBAND+FATHER set - WNS"
+FATHER-IN-LAW3,"COMPOUND, IND",wife + father NCP
+FATHER-IN-LAW4,"COMPOUND, IND","An ""atɨ+uβ"" WIFE+FATHER compound set -- ZJO"
+FATHER-IN-LAW5,,
+FATHER-IN-LAW6,,
+FATHER-IN-LAW7,,
+FATHER-IN-LAW8,,
+FATHER-IN-LAW9,,
+FATHER-IN-LAW10,,
+SON-IN-LAW1,,"A ""peʔúm"" set -- ZJO"
+SON-IN-LAW2,,
+SON-IN-LAW3,,
+SON-IN-LAW4,,
+SON-IN-LAW5,,
+SON-IN-LAW6,,
+SON-IN-LAW7,"COMPOUND, IND",A DAUGHTER+HUSBAND compound set -- ZJO
+SON-IN-LAW8,"COMPOUND, IND",A DAUGHTER+HUSBAND compound set -- ZJO
+SON-IN-LAW9,,
+SON-IN-LAW10,"COMPLEX, IND",
+DAUGHTER-IN-LAW1,,
+DAUGHTER-IN-LAW2,"COMPOUND, IND","An ""aɨ+atɨ"" SON+WIFE compound set -- ZJO"
+DAUGHTER-IN-LAW3,"COMPOUND, IND","A ""membi+atɨ"" SON+WIFE compound set -- ZJO"
+DAUGHTER-IN-LAW4,,
+DAUGHTER-IN-LAW5,"COMPLEX, IND",
+GRANDCHILDMALEEGO1,"COMPLEX, GEN","A ""minó"" set + 'emi-' NOMZ -- ZJO"
+GRANDCHILDMALEEGO3,,
+GRANDCHILDFEMALEEGO1,"COMPLEX, GEN","A ""aɾiɾõ"" set + 'emi-' NOMZ -- ZJO"
+GRANDCHILD5,,
+GRANDCHILD3,,
+GRANDCHILD7,,
+GRANDMOTHER1,,"An ""aɾɨj"" set -- ZJO"
+GRANDMOTHER2,,
+GRANDMOTHER3,,
+GRANDMOTHER4,"COMPOUND, IND","A compound ""sɨ+sɨ"" MOTHER+MOTHER set -- ZJO"
+GRANDMOTHER5,"COMPOUND, IND","An ""uβ+sɨ"" FATHER+MOTHER compound set -- ZJO"
+GRANDMOTHER6,,
+GRANDMOTHER7,,
+GRANDMOTHER8X,,
+GRANDFATHER1,,
+GRANDFATHER2,,
+GRANDFATHER3,,"An ""amũj"" set -- ZJO"
+GRANDFATHER4,"COMPOUND, IND","An ""uβ+uβ"" FATHER+FATHER compound set -- ZJO"
+GRANDFATHER5,"COMPOUND, IND","A ""sɨ+uβ"" MOTHER+FATHER compound set -- ZJO"
+GRANDFATHER6X,,
+GODMOTHER1,,
+GODMOTHER2,"COMPOUND, IND","A ""sɨ+angá"" MOTHER+? compound set, note medial linking r -- ZJO"
+GODMOTHER3,"COMPOUND, IND","A ""sɨ+angá"" MOTHER+? compound set, note lack of medial linking r -- ZJO"
+GODMOTHER4,"COMPOUND, IND","A ""imãi + anga"" MOTHER+? compound set - WNS"
+GODFATHER1,"COMPOUND, IND","An ""uβ+angá"" FATHER+? compound set, note medial bilabial -- ZJO"
+GODFATHER2,"COMPOUND, IND","An ""u+angá"" FATHER+? compound set, note lack of medial bilabial -- ZJO"
+GODFATHER3,"COMPOUND, IND","A ""ipái+anga"" FATHER+? compound set - WNS"
+GODFATHER4,,
+GODFATHER5,,
+MAN1,,"A ""kuimbaʔé"" set -- ZJO"
+MAN2,"COMPLEX, GEN","A LAND+NOMZ complex set, i.e., ""one of the Earth"" -- ZJO"
+MAN3,,"Really means something like 'fellow human' and needs to be searched for better, so Xd -- ZJO"
+MAN4,,
+MAN5,,
+MAN7,,
+MAN8,,
+MAN9,,
+MAN10,,
+MAN11X,,
+MAN12X,,
+WOMAN1,,
+WOMAN2,,
+WOMAN3,,
+WOMAN3.5,,
+WOMAN4,,"An ""esi"" set -- ZJO"
+WOMAN6,,
+WOMAN7,,
+OLD WOMAN1,,"A ""wajβ"" set -- ZJO"
+OLD WOMAN2,,"A ""nuj"" set -- ZJO"
+OLD WOMAN3,"COMPOUND, GEN","A ""wajβ+nui"" compound set -- ZJO"
+OLD WOMAN4,"COMPOUND, GEN","A ""wajβ+ĩ"" compound set -- ZJO"
+OLD WOMAN5,,
+OLD WOMAN6,,
+OLD WOMAN7,,
+OLD WOMAN8,,
+OLD WOMAN9,"COMPOUND, GEN",woman + grow - NCP
+OLD WOMAN10,,
+PERSON1,,
+PERSON2,,"An ""aβá"" set -- ZJO"
+PERSON3,,"An ""mbɨʔa"" set -- ZJO"
+PERSON3.5,,"A teko set. This seems related with the eko root meaning live, but then the t is not explained. The verb doesn't show remnants of relational ""prefix"". - NCP
+"
+PERSON4,,
+PERSON5X,,
+PERSON7,,
+PERSON9X,,
+PERSON10,,
+PERSON11X,,
+PERSON13X,,"I note that this form /poro-/ is usually considered a prefix on verbs, indicating a 'generic human' participant (usually object on transitive verbs). --SM
+I think we should populate this row (and maybe X it?) - NCP
+ "
+PERSON14X,,
+PERSON18X,,"A ""tapɨʔɨj"" set that means other indigenous person.  This cognate would be widely attested if we had looked for words for ""indio"" -- ZJO"
+PERSON19,LOAN,
+PERSON20X,,
+WHITE PERSON1,,"A ""kaɾaj"" set -- ZJO"
+WHITE PERSON2,,
+WHITE PERSON3,LOAN,Almost certainly a loan from Nheengatú in the colonial period -- ZJO
+WHITE PERSON4,,
+WHITE PERSON5,,
+WHITE PERSON6,,
+WHITE PERSON8X,,
+WHITE PERSON9,,
+WHITE PERSON10X,,
+WHITE PERSON11,,
+WHITE PERSON12,,
+WHITE PERSON13,,
+WHITE PERSON14,,
+WHITE PERSON15,,
+WHITE PERSON 16,,
+CHILD1,,"This is mostly the gender-neutral child set based on the root ""mɨta"" - VMW"
+CHILD2,,
+CHILD3,,
+CHILD4,,
+CHILD5,,"is this a good cognate set? Also, could it be related to son? - NCP"
+CHILD6,,
+CHILD7,,
+CHILD8,,
+CHILD9,,
+CHILD10,,
+CHILD11,LOAN,< Quechua -- ZJO
+CHILD12,,
+CHILD13,,
+CHILD14,,
+CHILD15,,
+CHILD16,,
+CHILD17,,
+CHILD.MALE5,"COMPOUND, IND",child (son1)+man - NCP
+CHILD.MALE7,,
+CHILD.MALE9X,,
+CHILD.MALE10,,
+CHILD.MALE12,,
+CHILD.MALE15X,,
+CHILD.MALE17X,,
+CHILD.MALE19X,,
+CHILD.MALE20X,,
+CHILD.MALE21X,,
+CHILD.FEMALE1,,
+CHILD.FEMALE2,,"A ""kujãmuku"" set -- ZJO"
+CHILD.FEMALE3,,
+CHILD.FEMALE4,,
+CHILD.FEMALE4.5,,
+CHILD.FEMALE6X,,
+CHILD.FEMALE7X,,
+CHILD.FEMALE8X,,
+CHILD.FEMALE9X,,
+CHILD.FEMALE10X,,
+CHILD.FEMALE14,,
+CHILD.FEMALE17,,
+CHILD.FEMALE18,,
+YOUNG MAN1,,"A ""kunumĩ"" set -- ZJO"
+YOUNG MAN2,,
+YOUNG MAN3,,
+YOUNG MAN4,,
+YOUNG MAN7,,
+YOUNG MAN8,,
+YOUNG MAN10X,,
+YOUNG MAN11,,
+YOUNG WOMAN1,"COMPOUND, GEN","a kuña + tai -- VMW
+"
+YOUNG WOMAN2,,
+YOUNG WOMAN3,,
+YOUNG WOMAN4 ,,
+YOUNG WOMAN6,,
+YOUNG WOMAN7,,
+MINGA1,,
+MINGA2X,,
+ORPHAN1,"COMPOUND, IND","A ""sɨ+eʔɨm"" MOTHER+PRIVATIVE compound set, though not strictly a compound because the latter is bound morpheme -- ZJO"
+ORPHAN2,,
+ORPHAN3X,,
+ORPHAN4,"COMPOUND, IND","An ""uβ+eʔɨm"" FATHER+PRIVATIVE compound set -- ZJO"
+ORPHAN5,,
+ORPHAN6,,
+ORPHAN7,,
+ORPHAN8,,
+ORPHAN9,,
+ORPHAN10,,
+ORPHAN11,LOAN,
+ORPHAN11.5,,
+ORPHAN12,,
+ORPHAN13,,
+OWNER1,,"A ""yaɾ"" set -- ZJO"
+OWNER2,,
+SPIRIT1,"COMPOUND, GEN","An ""aj+aŋ"" ?+SHADE compound set, copied there -- ZJO"
+SPIRIT2,,
+SPIRIT3,,
+SPIRIT4,,
+SPIRIT7,,
+SPIRIT8,"COMPOUND, GEN","A ""mai+sankara"" ""spirit (in THING1)+prefix+imitate1"" compound set -- ZJO"
+SPIRIT9,,
+SPIRIT10,,
+SPIRIT11,,
+SPIRIT12,,
+SPIRIT13,,
+SPIRIT15,,
+SPIRIT16,"COMPLEX, IND",
+SPIRIT18X,,
+SPIRIT19X,,
+SPIRIT20X,,"In OMG, subaquatic peoples (local Sp. 'yacuruna') -- ZJO"
+SPIRIT21,,
+FRIEND0.5,,"A ""(je)kotɨ(ʔa)r"" set, probably based on /kotɨ/, the postposition -- ZJO"
+FRIEND1X,,
+FRIEND2X,,
+FRIEND3X,,
+FRIEND4X,"COMPOUND, GEN","An ""atɨ+"" WIFE+? compound set that probably denoted someone in a wife-swapping relationship -- ZJO"
+FRIEND5X,,
+FRIEND6X,,
+FRIEND7X,,
+FRIEND8X,,
+FRIEND9X,,
+FRIEND10X,LOAN,
+FRIEND11X,,
+FRIEND12X,LOAN,
+FRIEND13X,,
+FRIEND14X,LOAN,
+FRIEND14.5X,LOAN,
+FRIEND15X,,
+FRIEND16X,,
+COMPANION1,,"An ""irũ"" set -- ZJO"
+COMPANION2,,"A ""tɨr"" set -- ZJO"
+FLOURX,,"this is a clearly tir tiram set. we are operating with the hypothesis that there are two roots ti and tir, see Parintintin. we still need to figure out what to do with the items still in companion 2. also, still we are struggling with the relationship of the meanings of flour and companion
+	-pagouritsa itsnoneofyourbusiness"
+COMPANION3,,
+COMPANION4,,
+COMPANION5,,
+COMPANION6,,
+COMPANION7,,
+COMPANION8,,
+COMPANION9,,
+COMPANION10,,
+COMPANION11X,,
+COMPANION12X,,
+COMPANION13,,
+WITCH~SHAMAN1,,"A ""pajé"" set -- ZJO"
+WITCH~SHAMAN2,"COMPOUND, GEN",
+WITCH~SHAMAN4,"COMPOUND, GEN",
+WITCH~SHAMAN5,,
+WITCH~SHAMAN6,,
+WITCH~SHAMAN6.5,,
+WITCH~SHAMAN7X,,Xd b/c not deep-drilled -- ZJO
+WITCH~SHAMAN8,"COMPOUND, GEN",person + heal - NCP
+CHIEF1,"COMPOUND, GEN","compound of before, long time ago + strong - NCP"
+CHIEF2,,"""muru"" set -- VMW"
+CHIEF3,"COMPOUND, IND","muru + ubixa (big, large) set - NCP"
+CHIEF4,,
+CHIEF5,"COMPOUND, GEN","A ""muru+?"" compound set -- ZJO"
+CHIEF6,LOAN,
+CHIEF7,LOAN,
+CHIEF8,,"A ""more(re)kwat"" set -- ZJO"
+CHIEF9,,
+CHIEF10,LOAN,
+CHIEF11,LOAN,
+CHIEF12,LOAN,
+CHIEF13,LOAN,
+CHIEF14,,"An ""aɾɨβ"" set -- ZJO"
+CHIEF15X,"COMPLEX, GEN","the one to be obeyed, nominalizer + obey (in BELIEVE)- NCP"
+CHIEF16X,,
+CHIEF17,LOAN,
+CHIEF18,"COMPLEX, GEN",An ORDER+NOMZ complex set -- ZJO
+CHIEF19,,
+CHIEF20,,
+CHIEF21,,
+CHIEF22X,,
+CHIEF25,LOAN,
+CHIEF26,LOAN,
+RED1,,"A ""piɾaŋ"" set -- ZJO"
+RED2,,"A ""pɨtaŋ"" set -- ZJO
+probably meant dark, red-brown. - NCP
+"
+RED4,,
+RED5,,
+RED6,,
+RED7,,
+RED8X,,
+RED9X,,
+RIPE1,,
+RIPE1.5,,
+RIPE2,,
+RIPE3,,
+RIPE4,,
+RIPE5,,
+RIPE6,,
+RIPE7,,
+RIPE8,,
+RIPE9,,
+RIPE10,,
+RIPE11,,
+RIPE12,,
+WHITE1 ,,"A ""ti(ŋ)"" set -- ZJO"
+WHITE2,"COMPOUND, MED","A ""moro + ti(ŋ)"" set -- ZJO"
+WHITE4,,
+WHITE5,,
+WHITE6,,
+WHITE7,,
+WHITE8,,
+BLACK1,,"The distinct BLACK1 and BLACK 1.5 sets reflect the fact that we are currently operating under the hypothesis that there are two different roots here, *tsun and *tun; this is connected to the unresolved question of the compound nature of DARK1&2. One one view DARK1 = edge + tun (BLACK); and DARK2 = pi + tsun (BLACK), where the origin of the first element is unclear, but may be related to the pi in RED. On this view we would explain the differences in the initial vowels (and in some cases the second vowels) in the DARK1&2 forms as due to leveling. -- LDM"
+BLACK2,,An *un set -- ZJO
+BLACK3,,
+BLACK4,,
+BLACK5,,
+BLACK6,,
+BLACK8,LOAN,
+BLACK9,,
+DARK1,"COMPOUND, GEN","A ""(ɨ)pɨt+un"" ?+BLACK compound set -- ZJO
+----
++zjohagan@gmail.com we are no longer considering dark 1 and 2 as compounds, and maybe dark1 needs to be moved to night. also, stuff needs to be pulled out of Black1. Once you are done, please erase dark1 and dark2 from the compounds tab in this spreadsheets.
+_Assigned to Zachary O'Hagan_
+	-pagouritsa itsnoneofyourbusiness"
+DARK2,"COMPOUND, GEN","A ""pi+tsun"" ?+BLACK compound set -- ZJO"
+DARK3,,
+DARK4,,
+DARK5,,
+DARK6,,
+DARK7,,
+DARK8,,
+DARK9,,
+DARK10,,
+UNRIPE1,,
+UNRIPE3,,
+GREEN1,,"Should *kyt and *akyt be separate cognate sets? Note that both apparently exist independently in Aweti. --SM
+
+akyt is probable 'green fruit', hence (não maduro). -- LDM
+"
+GREEN2,,
+GREEN3X,,
+GREEN4,"COMPOUND, GEN",grue + yellow - NCP
+GREEN5,,
+BLUE1,,
+BLUE2,,
+BLUE3X,,
+BLUE5,,
+YELLOW1,,
+YELLOW2,,
+YELLOW3,,
+YELLOW4,,
+YELLOW5,,"A ""tawa"" set -- ZJO.  What should we do with this in terms of deep drilling?  It's 'clay' -- ZJO
+let's see what we find and we make a clay header afterwards if we need to - NCP
+"
+YELLOW6,,
+YELLOW7,,
+GRUE1,,
+GRUE2,,
+GRUE3,,
+YESTERDAY1,,"A ""kwesé"" set -- ZJO
+----
+I think this set needs review. A few forms are missing the second syllable.
+	-pagouritsa itsnoneofyourbusiness"
+YESTERDAY2,,
+YESTERDAY4,,
+YESTERDAY5,,
+YESTERDAY6,,
+YESTERDAY7X,,
+YESTERDAY8,,
+YESTERDAY9,,
+YESTERDAY10,,
+YESTERDAY11,,
+YESTERDAY12,,
+YESTERDAY13X,,
+YESTERDAY14,,
+YESTERDAY15,,
+TOMORROW1,,
+TOMORROW3,,
+TOMORROW4,,
+TOMORROW5,,
+TOMORROW6,"COMPLEX, IND",complex day+some morphology - NCP
+TOMORROW9,,
+TOMORROW10,,
+TOMORROW11,"COMPLEX, IND",
+TOMORROW12,,
+TOMORROW13,,
+NOW1,,"An ""ãɨ""/""aiN"" (crucially with nasality) set -- ZJO."
+NOW2,,"A ""kuɾi"" set -- ZJO"
+NOW3,"COMPOUND, MED","A ""kuɾiteĩ"" set now2+ ? -- ZJO"
+NOW4,,
+NOW5,"COMPLEX, IND","A ""koʔɨɾ"" set -- ZJO"
+NOW6,,
+NOW7,,
+NOW8.5,,
+NOW9X,,
+NOW10,,
+NOW11,,
+NOW12,,
+NOW13,,
+NOW14,,
+NOW15,,
+NOW16,,
+NOW17,,
+NOW18,,
+NOW19X,,
+NOW20X,"COMPLEX, IND",
+NOW22,,
+NOW23,,
+NOW24,,
+NOW25X,,
+TODAY1,"COMPLEX, IND","""ko + me (+ te/he)"" set --VMW"
+TODAY2,,"An ""aŋ"" set -- VMW
+----
++zjohagan@gmail.com todays need to be cleaned up
+_Assigned to Zachary O'Hagan_
+	-pagouritsa itsnoneofyourbusiness"
+TODAY3,"COMPLEX, MED","and ""aŋ + amo"" set -- VMW
+"
+TODAY4,"COMPLEX, IND","A combination of ""ko"" + ""ara"" 'day' -- ZJO"
+TODAY6,,"A ""(k)are(he)"" set -- ZJO"
+TODAY8,,
+TODAY10,"COMPLEX, GEN",
+TODAY11,,
+TODAYFUNCTX,,
+DAY1,,
+DAY3,,
+DAY4,,
+DAY5,"COMPLEX, GEN",
+YEAR1,"COMPOUND, GEN","A ""yere"" set -- ZJO"
+YEAR2,,"A ""roʔɨ"" set -- ZJO"
+YEAR3,"COMPOUND, GEN",day + ? - NCP
+YEAR6,,
+YEAR7,"COMPOUND, GEN",cognate with postposition? -- LDM
+YEAR9,,
+YEAR10,,
+YEAR11,,
+YEAR12,,
+YEAR13,,
+YEAR14,"COMPOUND, GEN",sun + day - NCP
+YEAR15,LOAN,
+YEAR16,LOAN,
+YEAR17,LOAN,
+YEAR18,LOAN,
+YEAR19,,
+LONG TIME AGO1,,"An ""ɨm(u)ã"" set -- ZJO"
+LONG TIME AGO2,,"An ""aɾaka"" set -- ZJO"
+LONG TIME AGO4,,
+LONG TIME AGO5,,
+LONG TIME AGO6,,
+LONG TIME AGO7,,
+LONG TIME AGO8,,
+BEFORE1,,
+BEFORE2,,
+BEFORE2.5,,
+BEFORE3,,
+BEFORE8,,
+BEFORE4,,
+BEFORE5,,
+BEFORE6,,
+BEFORE7,,
+BEFORE9,,
+BEFORE10X,,
+BEFORE11,,
+AFTER1,,
+AFTER2FUNCTX,,functional items in this row - NCP
+AFTER3,,
+AFTER3.5,,
+AFTER4,,
+AFTER5FUNCTX,,functional items - NCP
+AFTER6FUNCTX,,"Really spatial PPs meaning 'behind' that only got in here b/c OMG/KOK forms have grammaticalized to temporal clause linkers; all funct really -- ZJO
+----
+Are we sure that all these are cognate? meanings seem a bit wild. It seems to me that this cognate set is only based on akɨ. Maybe we should make it based on the omg kok forms that are compounds?
+	-pagouritsa itsnoneofyourbusiness"
+AFTER7,,
+AFTER9,,
+AFTER10,,
+AFTER11,,
+AFTER12,,
+AFTER15,,
+AFTER16,,
+AFTER17,,
+AFTER18,,
+AFTER19,,
+AFTER20,,
+AFTER21,,
+AFTER22,,
+AFTER23,,
+AFTER24,,
+AFTER25,,
+AFTER26,,
+AFTER27,,
+ALREADY3,,
+ALREADY4,,
+ALREADY5X,,
+ALREADY6,,
+ALREADY7,,
+ALREADY8,,
+ALREADY9,,
+ALREADY11,,
+ALREADY13,,
+ALREADY14,,
+ALREADY15FUNCTX,,
+ALREADY16,,
+ALWAYS1,,"A ""jepi"" set - NCP"
+ALWAYS1.5,,
+ALWAYS2,,this is a rame/hame set - NCP
+ALWAYS2.5,,
+ALWAYS3,,
+ALWAYS4,,"A ""memé"" set -- ZJO"
+ALWAYS6,,
+ALWAYS7,,
+ALWAYS8,,
+ALWAYS9,,
+ALWAYS9.5,,
+ALWAYS11,,
+ALWAYS12,,
+ALWAYS13,,
+ALWAYS16,,
+ALWAYS17,,
+ALWAYS19,,
+ALWAYS20X,,
+ALWAYS21,,
+ALWAYS22,,
+ALWAYS23,,
+ALWAYS24,,
+NIGHT1,,
+NIGHT2,,"A ""pɨsa"" set -- ZJO
+
+We are including forms bearing locative suffixes in this row. -- LDM"
+NIGHT3,"COMPLEX, GEN","A ""pɨsare"" NIGHT2 + ? set -- ZJO"
+NIGHT6,"COMPLEX, GEN","A ""pɨsaje"" set NIGHT2 + ? -- ZJO"
+NIGHT8,,
+NIGHT9,,
+NIGHT10,LOAN,
+DAWN1,"COMPLEX, GEN",
+DAWN2,,
+DAWN3,,
+DAWN4,,
+DAWN5,,
+DAWN6,,
+MORNING1,,"An ""ajeʔi~ajiʔi"" set -- ZJO"
+MORNING2,,
+MORNING3,,
+MORNING4,,
+MORNING5X,,
+MORNING7X,,
+MORNING8,,
+MORNING9,,
+EARLY1,,"A ""βoi"" set -- ZJO"
+EARLY3,,
+EARLY4,"COMPOUND, IND",
+EARLY5,,
+AFTERNOON1,,"A ""kaʔaɾuk"" set -- ZJO"
+AFTERNOON3,,
+AFTERNOON4,,
+AFTERNOON5,"COMPOUND, IND",
+AFTERNOON6,"COMPOUND, IND",
+AFTERNOON8,,
+LATER1,,
+LATER3,,
+LATER4,,"Do we want to get rid of this row and the one underneath?
+	-Wesley Santos"
+LATER5,,
+LATER6,,
+LATER7,"COMPOUND, IND",
+LATER8,,
+LATER9,,
+LATER10,,
+RIVER1,"COMPOUND, IND","A ""ɨ+sɨɾɨk"" WATER+SLIP compound set -- ZJO"
+RIVER2,,"A ""paɾanã"" set -- ZJO"
+RIVER3,,
+RIVER4,,
+RIVER5,"COMPOUND, IND",
+RIVER5.5,"COMPOUND, IND",
+RIVER6,,
+RIVER7X,,
+RIVER8X,,
+RIVER9,,
+WATER1,,"An ""ʔɨ"" set -- ZJO
+NCP: Forms meaning dry are water (ɨ) or liquid (tɨ) and the completive suffix -pa. 
+----
+I believe that we have been overly zealous in placing forms that mean something like 'gourd' or 'fruit' in this set; they should probably be removed and put in distinct GOURD and FRUIT cognate sets.
+	-Lev Michael"
+WATER2,,
+WATER3,,
+RAIN(N)1,,
+RAIN(N)2,,
+RAIN(N)3,,
+RAIN(N)4,,
+RAIN(N)5,,
+RAIN(N)6X,,
+RAIN(N)7X,,
+RAIN(N)8,,
+RAIN(N)9,,
+LAKE1,"COMPOUND, GEN","An ""ɨ+paβ"" WATER+FINISH compound set -- ZJO;
+"
+LAKE2,"COMPOUND, MED","An ""ɨ+paβ+su"" WATER+FINISH+AUGMENTATIVE three-way compound set -- ZJO"
+LAKE3,"COMPOUND, IND","An ""ɨ+upaβ"" WATER+FINISH compound set, which differs from the similar GEN compound set in showing inflected verb -- ZJO"
+LAKE4,,
+LAKE5,,
+LAKE6,,
+LAKE7,,
+LAKE8,"COMPOUND, GEN",
+LAKE9,,
+STREAM1,,
+STREAM2,"COMPOUND, MED","Compound. Water + branch -- KCB
+"
+STREAM3,,
+STREAM4,"COMPOUND, IND",
+STREAM5,,
+STREAM5.5,,
+STREAM6,,
+STREAM7,"COMPOUND, GEN","An ""ɨ+kuʔá"" WATER+INLET compound set; cf. TPN /kuʔá/, not otherwise in dataset -- ZJO"
+STREAM8,,
+STREAM9,"COMPOUND, GEN",A WATER+SLIP+NOMZ set -- ZJO
+STREAM9.5X,,
+STREAM10,,
+STREAM11X,,
+STREAM12X,,
+STREAM13X,,
+STREAM14X,"COMPLEX, GEN",
+"SHORE, BANK1","COMPOUND, MED",this is a compound of lip + water. - NCP
+"SHORE, BANK2",,
+"SHORE, BANK3",,
+"SHORE, BANK5",,
+"SHORE, BANK6",,
+"SHORE, BANK7",,
+FOREST1,,"A ""kaʔá"" set -- ZJO"
+FOREST2X,,
+FOREST3,,ɨwɨɾati < *ɨwɨɾa-tɨ tree-plant.collective.pl -- LDM
+FOREST4,,
+FOREST5,,
+FOREST7,,
+FOREST8,,
+FOREST9X,,
+FOREST10,,
+ROOT1,,
+ROOT2,"COMPOUND, GEN",tree + root - NCP
+ROOT3,,
+TREE1,"COMPOUND, GEN","An ""ɨβ+(β)ɨɾá"" TRUNK+STICK(?) compound set; copied under TRUNK1 and TREE2.  Some languages lost initial /ɨ/ -- ZJO
+----
+How strong is the evidence for this compound? maybe revisit?
+	-pagouritsa itsnoneofyourbusiness"
+TREE2,,"A ""(β)ɨɾá"" set, where some languages lost initial /β/.  There appears to be systematic alternation between forms for 'tree' with initial /ɨ/ versus forms for 'bow' lacking initial /ɨ/.  In addition, some languages appear to have leveled 'tree' with 'bow', losing /ɨ/ in the former, while the reverse process is attested in other languages -- ZJO"
+TREE3,,
+BRANCH1,,"An ""aka(m)"" set, merged in many languages with BONE *aka(ŋ) b/c of loss of final nasals -- ZJO"
+BARK1,,"Original meaning probably something very broad covering shell, back, bark, surface covering a round object. - NCP"
+BARK2,,
+BARK3,,
+BARK4,,
+BARK5,,
+BARK6,,
+TRUNK1,,"An ""ɨ(β)"" set, where languages alternately show loss of /β/ or freezing of nuclear suffix /-a/, which in the latter case makes it hard to distinguish from the FRUIT1 compound set, but in such cases I placed forms based on meaning -- ZJO"
+TRUNK2,"COMPOUND, IND","An ""ɨβ+ɨpɨ"" TRUNK+BEGINNING compound set -- ZJO"
+TRUNK3,"COMPOUND, GEN",
+TRUNK4X,,
+TRUNK6,,
+TRUNK8,,
+TRUNK9,,
+TRUNK10,,
+TRUNK11,,"An ""opɨtá"" set (probably meant something like TREE BASE) -- ZJO"
+TRUNK12,,
+TRUNK13X,,
+TRUNK14,"COMPOUND, GEN",tree + root - NCP
+TRUNK15,,
+TRUNK16X,,
+TRUNK17,,
+FLOWER1,,
+FLOWER2,LOAN,
+FLOWER3,LOAN,
+LEAF1,,"An ""oβ"" set, which referred to large broad leaves/fronds -- ZJO"
+LEAF2,,
+LEAF3,,
+BAMBOO1,,
+BAMBOO2,"COMPOUND, IND","A ""takwaɾ+usu"" set -- ZJO"
+BAMBOO3,,
+BAMBOO4,,
+BAMBOO5,,
+BAMBOO6,,
+BAMBOO7,,
+BAMBOO8,,
+BAMBOO9,,
+BAMBOO10,,
+BAMBOO10.5X,,
+BAMBOO11X,,
+BAMBOO12X,,
+BAMBOO13,,
+BAMBOO14X,,
+BAMBOO15X,,
+BAMBOO16X,,
+GRASS1,,"This is a ""pi"" set, that includes either ka or ka'a -VMW"
+GRASS2,,"A ""ju/xõ"" set -- ZJO"
+GRASS2.5,,
+GRASS3,,
+GRASS4,,
+GRASS5,,
+GRASS7,,
+GRASS8,,
+GRASS9,,
+WEED1,,
+WEED2,,
+VINE1,,"An ""ɨsɨpó"" set -- ZJO"
+VINE2,,
+VINE3,,
+VINE4,,
+VINE5X,,
+VINE6X,,
+VINE7X,,
+VINE8X,,
+VINE9X,,
+ISLAND1,"COMPOUND, GEN","'paʔõ' ""be in the middle"" --KCB
+water + middle compound set. - ZJO
+"
+ISLAND2,,
+ISLAND3,,
+ISLAND4,,
+ISLAND5,,
+ISLAND6,,
+ISLAND7,,
+ISLAND8,"COMPOUND, GEN",
+"SHADOW, SHADE1",,"an ""aŋ"" set, crucially different from SPIRIT1 ""aɲaŋ"" -- ZJO
+----
+see note for this set. There is an anan in nandeva, which is included in this set.
+	-pagouritsa itsnoneofyourbusiness"
+"SHADOW, SHADE2","COMPOUND, MED","compound of SUN+SHADE probably due to shade drifting towads spirit meaning - VMW
+
+The Parintintin dictionary indicates that this is the word for shade created by the light of the sun. --KCB"
+"SHADOW, SHADE3",,
+"SHADOW, SHADE4",,
+"SHADOW, SHADE5",,
+"SHADOW, SHADE6",,"A ""tõ"" set possibly related to DARK1 forms involving <jitõ> -- ZJO"
+"SHADOW, SHADE6.5","COMPOUND, GEN",tree + shadow - NCP
+"SHADOW, SHADE7",,
+MUD1,,"A ""tuyuk"" set -- ZJO"
+MUD3,,
+MUD4,,
+MUD5,,
+MUD6,,
+DIRT1,,
+DIRT2,,
+DIRT3,,
+DIRT4,,
+DIRT5,,
+LAND1,,"An ""ɨβɨ"" set -- ZJO"
+LAND2,,
+LAND3,,
+LAND4,,"An ""ʔɨj"" set -- ZJO
+"
+LAND6,,
+DUST1,"COMPOUND, MED","An ""ɨβɨ+timboɾ"" LAND+BE STINKY compound set -- ZJO"
+DUST2,,a tuwɨr set - NCP
+DUST3,"COMPOUND, MED","An ""ɨβɨ+tuβɨɾ"" LAND+? compound set -- ZJO"
+DUST4,,"This is the catch-all ""kuʔi"" set for the database, that probably at some point meant ""ground up X"". The ""ɨβɨ+kuʔi"" compound set is under SAND -- VMW, ZJO"
+DUST5,,
+DUST6,,
+DUST7,,
+DUST8,"COMPOUND, GEN",ɨj + tuw earth + dry (probably) - NCP
+SAND1,,
+SAND2,,"A catch-all ""kɨtĩ"" set -- ZJO"
+SAND3,"COMPOUND, IND","An ""ɨβɨ+kitĩ"" LAND+? compound set, distinct from the compound set immediately above -- ZJO"
+SAND4,"COMPOUND, IND","An ""ɨβɨ+kuʔi"" LAND+GROUND.UP set (made sure components are under relevant etyma).  Catch-all ""kuʔi"" set is under DUST -- ZJO"
+SAND5,"COMPOUND, IND","An ""ita kuʔi"" compound set (made sure components are under relevant etyma) -- ZJO"
+SAND6,"COMPOUND, IND","A ""ɨ(ʔɨ)tiŋ"" ?+WHITE compound set.  Does not involve *ɨj root in LAND4 -- ZJO"
+SAND7,"COMPOUND, IND",land + white compound set - NCP
+SAND8,,
+SAND9,"COMPOUND, GEN",land4 ɨj + kɨt (unripe?) - NCP
+CANDELA1,,
+CANDELA2,,
+CANDELA3,,
+CANDELA4,,
+ASHES1,,
+ASHES2,,
+ASHES3,,
+ASHES4,,
+ASHES5,"COMPLEX, GEN",tata + ? - NCP
+ASHES6,,
+ASHES7,,"A ""(t)atá+pɨj"" set that really means 'embers' but snuck in b/c Xeta word apparently means 'ashes' -- ZJO
+I deXed it for now, since also in Guaja it means ashes. NCP"
+ASHES8X,,
+ASHES9X,,
+SMOKE1,"COMPOUND, GEN",
+SMOKE2,,
+SMOKE3,"COMPOUND, GEN",? + white. - NCP
+SMOKE5X,,
+COTTON1,,"Possibly an old compound of ""amɨn+juβ"" COTTON+YELLOW?  Can't know for sure, but we see in Xingú words for 'cloud' that a component 'amɨn' appears to enter into other compounds -- ZJO"
+COTTON2,,
+COTTON3,,
+CLOUD1,,
+CLOUD2,"COMPOUND, GEN","An ""ɨwɨ+tiŋ"" LAND+WHITE compound set -- ZJO"
+CLOUD3,"COMPOUND, MED","An ""ɨwak+tiŋ"" SKY+WHITE compound set -- ZJO"
+CLOUD4,"COMPOUND, GEN","An ""ɨwɨ+ɨwak"" LAND+SKY compound set -- ZJO"
+CLOUD5,,
+CLOUD6,,
+CLOUD7,,
+CLOUD8,,
+CLOUD10X,"COMPOUND,IND",sky1 and black1 - NCP
+THUNDER1,,"A ""sunuŋ"" set -- ZJO"
+THUNDER2,,"An ""ɨapu"" set -- ZJO"
+THUNDER3,,"A ""tupã"" set -- ZJO"
+THUNDER4,,
+THUNDER5,,
+THUNDER6,,
+THUNDER7,,
+THUNDER8,,
+THUNDER9,,
+THUNDER10,,
+THUNDER11,"COMPOUND, GEN","An ""ɨwak+?"" SKY+? compound set -- ZJO"
+THUNDER12,,
+THUNDER13,,"A ""naroŋ"" set -- ZJO"
+THUNDER15X,,
+THUNDER16,,
+SKY1,,"An ""ɨβak"" set with loss of final /k/ in many languages -- ZJO"
+SKY2,,
+SKY3,,
+SKY4,,
+SUN1,,
+SUN2,,
+SUN3,,
+SUN4X,,
+MOON1,,
+MOON2X,,
+STAR1,"COMPOUND, GEN","A ""jasɨ+tata"" MOON+FIRE compound set -- ZJO"
+STAR2,,
+STAR3,,
+STAR4,,
+STAR5,LOAN,
+STAR6,"COMPOUND, GEN","An ""ɨwak+ata"" SKY+FIRE compound set -- ZJO"
+STAR7,"COMPOUND, GEN",moon + small  NCP
+STAR8,"COMPOUND, GEN",MOON + SON - NCP
+PLEIADES1,,
+PLEIADES2,,
+SEED1,"COMPOUND, GEN","A ""ʔa+ɨɲ"" FRUIT/SEED+? compound set; ""á"" components are under FRUIT -- ZJO
+----
+I don't think this involves the ʔa classifier. there is no glottal stop and it seems that there is instead a ""relative prefix"".
+	-pagouritsa itsnoneofyourbusiness"
+SEED2,"COMPLEX, IND","An ""emi+tɨm"" NOMZ+PLANT complex set -- ZJO"
+SEED5,,
+SEED6,,
+SEED7,,
+SEED8X,,
+SEED9,,
+STONE1,,"A general ""itá"" set -- ZJO"
+STONE2,,
+STONE3,,
+STONE4,LOAN? ,
+STONE5X,,
+WIND1,,
+HILL1,"COMPOUND, GEN","A ""ɨβɨ+tɨɾ"" LAND+PROMINENCE compound set.  The TPN word /tɨɾ/ seems to mean roughly prominence, but can refer to a wide range of items, from overgrown shrubbery to friezes -- ZJO"
+HILL2,"COMPOUND, GEN",land + ?
+HILL3 ,,
+HILL4 ,,
+HILL5 ,,
+HILL6 ,,
+HILL7X,,
+HILL8X,,
+HILL8,"COMPLEX, GEN",land + ? - NCP
+HILL9,,
+CUTBANK1,"COMPOUND, GEN","An ""ɨβɨ+am"" LAND+STAND compound set -- ZJO"
+CUTBANK1.5,,
+CUTBANK2,,
+CUTBANK3,,
+CUTBANK4,,
+CUTBANK5,,
+CUTBANK6,,
+HOLE1,,this is a kwar set. Many of the items have LAND in them and were copied there as well. - NCP
+HOLE2,,
+HOLE3,,
+HOLE4,,
+HOLE5,,
+HOLE6,,
+HOLE8,,
+HOLE9X,,
+HOLE10,,
+HOLE11,,
+SAP1,,"An ""ɨsɨk ~ ɨtɨk""-based set -- ZJO."
+SAP2,"COMPLEX, IND","A WATER+NOM.PST ""compound/complex"" set -- ZJO"
+SAP4,,
+SAP5,,
+SAP7,,
+SAP8,,
+SAP9,,
+SAP9X,,
+CANOE1,,LDM: water + NMLZ
+CANOE2,,
+CANOE3,,
+CANOE4X,,
+CANOE5,,
+CANOE6,LOAN,
+CANOE7,LOAN,
+CANOE8,,
+CANOE9,,
+PROW1,"COMPOUND, MED","An ""ɨaɾ-tĩ"" CANOE+NOSE compound set -- ZJO"
+PROW2,"COMPOUND, IND",
+PROW3,"COMPOUND, IND",A CANOE+HEAD compound -- ZJO
+HAMMOCK1,"COMPLEX, GEN","A compound ""ke+saβ"" SLEEP+action/state nominalizer set -- KCB"
+HAMMOCK2,,
+HAMMOCK3,,"An ""inĩ"" set -- ZJO"
+HAMMOCK4,"COMPOUND, GEN","A compound ""tuku+ini"" CHAMBIRA+HAMMOCK set -- ZJO"
+HAMMOCK5,,
+HAMMOCK6,,
+HAMMOCK7X,,
+HAMMOCK8,,
+HAMMOCK9,,
+HAMMOCK10,,
+HAMMOCK11,,
+HAMMOCK12,,
+"GRILL, BARBEQUE1","COMPLEX, GEN",A ROAST+INSTR.NOMZ complex set -- ZJO
+"GRILL, BARBEQUE2","COMPOUND, GEN","A ""takwaɾ+pem+pɨɾ"" CANE+WEAVE+NOMZ set -- ZJO"
+"GRILL, BARBEQUE3",,
+"GRILL, BARBEQUE4",,"A ""juɾá"" set -- ZJO
+it is a grill - like structure (floor with parallel wood pieces, ladder, actual grill) - NCP"
+"GRILL, BARBEQUE5",,
+"GRILL, BARBEQUE6X",,
+"GRILL, BARBEQUE7",,
+"GRILL, BARBEQUE8",,
+"GRILL, BARBEQUE9",,
+"GRILL, BARBEQUE10",,
+"GRILL, BARBEQUE11",,
+"GRILL, BARBEQUE12",,
+"GRILL, BARBEQUE13","COMPOUND, GEN",
+"GRILL, BARBEQUE14","COMPLEX, GEN",
+"GRILL, BARBEQUE15","COMPOUND, GEN",
+"WALL, FENCE1",,
+"WALL, FENCE2",,
+"WALL, FENCE3",,
+"WALL, FENCE4.5",,
+"WALL, FENCE5",LOAN,
+"WALL, FENCE4",LOAN,
+"WALL, FENCE5.5",LOAN,
+"WALL, FENCE6","COMPOUND, IND",
+"WALL, FENCE6.5","COMPOUND, IND",
+"WALL, FENCE6.75","COMPOUND, IND",
+"WALL, FENCE7",,
+"WALL, FENCE8",,
+"WALL, FENCE9",,
+"WALL, FENCE10",,
+"WALL, FENCE11",,
+"WALL, FENCE12X",,
+"WALL, FENCE13X",,
+"WALL, FENCE14",,
+"WALL, FENCE15",,
+"WALL, FENCE16",,
+"WALL, FENCE17","COMPOUND, GEN",leaf + fence - NCP
+"WALL, FENCE18",,
+"WALL, FENCE19",,
+"WALL, FENCE20",,
+"WALL, FENCE21X",,
+"WALL, FENCE22",,
+"WALL, FENCE23",,
+DOOR1,"COMPOUND, GEN","An ""ok+en(daβ)"" HOUSE+PLACE compound set -- ZJO"
+DOOR2,,
+DOOR3,,
+DOOR4,"COMPOUND, IND",A HOUSE+HOLE compound set -- ZJO
+DOOR6,,
+DOOR7,,
+DOOR8,,
+DOOR9,"COMPOUND, GEN","Apparently an old compound; I suppose, from PTG */ok/ 'house' + */juru/ 'mouth' (/soro/ in Asurini). --SM"
+DOOR10,"COMPOUND, GEN",A HOUSE+? compound set -- ZJO
+DOOR11X,"COMPOUND, GEN",
+DOOR12,"COMPOUND, GEN",
+HOUSE1,,"An ""o(k)"" set, probably with original classifier-like meaning, hence MANIOC forms -- ZJO"
+HOUSE2,"COMPLEX, IND","An ""oga"" set -- ZJO"
+HOUSE3,"COMPLEX, MED",o + ɨ(r) complex set. NCP
+HOUSE4,"COMPLEX, MED","A complex ""ok+aj"" HOUSE+? set -- ZJO"
+HOUSE5,,"A ""pɨɾ"" set -- ZJO"
+HOUSE6,,"An ""apɨr"" set -- ZJO"
+HOUSE7,,
+HOUSE8,LOAN,
+HOUSE9,,
+HOUSE10,,
+HOUSE11,,
+HOUSE12,,
+VILLAGE1,,
+VILLAGE2,"COMPLEX, MED","""eko"" + old circumstantial nominalizer ""-tsaβ"" -- ZJO"
+VILLAGE3,,"An ""etam"" set -- ZJO"
+VILLAGE4,,
+VILLAGE5,,
+VILLAGE6,,
+"TAMBO, SHELTER1",,
+"TAMBO, SHELTER2","COMPOUND, GEN","A ""teyupa"" set -- ZJO
+tey (hunting party) + upa (place) (in HAMMOCK). - NCP"
+"TAMBO, SHELTER3","COMPOUND, IND",
+"TAMBO, SHELTER4",,
+"TAMBO, SHELTER5",,
+"TAMBO, SHELTER6",,
+"TAMBO, SHELTER7",,
+"TAMBO, SHELTER8X",,
+"TAMBO, SHELTER9X",,
+PATIO1,,
+PATIO2,,
+PATIO3,,"An ""okaɾ"" set.  Note the loss final /ɾ/ in some languages which makes the surface form look like 'house' plus the '-a' suffix -- ZJO"
+PATIO4,,
+PATIO5,,"A ""tai"" set -- ZJO"
+BEACH1,,
+BEACH2,,
+BEACH3,,
+BEACH4,,
+PORT1,"COMPOUND, GEN",A CANOE+HOUSE compound set -- ZJO
+PORT2,"COMPOUND, MED","A CANOE+PLACE compound set -- ZJO
+"
+PORT2.5,"COMPLEX, MED","A ""pe+asaβ"" PATH+CROSS(?) complex set; not copied to CROSS b/c wasn't sure of connection -- ZJO"
+PORT3,,
+PORT4,,
+PORT5,,
+PORT6,,
+PORT7,,
+PORT8,"COMPOUND, IND",
+PORT9,,
+"PATH, ROAD1",,
+"PATH, ROAD3",,
+"PATH, ROAD4",,
+"PATH, ROAD5",,
+CHACRA1,,"A ""ko"" set -- ZJO"
+CHACRA2,"COMPLEX, IND","A ""kopisaβ"" set -- ZJO"
+CHACRA3,,
+CHACRA4,,
+"CURE, MEDICINE1",,
+"CURE, MEDICINE2",,"A ""posaŋ"" set -- ZJO"
+"CURE, MEDICINE3",,
+"CURE, MEDICINE4",,
+"CURE, MEDICINE6",,
+"CURE, MEDICINE7X",,
+"CURE, MEDICINE8X",,
+"CURE, MEDICINE9X",,
+WOUND1,,"A ""pereβ"" set -- ZJO"
+WOUND2,,
+WOUND3,,
+WOUND4,,
+WOUND5,,
+WOUND6,,
+WOUND8,,
+WOUND9,,
+WOUND11,,
+WOUND13,,
+WOUND14,,
+FLUTE1,"COMPLEX, GEN","An ""emi+pɨ"" NOMZ+BLOW complex set -- ZJO"
+FLUTE2,,
+FLUTE3,,
+FLUTE4,,
+FLUTE5,,"A ""miʔá"" set -- ZJO"
+FLUTE7,,
+FLUTE8,,
+FLUTE9,,
+FLUTE10,,
+FLUTE11,,
+FLUTE12,,
+FLUTE13,,
+FLUTE14,,
+FLUTE15,,
+FLUTE16,,
+FLUTE17,,
+FLUTE18,,
+FAN1,,
+FAN3,,
+FAN4,,
+FAN5,,a pekwa set. - NCP
+FAN6,,
+FAN8,,
+BEAD1,,"A ""poʔɨɾ"" set -- ZJO"
+BEAD2,,
+BEAD3,,
+BEAD4,,
+BEAD5,,
+BEAD6,,
+BEAD7,,
+BEAD8,,
+BEAD9,,
+BEAD10X,,
+BROOM1,"COMPLEX, MED","A ""peʔiɾ+saβ"" SWEEP+CIRCUM.NOMZ complex set -- ZJO"
+BROOM2,"COMPOUND, MED","An ""ɨtɨ+peʔiɾ+saβ"" TRASH+SWEEP+CIRCUM.NOMZ compound/complex set -- ZJO"
+BROOM3,,
+BROOM4,,
+BROOM5,,
+BROOM6,,
+BROOM7,,
+DIGGING STICK1,,
+DIGGING STICK2,,
+DIGGING STICK3,,
+DIGGING STICK4,,
+DIGGING STICK5,,
+DIGGING STICK6,,
+DIGGING STICK7,,
+DIGGING STICK8,,
+DIGGING STICK9,,
+PADDLE (N)1,,
+PADDLE (N)2,,
+PADDLE (N)3,,
+PADDLE (N)4,,
+PADDLE (N)6,,
+PADDLE (N)7,"COMPOUND, GEN","""That which encounters the water"" -- ZJO"
+PADDLE (N)8,,
+PADDLE (N)9,,
+CLOTH1,,"An ""aʔoβ"" set -- ZJO"
+CLOTH2,,"An ""ɨɾu"" set -- ZJO"
+CLOTH3,,
+CLOTH4X,,
+CLOTH5X,,
+CLOTH6,,
+CLOTH7,,
+CLOTH8X,,
+CLOTH9,,
+CLOTH10,,
+CLOTH11,LOAN,
+CLOTH12,,
+CLOTH13,,
+CLOTH14X,,
+CLOTH15X,,
+CLOTH16X,LOAN,
+CLOTH17,LOAN,
+GARBAGE1,,
+GARBAGE2,,
+GARBAGE3X,,
+FIREWOOD1,,"This is a ""kaʔi"" set -- ZJO"
+FIREWOOD2,,"This is a ""aki"" set maybe w/palatalization -- ZJO"
+FIREWOOD3,,"A ""jepeʔaβ"" set -- ZJO"
+FIREWOOD4,,
+FIREWOOD5,,
+GRINDSTONE1,"COMPOUND, GEN","An ""itá+kɨɾɨk/kɨtɨk"" compound set; forms only copied to STONE b/c impossible to tell which of the latter two verbs it should be copied to, b/c all forms here lacking final syllable -- ZJO"
+GRINDSTONE2,,
+MORTAR1,,"An ""aŋɡuʔá"" set -- ZJO"
+MORTAR2,,
+PESTLE1,,
+PESTLE2,,
+PESTLE3,,
+PESTLE4,,
+PESTLE5,"COMPOUND, GEN",mortar + husband - NCP
+PESTLE6,,
+PESTLE7,"COMPOUND, GEN",
+PESTLE8,,
+FISHING NET1,,this is a pɨsa set. Items with reflexes of pira (fish) have been moved out. -- NCP
+FISHING NET2,,
+FISHING NET3,,
+FISHING NET4,,
+FISHING NET5,,
+FISHING NET6,,
+FISHING NET7,,
+POISON1,,
+POISON2,,
+POISON3,,
+POISON4,,
+POISON5,,
+POISON6,,
+POISON7,,
+POISON8,,
+POISON9,,
+POISON10,,
+POISON11,,
+POISON12,,
+FISH POISON1,"COMPOUND, GEN","A ""tiŋ+pó"" WHITE+FIBER compound set (credit to NCP) -- ZJO"
+FISH POISON2,"COMPOUND, GEN","A ""tiŋ+ɨ"" WHITE+WATER compound set (credit to NCP) -- ZJO"
+FISH POISON2.5,"COMPOUND, GEN","""tiŋ+ɨ+jar"", based on FISH POISON 2 -- ZJO"
+FISH POISON3,,
+FISH POISON4,,
+FISH POISON5X,,
+FISH POISON6,,
+FISH POISON7,,
+FISH POISON8,,
+FISH POISON9,,
+FISH POISON10,,
+FISH HOOK3,,"A ""pinda"" set -- ZJO"
+FISH HOOK4,,
+FISH HOOK5,,
+FISH HOOK6,,
+FISH HOOK7,,
+FISH HOOK8,"COMPOUND, GEN",fish+ swallow+ nominalizer NCP
+FISH HOOK9,,
+FISH HOOK10,,
+FISH HOOK11,,
+FISH HOOK12.5,,
+FISH HOOK13X,,
+SPEAR1,,
+SPEAR2,,
+SPEAR3,,
+SPEAR4,,"A ""min"" set -- ZJO"
+SPEAR5,"COMPLEX, GEN","An ""emi+puku"" NOMZ+LONG complex set -- ZJO"
+SPEAR6,"COMPOUND, GEN","An ""ita+emi+puku"" STONE+NOMZ+LONG compound set -- ZJO"
+SPEAR7,,
+SPEAR8,"COMPOUND, IND",add to cognate chart and color yellow. - NCP
+SPEAR9,,
+SPEAR10,,
+AXE1,,"A ""yɨ"" set -- ZJO."
+AXE2,,
+AXE3,,
+AXE4,"COMPOUND, MED","An ""itá+jɨ"" STONE+AXE compound set -- ZJO"
+AXE5,,
+AXE6,,
+AXE7,,
+AXE8,LOAN,
+AXE9,LOAN,
+AXE10,,
+AXE11,,
+BOW1,"COMPOUND, GEN","An older ""(β)ɨɾá+apaɾ"" STICK+BENT compound set; see BOW2.  All forms copied to BENT -- ZJO
+"
+BOW2,"COMPOUND, IND","An ""[ɨβ+(β)ɨɾá]+apaɾ"" [TREE.COMP]+BENT compound set that was later innovated in many langauges; see BOW1.  All forms copied to BENT -- ZJO"
+BOW3,,
+BOW4X,,
+BOW5,,
+BOW6,,
+BOW7X,"COMPOUND, GEN",compound yvyrapar + ham bow + rope - NCP
+ARROW1,,"An 'uʔuβ"" set -- ZJO"
+ARROW2,,
+ARROW3,,"could this be related to bow1? - NCP
+leave it here for now"
+ARROW4,,
+ARROW5,,
+ARROW7X,,
+ARROW8X,,
+ARROW9X,,
+ARROW10X,,
+ARROW11X,,
+ARROW12,,
+KNIFE1,,
+KNIFE2,,
+KNIFE3,,
+KNIFE4,,
+KNIFE5,,
+CUP1,,
+CUP2,"COMPOUND, MED","A ""ka+waβ"" compound set, probably a 'cauim cup' -- ZJO"
+CUP3,"COMPOUND, MED","An ""ɨ+waβ"" compound set, probably a 'water cup' -- ZJO"
+CUP4,,"A general ""waβ"" set -- ZJO"
+CUP5,,
+CUP6,,
+CUP7, ,
+CUP8,,
+CUP9,,
+CUP10,,
+CUP11,LOAN,
+CUP12,LOAN,
+CUP13,,
+CROCK1,,
+CROCK2,,
+CROCK3,,
+CROCK4,,
+CROCK5,,
+CROCK6,,
+CROCK7,,
+CROCK8,,
+CROCK9X,,
+CROCK12X,,
+CROCK13,,
+CROCK14,,
+POT1,,"""jãʔe"" set -- ZJO"
+POT2,"COMPOUND, GEN","A ""jaʔẽ+pepo"" POT+WING compound set -- ZJO
+
+these items should be copied to WING1- NCP"
+POT3,,
+POT4,,
+POT5,,
+POT6,,
+POT7,,
+POT7.5,,
+POT9,,
+POT10,,"A ""jaʔã"" set -- ZJO"
+POT11,,
+POT12,LOAN,
+POT13,,
+POT14,,
+POT15,,
+POT16X,,
+POT17X,,
+POT18,LOAN,
+POT19X,LOAN,
+POT20X,LOAN,
+POT21X,LOAN,
+POT22X,LOAN,
+POT23X,LOAN,
+POT24X,LOAN,
+POT25,LOAN,
+POT26,LOAN,
+SIEVE1,"COMPOUND, GEN","SIEVE1 appears to be an old compound involving cognates in CLOTH2, which likely meant something like SACK, even though in many languages it's come to mean BASKET. -- ZJO
+compound of ɨru (probably container)  + pem (weave) 
+"
+SIEVE2,,
+SIEVE3,,
+SIEVE4,,
+SIEVE5,,
+SIEVE6,,
+SIEVE7,,
+SIEVE8,COMPLEX,A '?+haw' MUWEWE+CIRM.NMLZ set - WNS
+BASKET1,,"a ""panakũ"" set -- VMW"
+BASKET2,,
+BASKET3X,,
+BASKET4X,,
+BASKET5,,
+BASKET6,,"A ""kuɾu"" set -- ZJO"
+BASKET7,,"a ""tupe/tope"" set -- ZJO"
+BASKET8,,
+BASKET9,,
+BASKET10,,
+BASKET11,,
+BASKET12X,"COMPOUND, GEN","An ""uɾusãkã"" compound, which I left here in addition to copying these forms up to CLOTH2, because other BASKET roots 'uru' were moved entirely up to CLOTH2 -- ZJO"
+BASKET12.5,,"A ""sãkã"" set -- LDM"
+BASKET13,,
+BASKET14,,
+BASKET15X,,
+BASKET16,,
+BASKET17,,
+BASKET18,,
+BASKET19,,
+BASKET20X,,
+BASKET21,,
+BASKET22,,
+BASKET23,,
+BASKET24,,
+BASKET25X,,
+BASKET26X,,
+BASKET27X,,
+BASKET28X,,
+BASKET29X,,
+BASKET30X,,
+BASKET31X,,
+BASKET32X,,
+BASKET33X,,
+BASKET34X,,
+ROPE1,,"A ""po"" set, originally probably was a classifier-like element meaning 'long slender flexible thing' -- ZJO"
+ROPE2,,"A ""sa(m)"" set, that probably originally meant 'rope' -- ZJO."
+ROPE3,"COMPOUND, MED","A ""tuku+po"" CHAMBIRA+FIBER compound set -- ZJO."
+ROPE4,"COMPOUND, MED","A ""tupa+sam"" ?+ROPE compound set -- ZJO"
+ROPE5,,"An ""ɨβiɾ"" set, likely a compound, meaning 'fiber' -- ZJO"
+ROPE6,,
+ROPE7,,
+ROPE8,,
+ROPE9,,
+ROPE10,,
+ROPE11,,
+ROPE12X,,
+ROPE13,"COMPOUND, MED",A 'kyhà+hàm' HAMMOCK+ROPE compound set - WNS
+THREAD1,"COMPOUND, GEN","An ""inĩ+po"" HAMMOCK+ROPE compound set -- ZJO"
+THREAD1.5,,
+THREAD3X,,
+THREAD4X,"COMPOUND, IND","a ""pina+ijam"" FISHHOOK+LINE set -- ZJO"
+THREAD5X,,
+THREAD6X,,
+RATTLE1,,
+RATTLE4,,
+RATTLE5,,
+RATTLE6X,,
+RATTLE7X,,
+RATTLE8,,
+RATTLE9,,
+RATTLE10,,
+THORN1,,"a ""jua"" set - VMW"
+THORN2,"COMPOUND, IND","A ""ju+atĩ"" THORN+HORN compound set; copied to HORN b/c of latter -- ZJO"
+THORN3,,
+THORN4,,
+THORN5X,,means needle - NCP
+THORN6,,
+PAIN1,,"An ""asɨ"" set -- ZJO"
+PAIN2,,
+PAIN3X,,
+PAIN4,,
+PAIN5X,,
+PAIN6,,
+PAIN7X,,
+PAIN8X,,
+PAIN9X,,
+WORK(N)1,,
+WORK(N)2X,,
+WORK(N)4,,
+WORK(N)5,COMPLEX,
+AMOUNT3,,"A ""potaβ"" set -- ZJO"
+AMOUNT4,,
+AMOUNT5,,
+AMOUNT6,,
+AMOUNT7X,,
+BEGINNING1,,"An ""ɨpɨ"" set -- ZJO"
+THING1,,
+THING2X,,"A ""maɾã"" set that seems to have been a general question particle that is probably attested in more languages than reflected here -- ZJO
+
+I think this should get out completely. We can either keep it with an X and a different heading so we have the cognate set, but it  shouldn't be with thing. How did it come to be with thing anyway? 
+NCP
+
+This cell was brown (has been deep drilled)"
+THING3X,,
+THING5,,
+THING6X,,
+THING7X,,
+THING8,,
+NAME1,,
+NAME2,,
+NAME3X,,
+NAME4,,
+STORY1,,
+STORY2,,
+STORY3,,
+STORY4,,
+STORY6,,
+STORY8,,
+STORY9X,,
+STORY13,,
+STORY14,,
+STORY15X,,
+STORY16,LOAN,
+GOOD1,,"A ""katu"" set -- ZJO"
+GOOD2,,"A ""poɾaŋ"" set -- ZJO"
+GOOD3,,
+GOOD4,,"A ""(k)aβi"" set -- ZJO"
+GOOD5,,
+GOOD6,,
+GOOD6.25,,
+GOOD7,,
+GOOD8,,
+GOOD9,,
+GOOD10X,,
+GOOD12,,
+GOOD13,,
+GOOD14,,
+GOOD15X,,
+GOOD16,,
+GOOD17,,
+GOOD18X,,
+GOOD19,,
+GOOD21,,
+GOOD22,,
+UGLY1,,
+UGLY2,"COMPOUND, IND",a 'napora' set
+UGLY4,,
+UGLY5,,a 'ñaro' set
+UGLY6,,
+UGLY7,,
+UGLY8,,
+UGLY9,,
+UGLY10X,,
+UGLY11,,
+UGLY12,,
+UGLY13,,
+UGLY14,,
+UGLY17,,
+UGLY18,,
+UGLY19,,
+UGLY20,,
+BAD1,,"An ""asej"" set (cf. OOMG form) -- ZJO"
+BAD2,,
+BAD3,,"An ""aʔiβ"" set -- ZJO"
+BAD4,,"A ""maran"" set -- ZJO"
+BAD5,,"A ""tirũa"" set -- ZJO"
+BAD6,,
+BAD8,,
+BAD9,,
+BAD10,,
+BAD12,,
+BAD15,,
+BAD16,,
+BAD17,,
+"BIG, LARGE1FUNCTX",,
+"BIG, LARGE2",,"""tuvicha"" set -- VMW"
+"BIG, LARGE3",,
+"BIG, LARGE4",,
+"BIG, LARGE5",,
+"BIG, LARGE6",,
+"BIG, LARGE7",,
+"BIG, LARGE8 ",,
+"BIG, LARGE9",,
+"BIG, LARGE14",,
+"BIG, LARGE15",,
+"BIG, LARGE16",,
+"BIG, LARGE17",,
+"BIG, LARGE18",,
+"BIG, LARGE19",,
+"BIG, LARGE20",,
+"BIG, LARGE21",,
+"BIG, LARGE22",,
+"BIG, LARGE24",,
+"BIG, LARGE25",,
+SMALL0.5FUNCTX,,
+SMALL1,,
+SMALL2,,
+SMALL3,,
+SMALL4,LOAN,"Probably a Kokama loan, cf. <chura> + =nani with reduction; /ʃuɾa/ actual cognate survives under different meaning, cf. UNRIPE -- ZJO"
+SMALL6,,
+SMALL7,,
+SMALL8,,
+SMALL9,,
+SMALL10,,
+SMALL12,,
+SMALL13,,"same with nephew1? - NCP
+Noé : it's ""son of"", this is a specific construction for star, but not related with the idea of small."
+SMALL14,,
+SMALL16,,
+SMALL17,,
+SMALL18,,
+SMALL19,,
+SMALL20,,
+SMALL21,,
+SMALL22,,
+SMALL23,,
+SMALL24,,
+FAT1,,
+FAT2,,
+FAT3,,
+FAT4,,
+FAT6X,,
+FAT7,,
+NARROW1,,"A ""poʔi"" set -- ZJO"
+NARROW2,,
+NARROW3,,"A ""kaʔi"" set -- ZJO."
+NARROW3.5,"COMPLEX, MED",
+NARROW4,,
+NARROW5,,
+NARROW7,,
+NARROW8,,
+NARROW9,,
+NARROW11,,
+NARROW12,,
+NARROW14,,
+NARROW15,,
+NARROW16,,
+NARROW17,,
+"SKINNY, THIN2",,
+"SKINNY, THIN3",,
+"SKINNY, THIN4",,
+"SKINNY, THIN5",,
+"SKINNY, THIN5.5",,
+"SKINNY, THIN6",,
+"SKINNY, THIN7",,
+"SKINNY, THIN8",,
+"SKINNY, THIN9",,
+"SKINNY, THIN10","COMPLEX, IND","An ""oʔo+i"" MEAT+DIM(?) complex set -- ZJO"
+"SKINNY, THIN11",,
+"SKINNY, THIN12",,
+"SKINNY, THIN13X",,
+"SKINNY, THIN15",,
+"SKINNY, THIN16","COMPOUND, GEN",compound bone + old - NCP
+"SKINNY, THIN17",,
+"SKINNY, THIN18",,
+"SKINNY, THIN19",,
+"SKINNY, THIN20",,
+"SKINNY, THIN21",,
+"SKINNY, THIN22",,
+"SKINNY, THIN23",,
+"SKINNY, THIN24",,
+"SKINNY, THIN25",,
+"SKINNY, THIN27",,
+"SKINNY, THIN30",,"merge with DRY3?
+	-pagouritsa itsnoneofyourbusiness"
+"SKINNY, THIN31",,
+"SKINNY, THIN32",,
+"SKINNY, THIN33X",,
+"SKINNY, THIN34",,
+"SKINNY, THIN35",,
+DIRTY1,,
+DIRTY2,,
+DIRTY3,,
+DIRTY4X,,
+DIRTY5,,
+DIRTY6,,
+DIRTY8,,
+DIRTY9,,
+DIRTY10,,
+DIRTY11,,
+DIRTY12,,
+DIRTY13X,,
+DIRTY14,,
+DIRTY15,,
+DIRTY16,,
+DIRTY17,,
+DIRTY18,,
+SOIL1X,,
+SOIL2X,,
+SOIL3X,,
+SOIL5X,,
+SOIL6X,,
+SOIL7X,,
+CLEAN1,,
+CLEAN3,,
+CLEAN4,,
+CLEAN5,,"A ""peʔɨβ"" set -- ZJO"
+CLEAN6,,
+CLEAN7,,
+CLEAN8,,
+CLEAN9,,
+CLEAN10,,
+WET1,,"An ""akɨm"" set -- ZJO"
+WET2,,
+WET3,,
+WET4,,
+WET5,,
+WET6,,ZJO: I think that there should be more cognates for this across the family.
+DRY1,,"A ""kaŋ"" set -- ZJO"
+DRY2,,"An ""ɨpi"" set -- ZJO"
+DRY3,,"A ""piɾu"" set -- ZJO"
+DRY4,,"A ""tiniŋ"" set -- ZJO"
+DRY5,,
+DRY6,,"The catch-all ""tuβ"" set -- ZJO
+"
+DRY7,,
+DRY8,,
+DRY9,,
+DRY10,,
+DRY11,,
+DRY13,,
+DRY14,,
+DRY15,,
+DRY17X,,
+DRY18X,,
+DRY19,,
+SLOW1,,
+SLOW3,,
+SLOW4,,
+SLOW5,,
+SLOW6,,
+SLOW7,"COMPOUND, GEN",foot + heavy - NCP
+SLOW8,,
+SLOW9,,
+SLOW10,,
+SLOW11,,
+SLOW12,,
+FAST1,,
+FAST2,"COMPLEX, GEN",compound of ã (unknown element) and puan/kuan (PASS2) - NCP
+FAST3,,
+FAST5,,"A ""pojaβaβ"" set -- ZJO"
+FAST6X,,"Possibly a grammaticalization from *atsɨ 'be painful', akin to uses of Kampa malefactive applicatives to indicate hasty execution of an event and thus poor execution of it -- if an action is done fast, it is ""intensified,"" so to speak, a broader meaning that might then be extended to states -- ZJO
+
+probably more cognates missing. Xed for now. - NCP"
+FAST7,,
+FAST8X,,
+FAST9,,
+FAST10,,
+FAST12,,
+FAST13,,
+FAST14,,
+FAST15,,
+FAST16,,
+FAST17,,
+FAST18,,
+FAST19,,
+FAST20,,
+FAST21,,
+FAST22,,
+FAST25,,
+FAST26,,
+FAST28,,
+FAST29,,
+FAST30,,
+COLD1,,"An ""oʔɨ"" set -- VMW
+"
+COLD2,,"A ""raj"" set -- ZJO"
+COLD3,"COMPLEX, GEN",a complex oʔɨ + sa set. - NCP
+COLD6,,
+COLD9,,
+COLD10,,
+HOT1,,
+NEW1,,"A ""pɨsasu"" set -- ZJO
+----
+needs review. consonant correspondeces a bit weird. The anambe and Arawete words are homophonous with bathe. Also, along with the Xingu, tey lack a reflex of the initial p. compare with BATHE1.
+	-pagouritsa itsnoneofyourbusiness"
+NEW2,,"An ""ɨβɨɾ"" set -- ZJO
+it is distinct from ɨwɨrá tree1. but I am not convinced that this has nothing to do with green, young and shoot (young branch). needs more meditating. - NCP"
+NEW3,,
+NEW4,,
+NEW5X,"COMPOUND, GEN",green + grue - NCP
+NEW6,,
+NEW7,,
+NEW8,,
+NEW9,,
+NEW10,,
+OLD1,,"A ""tu(j)ap"" set -- ZJO"
+OLD2,,
+OLD4,,
+OLD5,,
+OLD6,,
+OLD7,,
+OLD8,,
+OLD9,,
+OLD10,,
+OLD11X,,
+OLD12,LOAN,
+OLD13,LOAN,
+OLD14,,
+OLD15,,
+OLD16X,,
+OLD17,,
+OLD18,,
+OLD19,,
+OLD20,,
+OLD21,,
+OLD22,,
+OLD23,LOAN? ,
+OLD24,,
+SHORT1,,"An ""akɨtã"" set -- ZJO"
+SHORT2,,
+SHORT3,,
+SHORT4,,
+SHORT5,,
+SHORT6,,
+SHORT7,,
+SHORT8,,
+SHORT10,,
+SHORT11,,
+SHORT12,,
+SHORT13,,"An ""aʔɨk"" set -- ZJO"
+SHORT14,,
+SHORT15,,
+SHORT16,,
+SHORT17,,
+SHORT18,,
+SHORT19,,
+LONG1,,
+LONG2,,
+LONG3,,
+LONG4,,
+LONG5,,
+LONG6,,
+LONG7,,
+HEAVY1,,
+HEAVY2,,
+HEAVY3,,
+HEAVY4,,
+SPICY1,,
+SOUR1,,
+SOUR2,,
+BITTER1,,"An ""ɾoβ"" set -- ZJO"
+BITTER2,,
+BITTER3,,
+SWEET1,,
+SWEET2,,
+SWEET3,,
+SWEET4,,
+SWEET5,,
+SWEET6,,
+SWEET7X,LOAN,
+SWEET8,,
+SWEET9,"COMPOUND, GEN",
+SWEET10,,
+TASTY1,,"TASTY1 differs from SWEET1 in that the latter all seem to exhibit a glottal stop and two vowels, whereas the former is monosyllabic"
+TASTY1.5,,
+TASTY2,,
+TASTY3,,
+TASTY4,,
+TASTY6,,"An ""akũpũ"" set -- ZJO"
+TASTY7,,
+TASTY8,,
+TASTY9,,
+TASTY10,,
+TASTY11,,
+TASTY12,,
+TASTY13,,
+TASTY14,"COMPOUND,GEN",good + tasty - NCP
+ROTTEN1,,"A ""nem"" set -- ZJO"
+ROTTEN2,,"An ""uʔum"" set -- ZJO
+
+"
+ROTTEN3,,
+ROTTEN4,,
+ROTTEN6,,
+ROTTEN7,,
+ROTTEN8,,
+ROTTEN9,,
+ROTTEN10,,
+ROTTEN11,,
+ROTTEN12,,
+ROTTEN13,,
+ROTTEN14,,
+ROTTEN15,,
+ROTTEN16,,
+ROTTEN17,,"A ""yuk"" set -- ZJO"
+ROTTEN18,,
+ROTTEN19,,"A ""puβ"" set -- ZJO"
+ROTTEN20,,
+ROTTEN21,,
+ROTTEN22,,
+ROTTEN23X,,
+ROTTEN24X,,
+ROTTEN25X,,
+ROTTEN26,,
+FULL1,,
+FULL2,,
+FULL3,,
+FULL4,"COMPOUND, GEN","A ""ɨnɨ+sem"" compound set -- ZJO"
+FULL5,,"A ""sem"" set, unrelated to ""sem"" of LEAVE.FROM -- ZJO"
+FULL6,"COMPOUND, GEN","An ""imi+sam"" compound set -- ZJO"
+FULL7,,"An ""ɨtaɾo"" set -- ZJO"
+FULL8,,
+FULL10X,,
+FULL12,,
+FULL13,,
+FULL14,,
+FULL15,,
+FULL16,,
+FULL17,,
+FULL18,,
+FULL19,,
+FULL22X,,
+FULL22.5,,
+FULL22.75,,
+FULL23X,,
+FULL24,,
+FULL25X,,
+HUNGRY1,,
+HUNGRY2,,
+HUNGRY3,,a 'war' set -- LDM
+HUNGRY4,"COMPOUND, GEN","An ""amɨ+asɨ"" ?+PAINFUL compound set -- ZJO"
+HUNGRY5,,
+HUNGRY6,"COMPLEX, IND",
+HUNGRY7,,"a ""(t)ɨʔaɾ"" set -- ZJO"
+HUNGRY8X,,
+HUNGRY9,"COMPLEX, GEN",liver + bitter. NCP
+HUNGRY10,,
+HUNGRY11,,
+HUNGRY12,,
+HUNGRY13,,
+HUNGRY14,,
+HUNGRY15,,
+HUNGRY17X,,
+HUNGRY18,"COMPOUND, IND",thing + eat + want - NCP
+HUNGRY19,,
+HUNGRY20,"COMPOUND, IND",thing+eat compound set - WNS
+TIRED1,,"Physically weak, an ""eʔõ"" set -- ZJO"
+TIRED2,"COMPOUND, GEN","A ""kaŋ+eʔo"" BONE+TIRED compound set -- ZJO"
+TIRED3,,
+TIRED4,,"A ""pweɾaj~kweɾaj"" set -- ZJO"
+TIRED5,,'Sleepy'
+TIRED6,"COMPOUND, GEN",breathe + ? - NCP
+TIRED6.5,"COMPOUND, MED","'pytupav' set = to breathe, be alive + to stop -- KCB"
+TIRED7,,
+TIRED8X,,
+TIRED10,,
+TIRED11,,
+TIRED12,,"An ""isi"" set -- ZJO"
+TIRED13,,
+TIRED14,,
+TIRED15,,
+TIRED16X,,
+TIRED17,,
+TIRED18,,
+TIRED19,,
+TIRED20X,,
+"QUIET, CALM1",,
+"QUIET, CALM2",,"An ""iné"" set -- ZJO"
+"QUIET, CALM3",,"A ""tʃina"" set -- ZJO"
+"QUIET, CALM4",,"A ""kɨɾɨɾĩ"" set -- ZJO"
+"QUIET, CALM5",,
+"QUIET, CALM6",,
+"QUIET, CALM7",,"A ""moβi~moβe"" set -- ZJO"
+"QUIET, CALM8",,
+"QUIET, CALM9",,
+"QUIET, CALM11",,
+"QUIET, CALM12",,
+"QUIET, CALM16",,
+"QUIET, CALM17",,
+"QUIET, CALM19",,
+"QUIET, CALM20",,
+"QUIET, CALM21",,
+"QUIET, CALM22",,
+"QUIET, CALM23",,
+"QUIET, CALM24",,
+"QUIET, CALM25",,
+"QUIET, CALM26",,
+"QUIET, CALM27",,
+"QUIET, CALM28",,
+"QUIET, CALM29",,
+"QUIET, CALM30X",,
+"QUIET, CALM31",,
+"QUIET, CALM32",,
+"QUIET, CALM33",,
+"QUIET, CALM34",,
+SICK1,,
+SICK2,,
+SICK3,,
+SICK4,,
+SICK5,,
+SICK7X,,
+LAZY1,"COMPLEX, IND","An ""ate+eʔɨm"" ?+PRIV complex set -- ZJO"
+LAZY2,,
+LAZY3,,
+LAZY4,,
+LAZY5,,"A ""yakɨ"" set -- ZJO"
+LAZY6,,"A ""seriã"" set -- ZJO"
+LAZY7,,
+LAZY18,,
+LAZY9,,
+LAZY10,,
+LAZY11,,
+LAZY12,,
+LAZY13,,
+LAZY14,,"An ""oʔɨɾõ"" set -- ZJO"
+LAZY15,,
+LAZY16,,
+LAZY17,,
+LAZY18,,
+LAZY19,,
+LAZY20,,
+LAZY21,,
+LAZY22,,
+LAZY23X,,
+POOR1,"COMPOUND, GEN","A ""por(e)+aʔɨtsu"" ?+LOVE compound set -- ZJO"
+POOR2,,
+POOR3,,
+POOR4,,
+POOR5,,
+POOR6X,,maybe a borrowing. ask Sergio. - NCP
+POOR7,,
+POOR8,,
+POOR9,,
+POOR10X,,possibly more cognates missing. Tupinamba for sure. Xed for now. - NCP
+POOR11X,,
+POOR12X,,"there are missing cognates here, definetely Tupinamba, probably others too. cognate set Xed - NCP"
+POOR13,,
+DRUNK1,,
+DRUNK2,"COMPLEX, GEN",
+DRUNK3,,
+DRUNK4,,
+DRUNK6,,
+DRUNK7,,
+DRUNK8,,
+DRUNK9,,
+NAKED1,,
+NAKED2,,
+NAKED3,,
+NAKED4,,
+NAKED5,,
+NAKED6,,
+NAKED11,,
+NAKED12,,
+NAKED13,,
+NAKED14,,
+NAKED15,"COMPLEX, GEN",
+NAKED16,,
+ANGRY1,,"A ""poʃɨ"" set -- ZJO"
+ANGRY2,,"A ""moʔɨɾõ"" set -- ZJO"
+ANGRY3,,
+ANGRY4X,,
+ANGRY5,,
+ANGRY6,,
+ANGRY8,,
+ANGRY9,,
+ANGRY10,,
+ANGRY11,,
+ANGRY12,,
+ANGRY13,,
+ANGRY14,"COMPOUND, GEN","A ""piɾ+asɨ"" SKIN+PAIN compound set  -- ZJO"
+ANGRY16X,,
+ANGRY17,,
+HAPPY1,,"An ""oɾɨβ"" set -- ZJO"
+HAPPY3,,
+HAPPY5,,
+HAPPY6,,
+HAPPY7,,"An ""aisi"" set -- ZJO"
+HAPPY8,,
+HAPPY10,,
+HAPPY11,,
+HAPPY12,,
+HAPPY13,,
+HAPPY14,,
+HAPPY15,,
+HAPPY16,,
+HAPPY17,,
+WEAK1,,"A ""kaŋ"" set, likely related to BONE, but not moved b/c relation uncertain -- ZJO"
+WEAK2,,
+WEAK3,,
+WEAK4,,"An ""atãa"" set -- ZJO"
+WEAK5,,
+WEAK6,,"A ""memek"" set -- ZJO"
+WEAK7,,
+WEAK8,,
+WEAK9,"COMPLEX, MED","A ""pɨtu+aɾ"" BREATHE+? complex set -- ZJO"
+WEAK10,,
+WEAK11,,
+WEAK12,,
+WEAK13,,
+WEAK14,,
+WEAK15,,
+STRONG1,,
+STRONG2,,
+STRONG3,,"A ""gurakõ"" set -- ZJO"
+STRONG4,,
+STRONG5,,
+STRONG6,,
+STRONG7,,
+STRONG9,,
+STRONG10,,
+STRONG12,,
+STRONG13,,
+STRONG14,,
+STRONG15,,
+STRONG16,,
+STRONG16X,,
+HARD1,,"An ""atã"" set -- ZJO"
+HARD2,"COMPOUND, GEN","A ""pɨɾ+atã"" ?+HARD compound set -- ZJO
+It may be related to HARD3, but it is not clear why the r (presumably a ""relational prefix"") is present in one set and not in the other. - NCP"
+HARD3,"COMPOUND, GEN","A ""pɨ+atã"" ?+HARD compound set -- ZJO
+It may be related to HARD2, but it is not clear why the r (presumably a ""relational prefix"") is present in one set and not in the other. - NCP"
+HARD4,,
+HARD5,,"An ""posakaɾ"" set -- ZJO."
+HARD6,,
+HARD7,,
+HARD8,,"A ""pɨm"" set -- ZJO"
+HARD9,,
+HARD10X,,
+HARD12,,
+HARD13,,
+HARD14,,
+HARD15X,,
+HARD17,,
+HARD18,,
+THICK1,"COMPLEX, IND","A ""powasu"" set -- ZJO
+this is some sort of complex form with big, large1"
+THICK2,,"An ""anam"" set -- ZJO."
+THICK3X,,
+THICK4,,
+THICK5,,
+THICK6,,
+THICK7,"COMPLEX, IND","also complex with big, large1 - NCP"
+THICK8,,
+THICK9,,
+THICK10,"COMPLEX, IND","this is also a big, large 1 complex form. - NCP"
+THICK11,,
+THICK13X,,
+THICK14X,,
+THICK15,,
+THICK16,,
+THICK17X,,
+THICK18X,,
+THICK19,,
+THICK20X,,
+THICK22,,
+THICK23,,
+ROUND1,,"An ""apuʔa"" set -- ZJO
+
+is the Tapirape h ok here? SM is skeptical? - NCP"
+ROUND2,,"An ""ajereβ"" set -- ZJO"
+ROUND3,,
+ROUND4,,
+ROUND5,,
+ROUND6,,"An ""apɨʔa"" set -- ZJO"
+ROUND7,,
+ROUND9X,,
+ROUND12,,
+ROUND14,,
+ROUND15,,
+ROUND16,,
+ROUND18,,
+ROUND19X,,
+ROUND20,,
+STRAIGHT1,,
+STRAIGHT2,,
+STRAIGHT3,,
+STRAIGHT4,,
+STRAIGHT5,,
+STRAIGHT6,,
+STRAIGHT7,,
+STRAIGHT8X,,
+STRAIGHT9,,
+STRAIGHT10 ,"COMPOUND, IND",
+STRAIGHT10.5,,
+STRAIGHT11X,,
+STRAIGHT12X,,
+STRAIGHT13X,,
+STRAIGHT14X,,
+STRAIGHT15X,,
+STRAIGHT17,,
+STRAIGHT18,,
+STRAIGHT19,,
+RIGHT1,,
+RIGHT2,,
+RIGHT3,"COMPLEX, MED",complex a + katu (good) - NCP
+RIGHT4,"COMPLEX, MED",e + katu . the last parts are not cognate. - NCP
+RIGHT5,,
+LEFT1,,"A ""yatso"" set -- ZJO"
+LEFT2,,
+LEFT3,,
+LEFT4X,"COMPLEX, IND",
+LEFT5,,
+LEFT6X,,
+"BENT, TWISTED1",,"An ""apẽ"" set; related to the bit in FIGERNAIL & TOENAIL? -- ZJO"
+"BENT, TWISTED2",,"An ""apaɾ"" set -- ZJO"
+"BENT, TWISTED2.5",,
+"BENT, TWISTED3",,"A ""βaŋ"" set -- ZJO"
+"BENT, TWISTED4",,
+"BENT, TWISTED5",,"A ""kandaβ"" set -- ZJO"
+"BENT, TWISTED6",,
+"BENT, TWISTED7",,
+"BENT, TWISTED8",,
+"BENT, TWISTED9",,
+"BENT, TWISTED10",,
+"BENT, TWISTED11X",,"A ""par"" set -- ZJO."
+"BENT, TWISTED12",,
+"BENT, TWISTED13",,
+"BENT, TWISTED14",,
+"BENT, TWISTED15",,
+"BENT, TWISTED16",,
+"BENT, TWISTED17",,
+"BENT, TWISTED18X",,
+"BENT, TWISTED19",,
+FAR1,,
+FAR2,,
+FAR3,,
+FAR4,,
+FAR5,,
+FAR6,,
+FAR7,,
+FAR8,,
+FAR9,,
+FAR10,,
+FAR11,,
+FAR12,,
+FAR13,,
+FAR14,,
+FAR15,,
+FAR16,,
+FAR17,,
+FAR18,,
+FAR19,,
+FAR20,,
+FAR21X,,
+FAR22,,
+NEAR0.5,,
+NEAR1,,"An ""(ɨ)pɨɾi"" set, based on *pɨɾ 'nearside' with locative '-i'; see also roots with voicing <ybyri> -- ZJO"
+NEAR2FUNCTX,,
+NEAR3FUNCTX,,
+NEAR4,,"A ""βaβ"" set -- ZJO"
+NEAR5,,
+NEAR6,,"A ""pɨβõ"" set -- ZJO"
+NEAR7,,"An ""ake"" set -- ZJO"
+NEAR8,,
+NEAR9,,
+NEAR10X,,
+NEAR11,,
+NEAR12,,
+NEAR13,,"A ""tete"" set -- ZJO"
+NEAR14,,
+NEAR15,,
+NEAR16,,
+NEAR17X,,
+NEAR18,,
+NEAR19,,
+NEAR20X,,
+NEAR21X,,
+NEAR22FUNCTX,,
+NEAR23,,
+NEAR24,,
+NEAR25,,
+NEAR26,,
+NEAR27,,
+NEARFUNCTX,,
+OPEN1,,
+OPEN2,,
+WIDE2,,
+WIDE3,,"A ""pɨ"" set -- ZJO
+----
+compare with LONG6
+	-pagouritsa itsnoneofyourbusiness"
+WIDE4,"COMPOUND, IND","A ""pɨ + wasu"" set -- ZJO"
+WIDE5,,
+WIDE6,,
+WIDE7,,
+WIDE8,,
+WIDE1,,"Seems to really mean ""flat""; a ""peβ"" set -- ZJO"
+PAINTED1,,"A ""paraβ"" set -- ZJO"
+PAINTED3,,"A ""pinim"" set -- ZJO"
+PAINTED4,,
+PAINTED5,,
+PAINTED6,,
+PAINTED7X,,
+PAINTED8X,,
+DULL1,,
+DULL2,,
+DULL3,,
+DULL4,,
+DULL5X,,
+SHARP1,,"We considered that this might be a compound TOOTH+LOC, but the fact that we have p/mb/me'e forms cast doubt on the LOC idea, and the sound correspondences aren't quite right for TOOTH -- LDM"
+SHARP3,,"this is a ""point"" (noun) set, exhibiting the kw:pw correspondence. Ideally this meaning should be separated out instead of staying in sharp. - NCP
+
+Note that the Mbya compound is SHARP+TOOTH, which happens to be homophonous with GROIN+TOOTH (=penis) due to sound changes. -- LDM"
+SHARP4,,
+SMOOTH1,,"A ""sɨm"" set -- ZJO"
+SMOOTH2,,
+SMOOTH4,,
+SMOOTH6,,
+SMOOTH8,,
+SMOOTH9,,
+SMOOTH10,,
+SMOOTH11,,
+SMOOTH14,,
+SMOOTH15,,
+SMOOTH16,,
+SMOOTH17,,
+SMOOTH18X,,
+SMOOTH19,,
+SMOOTH20,,
+SMOOTH21X,,
+SMOOTH22,,
+SMOOTH23,,
+MURKY1,,
+MURKY2,"COMPOUND, IND","An ""ɨpɨ+tiŋ"" DEEP+WHITE compound set. I copied those forms to DEEP for which a cognate for 'deep' was not otherwise attested in that language -- ZJO"
+MURKY3X,,
+MURKY4,"COMPOUND, GEN",? + black - NCP
+MURKY5X,,
+MURKY6,"COMPOUND, GEN","A DARK+BLACK compound set where ZJO bet $8 in favor, seems to be opposite of MURKY2, glottal stop is somewhat mysterious but possibly explainable phonetically -- ZJO"
+CORRECT1,,
+CORRECT1.5,,
+CORRECT2,,
+CORRECT3,,
+CORRECT5,,
+CORRECT6,,
+CORRECT7,,
+HIGH UP (ADV)1,,
+HIGH UP (ADV)2,,
+HIGH UP (ADV)3,,
+"HIGH, TALL1",,"A ""yeɨʔa"" set -- ZJO"
+"HIGH, TALL2X",,
+"HIGH, TALL3",,
+"HIGH, TALL6",,
+"HIGH, TALL7",,
+"HIGH, TALL8",,
+"HIGH, TALL9",,
+"HIGH, TALL10",,
+"HIGH, TALL11",,
+HIGH TALL12,,
+"HIGH, TALL12",,
+DEEP1,,
+DEEP3,,
+DEEP4,,
+DEEP5,,
+DEEP6,,
+DEEP7,,
+DEEP8,,
+DEAF1,,
+DEAF2,,
+BLIND1,"COMPLEX, IND","An ""esa+eʔɨm"" EYE+PRIVATIVE set.  Branch 2 languages and those nearby (Aché, Tapiete, Tapirapé), show an irregular form of the privative that may well be unrelated to the TPN form, but for now I have collapsed them -- ZJO"
+BLIND2,"COMPOUND, IND","An ""esa+kwaɾ"" EYE+HOLE compound set; latter may show locative or negative morphology -- ZJO"
+BLIND3,,
+BLIND4,,
+BLIND5,,
+BLIND6,"COMPLEX, GEN",
+BLIND7,,
+AGAIN1,,"A ""yɨ"" set -- NCP"
+AGAIN2,,"A ""no"" set -- ZJO"
+AGAIN3,,
+AGAIN4,,"A ""βe"" set -- ZJO"
+AGAIN5,,
+AGAIN6,,
+AGAIN7,,
+AGAIN8X,,
+AGAIN9,,
+AGAIN10,,
+AGAIN11,,
+STILL1,,a te ~ teri set -- LDM
+STILL2,"COMPOUND, IND",a compound kwe-teri set -- LDM
+STILL4,,"A ""yepe~yeβe"" set -- ZJO"
+STILL5,,
+STILL6,,
+STILL8,,
+STILL9,,
+STILL10,,
+STILL11,,
+STILL12,,
+STILL13,,
+STILL14,,
+ALSO1,,"A ""(y)aβe(i)"" set -- ZJO"
+ALSO2,,
+ALSO3,,
+ALSO4,,
+ALSO5,,
+ALSO6,,
+ALSO7,,
+ALSO8,,
+ALSO9,,
+ALSO10,,
+MORE1,,
+MORE2,LOAN,
+MORE3,,
+MORE4,,
+MORE5,,
+MORE6,,
+MORE7,,
+MORE8,,
+MORE10,,
+MORE11,,
+MORE12,,
+MORE13,,
+OTHER1,,"An ""amó"" set -- ZJO"
+OTHER2,,
+OTHER3X,,
+OTHER4,,
+OTHER5,,
+OTHER6,,
+OTHER7,,
+OTHER8,,
+OTHER9,,
+OTHER10,,
+MANY1,,"An ""etá"" set -- ZJO
+SM: probably cognate with Aweti 
+-ʐa and Mawe -rja (suffixes for ""group of X"")."
+MANY1.5,,
+MANY2,,"An ""atso"" set -- ZJO"
+MANY3,,
+MANY4,,"An ""eʔɨj"" set -- ZJO"
+MANY5,,"An ""ɨpiʔó"" set -- ZJO"
+MANY5.5,,
+MANY6,,
+MANY7X,,
+MANY8,,
+MANY9,,
+MANY10,,
+MANY10.5,,
+MANY11,,
+MANY12,,
+MANY13,,
+MANY14,,
+MANY15,,
+MANY16,,
+MANY17,,
+MANY18,,
+MANY19,,
+MANY22,,
+MANY25,,
+MANY26,,
+MANY27,,
+MANY28,,
+MANY29,,
+MANY31,,
+MANY32,,
+MANY33,,
+MANY34,,
+MANY35,,
+MANY36,,
+ALL1,,
+ALL7,,
+ALL8,,
+ALL10,,"A ""(w/h)ete(p)"" set -- ZJO"
+ALL11,,
+ALL12,,
+ALL13,,
+ALL14,,
+ALL15,,
+ALL16,,
+ALL17,,
+ALL18,,
+ALL19,,
+SOME2,,
+SOME3,,
+FEW1,,
+FEW2,,
+FEW3,,
+FEW4,,
+FEW5,,
+FEW6,,
+FEW7,,
+FEW8,,
+FEW9,,
+FEW10,,
+FEW11,,
+FEW13,,
+FEW14,,
+FEW15,,
+FEW16,,
+FEW17,,
+FEW18,,
+FEW20,,
+FEW22,,
+FEW23,,
+FEW24X,,
+FEWFUNCTX,,
+FEW25,,
+FIRST1,"COMPLEX, GEN",one + nominalizer
+FIRST2,,an 'nda' set -- LDM
+FIRST3,,
+FIRST4,,
+FIRST5,,
+FIRST6,,
+FIRST7FUNCTX,,
+FIRST9,,
+FIRST9.5,,
+FIRST10X,,
+FIRST11,,
+YES1X,,"An ""a'e"" set -- ZJO"
+YES2X,,"An ""eʔẽ"" set -- ZJO"
+YES2.5X,,
+YES3X,,"An ""aa"" set -- ZJO"
+YES3.5X,,
+YES4X,,"An ""oo"" set -- ZJO"
+YES5X,,
+YES6X,,"An ""upe"" set -- ZJO"
+YES7X,,
+YES8X,,
+YES9X,,
+YES10X,,
+YES11X,,
+YES12X,,
+YES13X,,
+YES14X,,
+YES15X,,
+YES16X,,
+YES17X,,
+YES20X,,
+YES21X,,
+NO1,,"An ""ani"" set -- ZJO"
+NO2,,
+NO3,,
+NO4,,
+NO5,,
+NO5.5,,
+NO6,,
+NO7,,
+NO8FUNCTX,,
+NO10,,
+NO11,,
+NO12,,
+SIDE1,,"An ""ɨké"" set -- ZJO"
+SIDE2,,
+SIDE4,"COMPOUND, GEN",kaku (cheek) + ra - NCP
+SIDE5,,
+SIDE6,,
+SIDE7,,
+SIDE8,,
+SIDE9.5XFUNCT,,
+SIDE10X,,
+SIDE11,,
+SIDE13X,,
+SIDE14X,,
+GO1,,"A ""tso"" set, where various languages developed allomorphic variation of 'go' based on the vowel quality of the person prefix -- ZJO
+causative +go meaning usually give or send - NCP"
+GO2,,
+GO4,,
+GO5X,,
+GO6X,,
+GO7X,,
+GO8X,,
+GO9X,,
+GO10X,,
+GO11X,,
+GO12X,,
+GO13X,,
+GO (IMP)1,,"Possibly related to pass3, but we have not enough information for now - NCP"
+GO (IMP)3,,
+COME1,,
+COME2,,
+COME4.5,,
+COME5,,
+COME7,,
+COME8X,,
+COME9X,,
+COME10X,,
+COME11X,,
+COME12X,,
+COME13X,,
+COME14,,"A ""yo"" set -- ZJO"
+COME15X,,
+COME16X,,
+ARRIVE1,,
+ARRIVE2,,"A ""wa(s)em"" set -- ZJO"
+ARRIVE3,,
+ARRIVE4X,,
+ARRIVE5,,
+ARRIVE6,,
+ARRIVE7,,
+ARRIVE8,,
+ARRIVE9X,,
+ARRIVE10,,
+LEAVE FROM1,,
+LEAVE FROM2,,"A *tsem set, with some languages showing stems causativized both with ero- and mo-; the former has additionally been separated as a genetic complex form -- ZJO"
+LEAVE FROM3,,
+LEAVE FROM4,,
+LEAVE FROM5,,
+LEAVE FROM7,,
+LEAVE FROM8,,
+LEAVE FROM9X,,
+LEAVE FROM10,,
+LEAVE FROM11,,
+LEAVE FROM12X,,
+LEAVE FROM14X,,
+LEAVE FROM16,,
+RETURN1,,"A ""jeβɨɾ"" set -- ZJO
+causative and return = vomit - NCP"
+RETURN2,,
+RETURN3,,
+RETURN4,,
+RETURN5X,,
+RETURN6,,
+RETURN7,,
+STOP1,,"A ""poʔiɾ"" set, that probably meant 'let go of' -- ZJO"
+STOP2,,
+STOP3,,
+STOP4,,
+STOP5,,
+STOP6,,"A ""pik"" set with nasalization from causative prefix; crucially different from ""pɨk"" TIGHTEN1 -- ZJO"
+STOP8,,
+STOP9,,
+STOP11,,
+STOP12,,
+STOP13,,
+STOP14X,,
+STOP15,,
+STOP16X,,
+STOP17X,,
+STAY17,,
+STAY1,,"A ""pɨt"" set -- ZJO"
+STAY2,,
+STAY3,,
+STAY4,,"An ""iton"" set -- ZJO"
+STAY5,,
+STAY6,,
+STAY7,,
+STAY8,,
+STAY9,,
+STAY10,,
+STAY12,,
+STAY13,,
+STAY15,,
+STAY15.5,,
+STAY16,,
+STAY11X,,
+WALK1,,
+WALK3,,
+WALK4,,
+WALK5,,
+WALK6X,,
+WALK7X,,
+WALK8X,,
+WALK9X,,
+WALK11X,,
+WALK12X,,
+WALK13X,,
+WALK14,,
+RUN2,,"A ""ñan"" set -- ZJO"
+RUN3,,
+RUN4,,
+RUN5,,
+RUN6,,
+RUN7,,
+RUN8,,
+RUN9X,,
+RUN10,,
+RUN11,,
+RUN14X,,
+RUN15X,,
+RUN16X,,
+RUN17X,,
+RUN18X,,
+RUN19X,,
+RUN20,,
+SWIM1,,
+SWIM2,,
+SWIM3,,
+SWIM4,,
+SWIM5X,,
+SWIM6,,
+SWIM7X,,
+SWIM8,,
+SWIM9,"COMPOUND, GEN",A WATER+DO compound set -- ZJO
+FLOAT1,,"A ""βeβui"" set -- ZJO"
+FLOAT2,,
+FLOAT3,,
+FLOAT4,,
+PLANT1,,"A ""tɨm"" set. Forms with nyo evidence that original root was monosyllabic, and thus tɨm, not atɨb as in BURY -- ZJO
+"
+PLANT3,,
+PLANT4,,
+PLANT5,,
+PLANT6X,,
+PLANT7X,,
+PLANT8X,,
+BURY1,,"A ""atɨβ"" set -- ZJO"
+BURY4,,
+BURY5,,
+STEAL1,,"A ""mon(d)á"" set -- ZJO"
+STEAL2,"COMPOUND, MED","A ""mon(d)á+arõ"" STEAL+AWAIT compound set.  Copied down to AWAIT -- ZJO"
+STEAL3,,"A ""mon(d)aɾ"" 'think badly of' set, assumed to not be related to ""mon(d)á"", but drifted in many languages to 'steal', so TPN form included b/c of cognacy -- ZJO"
+STEAL5,,
+STEAL6,,
+STEAL8,,
+STEAL11,,
+HIDE1,,"A ""mi(m)"" set -- ZJO"
+HIDE2,,
+HIDE3,,
+HIDE4,,
+HIDE6,,
+HIDE7X,,
+HIDE8X,,
+HIDE9X,,
+CULTIVATE1,,
+CULTIVATE2,,
+CULTIVATE3,,
+CULTIVATE4,,
+CULTIVATE5,,
+CULTIVATE6,"COMPOUND, GEN",land + grab - NCP
+CULTIVATE7,"COMPOUND, GEN",land + split - NCP
+DIG1,"COMPOUND, GEN","A compound ""ɨβɨ+kõj"" LAND+? set -- ZJO"
+DIG2,,"A ""kõi/kai"" set -- ZJO"
+DIG3,,"An ""mo+ɨβɨ+kwar"" CAUS+LAND+HOLE compound set -- ZJO"
+DIG4X,"COMPOUND, GEN","A ""tuyuk+?"" LAND/MUD+? compound set -- ZJO"
+DIG5,,
+DIG6,,
+DIG7,,
+DIG8,,
+DIG9,,
+DIG10,,
+DIG11,,
+DIG12,,
+DIG13X,,
+DIG14X,,
+DIG13,,
+DRIP1,,"A ""tɨkɨɾ"" set -- ZJO"
+DRIP2,,
+DRIP3,,
+DRIP4,,
+DRIP4.5,,
+FLOW1,,"A ""tororõ"" set, which I speculate referred to portion of the event in which liquid flows down an incline -- ZJO"
+FLOW2,,"A ""suɾuɾu"" set, note with /u/ and reduplicated syllables, which I suspect referred to the moment of an event in which, after flowing down an incline, water falls off an edge (hence meanings like 'drip') -- ZJO"
+FLOW3,,"An *em set, referring to spilling, pouring, or the motion of liquids, with some languages showing dialectal variation with a nasal e, even in languages like TPN, which did not regularly lose final nasal consonants. Some languages also show complex forms with the causative ero-, with the expected suppression of initial e and nasalization of r -- ZJO"
+FLOW5,,
+FLOW4,,
+FLOW6,,
+SLIP1,,"A ""sɨɾɨ(k)"" set, which probably meant 'move across surface', so that with 'foot' and 'water' incorporated it can refer to slipping or going downriver -- ZJO"
+SLIP2,,"A ""sɨɾɨɾɨ"" set (note with two /ɾɨ/) -- ZJO"
+SLIP3,,
+SLIP3.5,,
+SLIP4,"COMPOUND, MED","A ""pɨ+sɨɾɨ(k)"" compound set -- ZJO"
+SLIP7,,"A ""sɨɾɨj"" compound set -- ZJO"
+SLIP5,"COMPOUND, GEN","A ""pɨ+ho"" FOOT+GO compound set -- ZJO"
+SLIP6,"COMPOUND, GEN","A ""pɨ+sɨkuãi"" compound set -- ZJO"
+SLIP8,"COMPOUND, MED","A ""pɨ+ʔiɾ"" set FOOT+DISLODGE compound set; the DISLODGE root is probably the same as the small ""ʔiɾ"" root in FALL23 -- ZJO"
+SLIP10,,
+SLIP11,,
+SLIP12,,
+SLIP13,,
+SLIP14X,,
+SLIP15,,
+SLIP16,,
+SLIP17,,
+SLIP18,,
+SLIP19,,
+SLIP20,,
+SLIP21,,
+SWEAT1,,
+SWEAT2,,"An ""ɨʔai"" set -- ZJO"
+SWEAT3,"COMPOUND, IND","A ""pir+ɨʔaj"" SKIN+SWEAT compound set -- ZJO"
+SWEAT4,"COMPOUND, GEN",A SKIN+? compound set -- ZJO
+SWEAT5,,
+SWEAT6,"COMPOUND, GEN",sun + hot. the sun is moved to day in Mawe. - NCP
+SWEAT7X,,
+SWEAT8X,,
+BORROW1,,"A ""poru"" set; 'lend' is causativized stem -- ZJO"
+BORROW2X,,
+BORROW3X,,
+BORROW4X,,
+BORROW5,,
+LIVE1,,"An ""eko/iko"" set -- ZJO
+semantic evolution: exist, be alive, be in motion, walk - NCP"
+LIVE2,"COMPLEX, GEN","An ""ekoβe/ikoβe"" set -- ZJO"
+LIVE2.5,,"A ""koβ"" set, which is not the root involved in the immediately preceding set -- ZJO"
+LIVE3,,
+LIVE4X,,
+LIVE5,,
+LIVE6,,
+LIVE7,,
+LIVE8,,
+LIVE10X,,
+LIVE11X,,
+LIVE12X,,
+DIE1,,
+DIE3X,,
+DIE5,,
+DIE6X,,
+DIE7X,,
+DIE8X,,
+KILL1,,"A ""juká"" set -- ZJO"
+KILL2,,"An ""apiti"" set -- ZJO"
+KILL3,,
+KILL4,,
+KILL5,,
+KILL6,,
+KILL7,,
+KILL8,,"kyi means kill, jekyi means die - NCP"
+KILL9X,,
+KILL10X,,
+KILL11X,,
+KILL12X,,
+KILL13X,,
+KILL 14X,,
+FLY(V)1,,
+FLY(V)2,,
+FLY(V)3,,
+FLY(V)4,,
+FLY(V)5,,
+CLIMB1,,
+CLIMB2,,
+CLIMB3,,
+CLIMB4,,
+CLIMB5,,
+CLIMB6,,
+CLIMB7X,,
+CLIMB8,,
+CUT1,,
+CUT2,,
+CUT3,,"A ""kɨtĩ"" set -- ZJO
+
+Similar to knife1. It can be that they come from a common root further up the tree, but now they are divergent enough to be considered different sets. - LDM"
+CUT4,,
+CUT5,,"An ""aβ"" set -- ZJO"
+CUT6,,"A ""gaj"" set -- ZJO"
+CUT7,,"An ""asɨk"" set -- ZJO"
+CUT8,,
+CUT9,,"An ""asɨʔaβ"" set -- ZJO"
+CUT10,,
+CUT11,,
+CUT12,,
+CUT13,,
+CUT14X,,
+CUT15X,,
+CUT16X,,
+CUT17,,
+CUT19,,
+CUT21,,
+CUT23,,
+CUT24,,
+CUT25,,
+CUT26,,
+CUT27,,
+CUT28,,
+CUT29,,
+CUT30,,
+CUT31,,
+CUT34X,,
+CUT35X,,
+CUT36X,,
+CUT37X,,
+CUT38X,,
+CUT39X,,
+CUT40X,,
+CUT41X,,
+CUT42,,
+BREAK1,,"A ""pen"" set -- ZJO"
+BREAK2,,"A ""ká"" set, with frozen *jo- absolutive prefix -- ZJO
+NCP: most items mean ""break open"""
+BREAK3,,"A ""soɾok"" set; causativized comes out as ""mondoɾok"" -- ZJO"
+BREAK3.5,,
+BREAK4,,
+BREAK5,,
+BREAK6X,,
+BREAK7X,,
+BREAK8,,
+BREAK9,,
+BREAK10,,
+BREAK11,,
+BREAK12,,
+BREAK13X,,
+BREAK14,,
+BREAK15,,
+BREAK16,,
+BREAK17X,,
+BREAK18,,
+SPLIT1,,"A ""pesẽ"" set -- ZJO
+LDM: the tapiete form has lost the first syllable, probably because of reanalysis."
+SPLIT2,,"A ""βok"" set, unrelated to the ""ok"" set -- ZJO
+"
+SPLIT3,,
+SPLIT4,,"An extensive discussion of the items in this cognate set have led to the following observations: TPN exhibits a root /ir/ 'separarse, desprenderse, desgrudarse' which  is the basis of /po+ir/ 'let go' (po = hand) (cf. PG, poi 'soltar') and /mbo+ir/ 'separate' (mo = causative). Some languages exhibit a 'doubly causativized' form of the latter. The question that has occupied us is whether are two cognate sets or one, in particular, whether there is one set based on the above set of forms and, in addition, a /mbo-'i/ (CAUS-small) set. This issue is raised by the fact that some languages have forms w/ and w/o a final r (in languages that preserve them), and also have forms w/ and w/o a glottal stop. We have decided to merge the two sets, pending discussion w/ Fran re: the seemingly distinct Eme forms -- LDM
+
+An ""(mbo)ʔir"" set (most languages lost final /r/ and they exhibit the CAUS prefix); other languages show a reanalysis of /mboʔir/ as the root, and then recausativize it, as in Warazu -- ZJO"
+SPLIT5,,"A ""so(k)"" set (see also homophonous GRIND1 note), where causativized form is ""mondo(k)""; some show reduplicated ""soso(k)"" and causativized reduplicated ""mondoso(k)"" -- ZJO"
+SPLIT7X,,
+SPLIT8,,"A ""saβ"" set -- ZJO"
+SPLIT10,,
+SPLIT11,,
+SPLIT13,,
+SPLIT14,,
+DIVIDE1,,
+DIVIDE1.5,,
+DIVIDE1.75,,
+DIVIDE2,,
+DIVIDE3,,
+DIVIDE4,,
+DIVIDE6,,
+DIVIDE7,,
+DIVIDE8,,
+BURST1,,A *pok set -- ZJO
+BURST1.5,,A *puk set -- ZJO
+BURST2,,
+BURST3,,
+BURST4,,
+BURST5,,
+BURST6,,"A ""pororok"" set, a verb that means 'thunder', possibly to the crackling of lightning -- ZJO"
+BURST7,,
+BURST8,,
+FISH(V)1,"COMPOUND, GEN",A FISH+? compound set -- ZJO
+FISH(V)2,"COMPOUND, GEN",A FISH+PIERCE compound set -- ZJO
+FISH(V)3,"COMPOUND, MED","A ""pinda+poj"" FISHHOOK+FEED compound set -- ZJO"
+FISH(V)4,,
+FISH(V)5,"COMPOUND, MED","A ""piɾa+poj"" FISH+FEED set -- ZJO"
+FISH(V)6X,,
+FISH(V)7,,
+FISH(V)8,"COMPOUND, MED","A ""pidna+etɨk"" FISHHOOK+THROW set -- ZJO"
+FISH(V)9,"COMPOUND, GEN",A FISH+? compound set -- ZJO
+FISH(V)10,"COMPOUND, GEN",fish(n) + naɨ̃ - NCP
+FISH(V)11,,
+FISH(V)12,"COMPOUND, GEN",A FISHHOOK+THROW compound set -- ZJO
+FISH(V)13,"COMPOUND, GEN","A ""ukɨ+poj"" FISHHOOK+FEED set -- ZJO"
+FISH(V)14,"COMPOUND, IND",fish + kill pira + ɨka. - NCP
+FISH(V)15,,
+HUNT1 ,,
+HUNT2,,
+HUNT3,,"A ""poɾakaɾ"" set -- ZJO"
+HUNT4X,LOAN,
+HUNT5,,"A ""kaʔaup"" set (?) -- ZJO"
+HUNT6,,
+HUNT7,,
+HUNT8,,
+HUNT9,,
+HUNT11,,
+HUNT12,,
+HUNT13X,,
+HUNT14X,,
+HUNT15X,,
+HUNT16X,,
+HUNT17X,,
+HUNT19,,
+HUNT20,,
+SWEEP1,,"A ""peʔiɾ"" set -- ZJO"
+SWEEP2,"COMPOUND, IND","A compound ""ɨtɨ+peʔiɾ"" TRASH+SWEEP set -- ZJO
+"
+SWEEP3,,
+SWEEP4,,
+SWEEP5,,
+SWEEP6,,
+SWEEP7,,
+SWEEP8,,
+RAIN(V)1,,
+RAIN(V)2,,
+RAIN(V)3,,
+RAIN(V)4,,
+RAIN(V)5,,
+RAIN(V)6X,,
+RAIN(V)7X,,
+FLOOD1,,
+FLOOD2,,
+FLOOD4,,
+FLOOD5,,
+FLOOD6,"COMPOUND, IND","A ""ɨ+apo"" WATER+DO compound form.  Forms copied under WATER and DO -- ZJO"
+FLOOD7,,
+FLOOD8,,
+FLOOD10,,
+FLOOD11,,
+DROWN1,,"An ""(a)pɨm"" set -- ZJO"
+DROWN2,,
+DROWN3,,
+DROWN4,,
+DROWN5,,
+DROWN6,,
+DROWN7X,,
+DROWN10,,
+DROWN11,,
+DROWN9X,,
+SINK1,,
+SINK2,,
+SINK3,,
+SINK4,,
+SINK5,,
+SINK6,,
+SINK7,,
+SINK8,,
+BREATHE1,"COMPOUND, GEN","A ""pɨtu+ẽ"" BREATH+? set; second element possibly related to FLOW3 *ẽ -- ZJO
+"
+BREATHE2,,"A ""pɨtu"" set -- ZJO
+"
+BREATHE3,"COMPOUND, GEN",compound of pya liver and wur bubble - NCP
+BREATHE4,,
+BREATHE5,,
+BREATHE6,,
+YAWN1,,
+YAWN2,"COMPOUND, GEN","compound juru + peʔa, mouth+ open. NCP"
+YAWN3,"COMPOUND, IND",compound set mouth+open juru+peka. - NCP
+YAWN4,,
+YAWN5,"COMPOUND, IND","compound of juru + pirara, mouth and open - NCP"
+YAWN6,,
+YAWN7,"COMPOUND, IND",acompound set of mouth and laugh juru + jai - NCP
+YAWN8,"COMPOUND, GEN","compound of juru + wak, mouth + split. - NCP"
+YAWN9,,
+YAWN10,,
+YAWN11,"COMPOUND, GEN",compound of mouth and split. add to cognate table. - NCP
+VOMIT1,,"A ""weʔeŋ"" set -- ZJO"
+VOMIT2 ,,
+VOMIT3,,
+VOMIT4,,
+VOMIT5,,
+VOMIT6X,,
+LIE ON A SURFACE1,,
+LIE ON A SURFACE2,"COMPLEX, GEN","An ""apaɾaɾ"" set.  This appears to be a morphological derivation and so I did not label it as 'compound', but I made two sets because the presence of this form appears to correspond in interesting ways to subgrouping -- ZJO"
+LIE ON A SURFACE3,,"An ""ap~aβ"" set -- ZJO"
+LIE ON A SURFACE4,,"maybe related to lie on a surface 3 in some way. - SM
+
+The individual languages seem to vary a lot on how many stems there are, and on whether they are all ""forms of the same stem"" or independent verbs -- so it's not clear to me WHAT was innovated (longer forms from shorter forms? shorter forms from longer forms?) and whether the different stems are to be reconstructed as independent lexems ('characters') or as forms of the same lexeme ('subcharacters') -- /ap/ vs. /up/ vs. /aw/? /ap/ and /aw/ vs. /up/? /ap/, /aw/ and /up/ as one?...
+
+So I'd treat the positional verbs with great care -- their history is potentially confusing.
+"
+LIE ON A SURFACE5,,
+LIE ON A SURFACE6,,
+LIE ON A SURFACE7X,,
+LIE ON A SURFACE8,,
+LIE ON A SURFACE9,,
+LIE ON A SURFACE10,,
+LIE ON A SURFACE11X,,
+LIE ON A SURFACE12X,,
+LIE ON A SURFACE13X,,
+LIE ON A SURFACE14X,,
+LIE ON A SURFACE15X,,
+LIE ON A SURFACE16X,,
+LIE ON A SURFACE17X,,
+LIE ON A SURFACE18X,,
+LIE ON A SURFACE19X,,
+LIE ON A SURFACE21,,
+PUT1,"COMPLEX, GEN","A ""moʔin"" set -- ZJO
+causative + sit - NCP"
+PUT1.5,,
+PUT2,,
+PUT3,,
+PUT4,,"A ""noŋ"" set, where initial ""jo-"" is the old absolutive prefix for monosyllabic verb roots, which many languages have reanalyzed as part of the root -- ZJO"
+PUT5,"COMPOUND, GEN","A ""no + katu"" set -- ZJO"
+PUT6X,,
+PUT7,,
+PUT8,,
+PUT9,,
+PUT10,,
+PUT11X,,
+PUT12,,
+PUT13,,
+PUT14,,
+PUT15,,
+PUT16,,
+PUT17,,
+PUT18,,
+PUT19X,,
+PUT20X,,
+PUT21X,,
+PUT22X,,
+PUT23X,,
+PUT25X,,
+PUT26X,,
+PUT27X,,
+TURN1,,"A ""yereβ"" set -- ZJO"
+TURN5,,"A ""βak"" set -- ZJO"
+TURN2,,
+TURN3,,
+TURN4,,
+TURN6X,,
+TURN7,,
+TURN8,,
+TURN8.5X,,
+TURN9,,
+TURN10,,
+TURN11,,
+TURN12,,
+TURN13,,
+TURN14,,
+TURN15X,,
+TWIST1,,
+TWIST2,,
+TWIST3,,"A ""pepɨɾ"" set -- ZJO"
+TWIST4,,"A ""poká"" set -- ZJO"
+TWIST5,,
+TWIST6,,"A ""pɨɾɨɾɨ"" set -- ZJO"
+TWIST7,,
+TWIST8,,
+TWIST9,,
+TWIST10,,
+TWIST11,,
+TWIST12X,,
+TWIST15,,
+TWIST18,,
+TWIST19X,,
+ESCAPE1,,
+ESCAPE2,,
+ESCAPE3,,
+ESCAPE4,,
+ESCAPE5,,
+ESCAPE6,,
+ESCAPE7,,
+ESCAPE8,,
+ESCAPE9,,
+ESCAPE10,,
+ESCAPE12,,
+LEAVE1,,
+LEAVE2,,"An ""ejar"" set -- ZJO"
+LEAVE3,,
+LEAVE4,,
+LEAVE5,,
+LEAVE6,,
+LEAVE7,,
+LEAVE8,,
+LEAVE9,,
+LEAVE10,,
+LEAVE11,,
+LEAVE12,,
+LEAVE13X,,
+LEAVE14X,,
+LEAVE15X,,
+LEAVE16X,,
+LEAVE17X,,
+ENTER1,,
+ENTER2,,
+ENTER4,,
+ENTER6,,
+ENTER8,,
+ENTER9,,
+COUGH1,,
+COUGH1.5,,
+COUGH2,,
+COUGH3X,,
+COUGH4X,,
+COUGH5,,"a pytym set, where pytym probably originally meant something like 'cover', and was extended to 'close', 'blick', 'choke', 'cough'; it would probably good to deep drill this, perhaps under choke.  -- LDM"
+SWALLOW1,,
+SWALLOW2,,
+SWALLOW3,,
+SWALLOW4,,
+SWALLOW5X,,
+SWALLOW6X,,
+CAPTURE1,,
+CAPTURE2,,
+CAPTURE3,,
+CAPTURE5X,,
+CAPTURE6,,
+APPEAR1,,
+APPEAR2,,"A ""jekwaβ"" set -- ZJO"
+APPEAR3,,
+APPEAR4X,,
+APPEAR5X,,
+APPEAR6,,
+APPEAR7,,
+APPEAR8,,
+DISAPPEAR1,,
+DISAPPEAR2,,
+DISAPPEAR3,,
+DISAPPEAR4,,
+DISAPPEAR5X,,
+DISAPPEAR6X,,
+LOSE WAY1,,
+LOSE WAY2,,
+LOSE WAY3X,,
+LOSE WAY4X,,
+LOSE (ONESELF)1,,"A ""kaɲem"" set -- ZJO"
+LOSE (ONESELF)2,,
+LOSE (ONESELF)3,,
+LOSE (ONESELF)4,,
+LOSE (ONESELF)5,,
+LOSE (ONESELF)6,,
+HELP1,,
+HELP2,,
+HELP3X,,
+HELP4,,
+HELP5,,
+HELP6,,
+HELP7,,
+HELP8,,
+HELP9,,
+HELP10,,
+FEAR1,,"A ""kɨjé"" set -- ZJO"
+FEAR2,"COMPOUND, GEN","A ""sɨ+kɨjé"" compound set with metathesized form ""kɨsɨjé"" -- ZJO"
+FEAR3,"COMPOUND, GEN","A ""kɨsɨjé"" set that is the metathesized version of FEAR2.  FEAR2 also includes these forms -- ZJO"
+FEAR4,"COMPOUND, GEN","A ""sɨ+kɨsɨjé"" complex set consisting of metathesized form from FEAR3 -- ZJO"
+FEAR6,,"A ""sɨj"" set that may be related via sound symbolism to the first element in the complex sets FEAR2, FEAR3 & FEAR4 -- ZJO"
+FEAR7,,
+FEAR8,,
+FEAR9X,,
+FEAR10,,
+FEAR11X,,
+FEAR12,,
+FEAR13,,
+FEAR14,,
+FEAR15,,
+FEAR16X,,
+FEAR17 ,,
+FEAR18X,,
+FEAR19X,,
+FEAR20X,,
+FEAR21,,
+SCARE1,,"A ""piɾiŋ"" set -- ZJO"
+SCARE2,,
+SCARE3,,
+SCARE4,,
+SCARE5,,
+SCARE6,,
+SCARE7,,
+SCARE8,"COMPOUND, GEN","A ""pwasem/kwasem"" set; a complex involving shout -- ZJO"
+SCARE9X,,
+SCARE10,,
+SCARE13,,
+SCARE14,,
+BE ABLE1,,
+BE ABLE2,,
+BE ABLE3,,
+BE ABLE4,,
+BE ABLE5,,
+BE ABLE6FUNCTX,,
+BE ABLE7,,
+BE ABLE8,,
+BE ABLE9,,
+BE ABLE10,,
+BE ABLE11,,
+BE ABLE12,,
+BRING1,,"A ""ɾuɾ"" set, an old eroded causativized version of 'come' *uɾ -- ZJO"
+BRING2,,
+BRING3X,,
+BRING4,,
+PULL1,,"An ""ekɨj"" set -- ZJO"
+PULL2,,
+PULL4,,"A ""mutɨ"" set -- ZJO"
+PULL5,,
+PULL5.5,,
+PULL6,,
+PULL8,,
+PULL9,,
+PULL10,,
+PULL11,,
+PULL14,,
+PULL15,,
+PULL16,,
+PULL17X,,
+PULL18X,,
+PULL19X,,
+PULL20X,,
+PULL21,,
+PULL23,,
+SHOOT1,,
+SHOOT2,,
+SHOOT3,,"An ""ɨwõ"" set -- ZJO"
+SHOOT4,,
+SHOOT5,,"An ""awɨ"" set -- ZJO"
+SHOOT6,,
+SHOOT7,,
+SHOOT8,,
+SHOOT9,,
+SHOOT10,,
+SHOOT11,,
+SHOOT12,,
+SHOOT13X,,
+GRAB1,,"A ""pɨsɨk"" set -- ZJO"
+GRAB3,,"A ""poʔó"" set, possibly a HAND+REMOVE compound set, but note TPN lost final /k/ in that account, which is unlikely -- ZJO"
+GRAB4X,,
+GRAB5,,
+GRAB6,,
+GRAB7,,
+GRAB9,,
+TAKE.OUT~REMOVE1,,An *ok set -- ZJO
+TAKE.OUT~REMOVE2,,
+TAKE.OUT~REMOVE3,"COMPLEX, GEN","A set consisting of old *ero-tsem, the causative plus the root for 'leave from, emerge'; in many languages the initial e of the causative is not attested, and the nasality of reflexes of *tsem induces nasalization of the r of the causative prefix. There is another causative pattern involving *tsem, with the distinct causative mo-, which is not included here -- ZJO"
+TAKE.OUT~REMOVE4,,
+TAKE.OUT~REMOVE5,"COMPLEX, GEN","causative and jump, however an independent formation from THROW - NCP"
+TAKE.OUT~REMOVE6,"COMPLEX, GEN","causative and JUMP, however an independent formation from THROW. - NCP"
+TAKE.OUT~REMOVE7,,
+TAKE.OUT~REMOVE8,,
+TAKE.OUT~REMOVE9,,
+TAKE.OUT~REMOVE12X,,
+TAKE.OUT~REMOVE14,,
+TAKE.OUT~REMOVE15,,
+TAKE.OUT~REMOVE16,,
+TAKE.OUT~REMOVE17,,
+TAKE.OUT~REMOVE18,,
+TAKE.OUT~REMOVE19X,,
+TAKE.OUT~REMOVE20X,,
+TAKE.OUT~REMOVE21X,,
+TAKE.OUT~REMOVE22,,
+TAKE.OUT~REMOVE23,,
+TAKE.OUT~REMOVE24,,
+BEAT1,,"A ""nupã"" set -- ZJO"
+BEAT4,,"A ""kwaɾ"" set -- ZJO"
+BEAT5,,
+BEAT6,,
+BEAT7,,
+BEAT3,,"A ""petek"" set -- ZJO"
+BEAT8,,
+BEAT9,,
+BEAT10,,
+BEAT11,,
+BEAT13,,
+BEAT14,,
+BEAT15,,
+BEAT16,,
+BEAT17,,
+BEAT18 ,,
+BEAT19,,
+BEAT20X,,
+BEAT21,,
+BEAT22,,
+BEAT23X,,
+BEAT24X,,
+BEAT25,,
+BEAT27X,,
+FIGHT1,,
+FIGHT2,,
+FIGHT3,,
+FIGHT4X,"COMPLEX, MED",An amotaɾ+eʔɨm LOVE+PRIVATIVE complex set -- ZJO
+FIGHT5,,
+FIGHT6,,
+FIGHT7,,
+FIGHT8,,
+FIGHT9,,
+FIGHT10,,
+FIGHT11,,
+FIGHT12,,
+FIGHT13,,
+FIGHT14,,
+FIGHT15,,
+FIGHT16,,
+FIGHT17,,
+FIGHT18X,,
+FIGHT19,,
+REACH1,,
+REACH3,,
+REACH4,,
+REACH5,,
+REACH6,,
+REACH7,,
+REACH8,,
+REACH9X,,
+HABER1,,
+HABER2,,
+HABER3,,
+HABER4,,
+HABER5,,
+HABER6FUNCTX,,
+HABER6.5,,
+HABER7,,
+HABER8,,
+HABER9,,
+HAVE1,"COMPOUND, GEN","a reko set
+probably a compound of the comitative causative and live. I have copied the forms to LIVE1- NCP"
+HAVE2FUNCTX,,
+HAVE3,,
+HAVE4,,
+GIVE1,,"A ""meʔeŋ"" set -- ZJO"
+GIVE1.5,"COMPLEX, GEN","causative + GO1. - NCP
+
+it would be good to eventually collect forms meaning 'send', since these probably participate in this set. -- LDM
+
+"
+GIVE2,"COMPOUND, GEN",? plus GIVE1 -- ZJO
+GIVE3,,
+GIVE4,,
+GIVE6X,,
+GIVE8X,,
+GIVE8,"COMPLEX, IND",causative + COME1 
+GIVE10,,
+GIVE11,,
+GIVE12X,,
+GIVE13,,
+GIVE14,,
+THROW2,"COMPLEX, GEN",
+THROW1,,
+THROW3,,
+THROW4,,"An ""ejtɨk"" set -- ZJO"
+THROW5,,
+THROW6,,
+THROW7,,
+THROW8,,
+THROW10,,
+THROW11X,,
+THROW12X,,
+THROW13X,,
+THROW14X,,
+GET USED TO1,,
+GET USED TO2,,"Possibly an old compound analogous to ""know it like the back of your hand"". -- ZJO"
+GET USED TO3,,"A ""βɨʔar"" set -- ZJO"
+GET USED TO4,,
+GET USED TO5,,
+GET USED TO6,,
+GET USED TO7,,
+TEACH1,"COMPLEX, GEN","An mbo'e set -- ZJO
+
+NCP: This is a lexicalized reflex of causative + SAY. 
+----
+as soon as this is populated it should be copied to SAY
+	-pagouritsa itsnoneofyourbusiness"
+TEACH2,,
+TEACH3,,
+TEACH4,,
+TEACH5,,
+TEACH6,,
+TEACH8,"COMPLEX, GEN",
+TEACH9,,
+TEACH10,,
+TEACH11,,
+DECEIVE1,,"An ""apu"" set -- ZJO"
+DECEIVE2,,
+DECEIVE3,,
+DECEIVE4,,
+DECEIVE5,,
+DECEIVE6,,
+DECEIVE6.5,,
+DECEIVE7,,
+DECEIVE8,,
+DECEIVE8.5,,
+DECEIVE9,,"An ""moʔem"" set -- ZJO"
+DECEIVE10,,"An ""(i)temon"" set -- ZJO"
+DECEIVE11,,"An ""ite"" set -- ZJO"
+DECEIVE12,,"A ""me"" set -- ZJO"
+DECEIVE13,,
+DECEIVE14,,
+DECEIVE15,,
+DECEIVE16,,
+DECEIVE17,,
+DECEIVE18,,
+DECEIVE19,,
+DECEIVE20,,
+DECEIVE21,,
+DECEIVE22,,
+DECEIVE23X,,
+DECEIVE24,,
+DECEIVE25,,
+DECEIVE26X,,
+DECEIVE27,,
+SHARPEN1X,,"If we had an etymon POINT~TIP, OMG 'sapua' would also go there. -- ZJO"
+SHARPEN2X,,
+SHARPEN3X,,
+SHARPEN4X,,
+FORGET1,,
+FORGET2,,
+FORGET4,,
+FORGET5,,
+FORGET6,,
+KNOW1,,
+KNOW2X,,
+LOOK FOR1,,
+LOOK FOR2,,
+LOOK FOR3,,
+LOOK  FOR3.5,,
+LOOK FOR4,,
+LOOK FOR5,,
+LOOK FOR7,,
+LOOK FOR8,,
+LOOK FOR9,,
+LOOK FOR10,,
+LOOK FOR12X,,
+LOOK FOR13,,
+LOOK FOR14,,
+LOOK FOR15,,
+LOOK FOR16X,,
+LOOK1,,"A ""maʔẽ"" set -- ZJO"
+LOOK3,,
+LOOK4,,
+LOOK5,,
+LOOK6X,,
+LOOK7,,
+LOOK8,,
+LOOK10X,,
+LOOK11X,,
+LOOK12X,,
+LOOK13X,,
+LOOK14X,,
+SEE1,,"An ""epjak"" or ""etsak"" set -- ZJO"
+SEE3,,
+SEE4,,
+SEE5,,
+SEE6X,,
+SEE7X,,
+SEE8X,,
+SEE9X,,
+SEE10X,,
+SEE11,,
+MEET~ENCOUNTER1,,"A ""suβ"" set, with many *je-reflexivized forms meaning 'be born' -- ZJO"
+MEET~ENCOUNTER2,,
+MEET~ENCOUNTER3,"COMPOUND, GEN","An ""oβá+itĩ"" FACE+? compound set; in some languages the initial form looks more like *suβ from MEET~ENCOUNTER1, but this is probably b/c of an *o>u change -- ZJO"
+MEET~ENCOUNTER4,,
+MEET~ENCOUNTER5,,
+MEET~ENCOUNTER7,,
+MEET~ENCOUNTER8,,
+MEET~ENCOUNTER9,,
+MEET~ENCOUNTER10,,
+MEET~ENCOUNTER11,,
+MEET ~ ENCOUNTER12,,
+MEET~ENCOUNTER6X,,
+REMEMBER1,,"A ""manduʔaɾ"" set -- ZJO"
+REMEMBER2,,
+REMEMBER3,,"An ""aʔu"" set -- ZJO"
+REMEMBER4,,
+REMEMBER5,,
+REMEMBER6,,make this a maʔẽ set? - NCP
+REMEMBER7X,,
+THINK1 ,,
+THINK2,,
+THINK4,,
+THINK5,,
+THINK6,,"A ""rog"" set -- ZJO"
+THINK7,,
+THINK8X,,
+THINK9,,
+THINK10,,
+THINK12,,
+THINK13X,,
+THINK14X,,
+THINK15,,
+THINK16,,
+THINK17,"COMPLEX, GEN",wan + tup (hear) set. - NCP
+THINK18,,
+WANT1,,"A ""sej"" set -- ZJO"
+WANT2,,
+WANT3,,
+WANT4,,
+WANT5,,
+WANT6,,
+WANT7,,
+WANT8,,
+WANT9,,
+WANT10,,
+WANT11,,
+WANT12,,
+WANT13,,
+LIKE2,,
+LIKE3,,
+LIKE4,,
+LIKE5,,
+LIKE6X,,
+LIKE7,,
+LIKE8X,,
+LIKE9,,
+LIKE10,,
+LIKE11,,
+LOVE1,,"An ""aʔɨtsuβ"" set -- ZJO"
+LOVE2,,
+LOVE3,,
+LOVE4,,
+LOVE5X,,
+LOVE6,,
+LOVE8,,
+LOVE9,,
+COPULATE1,,"A ""menó"" set; appears to be a transitive verb which denotes an activity in which intercourse is not mutual -- ZJO
+- Perhaps related to /men/ 'husband' --SM
+"
+COPULATE2,,
+COPULATE3,,
+COPULATE4,,
+COPULATE5,,
+COPULATE6X,,
+COPULATE7,,
+COPULATE8,,
+COPULATE9X,,
+COPULATE10,,
+COPULATE11,,
+BELIEVE1,,
+BELIEVE2,,
+BELIEVE3,,"A ""ɾoβiaɾ"" set -- ZJO"
+BELIEVE4,,
+BELIEVE5,,
+BELIEVE6,,
+BELIEVE7X,,
+BELIEVE8,,
+BELIEVE9,,
+BELIEVE10,,
+BELIEVE11,,
+BELIEVE12,,
+OBEY1,,
+OBEY2,,
+OBEY3,,
+OBEY4,,
+OBEY5X,,
+OBEY6,,
+ORDER1,,"A ""pwaj/kwaj"" set -- ZJO"
+ORDER2,,
+ORDER4,,
+ORDER5,,
+HEAR1,,
+HEAR3X,,
+HEAR4,,
+HEAR5,,
+HEAR7X,,
+HEAR8X,,
+HEAR9X,,
+FOLLOW1,,
+FOLLOW2,,
+FOLLOW3,,
+FOLLOW3.5,,
+FOLLOW4,,
+FOLLOW5,,
+FOLLOW6,,
+FOLLOW7X,,
+FOLLOW8,,
+FOLLOW9,,
+FOLLOW10X,,
+FOLLOW11,,
+FOLLOW12,,
+FOLLOW13X,,
+RESPOND1,,
+RESPOND3,,
+RESPOND4,,
+RESPOND5,,
+RESPOND6,,
+RESPOND7X,,
+RESPOND8,,
+SING1,,
+SING3,,
+SING6X,,
+SING7,,
+SING8,,
+SING10,,"this may be an old compound SPEAK + SHAMANIC POWER (=karai), see forms in TPN, karai forms in Guarani -- LDM"
+SING11,,
+SING12,,
+SING13X,,
+SING14X,,
+ASK FOR1,,"A ""yerure"" set -- ZJO"
+ASK FOR2,"COMPOUND, GEN","A ""por+anduβ"" PEOPLE+PERCEIVE compound set, cf. ASK.FOR3 -- ZJO
+"
+ASK FOR3,,"An ""anduβ"" set -- ZJO
+different from entup set in hear. one is entup and the other anduw. - NCP"
+ASK FOR4,,
+ASK FOR5,,
+ASK FOR6,,
+ASK FOR7,,
+ASK FOR8,,
+ASK1,,
+ASK2,,
+ASK3,,
+CALL1,,this probably meant summon - NCP
+CALL1.5,,"this probably meant call somebody's name, address someone- NCP"
+CALL2,,
+CALL4,,
+CALL5,,
+CALL6X,,
+CONVERSE1,,
+CONVERSE2,,
+CONVERSE3,,
+CONVERSE4,"COMPLEX, IND",
+CONVERSE5,,
+TELL STORY1,,
+TELL STORY2,,
+TELL STORY3,,
+TELL STORY4,,Do we think they're related to SPEAK or GIVE? -- ZJO
+TELL STORY5,,
+TELL STORY6X,,
+TELL STORY7 ,,
+TELL STORY8X,,
+SAY1,,"An ""eʔú"" set -- ZJO"
+SAY2,,"An ""ʔé~ʔi"" set -- ZJO"
+SAY3,,"An ""aɨwu"" set -- ZJO"
+SAY4,,
+SAY5,,
+SAY6,,same as say 7? - NCP
+SAY7,,
+SAY8X,,
+SAY9X,,
+SAY10,,
+SPEAK1,,a ŋgeta set. - NCP
+SPEAK2,,"A ""jeʔeŋ"" set -- ZJO
+"
+SPEAK3,,
+SPEAK4,,
+SPEAK6,,
+SPEAK7,,
+SPEAK8X,,
+EMIT NOISE1,,"A ""pu"" set -- ZJO
+There may be an old relationship with THUNDER2, but we keep them separate for now. - NCP"
+EMIT NOISE1.5,"COMPLEX, GEN","An ""ambu"" set, probably meaning to create noise through the mouth (breathe, snore, moan), probably deeply related to ""pu"" NOISE -- ZJO"
+EMIT NOISE2X,,
+EMIT NOISE4,,
+EMIT NOISE5,,
+EMIT NOISE6X,,
+EMIT NOISE7,,
+EMIT NOISE8,,
+IMITATE1,"COMPOUND, GEN","An ""a+aŋ"" ?+SHADE compound, crucially different than SPIRIT compound also based on SHADE, which has medial glide /j/ and not glottal stop that results here; copied to SHADE -- ZJO"
+IMITATE2 ,,
+IMITATE3X,,
+IMITATE4,,
+DANCE1,,
+DANCE2,,"A ""poɾasej"" set -- ZJO"
+DANCE3,,
+DANCE4,,
+DANCE5,LOAN,
+DANCE6,,
+DANCE7,,
+DANCE8.5X,,
+DANCE9,,
+DANCE10,,
+DANCE11,,
+DANCE13,LOAN,
+DANCE14X,,
+DANCE15,,
+DANCE16,,
+DANCE17,,
+WAKE UP1,,"A ""pa(k)"" set -- ZJO"
+WAKE UP2,,
+WAKE UP3,,
+WAKE UP5,,
+WAKE UP6,,
+WAKE UP7,,
+SLEEP1,,"A ""ke(r)"" set -- ZJO"
+SLEEP2,,
+SLEEP3,,
+SLEEP5,,
+SLEEP6,,
+SLEEP7X,,
+SLEEP8X,,
+SLEEP9X,,
+SLEEP10X,,
+LAUGH1,,"A ""puk"" set (*puká)-- ZJO"
+LAUGH1.5,,"A ""jaj"" set -- ZJO"
+LAUGH2,,
+LAUGH3,,
+LAUGH4,,
+LAUGH4.5,,
+LAUGH5X,,
+LAUGH6X,,
+LAUGH7X,,
+SMILE1,"COMPOUND, GEN",mouth + happy - NCP
+SMILE2,,
+SMILE3,,
+CRY1,,
+CRY2,,A *jaseʔó set -- ZJO
+CRY2.5,,"An ""asẽ"" set -- ZJO"
+CRY3,,A *jaʔok (?) set -- ZJO
+CRY4,,
+CRY6,"COMPOUND, MED","An ""esa+ɨ"" EYE+WATER compound set -- ZJO"
+CRY8,,
+CRY9,,
+CRY10X,,
+CRY11X,,
+CRY12X,,
+CRY13X,,
+CRY14X,,
+CRY15,,
+CRY16,,
+MOURN1,,
+MOURN2,,
+MOURN3,,
+MOURN4,,
+MOURN5X,,This could warrant deep drilling for the meaning suffer. - ZJO
+MOURN6,,
+BE SAD1,,
+BE SAD2,"COMPLEX, MED",
+BE SAD3,,"A ""βɨʔa/mɨʔa"" set possibly related to LIVER1 but not obviously so -- ZJO"
+BE SAD4,"COMPLEX, MED",
+BE SAD5,"COMPLEX, MED",
+BE SAD6,,
+BE SAD7,,
+BE SAD8,,
+BE SAD9,,
+BE SAD10,,
+BE SAD11,,"A ""rur"" set -- ZJO"
+BE SAD12,,
+BE SAD13,,
+BE SAD14,,
+BE SAD16,,"An ""oka"" set -- ZJO"
+BE SAD17,,
+BE SAD18,,
+BE SAD19,,
+BE SAD20,,
+BE SAD22,,
+BE SAD23,,
+BE SAD24,,
+BE SAD25,,
+BE SAD26X,,
+BE SAD27,"COMPOUND, GEN",face + pain/sick - NCP
+BE SAD28,"COMPOUND, GEN",face + long - NCP
+BE THIRSTY1,"COMPOUND, GEN","An ""ɨʔ+ʔu+sej+ WATER+INGEST+WANT three-way compound set -- ZJO"
+BE THIRSTY2,"COMPOUND, GEN","An ""ʔu+sej"" INGEST+WANT two-way compound set -- ZJO"
+BE THIRSTY3,,
+BE THIRSTY4,,
+BE THIRSTY5X,,
+DEFECATE1,,"A ""poti"" set -- ZJO"
+DEFECATE2,,"A ""kaʔaβ"" set -- ZJO"
+DEFECATE3,,
+DEFECATE4,,
+DEFECATE5,,
+DEFECATE6,LOAN,From Spanish? -- ZJO
+DEFECATE7,,
+URINATE1,,
+URINATE2,,This is a tɨɨ-asɨ 'need to urinate' set; this should deep drilled and ultimately turned into a URINE set
+URINATE3X,,
+URINATE4,,
+URINATE5X,,
+COOK1,,"A ""jɨβ"" 'be cooked' set -- ZJO"
+COOK2,,
+COOK3,,
+COOK4,,
+COOK5,,
+COOK6,,
+COOK7,,
+COOK8,,
+COOK9X,,
+COOK10,"COMPOUND, IND",
+EAT1,,"An ""ʔu"" set, that probably meant 'ingest' -- ZJO
+
+food is deverbal nominalizer+eat - NCP"
+EAT2,,"A ""karu"" set -- ZJO"
+EAT3X,,
+EAT4,,
+EAT5,,"A ""wa"" set -- ZJO"
+EAT6X,,
+EAT7X,,
+EAT8X,,
+EAT9X,,
+DRINK1,,
+DRINK2,"COMPOUND, MED","An ""ʔɨ+ʔu"" WATER+EAT(INGEST) compound set -- ZJO"
+DRINK4,,
+DRINK5,,"An ""mbo+apy"" set, not related to BURN, but instead to intransitive ""apy"" meaning ""nunca acabar de"" in TPN -- ZJO
+
+We should deep drill this -- LDM"
+DRINK6,,
+DRINK8X,,
+DRINK9X,,
+DRINK ALCOHOL1,,"A complex ""ka+ʔu"" ?+ingest set, which typically means something like 'drink cauim'.  Something is being incorporated here, but I can't find a relevant nominal root, and I wonder if it is related to POK *kai 'tree sap', since in many languages this verb can refer to drinking ""vinho"", or the liquid of a tree -- ZJO
+
+History confirms Zach and this is a compound set of cawĩ alcoholic drink + ʔu eat, ingest. - NCP
+
+On second thoughts (January 2019) we are not sure we can defend this compound in a paper. So for now we don't consider ka'u and kawi related.  - NCP"
+DRINK ALCOHOL2,,
+ROAST1,,
+ROAST2,,"An ""esɨɾ"" set -- ZJO"
+ROAST3,"COMPLEX, GEN","this is an emi+esyr set -- LDM
+
+A ""miʃɨɾ"" set -- ZJO"
+ROAST4,,
+ROAST5,,
+ROAST6,,
+ROAST7,,
+ROAST8,,
+ROAST F.1,,
+ROAST F.2,,
+ROAST F.3,,
+ROAST F.4,,
+SMOKE FOOD1,,"A ""kaʔẽ"" set that originally meant 'be smoked/dried (of meat)' -- ZJO"
+SMOKE FOOD2,,
+BURN1,,"A ""kaj"" set that probably meant 'be in flames', where the subject was the entity undergoing burning -- ZJO"
+BURN2,,"An ""apɨ"" set, which was probably something like a semelfactive predicate that meant 'catch fire', where subject was the entity that came to be in flames -- ZJO"
+BURN3,,
+BURN3.5,,
+BURN4,,
+BURN5X,,
+BURN6X,,
+BURN7X,,
+BURN8,,
+BURN10,,
+BURN11,,
+BURN12X,,
+BURN13X,,
+BURN14X,,
+FLAME(V)1,,"An ""endɨ"" set, the subject of which was 'fire' itself -- ZJO"
+FLAME(V)2,,
+FLAME(V)3,,
+FLAME(V)4,,
+FLAME(V)5,,
+LIGHT(V)1,,
+LIGHT(V)2,,
+LIGHT(V)3,,"A ""mondɨk"" set, not to be confused with ""mo+endɨ"", a transitive verb whose object was '(cooking) fire' -- ZJO"
+LIGHT(V)4,,
+LIGHT(V)5,,
+LIGHT(V)6,,
+LIGHT(V)7,,
+LIGHT(V)8,,
+LIGHT(V)9,,
+LIGHT(V)10,,
+SHINE1,,"A ""βeɾaβ"" set 'shine', of many kinds of objects, probably involving some kind of reflection -- ZJO"
+SHINE2,,
+SHINE3,,
+SHINE4,,
+SHINE5,,
+SHINE6X,,
+SHINE7X,,
+ILLUMINATE1,,"An ""(e)sapé"" set, 'shine light on' -- ZJO"
+ILLUMINATE2,,
+ILLUMINATE3,,
+ILLUMINATE4,,
+ILLUMINATE5,,
+ILLUMINATE6,,
+ILLUMINATE7,,
+FRY1,,"A ""sɨɾɨɾɨk"" set -- ZJO"
+FRY2,,
+FRY3,,
+FRY4,,
+FRY5,,
+FRY6,,
+BOIL1,,"A ""pupuɾ"" set, that probably meant 'boil' (i.e., of water) -- ZJO"
+BOIL2,,"A ""mõj"" set, that probably meant 'be boiled' (of a boiled object, and not water, e.g.) -- ZJO"
+BOIL3,,
+BOIL4,,
+BOIL5,,
+BOIL6,,
+BOIL7,,
+BOIL8X,,
+BUBBLE1,,"A ""βuɾ"" set, suspiciously similar to BOIL1 ""pupuɾ"" set -- ZJO"
+BUBBLE2X,,
+SWELL1,,"A ""ɾuɾu"" set -- ZJO"
+SWELL3,,"A ""puŋɡá"" set -- ZJO"
+SWELL4,,
+SWELL6,,
+SWELL6.5,,
+SWELL7 ,"COMPLEX, MED","A complex reduplicated set, which otherwise lives in BUBBLE -- ZJO"
+SWELL8,,
+SWELL9X,,
+STRAIN1,,"A ""mowaβ"" set -- ZJO"
+STRAIN3,,
+STRAIN4,,
+STRAIN5X,,
+STRAIN6,,
+STRAIN7,,
+STRAIN9,,
+STRAIN10,,
+STRAIN11,,
+MIX1,,
+MIX2,,
+MIX3,,
+MIX4,,
+MIX5,,"A ""jeʔá"" set -- ZJO"
+MIX6,,"An ""m(b)o(yo)paɾ"" set -- ZJO"
+MIX7,,"A ""pɨβuɾ"" set -- ZJO"
+MIX8,,"A ""waɾá"" set -- ZJO"
+MIX9,"COMPOUND, IND","An ""ɨ+kwar"" WATER+BEAT compound set -- ZJO"
+MIX10X,,
+MIX11,,"A ""na(n)"" set -- ZJO"
+MIX12,,
+MIX13,,
+MIX14,,
+MIX15,,
+MIX16,,
+MIX17,,
+MIX18,,
+MIX19,,
+MIX20X,,
+MIX21X,,
+MIX22X,,
+MIX23X,,
+DRAW1,,
+DRAW2,,
+PAINT1,,
+PAINT3,,
+PAINT5,,
+PAINT6,,
+PAINT7,,
+PAINT8,,
+PAINT8.5X,,
+PAINT9X,,
+PAINT10X,,
+DYE1,,"A ""waŋ"" set -- ZJO"
+DYE1.5,,
+DYE2X,,
+DYE3X,,
+DYE4X,,
+DYE5X,,
+DYE6X,,
+DYE7X,,
+DYE8X,,
+DYE9X,,
+DYE10X,,
+DYE11X,,
+DYE12X,,
+ADORN~DECORATE1,,"A ""jewak"" set, possibly a reflexivized version of DYE1, although note difference in final consonant -- ZJO"
+ADORN~DECORATE2,,
+ADORN~DECORATE3,,
+ADORN~DECORATE4,,
+ADORN~DECORATE5X,,
+ADORN-DECORATE6,,
+ADORN-DECORATE7,,
+ADORN-DECORATE8,,
+ADORN-DECORATE9,,
+GROW1,,"A ""kakuwaβ"" set -- ZJO"
+GROW2,,
+GROW3,,
+GROW4,,
+GROW5,,
+GROW6X,,
+GROW7,,
+GROW8,,
+GROW9,,
+GROW10,,
+GROW11X,,
+GROW12,,
+GROW13,,
+GROW14,,
+GROW15,,
+GROW16,,
+GROW17,,
+GROW18,,
+GROW19X,,
+GROW20X,,
+GROW22,,
+HEAL1,,"A ""kwer"" set -- ZJO"
+HEAL2,,
+HEAL3,,
+HEAL4X,,
+HEAL6,,
+HEAL7,,
+HEAL8,,
+HEAL9,,
+HEAL10,,A 'mo+katu' (CAUS+good) set -- WNS.
+PASS1,,"A ""kwaβ"" set -- ZJO
+"
+PASS2,,"A ""pwan"" set. It contains a consonant initial root meaning pass and a complex from prefixed with ã- which means fast. -- ZJO"
+PASS3,,
+PASS4,,
+PASS5,,
+PASS6,,
+PASS7X,,
+PASS8X,,
+PASS9X,,
+PASS10,,
+CROSS1,,
+CROSS2,,
+CROSS3,,
+CROSS4,,
+STAB1X,,
+PIERCE1,,A *kutuk set -- ZJO
+PIERCE1.5,,"An *atɨká set -- ZJO
+
+no apparent cognate in Mbyá, Tapiete -- LDM "
+PIERCE2,,
+PIERCE3,,
+PIERCE4X,,
+PIERCE5,,"A *sok set -- ZJO
+
+There are complex issues affecting reflexes of PTG *ts (and possibly *tʃ), such as possible morphological conditioning of sound changes, that make precise determination of how modern forms in different daughter language relate to each other. It is clear, however, that there are forms like *tsok, *yotsok, *tsotsok. In the case of *yotsok, we get reflexes like zog in EME, contrasting with forms like sok (<*tsok)"
+PIERCE6,,"A *pi set, probably originally referring to the stinging of insects and related animals -- ZJO"
+PIERCE8X,,
+PIERCE9,,
+PIERCE10,,
+SEW1,"COMPLEX, GEN","A ""βɨβɨk"" set.  This is an old reduplicated version of ""βɨk"" TOUCH (see evidence for that in Tapirapé), and in many languages the word for 'sew' contains the last surviving reflex of the old TOUCH root, so all SEW forms in this row have been copied down to TOUCH.  I wanted it to count as evidence for subgrouping, so I considered it a compound  -- ZJO"
+SEW3,,
+SEW4,,
+SEW5,,"A ""piʔiŋ"" set -- ZJO"
+SEW6,,
+SEW7,"COMPOUND, GEN",cloth + do - NCP
+SEW8,"COMPOUND, GEN",
+WEAVE1,,"A ""pem"" set -- ZJO"
+WEAVE2,,"A ""pɨar/pɨasaβ"" set -- ZJO"
+WEAVE3,,
+WEAVE4,,
+WEAVE4.5,,
+WEAVE5,,
+WEAVE6X,,
+WEAVE7X,,
+WEAVE8,,
+WEAVE9,,
+WEAVE10,,
+WEAVE11,,
+PLAY1,,"A ""je+mo+saraj"" set -- ZJO"
+PLAY2,,
+PLAY3,,
+PLAY4,,
+PLAY5,,
+PLAY6,,
+PLAY7,,
+PLAY9,,
+PLAY11X,,
+PLAY12X,,
+SPILL~POUR1,,
+SPILL~POUR2,,"A *tsen set referring to spilling, pouring, or the motion of liquids, crucially with a different final consonant than *tsem 'leave from, emerge.' The initial consonant is attested in Tembe in reflexivized forms and also in POK with *ichini. Many forms in this row show a reciprocalized stem beginning with the nasal allomorph of /jo-/ -- ZJO"
+SPILL~POUR4,,
+SPILL~POUR6,,A *pijere set -- ZJO
+SPILL~POUR7,,
+SPILL~POUR8,,
+SPILL~POUR9,,
+SPILL~POUR10,,
+SPILL~POUR11,,
+SPILL~POUR12,,
+SPILL~POUR13,,
+SPILL~POUR14,,
+SPILL~POUR15,,
+SPILL~POUR16X,,
+SPILL~POUR17X,,
+SPILL~POUR18X,,
+SPILL~POUR19X,,
+SPILL~POUR20X,,
+SPILL~POUR21X,,
+JUMP1,,"A ""poɾ"" set. Icludes many causativized forms that mean throw (the majority) and a few that mean remove. We consider that these two derivations happened independently, as the resulting meanings cannot be related (make jump from one's hand leading to throw vs make jump from somewhere else leading to remove). -- NCP"
+JUMP2,,
+JUMP3,,
+JUMP4,,
+JUMP6X,,
+JUMP7X,,
+JUMP8,,
+JUMP9X,,
+JUMP10,,
+JUMP11X,,
+JUMP12X,,
+JUMP13,,
+JUMP14,,
+JUMP15,,
+PUSH1,,"An ""ajan"" set -- ZJO"
+PUSH2,,
+PUSH3,,
+PUSH6,,
+PUSH7,,
+PUSH8,,
+PUSH9,,
+PUSH10,,
+PUSH11X,,
+PUSH12X,,
+PUSH13X,,
+PUSH14X,,
+PUSH16,,
+RUB1,,"A ""piʃɨβ"" set -- ZJO"
+RUB2,,"A ""kɨtɨk"" set -- ZJO"
+RUB3,,
+RUB4,,
+RUB5,,
+RUB6,,
+RUB7,,
+RUB8,,
+SCRAPE~SCRATCH1,,"A ""pin"" set -- ZJO"
+SCRAPE~SCRATCH2,,
+SCRAPE~SCRATCH3,,"A ""kaɾãi"" set -- ZJO"
+SCRAPE~SCRATCH4,,
+SCRAPE~SCRATCH5,,"An ""eʔɨj"" set, not to be confused with ""ej"" in WASH1 -- ZJO"
+SCRAPE~SCRATCH6,,
+SCRAPE~SCRATCH7,,
+SCRAPE~SCRATCH8,,"An ""asit"" set -- ZJO"
+SCRAPE~SCRATCH9,,
+SCRAPE~SCRATCH10,,"An ""usaɾ"" set -- ZJO"
+SCRAPE~SCRATCH11,,
+SCRAPE~SCRATCH12,,"An ""emo"" set -- ZJO"
+SCRAPE~SCRATCH13,,
+SCRAPE~SCRATCH14,,"An ""awiɾ"" set -- ZJO"
+SCRAPE~SCRATCH15,,
+SCRAPE~SCRATCH16,,
+SCRAPE~SCRATCH17,,
+SCRAPE~SCRATCH18,,
+SCRAPE~SCRATCH19,,
+SCRAPE~SCRATCH20,,
+SCRAPE~SCRATCH21X,,
+SCRAPE~SCRATCH22,,
+SCRAPE~SCRATCH23,,
+GRIND1,,
+GRIND2,,"A ""moʔi"" set -- ZJO"
+GRIND3,,
+GRIND4,,"A ""kɨɾɨk"" set -- ZJO"
+GRIND5,,
+GRIND6X,,
+GRIND7,,
+GRIND8,,
+GRIND9X,,
+GRIND10,,
+GRIND11,,
+SPIN1,,"A ""poβan"" set -- ZJO"
+SPIN2,,
+SPIN4X,,
+SIT1,,"An ""apɨk"" set -- ZJO"
+SIT7,,"An ""in"" set -- ZJO
+also oin and in suppletive stems, causative +sit meaning put and cook - NCP
+Ideally this should be deep drilled. - NCP"
+SIT2,,
+SIT3,,
+SIT5,,
+SIT6X,,
+SIT9,,
+SIT10,,
+SIT11,,
+SIT13X,,
+SIT14X,,
+SIT15X,,
+SIT16X,,
+STAND1,,"An ""emboʔɨ"" set -- ZJO"
+STAND2,, an ʔam set which mostly means be standing - NCP
+STAND2.5,"COMPOUND, GEN","complex set pu + ʔam  ? + stand, which means stand up. Causativised forms mean lift, make stand (not lift as in putting something high). Note that both causatives have been used, but cognancy is not based on the causatives. - NCP"
+STAND3X,,
+STAND4,,
+STAND5,,"A ""βɨɾ"" set -- ZJO
+causativized forms mean make stand, make upright, lift - NCP"
+STAND6,,
+STAND7,,
+STAND8X,,
+STAND9X,,
+STAND10X,,
+STAND11X,,
+SMELL1,,"An ""etun"" set -- ZJO"
+SMELL2,,
+SMELL3,,
+SMELL4,,
+SMELL5X,,
+BE ODOROUS1,,"An ""ɨʔapwan~ɨʔakwan"" set; morphologically complex with 'water'? -- ZJO"
+BE ODOROUS2,,"A ""piʃé"" set that originally seems to have referred to the smell of smoke -- ZJO"
+BE ODOROUS3X,,
+BE ODOROUS4,,
+BE ODOROUS5,,
+BE ODOROUS6,,
+BE ODOROUS7,,
+BE ODOROUS8,,
+BE STINKY1,,"A ""timboɾ"" set distinct from POISON b/c of final consonant -- ZJO"
+BE STINKY2,,
+BE STINKY3,,
+BE STINKY4,,
+BE STINKY5,,
+BE STINKY6,,
+BE STINKY7,,
+SQUEEZE1,,"An ""amĩ"" set -- ZJO"
+SQUEEZE1.5,"COMPOUND, IND","A ""tɨ+amĩ"" compound set -- ZJO"
+SQUEEZE2,,"An ""uŋgá"" set -- ZJO"
+SQUEEZE3,"COMPLEX, GEN","A ""ka+mbik~ka+mbɨk (tighten1)"" complex set -- ZJO"
+SQUEEZE6,,
+SQUEEZE7,,
+SQUEEZE8,,
+SQUEEZE9,,
+TIGHTEN1,,"A ""mɨk~pɨk"" set, where causativized versions mean either 'tighten' or 'squeeze'. Crucially note difference from STOP5 ""pik"" -- ZJO"
+TIGHTEN2,,
+TIGHTEN3,,
+TIGHTEN4,,
+TIGHTEN5,,
+TIGHTEN6,,
+TIGHTEN7,,
+TIGHTEN8,,
+TIGHTEN9,,
+TIGHTEN10,,
+TIGHTEN16,,
+TIGHTEN17,,
+STRETCH1,,
+STRETCH2,,
+STRETCH3,,
+STRETCH4,,
+STRETCH5,,
+STRETCH6X,,
+STRETCH7X,,
+STRETCH8,,
+STRETCH9,,
+STRETCH10,,
+PADDLE1,,"A ""apukui"" set -- ZJO."
+PADDLE2,,
+PADDLE3,,
+PADDLE4,,
+PADDLE5,LOAN,
+GO UPRIVER2,,
+GO UPRIVER3,,
+GO UPRIVER4,,
+GO UPRIVER5X,,means upriver (N) - NCP
+GO UPRIVER6X,,
+GO UPRIVER7,,
+GO DOWNRIVER1X,,
+GO DOWNRIVER2,,
+GO DOWNRIVER3X,,means downriver (N) - NCP
+GO DOWNRIVER4X,,
+GO DOWN1,,"A ""yɨp~yup"" set; the Omagua and Kukama forms are likely not cognate with the other forms; re-evaluate after Paul's reconstruction work -- ZJO"
+GO DOWN1.5,"COMPOUND, GEN",a complex we + yɨv set - NCP
+GO DOWN2,,
+GO DOWN3,,"A ""ʃɨm"" set -- ZJO"
+GO DOWN4,,
+GO DOWN6,,"A ""sutu"" set -- ZJO"
+GO DOWN7,,
+BE PREGNANT1,,"A ""puruʔá"" set -- ZJO"
+BE PREGNANT3,,
+BE PREGNANT5,,
+BE PREGNANT6,,
+BE PREGNANT7,,
+BE PREGNANT8,,
+BE PREGNANT9,,
+BE PREGNANT10,,
+BE PREGNANT11,,
+FALL1X,,
+FALL3X,,
+FALL4X,,
+FALL5X,,
+FALL2X,,
+FALL OVER1,,"An ""ʔa(ɾ)"" set -- ZJO"
+FALL OVER2,,"A ""koj"" set -- ZJO"
+FALL OVER3,,
+FALL OVER4,,
+FALL OVER5,,
+FALL OVER6,,
+FALL OVER6.5,,
+FALL OVER7,,
+FALL OVER8,,
+FALL OVER11,,
+FALL OVER13,,
+FALL OVER14,,
+FALL OVER15,,
+FALL OVER16,,
+FALL OVER17,,
+FALL OVER18X,,
+FALL OVER19X,,
+FALL OVER20X,,
+FALL OVER21X,,
+FALL OVER22,,
+FALL OVER23,,Probably related to the latter element of the compound in SLIP8; deep drill in the future -- ZJO
+GIVE BIRTH1,,
+GIVE BIRTH2,"COMPOUND, IND",
+BE BORN1,,
+BE BORN2,,
+BE BORN3,,
+BE BORN4,,
+BE BORN5,,
+BE BORN9,,"A ""kwa"" set -- ZJO"
+BE BORN10,,"A ""jaŋ"" set -- ZJO"
+BE BORN11,,
+BE BORN12,,
+BE BORN13,,
+BREASTFEED1,"COMPOUND, MED",breast and eat - ncp
+BREASTFEED2X,,
+BREASTFEED3,"COMPOUND, GEN",BREAST+DRIP
+BREASTFEED4,,
+SUCK1,,"A ""pɨter"" set -- ZJO"
+SUCK2,,
+SUCK2.5,,
+SUCK3,,
+SUCK4,,
+SUCK5X,,
+SUCK6,,
+SUCK7,,
+BITE1,,"A ""suʔú"" set -- ZJO
+
+It is unclear how or if these forms are related to uʔú 'eat'. We have decided to be agnostic for now, and keep the two sets distinct. -- LDM"
+BITE2,,
+BITE3,,
+BITE3.5X,,
+BITE4X,,
+BITE5X,,
+BITE6X,,
+SPIT1,"COMPOUND, GEN","An *endɨ SALIVA+? compound set, that we do not think is related to BUBBLE -- ZJO"
+SPIT3,,"A ""mun"" set -- ZJO"
+SPIT4,,
+SPIT6,,
+SPIT7,,
+SPIT8,,
+SPIT9,,
+BLOW1,,"A ""pejú"" set 'blow on' -- ZJO"
+BLOW5,,"A ""pɨ"" that meant 'blow into wind instrument', when nominalized always means 'flute' -- ZJO"
+BLOW2,,
+BLOW6,,
+BLOW7,,
+BLOW8,,
+BLOW9,,
+BLOW11X,,
+BLOW12X,,
+BLOW13X,,
+DAMPEN1,,
+DAMPEN2,,
+DAMPEN3,,"A(n) ""(a)piɾá"" set -- ZJO"
+DAMPEN5,,
+DAMPEN6,,
+DAMPEN7,,
+DAMPEN8,,
+DAMPEN9,,"An ""amõ"" set -- ZJO"
+DAMPEN11,,
+DRY(V)1,"COMPOUND, GEN","compound of water + finish (verb) same root that gave rise to lake, but in lake the compounded form was a noun meaning end. - NCP
+"
+DRY(V)2,,
+DRY(V)3X,,
+DRY(V)4,,
+DRY(V)5,,
+DRY(V)6,,
+DRY(V)7,LOAN,
+DRY(V)8,,
+AWAIT1,,"An ""arõ"" set -- ZJO"
+AWAIT2,,
+AWAIT3,,
+AWAIT4,,
+AWAIT5,,
+AWAIT6,,
+AWAIT7,,
+AWAIT8,,
+AWAIT9,,
+AWAIT10,,
+AWAIT13,,
+AWAIT12X,,
+HURT~WOUND1,,"A ""(j)api"" set -- ZJO"
+HURT~WOUND2,"COMPLEX, GEN",complex api + sa set - NCP
+HURT~WOUND3,,
+HURT~WOUND4,,
+HURT~WOUND5,,
+HURT~WOUND8X,,
+HURT~WOUND9X,,
+HURT~WOUND10,,
+HURT-WOUND12,,
+HURT~WOUND13,,
+DOCK1,,
+DOCK2,,"A ""jaɾ"" set -- ZJO"
+DOCK3,,
+ATTACH1,,"A ""jar"" set, note minimally distinct from ""ar"" set in TAKE2 -- ZJO"
+ATTACH2,,
+ATTACH3,,
+ATTACH4X,,
+ATTACH5X,,
+ATTACH6,,a mong set -- LDM
+ATTACH7,,
+ATTACH8,,
+ATTACH9,,
+JOIN1,,
+JOIN2,,"An ""atɨɾ"" set that probably meant 'be joined' -- ZJO"
+JOIN3,,
+JOIN4,,
+JOIN5,,
+JOIN6,,
+JOIN7,,"An ""atɨk"" set. -- ZJO
+Isn't ""atɨk"" the description for JOIN2? This hardly seems to fit this set (which has only one cognate) --SM"
+JOIN8,,
+JOIN9,,
+JOIN10X,,
+GATHER~HARVEST0.5,,"An ""ar"" set; note minimally distinct from ""jar"" set in ATTACH1 -- ZJO"
+GATHER~HARVEST1,,same as harvest 2 ? - NCP
+GATHER~HARVEST2,,"A ""noʔoŋ"" set -- ZJO"
+GATHER~HARVEST2.5,,
+GATHER~HARVEST2.75,,
+GATHER~HARVEST3,"COMPOUND, GEN","A ""pu+ar"" ?+TAKE complex set; this seems to be the same 'pu' as is floating around in STAND, e.g. -- ZJO"
+GATHER~HARVEST4,"COMPOUND, GEN","A ""pu+ar+pɨk"" ?+HARVEST+? compound set; not sure of original meaning of last element, although it seems to be floating around in our data set -- ZJO"
+GATHER~HARVEST5,,
+GATHER~HARVEST6,,"An ""ɨkɨ"" set -- ZJO"
+GATHER~HARVEST7,,
+GATHER~HARVEST8,,
+GATHER~HARVEST9,,
+GATHER~HARVEST10,,
+GATHER~HARVEST11,,
+GATHER~HARVEST12X,,
+GATHER~HARVEST13,,
+GATHER~HARVEST14,,
+GATHER~HARVEST15,,
+GATHER~HARVEST16X,,
+GATHER~HARVEST17,,
+TIE1,,"A ""kwar/pwar"" set -- ZJO"
+TIE2,,"A ""tĩ"" set -- ZJO"
+TIE3,"COMPOUND, MED","An ""apɨr+tĩ"" END.POINT+TIE compound set; former form not in dataset -- ZJO"
+TIE4X,"COMPOUND, MED",
+TIE5,,
+TIE6,,
+TIE7,"COMPLEX, GEN",rope + ? - NCP
+TIE8,,
+TIE9,,
+TIE10,,
+TIE11,,
+TIE12,,
+TIE13,,
+TIE14,,
+TIE15,,
+TIE17X,,
+TIE18,,
+TIE19X,,
+TIE20,,
+TIE21,,
+UNTIE1,,"A ""ɾaβ"" set, with frozen *jo- -- ZJO"
+UNTIE2,,
+UNTIE3,,
+UNTIE3.5,,
+UNTIE4,,
+UNTIE5,,
+UNTIE6,,
+UNTIE7,,
+UNTIE8,"COMPOUND, GEN",rope + burst - NCP
+UNTIE9,,
+FINISH1,,"A ""paβ"" set -- ZJO
+this root means in most languages both all and finish (in the sense there is no more left). - NCP"
+FINISH5,,
+FINISH6,,"A ""sɨk"" set -- ZJO"
+FINISH7,,
+FINISH8,,
+FINISH9,,
+FINISH10,,
+FINISH11,,
+FINISH12X,,
+BEGIN1,"COMPOUND, IND","An ""ɨpɨɾuŋ"" set. Since it contains ""ɨpɨ"" it's doubled in BEGINNING 1 -- ZJO
+
+'ɾuŋ' - ""armar"" (along with other meaning) tupinampa --KCB
+
+we don't have *ruŋ anywhere in our dataset, so there's no home for the one half of the BEGINNING compound - ZJO"
+BEGIN3,,"A ""ram"" set -- ZJO"
+BEGIN4,,
+BEGIN5,,
+BEGIN6,,
+BEGIN7,,
+FEED1,,
+FEED2,,
+FEED3,,"A ""poj"" set, not to be confused with *pwai ORDER, which comes out with initial kw in many languages that underwent that change -- ZJO"
+FEED4,,
+FEED5,,
+FEED6,,
+FEED7,,
+WEED(V)1,,
+WEED(V)2X,,
+WEED(V)3,,
+WEED(V)4,,"Probably related to POK *karupama 'clear land' -- ZJO
+	-Zachary O'Hagan"
+WEED(V)5,,
+REST1,"COMPOUND, GEN","pɨtu + ʔu breathe +eat (?) compound set. - NCP
+"
+REST3,,
+REST5,,
+REST6,,
+REST7,,
+REST8,,
+REST9,,
+REST10X,,
+REST11X,,
+REST13,"COMPOUND, GEN",pɨtu + ʔak breathe + ? - NCP
+CARRY1,,"A ""βosɨj"" set -- ZJO
+somehow related to heavy 1, with the first segment voiced. - NCP"
+CARRY2,,
+CARRY3,,
+CARRY4,,
+CARRY5,,
+CARRY6,,
+CARRY7X,,
+CARRY8,,
+CARRY9,,
+CARRY10X,,
+CARRY11X,,
+CARRY12X,,
+CARRY13X,,
+CARRY14,,
+TAKE1,"COMPLEX, GEN","I think the cognate set here contains forms that have the ""causative-comitative"" prefix /er(o)-/ + the verb 'to go' (/to/ ~ /so/ ~ /co/ ~ /ha/). -SM"
+TAKE3X,,
+TAKE4,,
+TAKE5X,,
+TAKE6,,
+TAKE7,,
+TAKE8,,
+LIFT1,,"An ""upiɾ"" set -- ZJO
+climb is reflexive + lift - NCP"
+LIFT2X,,
+LIFT3,,
+LIFT4,,
+LIFT5,,
+LIFT6X,,
+LIFT7,,
+LIFT8,,
+MARRY1,"COMPLEX, MED","This is the same with husband, we should collapse it I think. - NCP
+leave here as complex, ind, but copy everything to husband"
+MARRY2,,
+MARRY3,"COMPLEX, MED",
+MARRY4,"COMPLEX, MED",Second constituent is grammaticalization of yara 'owner' -- ZJO
+MARRY5,,
+MARRY6,,
+MARRY7,,
+MARRY8,,
+MARRY9,,
+MARRY10,,
+MARRY11,,
+OPEN(V)1,,
+OPEN(V)3,"COMPOUND, IND", pia + wag. open + split - NCP
+OPEN(V)4,,"A ""peká"" set -- ZJO"
+OPEN(V)5,,
+OPEN(V)6,,
+OPEN(V)7,,"Possibly related to SKIN ""pir"" + old ""-ar"" verbalizer? -- ZJO"
+OPEN(V)8,,"A ""jaβ"" set -- ZJO"
+OPEN(V)9,"COMPOUND, GEN",akwapetym + wag. close + split - NCP
+OPEN(V)10,,
+OPEN(V)11,,"A ""jaβ"" set -- ZJO"
+OPEN(V)12X,,
+OPEN(V)13X,,
+OPEN(V)14,,
+OPEN(V)15,,
+OPEN(V)16,,
+OPEN(V)17,,
+OPEN(V)18,,
+OPEN(V)19,,
+OPEN(V)20,,
+OPEN(V)21X,,
+OPEN(V)22,,
+PEEL1,"COMPOUND, GEN","A ""piɾ+ʔok"" SKIN+take out, remove compound set,  loss of final /k/ in most languages. -- ZJO"
+PEEL2,"COMPOUND, IND","A ""piɾer+ʔok"" SKIN+take out, remove set (see note under PEEL1) -- ZJO"
+PEEL3,,
+PEEL4,,
+PEEL5,,
+PEEL6,,
+PEEL8,"COMPOUND, MED","and ""pe+ʔok"" BARK+REMOVE compound set (debuccalization, loss of glottal stop and final consonant in some languages) -- ZJO"
+PEEL9,,
+PEEL10,,
+PEEL11,"COMPOUND, IND","bark + scrape, scratch - NCP"
+PEEL12,,
+PEEL13,,
+PEEL14,,
+PEEL15,,
+PEEL16,,
+OFFEND1,,
+OFFEND2,,
+OFFEND4,,
+OFFEND5,,
+FILL1,,
+FILL3,,
+FILL5X,,
+FILL6X,,
+FILL7,,
+FILL9,,
+FILL10,,
+FILL11,,
+FILL12,,
+FILL13,,
+FILL14,,
+FILL15,,
+FILL16,,
+FILL17,,
+FILL18X,,
+FILL19X,,
+FILL20X,,
+FILL21,,
+SHOUT1,,"An ""asem"" set -- ZJO
+this probably meant shout, scream maybe while scared or in danger. - NCP"
+SHOUT2,,
+SHOUT3,,
+SHOUT4,,
+SHOUT5,,
+SHOUT6,,
+SHOUT7,,
+SHOUT8X,,
+GET DRESSED1,,"A ""monde"" set -- ZJO"
+GET DRESSED2,,
+GET DRESSED3,,
+GET DRESSED4,,
+GET DRESSED5,,
+GET DRESSED6X,,
+GET DRESSED7,,
+GET DRESSED8,,
+GET DRESSED9,,
+GET DRESSED10,,
+GET DRESSED11,,
+GET DRESSED12,,
+GET DRESSED13,,
+GET DRESSED14,"COMPLEX, GEN",
+GET DRESSED15,"COMPLEX, GEN",cloth + put
+INVITE1,,
+INVITE2,,
+INVITE3,,"A ""paɾesaɾ"" set -- ZJO"
+INVITE4,,
+INVITE5,,
+INVITE6,,
+INVITE7,,"A ""soʔó"" set -- ZJO"
+INVITE8X,,
+INVITE9,,
+INVITE10,"COMPLEX, GEN","An ur+ukar ""COME+CAUS"" complex set -- ZJO"
+INVITE11,,
+INVITE12,,
+INVITE13,,
+INVITE14,,
+INVITE15,LOAN,
+CLEAN(V)1,,"A ""sɨβ"" set -- ZJO"
+CLEAN(V)2,,"A ""kɨtiŋ"" set, where several languages show palatalization of alveolar and loss of final nasal, making it indistinguishable from CUT, in which case I went off meaning to distinguish -- ZJO"
+CLEAN(V)3,"COMPOUND, GEN","A ""kɨtiŋ+ok"" CLEAN+TAKE.OUT~REMOVE compound set -- ZJO"
+CLEAN(V)4,,"A ""tɨɾu"" set -- ZJO"
+CLEAN(V)5,,
+CLEAN(V)6,,
+CLEAN(V)8X,,
+CLEAN(V)9X,,
+WASH1,,"An ""ej"" set, not to be confused with ""eʔɨj"" in SCRAPE~SCRATCH5 -- ZJO"
+WASH2,"COMPOUND, MED","A ""piɾ+ej"" SKIN+WASH compound set -- ZJO"
+WASH6,,"An ""apatuká"" set -- ZJO"
+WASH4,,"A ""kosok"" set -- ZJO"
+WASH5,,"A ""kotok"" set -- ZJO. There was likely a meaning difference between this and WASH3, since some languages show both forms still."
+WASH8,,
+WASH9,,
+WASH10X,,
+WASH11,,
+WASH12X,,
+WASH13,,
+WASH14,,
+WASH15X,,
+WASH16X,,
+BATHE1,,"A ""yasuk"" set -- ZJO"
+BATHE2,,
+BATHE3,,
+TOUCH0.5,,"A ""βɨk"" set that probably meant 'be touching' (i.e., 'be in contact'); note, distinct from transitive 'touch', avyky, currenty in TOUCH 4 -- ZJO"
+TOUCH1,"COMPOUND, GEN","A ""po+kok"" HAND+EMBRACE compound set.  - ZJO"
+TOUCH2,"COMPOUND, MED",po (hand) + vɨk set - ZJO
+TOUCH3,,
+TOUCH4,,"an ""awɨkɨ"" (prob. transitive 'touch') set; note, distinct from vyk, intransitive touch -- ZJO"
+TOUCH6,,
+TOUCH8,,
+TOUCH9X,,
+TOUCH10,,
+TOUCH12X,,
+TOUCH13,,
+TOUCH14,,
+SHAKE1,,
+SHAKE2,,"A ""mɨj"" set -- ZJO"
+SHAKE3,,"A ""βak"" set, with some reduplication, which seems common in words for 'shake' in this family -- ZJO"
+SHAKE13,,
+SHAKE4,,
+SHAKE5,,"A ""wɨw"" set -- ZJO"
+SHAKE6,,"A ""(t)umuŋ"" set -- ZJO"
+SHAKE7,,
+SHAKE8,,
+SHAKE10,,
+SHAKE11,,
+SHAKE12,,
+SHAKE14,,
+SHAKE15,,
+SHAKE16,,"An ""apawɨ"" set -- ZJO"
+SHAKE17,,"A ""suŋ/soŋ"" set -- ZJO"
+SHAKE17.5,,
+SHAKE18,,
+SHAKE19X,,
+SHAKE21 ,,
+SHAKE22,,
+SHAKE23,,
+SHAKE25,,
+SHAKE26X,,
+SHAKE27X,,
+SHAKE28X,,"causativized forms mean shake, root means tremble. Xed because not deep drilled. - NCP"
+SHAKE29X,,
+SHAKE30X,,
+SHAKE31X,,
+SHAKE32X,,
+SHAKE33X,,
+EMBRACE1,,"A ""kok"" set; many languages show frozen *jo- absolutive -- ZJO"
+EMBRACE2,,Possibly related to WRAP1? -- ZJO
+EMBRACE3,,
+EMBRACE4,,
+EMBRACE5,,
+EMBRACE6,,
+EMBRACE7,,
+EMBRACE8X,,
+WRAP1,,"A ""uβan"" set -- ZJO"
+WRAP2,"COMPOUND, GEN","An ""(a)ɲ+uβan"" HEAD(?)+WRAP compound set -- ZJO"
+WRAP3,,"A ""maman"" set that may have meant 'make into bundle' -- ZJO"
+WRAP3.5,,
+WRAP4,,
+WRAP5X,,
+WRAP6,,"A ""pokek"" set -- ZJO"
+WRAP7,,
+WRAP8,,
+WRAP10,,
+WRAP11,,
+WRAP12X,,
+WRAP13X,,
+COVER1,,
+COVER2,,"An ""asoʔí"" set -- ZJO"
+COVER3,,"An ""uβan"" set -- ZJO"
+COVER4,,
+COVER5,,
+COVER6,,
+COVER7,,
+COVER8,,
+COVER9X,,
+COVER10,,"A ""soβ"" set -- ZJO"
+COVER11,,
+COVER12,,
+COVER13X,,
+CLOSE1,,"A ""tɨβ"" set -- ZJO"
+CLOSE2,"COMPOUND, GEN","An ""aka+pɨtɨm"" ?+CHOKE compound set -- ZJO"
+CLOSE3,"COMPOUND, MED","An ""oβ+pɨtɨm"" LEAF+CHOKE compound set -- ZJO
+
+LDM: We are, as of 18apr2019, increasingly coming to believe that this is actually FACE+'CHOKE', where 'CHOKE' probably meant something like 'block or occlude an opening'
+
+Perhaps also ""obapy+ty(?)"" based on Guarayu and involving CLOSE 1 -- ZJO
+----
+we need to reevalute the debate if the oba, uwa forms are actually leaf or face. (and copy/delete forms accordingly)
+	-pagouritsa itsnoneofyourbusiness"
+CLOSE4,"COMPOUND, MED",An oβ+apɨk FACE+COVER compound set -- ZJO
+CLOSE5,,
+CLOSE7,,
+CLOSE8,,
+CLOSE9,,
+CLOSE11,,
+CLOSE16,,
+CLOSE17,,
+CLOSE18 ,,
+CLOSE19,,A ju+pyk ABS+COVER set - WNS. 
+CLOSE18X,,
+CLOSE19X,,
+CLOSE20X,,
+WORK1,"COMPOUND, GEN","poro (incorporation) + avyky (transitive touch) - LDM
+
+Conforms to class of deverbal nouns derived by nasalizing an initial /p/ -- see CURE and MEDICINE -- ZJO
+"
+WORK2,,
+WORK3,,
+WORK4,,
+WORK5,,
+WORK6X,,
+WORK7,,
+WORK8,,
+WORK10X,,
+WORK11,LOAN,
+WORK12X,,
+DO1,,"An ""apo"" set. Many words for 'work' seem to involve a generic derivative of ""apo"" -- ZJO"
+DO2,,
+DO3,,Other languages have forms like *moɲaŋ but they transparently mean 'make run' and I'm not sure if that's what's related here -- ZJO
+DO4,,
+EYE,face,

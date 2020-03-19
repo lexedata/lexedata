@@ -49,19 +49,9 @@ def init_con_form(dir_path, con_iter, form_iter, lan_dict, wb):
                     # get corresponding language_id to column
                     this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
 
-                    try:
-                        for f_ele in CellParser(f_cell):
-                            form_cell = Form.create_form(f_ele, this_lan_id, f_cell, concept_cell)
-                            formscsv.writerow(form_cell)
-
-                    except CellParsingError as err:
-                        print("CellParsingError - somethings quite wrong")
-                        print(err.message)
-                        #input()
-
-                    except FormCellError as err:
-                        print(err)
-                        #input()
+                    for f_ele in CellParser(f_cell):
+                        form_cell = Form.create_form(f_ele, this_lan_id, f_cell, concept_cell)
+                        formscsv.writerow(form_cell)
 
 
 def initialize_lexical(dir_path, lan_dict,
@@ -78,62 +68,58 @@ def initialize_lexical(dir_path, lan_dict,
     init_con_form(dir_path, iter_concept, iter_forms, lan_dict, wb)
 
 
-def cogset_cognate(dir_path, cogset_iter, cog_iter, lan_dict, wb):
-    with (dir_path / "cog_init.csv").open("w", encoding="utf8", newline="") as cogout, \
-            (dir_path / "cogset_init.csv").open("w", encoding="utf8", newline="") as cogsetout:
+def cogset_cognate(cogset_iter, cog_iter, lan_dict, wb, cogsetcsv, cogcsv):
 
-        header_cog = ["ID", "CogSet_ID", "Form_ID",
-                      "Cognate_Comment", "Phonemic", "Phonetic", "Orthographic",  "Source"]
-        cogcsv = csv.DictWriter(cogout, header_cog, extrasaction="ignore", quotechar='"',
-                                quoting=csv.QUOTE_MINIMAL)
-        cogcsv.writeheader()
+    for cogset_row, cog_row in zip(cogset_iter, cog_iter):
+        if not cogset_row[1].value:
+            continue
+        if cogset_row[1].value.isupper():
+            cogset = CogSet.from_excel(cogset_row)
+            cogsetcsv.writerow(cogset)
 
-        header_cogset = ["ID", "Set", "Description"]
+            for f_cell in cog_row:
+                if f_cell.value:
+                    # get corresponding language_id to column
+                    this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
 
-        cogsetcsv = csv.DictWriter(cogsetout, header_cogset, extrasaction="ignore", quotechar='"',
-                                  quoting=csv.QUOTE_MINIMAL)
-        cogsetcsv.writeheader()
-
-        for cogset_row, cog_row in zip(cogset_iter, cog_iter):
-            if not cogset_row[1].value:
-                continue
-            if cogset_row[1].value.isupper():
-                cogset = CogSet.from_excel(cogset_row)
-                cogsetcsv.writerow(cogset)
-
-                for f_cell in cog_row:
-                    if f_cell.value:
-                        # get corresponding language_id to column
-                        #this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
-                        this_lan_id = "not yet"
-                        try:
-                            for f_ele in CellParser(f_cell):
-                                cog = Cognate.from_excel(f_ele, this_lan_id, f_cell, cogset)
-                                cogcsv.writerow(cog)
-
-                        except CellParsingError as err:
-                            print("CellParsingError - somethings quite wrong")
-                            print(err.message)
-                            #input()
-
-                        except FormCellError as err:
-                            print(err)
-                            #input()
-
-            # line not to be processed
-            else:
-                continue
+                    for f_ele in CogCellParser(f_cell):
+                        cog = Cognate.from_excel(f_ele, this_lan_id, f_cell, cogset)
+                        cogcsv.writerow(cog)
+        # line not to be processed
+        else:
+            continue
 
 
 def initialize_cognate(dir_path, lan_dict,
-                 file=r"C:\Users\walter.fuchs\Desktop\outofasia\stuff\Copy of TG_cognates_online_MASTER.xlsx"):
+                 file=r"C:\Users\walter.fuchs\Desktop\outofasia\stuff\TG_cognates_online_MASTER.xlsx"):
     wb = op.load_workbook(filename=file)
-    sheets = wb.sheetnames
-    wb = wb[sheets[0]]
-    iter_cog = wb.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
-    iter_congset = wb.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
-    cogset_cognate(dir_path, iter_congset, iter_cog, lan_dict, wb)
+    cogout = (dir_path / "cog_init.csv").open("w", encoding="utf8", newline="")
+    cogsetout = (dir_path / "cogset_init.csv").open("w", encoding="utf8", newline="")
 
+    header_cog = ["ID", "CogSet_ID", "Form_ID",
+                  "Cognate_Comment", "Phonemic", "Phonetic", "Orthographic", "Comment", "Source"]
+    cogcsv = csv.DictWriter(cogout, header_cog, extrasaction="ignore", quotechar='"',
+                            quoting = csv.QUOTE_MINIMAL)
+    cogcsv.writeheader()
+
+    header_cogset = ["ID", "Set", "Description"]
+
+    cogsetcsv = csv.DictWriter(cogsetout, header_cogset, extrasaction="ignore", quotechar='"',
+                               quoting = csv.QUOTE_MINIMAL)
+    cogsetcsv.writeheader()
+
+    try:
+        for sheet in wb.sheetnames:
+            print(sheet+"\n\n")
+            ws = wb[sheet]
+            iter_cog = ws.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
+            iter_congset = ws.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
+            cogset_cognate(iter_congset, iter_cog, lan_dict, ws, cogsetcsv, cogcsv)
+    except KeyError:
+        pass
+
+    cogout.close()
+    cogsetout.close()
 
 def initialize():
     dir_path = Path.cwd() / "initial_data"

@@ -1,39 +1,39 @@
 ID,Name,Curator,Comment,iso639p3,Excel_name
-ache1,,NCP: started strict/lax opportunistically,,,Aché:guq(I):KCB
+ache1,,NCP: started strict/lax opportunistically,,,Aché
 paraguayan_guarani1,,ZJO: DONE S/L,,,Paraguayan Guaraní
-oldparaguayanguarani1,,LDM: sourced cited from Guasch (1962) are drawn from Montoya,,,OldParaguayanGuaraní:gug(I) LDM
-kaiowa1,,ECC/ZJO: DONE S/L,,,Kaiowá:kgk(I)
-mbya1,,ZJO: DONE S/L (green),,,Mbyá:gun(I):KCB/VMW
-nandeva1,,ZJO: DONE S/L,,,Ñandeva:???(I):VMW
-xeta1,,KCB: DONE S/L,,,Xetá:xet(I):VMW/KCB
-tapiete1,,LDM: done strict/lax,,,Tapiete:???(I):VMW
-chiriguano1,,NCP: DONE S/L,,,Chiriguano:???(I):MTR/ZJO
-guarayu1,,ZJO: DONE S/L (green),,,Guarayu:gyr(II):ZJO
-siriono1,,ZJO: DONE S/L (green),,,Siriono:srg(II):VMW/NG
-yuki1,,NCP/ZJO: DONE S/L,,,Yuki:yuq(II):ZJO
-jora1,,,,,Jorá:jor (II): NG
-warazu1,,psm:ZJO/SD- ZJO: DONE S/L (green); read: added or changed by SD,,,Warazu
-omagua1,,ZJO: DONE S/L (green),,,Omagua:omg(III):ZJO
-oldomagua1,,,,,OldOmagua
-kokama1,,ZJO: DONE S/L (green),,,Kokama:cod(III):VMW
-tupinamba1,,ZJO: DONE S/L (green),,,Tupinambá:tpn(III):ZJO
-tapirape1,,LDM: DONE S/L,,,Tapirapé:taf(IV):LDM/VMW
-tocantinsasurini1,,KCB: DONE S/L,,,TocantinsAsuriní:asu(IV):VMW
-parakana1,,ZJO: DONE S/L,,,Parakanã:pak(IV):KCB
-avacanoeiro1,,KCB: DONE S/L,,,AváCanoeiro:avv(IV):VMW/KCB
-tembe1,,KCB: DONE S/L,,,Tembé:tgb(IV):KCB
-guajajara1,,KCB,,,Guajajara:gub(IV):KCB
-turiwara1,,n/a,,,Turiwará:twt(V):ZJO
-anambe1,,NCP: DONE S/L,,,Anambé:aan(V):ZJO/VMW
-arawete1,,KCB: DONE S/L,,,Araweté:awt(V):VMW/KCB
-xinguasurini1,,ECC: DONE S/L,,,XinguAsuriní:asn(V):ZJO
-kayabi1,,LDM: DONE S/L,,,Kayabí:kyb(V):VMW
-apiaka1,,KCB: DONE S/L,,,Apiaká:api(VI):KCB
-parintintin1,,LDM: DONE S/L,,,Parintintin:???(VI):LDM/KCB
-kamaiura1,,ZJO: DONE S/L (green),,,Kamaiurá:kay(VII):ZJO
-wayampi_viii1,,NCP: DONE S/L,,,Wayampí:oym(VIII):NCP
-emerillon_viii1,,NCP: DONE S/L,,,Emerillon:eme(VIII):NCP
-apor_viii1,,LDM: DONE S/L,,,Ka'ápor:urb(VIII):ZJO
-guaja_viii1,,ZJO: DONE S/L (green),,,Guajá:gvj(VIII):VMW
-aweti1,,NCP/ZJO: DONE S/L,,,Awetí:awe:NCP
-mawe1,,NCP: DONE S/L,,,Mawé:mav:NCP
+paraguayan_guarani2,,LDM: sourced cited from Guasch (1962) are drawn from Montoya,,,Old Paraguayan Guaraní
+kaiwa1,,ECC/ZJO: DONE S/L,,,Kaiwá
+mbya_guarani1,,ZJO: DONE S/L (green),,,Mbyá Guaraní
+chiripa1,,ZJO: DONE S/L,,,Chiripá
+xeta1,,KCB: DONE S/L,,,Xetá
+tapiete1,,LDM: done strict/lax,,,Tapieté
+eastern_bolivian_guarani1,,NCP: DONE S/L,,,Eastern Bolivian Guaraní
+guarayu1,,ZJO: DONE S/L (green),,,Guarayu
+siriono1,,ZJO: DONE S/L (green),,,Sirionó
+yuqui1,,NCP/ZJO: DONE S/L,,,Yuqui
+jora1,,,,,Jorá
+warazu1,,psm:ZJO/SD- ZJO: DONE S/L (green); read: added or changed by SD,,,Warázu
+omagua1,,ZJO: DONE S/L (green),,,Omagua
+omagua2,,,,,Old Omagua
+cocama_cocamilla1,,ZJO: DONE S/L (green),,,Cocama-Cocamilla
+tupinamba1,,ZJO: DONE S/L (green),,,Tupinambá
+tapirape1,,LDM: DONE S/L,,,Tapirapé
+tocantins_asurini1,,KCB: DONE S/L,,,Tocantins Asurini
+parakana1,,ZJO: DONE S/L,,,Parakanã
+canoeiro1,,KCB: DONE S/L,,,Avá-Canoeiro
+tembe1,,KCB: DONE S/L,,,Tembe
+guajajara1,,KCB,,,Guajajára
+turiwara1,,n/a,,,Turiwára
+anambe1,,NCP: DONE S/L,,,Anambé
+arawete1,,KCB: DONE S/L,,,Araweté
+xingu_asurini1,,ECC: DONE S/L,,,Xingú Asuriní
+kayabi1,,LDM: DONE S/L,,,Kayabí
+apiaka1,,KCB: DONE S/L,,,Apiaká
+parintintin1,,LDM: DONE S/L,,,Parintintin
+kamayura1,,ZJO: DONE S/L (green),,,Kamayurá
+wayampi1,,NCP: DONE S/L,,,Wayampi
+teko1,,NCP: DONE S/L,,,Teko
+urubu_kaapor1,,LDM: DONE S/L,,,Urubú-Kaapor
+guaja1,,ZJO: DONE S/L (green),,,Guajá
+aweti1,,NCP/ZJO: DONE S/L,,,Awetí
+satere_mawe1,,NCP: DONE S/L,,,Sateré-Mawé

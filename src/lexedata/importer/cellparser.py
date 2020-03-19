@@ -22,32 +22,38 @@ class CellParser():
     \s*               # Any amount of spaces
     (?=[</\[])        # Followed by the beginnig of any transcription, but don't consume that bit""", re.VERBOSE)
 
-    __line_separator = re.compile(r"^(.+[}\]>)/])[,;]\s?([<{/[].+)$")
+    _line_separator = re.compile(r"^(.+[}\]>)/])\s*[,;]\s*([<{/[].+)$")
     # pattern for parsing content of supposedly well formatted cell
     # /./ [.] <.> () {}
-    __cell_value_pattern = re.compile(r"^(/.+?/)?\s?(\[.+?\])?\s?(<.+?>)?\s?(\(.+\))?\s?(\{.+\})?$")
-    __special_pattern = [re.compile(e) for e in [r"^.*(/.+/).*$", # phonemic
-                                                r"^.*(\[.+?\]).*$", # phonetic
-                                                r"^.*(<.+?>).*$", # orthographic
-                                                r"^.*(\(.+\)).*$", # comment
-                                                r"^.*(\{.+?\}).*$"] # source
+    _cell_value_pattern = re.compile(r"^(/.+?/)?\s?(\[.+?])?\s?(<.+?>)?\s?(\(.+\))?\s?({.+})?$")
+    _special_pattern = [(re.compile(e), l) for e, l in [(r"^(.*?)(/.+/)(.*)$", "phonemic"),
+                                                        (r"^(.*?)(\[.+?\])(.*)$", "phonetic"),
+                                                        (r"^(.*?)(<.+?>)(.*)$", "orthographic"),
+                                                        (r"^(.*?)(\(.+\))(.*)$", "comment"),
+                                                        (r"^(.*?)(\{.+?\})(.*)$", "source")]
                        ]
+    _cleaner = re.compile(r"^(.+)#.+?#(.*)$")
 
     def __init__(self, cell):
         values = cell.value
         self.coordinate = cell.coordinate
+        self.set_elements(values)
 
+    def set_elements(self, values):
+
+        #remove #
+        while self._cleaner.match(values):
+            values = self._cleaner.sub(r"\1\2", values)
         elements = CellParser.separate(values)
 
         if len(elements) == 0: # check that not empty
-            raise CellParsingError(values, cell.coordinate)
+            raise CellParsingError(values, self.coordinate)
 
         # clean elements list
         elements = [e.rstrip(" ").lstrip(" ") for e in elements]  # no tailing white spaces
         elements[-1] = elements[-1].rstrip("\n").rstrip(",").rstrip(";") # remove possible line break and ending commas
 
         self._elements = iter(elements)
-
 
     @classmethod
     def separate(cl, values):
@@ -62,8 +68,8 @@ class CellParser():
         =======
         list of form strings
         """
-        while cl.__line_separator.match(values):
-            values = cl.__line_separator.sub(r"\1&&\2", values)
+        while cl._line_separator.match(values):
+            values = cl._line_separator.sub(r"\1&&\2", values)
         return values.split("&&")
 
     @classmethod
@@ -72,7 +78,7 @@ class CellParser():
         :param ele: is a form string; form string referring to a possibly (semicolon or)comma separated string of a form cell
         :return: list of cellsize containing parsed data of form string
         """
-        mymatch = cls.__cell_value_pattern.match(ele)
+        mymatch = cls._cell_value_pattern.match(ele)
 
         # check for match
         if mymatch:
@@ -122,30 +128,58 @@ class CellParser():
     def wrong_order(formele, coordinates, cellsize=5):
         """checks if values of cells not in expected order, extract each value"""
         ele = (formele + ".")[:-1] # force python to hard copy string
-        empty_cell = [None] * cellsize
-        for i, pat in enumerate(CellParser.__special_pattern):
+        d = {"phonemic": None, "phonetic": None, "orthographic": None, "comment": None, "source": None}
+        for pat, lable in CellParser._special_pattern:
+
             mymatch = pat.match(ele)
             if mymatch:
                 # delete match in cell
-                empty_cell[i] = mymatch.group(1)
-                ele = pat.sub("", ele)
-
+                d[lable] = mymatch.group(2)
+                ele = pat.sub(r"\1\3", ele)
         # check that ele was parsed entirely
         # add wrong ordered cell to error message of CellParser
         # raise error
         ele = ele.strip(" ")
         if not ele == "":
-            errmessage = formele +" led to representation: " + str(empty_cell)
-            raise FormCellError(errmessage, "wrong order or illegal content", coordinates)
+            # if just text left and no comment given, put text in comment
+            if not re.search(r"[<>/\[\]\{\}]", ele):
 
+                if not d["comment"]:
+                    d["comment"] = ( "(" + ele + ")")
+                else:
+                    d["comment"] = ("(" + d["comment"] + ele + ")")
+            else:
+                errmessage = "after parsing {}  -  {} was left unparsed".format(formele, ele)
+                raise FormCellError(errmessage, "IncompleteParsingError; probably illegal content", coordinates)
+
+        empty_cell = [d["phonemic"], d["phonetic"], d["orthographic"], d["comment"], d["source"]]
         return empty_cell
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        ele = next(self._elements)
-        return CellParser.parsecell(ele, self.coordinate)
+        try:
+            ele = next(self._elements)
+            ele = CellParser.parsecell(ele, self.coordinate)
+            return ele
+
+        except CellParsingError as err:
+            print("CellParsingError: " + err.message)
+            # input()
+            return self.__next__()
+
+        except FormCellError as err:
+            print(err)
+            # input()
+            return self.__next__()
+
+        except IgnoreCellError as err:
+            print(err)
+            # input()
+            return self.__next__()
+
+
 
     @staticmethod
     def variants_scanner(string):
@@ -214,3 +248,16 @@ class CellParser():
             return first
         else:
             return string
+
+
+class CogCellParser(CellParser):
+
+    def __init__(self, cell):
+        values = cell.value
+        self.coordinate = cell.coordinate
+
+        if values.isupper():
+            print(IgnoreCellError(values, self.coordinate))
+
+        self.set_elements(values)
+

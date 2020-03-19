@@ -41,5 +41,11 @@ class CellParsingError(CellError):
         super().__init__(values, type, cell)
 
 
+class IgnoreCellError(CellError):
+
+    def __init__(self, values, cell):
+        type = "IGNORE"
+        super().__init__(values, type, cell)
+
 if __name__ == "__main__":
     pass
