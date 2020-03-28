@@ -3090,10 +3090,10 @@ FAST30,,
 COLD1,,"An ""oʔɨ"" set -- VMW
 "
 COLD2,,"A ""raj"" set -- ZJO"
-COLD3,"COMPLEX, GEN",a complex oʔɨ + sa set. - NCP
+COLD3,"COMPLEX, GEN",a complex oʔɨ + sang set. - NCP
+COLD4,,
+COLD5,,
 COLD6,,
-COLD9,,
-COLD10,,
 HOT1,,
 NEW1,,"A ""pɨsasu"" set -- ZJO
 ----
@@ -4066,6 +4066,7 @@ SLIP7,,"A ""sɨɾɨj"" compound set -- ZJO"
 SLIP5,"COMPOUND, GEN","A ""pɨ+ho"" FOOT+GO compound set -- ZJO"
 SLIP6,"COMPOUND, GEN","A ""pɨ+sɨkuãi"" compound set -- ZJO"
 SLIP8,"COMPOUND, MED","A ""pɨ+ʔiɾ"" set FOOT+DISLODGE compound set; the DISLODGE root is probably the same as the small ""ʔiɾ"" root in FALL23 -- ZJO"
+SLIP9,"COMPOUND, GEN",NCP: FOOT + ? 
 SLIP10,,
 SLIP11,,
 SLIP12,,
@@ -4465,7 +4466,6 @@ CAPTURE2,,
 CAPTURE3,,
 CAPTURE5X,,
 CAPTURE6,,
-APPEAR1,,
 APPEAR2,,"A ""jekwaβ"" set -- ZJO"
 APPEAR3,,
 APPEAR4X,,

@@ -208,7 +208,7 @@ class Cognate(DatabaseObjectWithUniqueStringID):
     Phonetic = sa.Column(sa.String, name="Phonetic")
     Orthographic = sa.Column(sa.String, name="Orthographic")
     Source = sa.Column(sa.String, name="Source")
-    Comment = sa.Column(sa.String, name="Comment")
+    Procedural_Comment = sa.Column(sa.String, name="Comment")
 
     __cog_counter = defaultdict(int)
 
@@ -224,10 +224,10 @@ class Cognate(DatabaseObjectWithUniqueStringID):
         cogset_id = cogset.ID
         id = cls.create_id(cogset_id)
         form_id = ""
-        cog_com = comment_getter(cog_cell)
+        pro_com = comment_getter(cog_cell)
         source = lan_id + ("{1}" if source == "" else source).strip()
-        return cls(ID=id, Language_ID=lan_id, CogSet_ID=cogset_id, Form_ID=form_id, Cognate_Comment=cog_com,
-                   Phonemic=phonemic, Phonetic=phonetic, Orthographic=ortho, Source=source, Comment=comment)
+        return cls(ID=id, Language_ID=lan_id, CogSet_ID=cogset_id, Form_ID=form_id, Cognate_Comment=comment,
+                   Phonemic=phonemic, Phonetic=phonetic, Orthographic=ortho, Source=source, Procedural_Comment=pro_com)
 
     # ________________________________________________________________________
     #gereon

@@ -118,7 +118,7 @@ class DatabaseObjectWithUniqueStringID(Base):
         return candidate
 
 
-def create_db_session(location='sqlite:///:memory:'):
+def create_db_session(location='sqlite:///:memory:', echo=True):
     # FIXME: Give this a parameter to decide whether or not an existing DB should be overwritten
     try:
         os.remove("cldf.sqlite")
@@ -128,7 +128,7 @@ def create_db_session(location='sqlite:///:memory:'):
     if not dir_path.exists():
         print("Initialize fromexcel.py first")
         exit()
-    engine = sa.create_engine(location, echo=True) # Create an SQLite database in this directory
+    engine = sa.create_engine(location, echo=echo) # Create an SQLite database in this directory
     # use `echo=True` to see the SQL stamenets echoed
 
     session = sessionmaker(bind=engine)()

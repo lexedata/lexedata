@@ -3,7 +3,8 @@ from pathlib import Path
 from objects import Language, Concept, Form, FormToConcept, Cognate, CogSet,\
     DatabaseObjectWithUniqueStringID, create_db_session
 from csv import DictReader
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
+from exceptions import *
 
 def insert_languages(dir_path, session):
     for l_row in DictReader((dir_path / "lan_init.csv").open("r", encoding="utf8", newline="")):
@@ -54,33 +55,90 @@ def insert_forms(dir_path, session):
     session.commit()
 
 
-def query_cognates(cog, session):
-    one_transcription = session.query(Form).filter(or_(
-        Form.Phonetic == cog.Phonetic,
-        Form.Phonemic == cog.Phonemic,
-        Form.Orthographic == cog.Orthographic))
+def query_cognates(cog, session, myfilters):
+    # just select same language
+    myquery = session.query(Form).filter(Form.Language_ID == cog.Language_ID)
 
-    one_transcription_source = one_transcription.filter(Form.Source == cog.Source)
+    # select with just one matching transcription, i.e. using or_
+    myquery = myquery.filter(or_(getattr(Form, attribute) == value for attribute, value in myfilters.items()))
 
-    match = one_transcription_source.filter(Form.Phonetic == cog.Phonetic,
-        Form.Phonemic == cog.Phonemic,
-        Form.Orthographic == cog.Orthographic).one_or_none()
+    one_transcription = myquery.all()
 
-    return one_transcription, one_transcription_source, match
+    len_one = len(one_transcription)
+    # if just one match or no match so far, exit here
+    if len_one == 1 or len_one == 0:
+        return one_transcription
+
+    # match for the source
+    one_transcription_source = myquery.filter(Form.Source == cog.Source)
+    one_transcription_source = one_transcription_source.all()
+
+    # if just one match with source, exit here; if no match with source, return without source
+    len_source = len(one_transcription_source)
+    if len_source == 1:
+        return one_transcription_source
+    elif len_source == 0:
+        return one_transcription
+
+    # match all given transcriptions
+    myquery = myquery.filter(and_(getattr(Form, attribute) == value for attribute, value in myfilters.items())).all()
+
+    # if no exact match, return match with source
+    if len(myquery) == 0:
+        return one_transcription
+    else:
+        return myquery
+
+
+def compare_cog(cog, form, myfilters):
+
+    if len(form) == 0:
+        raise MatchingError(cog, "")
+    elif len(form) > 1:
+        raise MultipleMatchError(cog, form)
+
+    elif cog.Source != form[0].Source:
+        raise NoSourceMatchError(cog, form)
+
+    elif not all(getattr(form[0], attribute) == getattr(cog, attribute) for attribute in myfilters):
+        raise PartialMatchError(cog, form)
 
 
 def insert_cognates(dir_path, session):
     for c_row in DictReader((dir_path / "cog_init.csv").open("r", encoding="utf8", newline="")):
         cog = Cognate(c_row)
-        m1, ms1, match = query_cognates(cog, session)
-        for ele in m1:
-            print(m1.ID)
-        input()
+        print(cog)
+
+        # create dict with not empty attributes
+        myfilters = {}
+        if cog.Phonemic != "":
+            myfilters["Phonemic"] = cog.Phonemic
+        if cog.Phonetic != "":
+            myfilters["Phonetic"] = cog.Phonetic
+        if cog.Orthographic != "":
+            myfilters["Orthographic"] = cog.Orthographic
+
+        res = query_cognates(cog, session, myfilters)
+        try:
+            compare_cog(cog, res, myfilters)
+
+        except MultipleMatchError as err:
+            print(err)
+            input()
+        except NoSourceMatchError as err:
+            print(err)
+            #input()
+        except PartialMatchError as err:
+            print(err)
+            #input()
+        except MatchingError as err:
+            print(err)
+            #input()
 
 def create_db():
     dir_path = Path.cwd() / "initial_data"
     if not dir_path.exists():
-        print("Initialize fromexcel.py first")
+        print("Necessary data not found \nInitialize fromexcel.py first")
         exit()
 
     db_path = dir_path / "lexedata.db"
@@ -94,7 +152,7 @@ def create_db():
 
     db_path = "sqlite:///" + str(db_path)
     db_path = db_path.replace("\\", "\\\\") # can this cause problems on IOS?
-    session = create_db_session(location=db_path)
+    session = create_db_session(location=db_path, echo=False)
 
     insert_languages(dir_path, session)
     insert_concepts(dir_path, session)
@@ -109,10 +167,23 @@ def test():
     db_path = dir_path / "lexedata.db"
     db_path = "sqlite:///" + str(db_path)
     db_path = db_path.replace("\\", "\\\\")  # can this cause problems on IOS?
-    session = create_db_session(location=db_path)
+    session = create_db_session(location=db_path, echo=False)
     insert_cognates(dir_path, session)
     session.close()
 
+def show_empty_forms():
+    dir_path = Path.cwd() / "initial_data"
+    db_path = dir_path / "lexedata.db"
+    db_path = "sqlite:///" + str(db_path)
+    db_path = db_path.replace("\\", "\\\\")  # can this cause problems on IOS?
+    session = create_db_session(location=db_path, echo=False)
+    return session.query(Form).filter(
+        Form.Phonetic == "",
+        Form.Phonemic == "",
+        Form.Orthographic == "").all()
+
+
 if __name__ == "__main__":
-    create_db()
-    #test()
+    #create_db()
+    test()
+

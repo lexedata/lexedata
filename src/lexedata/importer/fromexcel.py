@@ -46,10 +46,12 @@ def init_con_form(dir_path, con_iter, form_iter, lan_dict, wb):
 
             for f_cell in row_forms:
                 if f_cell.value:
+
                     # get corresponding language_id to column
                     this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
 
                     for f_ele in CellParser(f_cell):
+
                         form_cell = Form.create_form(f_ele, this_lan_id, f_cell, concept_cell)
                         formscsv.writerow(form_cell)
 
@@ -96,8 +98,8 @@ def initialize_cognate(dir_path, lan_dict,
     cogout = (dir_path / "cog_init.csv").open("w", encoding="utf8", newline="")
     cogsetout = (dir_path / "cogset_init.csv").open("w", encoding="utf8", newline="")
 
-    header_cog = ["ID", "CogSet_ID", "Form_ID",
-                  "Cognate_Comment", "Phonemic", "Phonetic", "Orthographic", "Comment", "Source"]
+    header_cog = ["ID", "CogSet_ID", "Form_ID", "Language_ID",
+                  "Cognate_Comment", "Phonemic", "Phonetic", "Orthographic", "Procedural_Comment", "Source"]
     cogcsv = csv.DictWriter(cogout, header_cog, extrasaction="ignore", quotechar='"',
                             quoting = csv.QUOTE_MINIMAL)
     cogcsv.writeheader()
@@ -120,6 +122,7 @@ def initialize_cognate(dir_path, lan_dict,
 
     cogout.close()
     cogsetout.close()
+
 
 def initialize():
     dir_path = Path.cwd() / "initial_data"
