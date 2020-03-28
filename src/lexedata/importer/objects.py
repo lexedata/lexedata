@@ -167,26 +167,15 @@ class Concept(DatabaseObjectWithUniqueStringID):
 
 class FormToConcept(DatabaseObjectWithUniqueStringID):
     __tablename__ = 'FormTable_ParameterTable'
-
-    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    form_id = sa.Column(sa.String, sa.ForeignKey('FormTable.cldf_id'), name="cldf_?")
-    concept_id = sa.Column(sa.String, sa.ForeignKey('ParameterTable.cldf_id'), name="cldf_?!")
-    form_comment = sa.Column(sa.String, name="cldf_??")
-    procedural_comment = sa.Column(sa.String, name="cldf_???")
-    procedural_comment_concept = sa.Column(sa.String, name="cldf_????")
-    # relations to one Form and one Concept
-    concept = sa.orm.relationship("Concept", back_populates="toform")
-    form = sa.orm.relationship("Form", back_populates="toconcepts")
-
-
-
-
-    @classmethod
-    def from_form(cls, form):
-        myid = form.id + "c"
-        return cls(id=myid, form_id=form.id, concept_id=form.concept_id,
-                   form_comment=form.form_comment, procedural_comment=form.procedural_comment,
-                   procedural_comment_concept=form.procedural_comment_concept)
+    # Actually pycldf looks for 'forms.csv_concepts.csv', there could probably
+    # be a translation in pycldf to tie it to the 'conformsTo' objects.
+    # Previous line kept for posterity.
+    form = sa.Column('FormTable_cldf_id',
+                     sa.Integer, sa.ForeignKey(Form.ID), primary_key=True)
+    concept = sa.Column('ParameterTable_cldf_id',
+                        sa.Integer, sa.ForeignKey(Concept.ID), primary_key=True)
+    context = sa.Column('context', sa.String)
+    procedural_comment = sa.Column('Internal_Comment', sa.String)
 
 
 class CogSet(DatabaseObjectWithUniqueStringID):
@@ -257,3 +246,9 @@ class Cognate:
                    phonemic=phonemic, phonetic=phonetic, orthographic=ortho, source=source, procedural_comment=pro_com)
 
 
+form_sources = sa.Table(
+    'FormTable_SourceTable', Base.metadata,
+    sa.Column('FormTable_cldf_id', sa.String, sa.ForeignKey(Form.ID)),
+    sa.Column('SourceTable_id', sa.String, sa.ForeignKey(Source.ID)),
+    sa.Column('context', sa.String),
+)
