@@ -122,10 +122,15 @@ class DatabaseObjectWithUniqueStringID(Base):
         return candidate
 
 
-def create_db_session(location=DATABASE_ORIGIN, echo=True, in_memory=False):
-    "only use to create database. Use connect_db to connect to existing database"
-    if in_memory:
-        location = "sqlite:///:memory:"
+def create_db_session(location='sqlite:///:memory:'):
+    # FIXME: Give this a parameter to decide whether or not an existing DB should be overwritten
+    try:
+        os.remove("cldf.sqlite")
+    except FileNotFoundError:
+        pass
+    engine = sa.create_engine(location, echo=False) # Create an SQLite database in this directory
+    engine.execute('pragma foreign_keys=ON')
+    # use `echo=True` to see the SQL stamenets echoed
 
     # create db path for sql module, and escape \ for windows
     location = "sqlite:///" + str(location)

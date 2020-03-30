@@ -21,33 +21,10 @@ class Language(DatabaseObjectWithUniqueStringID):
     __tablename__ = "LanguageTable"
     id = sa.Column(sa.String, name="cldf_id", primary_key=True)
     name = sa.Column(sa.String, name="cldf_name")
-    curator = sa.Column(sa.String, name="Curator")
-    comment = sa.Column(sa.String, name="cldf_comment")
+    glottocode = sa.Column(sa.String, name="cldf_glottocode")
     iso639p3 = sa.Column(sa.String, name="cldf_iso639p3code")
-    #excel_name = attr.ib()
-    # contains all forms and judgements of this language
-    forms = sa.orm.relationship("Form", back_populates="language")
-    judgements = sa.orm.relationship("CognateJudgement", back_populates="language")
-
-    @classmethod
-    def from_column(k, column):
-        name, curator = [cell.value or "" for cell in column]
-        id = k.create_id_from_string(name)
-        comment = ""
-        return k(id=id, name=name, curator=curator, comment=comment)
-
-    # id creation encapuslated
-    __valid = re.compile(r"\W+")
-    _languagedict = defaultdict(int)
-
-    @classmethod
-    def create_id_from_string(k, string):
-        string = uni.unidecode(k.__valid.sub("_", string)).lower()
-        # take only parts longer than 3
-        string = "_".join([ele for ele in string.split("_") if len(ele) > 3])
-        k._languagedict[string] += 1
-        string += str(k._languagedict[string])
-        return string
+    curator = sa.Column(sa.String, name="Curator")
+    comments = sa.Column(sa.String, name="cldf_comment")
 
 
 class Source(DatabaseObjectWithUniqueStringID):
@@ -62,15 +39,30 @@ for source_col in ['genre'] + BIBTEX_FIELDS:
 
 class Form(DatabaseObjectWithUniqueStringID):
     __tablename__ = "FormTable"
-    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    language_id = sa.Column(sa.String, sa.ForeignKey('LanguageTable.cldf_id'), name="cldf_languageReference")
+    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
+    Language_ID = sa.Column(sa.String, sa.ForeignKey(Language.ID), name="cldf_languageReference")
+    # FIXME: Use an actual foreign-key relationship here.
 
-    phonemic = sa.Column(sa.String, name="Phonemic_Transcription")
-    phonetic = sa.Column(sa.String, name="cldf_form")
-    orthographic = sa.Column(sa.String, name="Orthographic_Transcription")
-    variants = sa.Column(sa.String, name="Variants_of_Form_given_by_Source") #does it need this column name?
+    phonemic = sa.Column(sa.String, name="Phonemic_Transcription", index=True)
+    phonetic = sa.Column(sa.String, name="cldf_form", index=True)
+    orthographic = sa.Column(sa.String, name="Orthographic_Transcription", index=True)
+    variants = sa.Column(sa.String, name="Variants_of_Form_given_by_Source")
+    original = sa.Column(sa.String, name="cldf_value", index=True)
+    form_comment = sa.Column(sa.String, name="cldf_comment")
+    sources = sa.orm.relationship(
+        "Source",
+        secondary="FormTable_SourceTable"
+    )
+    concepts = sa.orm.relationship(
+        "Concept",
+        secondary='FormTable_ParameterTable',
+        back_populates="forms"
+    )
 
-   # sources_gereon = sa.orm.relationship(
+    __variants_corrector = re.compile(r"^([</\[])(.+[^>/\]])$")
+    __variants_splitter = re.compile(r"^(.+?)\s?~\s?([</\[].+)$")
+
+    # sources_gereon = sa.orm.relationship(
     #    "Source",
     #    secondary="FormTable_SourceTable"
     #)
@@ -119,63 +111,47 @@ class Concept(DatabaseObjectWithUniqueStringID):
     """
     __tablename__ = "ParameterTable"
 
-    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    set = sa.Column(sa.String, name="Set")
     english = sa.Column(sa.String, name="cldf_name")
+    set = sa.Column(sa.String, name="Set")
     english_strict = sa.Column(sa.String, name="English_Strict")
     spanish = sa.Column(sa.String, name="Spanish")
-    portuguese = sa.Column(sa.String, name="Portuguese")
     french = sa.Column(sa.String, name="French")
-    concept_comment = attr.ib()
-    # toform may contain various FormToConcept
-    toform = sa.orm.relationship("FormToConcept", uselist=False, back_populates="concept")
+    portuguese = sa.Column(sa.String, name="Portuguese")
+    concept_comment = sa.Column(sa.String, name="cldf_comment")
+
+    forms = sa.orm.relationship(
+        "Form",
+        secondary='FormTable_ParameterTable',
+        back_populates="concepts"
+    )
+
+    def get(self, property, default=None):
+        if property == "concept_id":
+            return self.ID
+        elif property == "set":
+            return self.set
+        elif property == "english":
+            return self.english
+        elif property == "english_strict":
+            return self.english_strict
+        elif property == "spanish":
+            return self.spanish
+        elif property == "portuguese":
+            return self.portuguese
+        elif property == "french":
+            return self.french
+        return default
 
 
-    @classmethod
-    def from_default_excel(cls, conceptrow):
-        # at least english meaning must be provided
-        if conceptrow[1].value is None:
-            raise CellParsingError("Column English", conceptrow[1])
-        # values of cell
-        set, english, english_strict, spanish, portuguese, french = [cell.value or "" for cell in conceptrow]
-        concept_id = cls.create_id(english)
-        comment = comment_getter(conceptrow[1])
-        return cls(id=concept_id, set=set, english=english, english_Strict=english_strict, spanish=spanish,
-                   portuguese=portuguese, french=french, concept_comment=comment)
-
-    # protected static class variable for creating unique ids, regex-pattern
-    _conceptdict = defaultdict(int)
-    __id_pattern = re.compile(r"^(.+?)(?:[,\(\@](?:.+)?|)$")
-    @staticmethod
-    def create_id(meaning):
-        """
-        creates unique id out of given english meaning
-        :param meaning: str
-        :return: unique id (str)
-        """
-        mymatch = Concept.__id_pattern.match(meaning)
-        if mymatch:
-            mymatch = mymatch.group(1)
-            mymatch = mymatch.replace(" ", "")
-            mymatch = uni.unidecode(mymatch)
-            Concept._conceptdict[mymatch] += 1
-            mymatch += str(Concept._conceptdict[mymatch])
-            return mymatch
-        else:
-            raise ConceptIdError
-
-
-class FormToConcept(DatabaseObjectWithUniqueStringID):
+class FormMeaningAssociation(Base):
     __tablename__ = 'FormTable_ParameterTable'
-    # Actually pycldf looks for 'forms.csv_concepts.csv', there could probably
-    # be a translation in pycldf to tie it to the 'conformsTo' objects.
-    # Previous line kept for posterity.
     form = sa.Column('FormTable_cldf_id',
-                     sa.Integer, sa.ForeignKey(Form.ID), primary_key=True)
+                     sa.Integer, sa.ForeignKey(Form.ID),
+                     primary_key=True)
     concept = sa.Column('ParameterTable_cldf_id',
-                        sa.Integer, sa.ForeignKey(Concept.ID), primary_key=True)
-    context = sa.Column('context', sa.String)
-    procedural_comment = sa.Column('Internal_Comment', sa.String)
+                        sa.Integer, sa.ForeignKey(Concept.ID),
+                        primary_key=True)
+    context = sa.Column('context', sa.String, default="Concept_IDs")
 
 
 class CogSet(DatabaseObjectWithUniqueStringID):
