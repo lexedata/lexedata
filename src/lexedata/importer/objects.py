@@ -80,23 +80,6 @@ class Concept(DatabaseObjectWithUniqueStringID):
         back_populates="concepts"
     )
 
-    def get(self, property, default=None):
-        if property == "concept_id":
-            return self.id
-        elif property == "set":
-            return self.set
-        elif property == "english":
-            return self.english
-        elif property == "english_strict":
-            return self.english_strict
-        elif property == "spanish":
-            return self.spanish
-        elif property == "portuguese":
-            return self.portuguese
-        elif property == "french":
-            return self.french
-        return default
-
 
 class FormMeaningAssociation(Base):
     __tablename__ = 'FormTable_ParameterTable'
