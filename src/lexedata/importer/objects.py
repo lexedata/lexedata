@@ -57,49 +57,6 @@ class Form(DatabaseObjectWithUniqueStringID):
         back_populates="forms"
     )
 
-    __variants_corrector = re.compile(r"^([</\[])(.+[^>/\]])$")
-    __variants_splitter = re.compile(r"^(.+?)\s?~\s?([</\[].+)$")
-
-    # sources_gereon = sa.orm.relationship(
-    #    "Source",
-    #    secondary="FormTable_SourceTable"
-    #)
-
-    #melvin
-    form_comment = attr.ib()
-    source = sa.Column(sa.String, name="source")
-    concept_id = attr.ib()
-    procedural_comment = attr.ib()
-    procedural_comment_concept = attr.ib()
-
-    language = sa.orm.relationship("Language", back_populates="forms")
-    # toconcepts may contain various FormToConcept
-    toconcepts = sa.orm.relationship("FormToConcept", back_populates="form")
-    # judgements may contain various CognateJudgement
-    judgements = sa.orm.relationship("CognateJudgement", back_populates="form")
-
-    __form_id_counter = defaultdict(int)
-
-    @classmethod
-    def id_creator(cls, lan_id, con_id):
-        candidate = "_".join([lan_id, con_id])
-        cls.__form_id_counter[candidate] += 1
-        candidate += ("_" + str(cls.__form_id_counter[candidate]))
-        return candidate
-
-    @classmethod
-    def create_form(cls, f_ele, lan_id, form_cell, concept):
-
-        phonemic, phonetic, ortho, comment, source, variants = f_ele
-        form_id = cls.id_creator(lan_id, concept.id)
-        # replace source if not given
-        source_id = lan_id + ("{1}" if source == "" else source).strip()
-
-        return cls(id=form_id, language_id=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
-                   variants=variants, form_comment=comment, source=source_id, procedural_comment=comment_getter(form_cell),
-                   procedural_comment_concept=concept.concept_comment,  concept_id=concept.id)
-
-
 class Concept(DatabaseObjectWithUniqueStringID):
     """
     a concept element consists of 8 fields:
