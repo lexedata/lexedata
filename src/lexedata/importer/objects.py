@@ -8,7 +8,6 @@ from lexedata.importer.database import create_db_session, Base, DatabaseObjectWi
 class Language(DatabaseObjectWithUniqueStringID):
     """Metadata for a language"""
     __tablename__ = "LanguageTable"
-    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
     name = sa.Column(sa.String, name="cldf_name")
     glottocode = sa.Column(sa.String, name="cldf_glottocode")
     iso639p3 = sa.Column(sa.String, name="cldf_iso639p3code")
