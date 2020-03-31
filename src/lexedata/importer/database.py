@@ -46,7 +46,7 @@ class DatabaseObjectWithUniqueStringID(Base):
     '''
     __abstract__ = True
     session = None # These objects need a database session to look up existing IDs
-    id = sa.Column(sa.String, primary_key=True)
+    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
 
     def __init__(self, *initial_data, **kwargs):
         for dictionary in initial_data:
