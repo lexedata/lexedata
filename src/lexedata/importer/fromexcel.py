@@ -2,137 +2,167 @@
 import openpyxl as op
 import csv
 from pathlib import Path
-from lexedata.importer.objects import *
-from lexedata.importer.cellparser import *
+
+from lexedata.importer.objects import Language, Concept, Form
+from lexedata.importer.database import create_db_session
+from lexedata.importer.cellparser import CellParser
+
+create_db_session()
+
+class ExcelParser:
+    def language_from_column(self, column):
+        excel_name, curator = [cell.value or "" for cell in column]
+        name, comment = "", ""
+        return {
+            "name": name,
+            "curator": curator,
+            "comments": comment,
+            "raw name": excel_name,
+        }
+
+    def concept_from_row(self, row):
+        set, english, english_strict, spanish, portuguese, french = [cell.value or "" for cell in row]
+        return {
+            "set": set,
+            "english": english,
+            "english_strict": english_strict,
+            "spanish": portuguese,
+            "french": french,
+            "gloss": english,
+        }
+
+    def init_lan(self, lan_iter):
+        for lan_col in lan_iter:
+            # iterate over language columns
+            language_properties = self.language_from_column(lan_col)
+            raw_name = language_properties.pop("raw name")
+            id = Language.register_new_id(raw_name)
+            self.lan_dict[raw_name] = Language(ID=id, **language_properties)
+
+    def get_cell_comment(self, cell):
+        return cell.comment.content if cell.comment else ""
+
+    def init_con_form(self, con_iter, form_iter, wb):
+        with (self.path / "form_init.csv").open( "w", encoding="utf8", newline="") as formsout, \
+                (self.path / "concept_init.csv").open( "w", encoding="utf8", newline="") as conceptsout:
+
+            for row_forms, row_con in zip(form_iter, con_iter):
+                concept_properties = self.concept_from_row(row_con)
+                concept_id = Concept.register_new_id(concept_properties.pop("gloss"))
+                comment = self.get_cell_comment(row_con[0])
+                concept_cell = Concept(ID=concept_id, concept_comment=comment, **concept_properties)
+
+                for f_cell in row_forms:
+                    if f_cell.value:
+                        # get corresponding language_id to column
+                        this_lan = self.lan_dict[wb[(f_cell.column_letter + "1")].value]
+
+                        for f_ele in self.cell_parser.parse(f_cell):
+                            form_cell = self.form_from_cell(f_ele, this_lan, f_cell, concept_cell)
+                            Form(**form_cell)
+
+    def form_from_cell(self, f_ele, lan, form_cell, concept):
+
+        phonemic, phonetic, ortho, comment, source = f_ele
+
+        form_id = Form.register_new_id("{:}_{:}".format(lan.ID, concept.ID))
+        # replace source if not given
+        source_id = "{:s}_{:}".format(lan.ID, (source if source else "{1}").strip())
+
+        return {
+            "ID": form_id,
+            "Language_ID": lan.ID,
+            "phonemic": phonemic,
+            "phonetic": phonetic,
+            "orthographic": ortho,
+            "form_comment": comment,
+            "sources": [source_id],
+            #"procedural_comment": self.get_cell_comment(form_cell),
+            "concepts": [concept]}
 
 
-def init_lan(dir_path, iter_lan, lan_dict):
-    # create iterator over excel cells
-    with (dir_path / "language_init.csv").open("w", encoding="utf8", newline="") as lanout:
-        for language in iter_lan:
-            if language[0].value is None:
+
+    def initialize_lexical(self):
+
+        wb = op.load_workbook(filename=self.lexicon_spreadsheet)
+        sheets = wb.sheetnames
+        wb = wb[sheets[0]]
+        iter_forms = wb.iter_rows(min_row=3, min_col=7, max_col=44)  # iterates over rows with forms
+        iter_concept = wb.iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
+        iter_lan = wb.iter_cols(min_row=1, max_row=2, min_col=7, max_col=44)
+
+        self.init_lan(iter_lan)
+        self.init_con_form(iter_concept, iter_forms, wb)
+
+
+    def cogset_cognate(self, cogset_iter, cog_iter, lan_dict, wb, cogsetcsv, cogcsv):
+
+        for cogset_row, cog_row in zip(cogset_iter, cog_iter):
+            if not cogset_row[1].value:
                 continue
+            if cogset_row[1].value.isupper():
+                cogset = CogSet.from_excel(cogset_row)
+                cogsetcsv.writerow(cogset)
+
+                for f_cell in cog_row:
+                    if f_cell.value:
+                        # get corresponding language_id to column
+                        this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
+
+                        for f_ele in CogCellParser.parse(f_cell):
+                            cog = Cognate.from_excel(f_ele, this_lan_id, f_cell, cogset)
+                            cogcsv.writerow(cog)
+            # line not to be processed
             else:
-                l = Language.from_column(language)
-                lan_dict[language[0].column] = l.id
-                lanout.write(l)
+                continue
 
 
-def init_con_form(dir_path, con_iter, form_iter, lan_dict, wb):
+    def initialize_cognate(self,
+                 file=r"TG_cognates_online_MASTER.xlsx"):
+        wb = op.load_workbook(filename=file)
+        cogout = (self.path / "cog_init.csv").open("w", encoding="utf8", newline="")
+        cogsetout = (self.path / "cogset_init.csv").open("w", encoding="utf8", newline="")
 
-    with (dir_path / "form_init.csv").open( "w", encoding="utf8", newline="") as formsout, \
-            (dir_path / "concept_init.csv").open( "w", encoding="utf8", newline="") as conceptsout:
+        header_cog = ["ID", "CogSet_ID", "Form_ID",
+                    "Cognate_Comment", "Phonemic", "Phonetic", "Orthographic", "Comment", "Source"]
+        cogcsv = csv.DictWriter(cogout, header_cog, extrasaction="ignore", quotechar='"',
+                                quoting = csv.QUOTE_MINIMAL)
+        cogcsv.writeheader()
 
-        header_concepts = ["id",
-                           "Set", "English", "English_Strict", "Spanish", "Portuguese", "French"]
-        concsv = csv.DictWriter(conceptsout, header_concepts, extrasaction="ignore", quotechar='"',
-                                quoting=csv.QUOTE_MINIMAL)
-        concsv.writeheader()
+        header_cogset = ["ID", "Set", "Description"]
 
-        header_forms = ["id", "language_id",
-                        "phonemic", "phonetic", "orthographic", "Variants", "form_comment", "source",
-                        "procedural_comment", "procedural_comment_concept", "concept_id"]
+        cogsetcsv = csv.DictWriter(cogsetout, header_cogset, extrasaction="ignore", quotechar='"',
+                                quoting = csv.QUOTE_MINIMAL)
+        cogsetcsv.writeheader()
 
-        formscsv = csv.DictWriter(formsout, header_forms, extrasaction="ignore", quotechar='"',
-                                  quoting=csv.QUOTE_MINIMAL)
-        formscsv.writeheader()
+        try:
+            for sheet in wb.sheetnames:
+                print(sheet+"\n\n")
+                ws = wb[sheet]
+                iter_cog = ws.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
+                iter_congset = ws.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
+                self.cogset_cognate(iter_congset, iter_cog, self.lan_dict, ws, cogsetcsv, cogcsv)
+        except KeyError:
+            pass
 
-        for row_forms, row_con in zip(form_iter, con_iter):
+        cogout.close()
+        cogsetout.close()
 
-            concept_cell = Concept.from_default_excel(row_con)
-            concsv.writerow(concept_cell)
+    def __init__(self,
+               output=Path("initial_data"),
+               lexicon_spreadsheet = "TG_comparative_lexical_online_MASTER.xlsx",
+               cognatesets_spreadsheet = "TG_comparative_lexical_online_MASTER.xlsx"):
+        self.path = output
+        if not self.path.exists():
+            self.path.mkdir()
+        self.lan_dict = {}
+        self.lexicon_spreadsheet = lexicon_spreadsheet
+        self.cell_parser = CellParser()
 
-            for f_cell in row_forms:
-                if f_cell.value:
-
-                    # get corresponding language_id to column
-                    this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
-
-                    for f_ele in CellParser(f_cell):
-
-                        form_cell = Form.create_form(f_ele, this_lan_id, f_cell, concept_cell)
-                        formscsv.writerow(form_cell)
-
-
-def initialize_lexical(dir_path, lan_dict,
-                       file=r"C:\Users\walter.fuchs\Desktop\outofasia\stuff\TG_comparative_lexical_online_MASTER.xlsx"):
-
-    wb = op.load_workbook(filename=file)
-    sheets = wb.sheetnames
-    wb = wb[sheets[0]]
-    iter_forms = wb.iter_rows(min_row=3, min_col=7)  # iterates over rows with forms
-    iter_concept = wb.iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
-    iter_lan = wb.iter_cols(min_row=1, max_row=2, min_col=7, max_col=44)
-
-    init_lan(dir_path, iter_lan, lan_dict)
-    init_con_form(dir_path, iter_concept, iter_forms, lan_dict, wb)
-
-
-def cogset_cognate(cogset_iter, cog_iter, lan_dict, wb, cogsetcsv, cogcsv):
-
-    for cogset_row, cog_row in zip(cogset_iter, cog_iter):
-        if not cogset_row[1].value:
-            continue
-        if cogset_row[1].value.isupper():
-            cogset = CogSet.from_excel(cogset_row)
-            cogsetcsv.writerow(cogset)
-
-            for f_cell in cog_row:
-                if f_cell.value:
-                    # get corresponding language_id to column
-                    this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
-
-                    for f_ele in CogCellParser(f_cell):
-                        cog = Cognate.from_excel(f_ele, this_lan_id, f_cell, cogset)
-                        cogcsv.writerow(cog)
-        # line not to be processed
-        else:
-            continue
-
-
-def initialize_cognate(dir_path, lan_dict,
-                 file=r"C:\Users\walter.fuchs\Desktop\outofasia\stuff\TG_cognates_online_MASTER.xlsx"):
-
-    cogout = (dir_path / "cog_init.csv").open("w", encoding="utf8", newline="")
-    cogsetout = (dir_path / "cogset_init.csv").open("w", encoding="utf8", newline="")
-
-    header_cog = ["id", "cog_set_id", "form_id", "language_id",
-                  "cognate_comment", "phonemic", "phonetic", "orthographic", "procedural_comment", "source"]
-    cogcsv = csv.DictWriter(cogout, header_cog, extrasaction="ignore", quotechar='"',
-                            quoting = csv.QUOTE_MINIMAL)
-    cogcsv.writeheader()
-
-    header_cogset = ["id", "Set", "Description"]
-
-    cogsetcsv = csv.DictWriter(cogsetout, header_cogset, extrasaction="ignore", quotechar='"',
-                               quoting = csv.QUOTE_MINIMAL)
-    cogsetcsv.writeheader()
-    wb = op.load_workbook(filename=file)
-    try:
-        for sheet in wb.sheetnames:
-            print(sheet+"\n\n")
-            ws = wb[sheet]
-            iter_cog = ws.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
-            iter_congset = ws.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
-            cogset_cognate(iter_congset, iter_cog, lan_dict, ws, cogsetcsv, cogcsv)
-    except KeyError:
-        pass
-
-    cogout.close()
-    cogsetout.close()
-
-
-def initialize():
-    dir_path = Path.cwd() / "initial_data"
-    if not dir_path.exists():
-        dir_path.mkdir()
-    dir_path = Path(dir_path)
-
-    lan_dict = {} # just for getting of language_id
-    initialize_lexical(dir_path, lan_dict)
-    print("\n\ncognates\n\n")
-    initialize_cognate(dir_path, lan_dict)
+    def parse(self):
+        self.initialize_lexical()
+        self.initialize_cognate()
 
 
 if __name__ == "__main__":
-    initialize()
+    ExcelParser()

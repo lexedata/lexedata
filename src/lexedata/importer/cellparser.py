@@ -14,16 +14,6 @@ class CellParser():
     """
     Iterator class over all form elements contained in a form cell
     """
-
-    # pattern for splitting form cell into various form elements, re.sub will be used
-    _form_separator = re.compile(r"""^(.+[}\]>)/])        # Anything until the first separator
-    \s*              # Any amount of spaces
-    [,;]             # Some separator
-    \s*              # Any amount of spaces
-    ([<{/[].+)       # Followed by the rest of the string""", re.VERBOSE)
-
-    # exemplary pattern to catch phonemic transcription: /.+/ or /.+[%~].+/ or /.+/ [%~]/.+/ [%~]/.+/ ....
-    # is repeated for phonetic and orthographic
     phonemic_pattern = re.compile(r"""(?:^| # start of the line or
     (.*?(?<=[^&]))) #capture anything before phonemic, phonemic must not follow a &, i.e. & escapes
     (/.+?/  #first phonemic element, not greedy
@@ -47,6 +37,20 @@ class CellParser():
     _cleaner = re.compile(r"^(.+)#.+?#(.*)$")  # will clean using re.sub
 
     def __init__(self, cell):
+
+    #pattern for splitting form cell into various form elements
+    form_separator = re.compile(r"""
+    (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
+    \s*               # Any amount of spaces
+    [,;]              # Some separator
+    \s*               # Any amount of spaces
+    (?=[</\[])        # Followed by the beginnig of any transcription, but don't consume that bit""",
+        re.VERBOSE)
+    # pattern for parsing content of cell
+    __cell_value_pattern = re.compile(r"^(/.+?/)?\s?(\[.+?\])?\s?(<.+?>)?\s?(\(.+\))?\s?(\{.+\})?$")
+
+    def parse(self, cell):
+        # FIXME: Avoid side-effects to the parser class
         values = cell.value
         self.coordinate = cell.coordinate
         if not values:  # capture None values
@@ -68,6 +72,7 @@ class CellParser():
         elements[-1] = elements[-1].rstrip("\n").rstrip(",").rstrip(";") # remove possible line break and ending commas
 
         self._elements = iter(elements)
+        return self
 
     @classmethod
     def separate(cl, values):
@@ -286,6 +291,8 @@ class CogCellParser(CellParser):
     def __init__(self, cell):
         values = cell.value
         self.coordinate = cell.coordinate
+        ele = next(self._elements)
+        return CellParser.parsecell(ele)
 
         if values.isupper():
             print(IgnoreCellError(values, self.coordinate))

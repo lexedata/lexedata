@@ -35,12 +35,13 @@ class Form(DatabaseObjectWithUniqueStringID):
     variants = sa.Column(sa.String, name="Variants_of_Form_given_by_Source")
     original = sa.Column(sa.String, name="cldf_value", index=True)
     form_comment = sa.Column(sa.String, name="cldf_comment")
+    procedural_comment = sa.Column(sa.String, name="cldf_comment")
     sources = sa.orm.relationship(
-        "Source",
+        "source",
         secondary="FormTable_SourceTable"
     )
     concepts = sa.orm.relationship(
-        "Concept",
+        "concept",
         secondary='FormTable_ParameterTable',
         back_populates="forms"
     )
