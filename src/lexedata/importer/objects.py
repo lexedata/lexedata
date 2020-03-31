@@ -1,20 +1,9 @@
 import re
 import attr
 from collections import defaultdict
-
-import unidecode as uni
 from pycldf.db import BIBTEX_FIELDS
 
-from lexedata.importer.database import Base, DatabaseObjectWithUniqueStringID, sa, create_db_session
-from lexedata.importer.exceptions import *
-
-# lambda function for getting comment of excel cell if comment given
-comment_getter = lambda x: x.comment.content if x.comment else ""
-#functions for bracket checking
-one_bracket = lambda opening, closing, str, nr: str[0] == opening and str[-1] == closing and \
-                                                (str.count(opening) == str.count(closing) == nr)
-comment_bracket = lambda str: str.count("(") == str.count(")")
-
+from lexedata.importer.database import create_db_session, Base, DatabaseObjectWithUniqueStringID, sa
 
 class Language(DatabaseObjectWithUniqueStringID):
     """Metadata for a language"""
@@ -101,11 +90,6 @@ class CogSet(DatabaseObjectWithUniqueStringID):
     # judgements may contain various CognateJudgement
     judgements = sa.orm.relationship("CognateJudgement", back_populates="cogset")
 
-    @classmethod
-    def from_excel(cls, cog_row):
-        values = [cell.value or "" for cell in cog_row]
-        return cls(id=values[1], set=values[0], description=comment_getter(cog_row[1]))
-
 
 class CognateJudgement(DatabaseObjectWithUniqueStringID):
     __tablename__ = 'CognateTable'
@@ -126,38 +110,6 @@ class CognateJudgement(DatabaseObjectWithUniqueStringID):
         id = cognate.id + "_" + form.id
         return cls(id=id, cogset_id=cognate.cog_set_id, form_id=form.id, language_id=cognate.language_id,
                    cognate_comment=cognate.cognate_comment, procedural_comment=cognate.procedural_comment)
-
-
-@attr.s
-class Cognate:
-
-    id = attr.ib()
-    language_id = attr.ib()
-    cog_set_id = attr.ib()
-    cognate_comment = attr.ib()
-    phonemic = attr.ib()
-    phonetic = attr.ib()
-    orthographic = attr.ib()
-    source = attr.ib()
-    procedural_comment = attr.ib()
-
-    __cog_counter = defaultdict(int)
-
-    @classmethod
-    def create_id(cls, cogset_id):
-        cls.__cog_counter[cogset_id]+=1
-        return cogset_id + "_" + str(cls.__cog_counter[cogset_id])
-
-    @classmethod
-    def from_excel(cls, f_ele, lan_id, cog_cell, cogset):
-
-        phonemic, phonetic, ortho, comment, source, variants = f_ele
-        cogset_id = cogset.id
-        id = cls.create_id(cogset_id)
-        pro_com = comment_getter(cog_cell)
-        source = lan_id + ("{1}" if source == "" else source).strip()
-        return cls(id=id, language_id=lan_id, cog_set_id=cogset_id, cognate_comment=comment,
-                   phonemic=phonemic, phonetic=phonetic, orthographic=ortho, source=source, procedural_comment=pro_com)
 
 
 form_sources = sa.Table(
