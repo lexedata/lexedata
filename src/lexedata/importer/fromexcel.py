@@ -3,9 +3,10 @@ import openpyxl as op
 import csv
 from pathlib import Path
 
-from lexedata.importer.objects import Language, Concept, Form
+from lexedata.importer.objects import Language, Concept, Form, CogSet, CognateJudgement
 from lexedata.importer.database import create_db_session
 from lexedata.importer.cellparser import CellParser
+import lexedata.importer.exceptions as ex
 
 create_db_session()
 
@@ -16,7 +17,7 @@ class ExcelParser:
         return {
             "name": name,
             "curator": curator,
-            "comments": comment,
+            "comment": comment,
             "raw name": excel_name,
         }
 
@@ -50,7 +51,7 @@ class ExcelParser:
                 concept_properties = self.concept_from_row(row_con)
                 concept_id = Concept.register_new_id(concept_properties.pop("gloss"))
                 comment = self.get_cell_comment(row_con[0])
-                concept_cell = Concept(ID=concept_id, concept_comment=comment, **concept_properties)
+                concept = Concept(ID=concept_id, comment=comment, **concept_properties)
 
                 for f_cell in row_forms:
                     if f_cell.value:
@@ -58,27 +59,28 @@ class ExcelParser:
                         this_lan = self.lan_dict[wb[(f_cell.column_letter + "1")].value]
 
                         for f_ele in self.cell_parser.parse(f_cell):
-                            form_cell = self.form_from_cell(f_ele, this_lan, f_cell, concept_cell)
-                            Form(**form_cell)
+                            form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
+                            # FIXME: Replace this by [look up existing form, otherwise create form]
+                            form_id = Form.register_new_id("{:}_{:}".format(this_lan.ID, concept.ID))
+                            form = Form(ID=form_id, **form_cell)
+                            form.concepts.append(concept)
 
-    def form_from_cell(self, f_ele, lan, form_cell, concept):
+    def form_from_cell(self, f_ele, lan, form_cell):
 
         phonemic, phonetic, ortho, comment, source = f_ele
 
-        form_id = Form.register_new_id("{:}_{:}".format(lan.ID, concept.ID))
         # replace source if not given
         source_id = "{:s}_{:}".format(lan.ID, (source if source else "{1}").strip())
 
         return {
-            "ID": form_id,
-            "Language_ID": lan.ID,
+            "language": lan,
             "phonemic": phonemic,
             "phonetic": phonetic,
             "orthographic": ortho,
-            "form_comment": comment,
+            "comment": comment,
             "sources": [source_id],
             #"procedural_comment": self.get_cell_comment(form_cell),
-            "concepts": [concept]}
+        }
 
 
 
@@ -94,69 +96,61 @@ class ExcelParser:
         self.init_lan(iter_lan)
         self.init_con_form(iter_concept, iter_forms, wb)
 
+    def cogset_from_row(self, cog_row):
+        values = [cell.value or "" for cell in cog_row]
+        return {"ID": values[1],
+                "properties": values[0],
+                "comment": self.get_cell_comment(cog_row[1])}
 
-    def cogset_cognate(self, cogset_iter, cog_iter, lan_dict, wb, cogsetcsv, cogcsv):
+    def cogset_cognate(self, cogset_iter, cog_iter, lan_dict, wb):
 
-        for cogset_row, cog_row in zip(cogset_iter, cog_iter):
+        for cogset_row, row_forms in zip(cogset_iter, cog_iter):
             if not cogset_row[1].value:
                 continue
-            if cogset_row[1].value.isupper():
-                cogset = CogSet.from_excel(cogset_row)
-                cogsetcsv.writerow(cogset)
+            elif cogset_row[1].value.isupper():
+                properties = self.cogset_from_row(cogset_row)
+                cogset = CogSet(**properties)
 
-                for f_cell in cog_row:
+                for f_cell in row_forms:
                     if f_cell.value:
                         # get corresponding language_id to column
-                        this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
+                        this_lan = self.lan_dict[wb[(f_cell.column_letter + "1")].value]
 
-                        for f_ele in CogCellParser.parse(f_cell):
-                            cog = Cognate.from_excel(f_ele, this_lan_id, f_cell, cogset)
-                            cogcsv.writerow(cog)
-            # line not to be processed
+                        try:
+                            for f_ele in self.cell_parser.parse(f_cell):
+                                form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
+                                # FIXME: Replace this by [look up existing form, otherwise create form]
+                                form = Form(**form_cell)
+                                CognateJudgement
+                        except ex.CellParsingError as e:
+                            print("{:s}{:d}:".format(f_cell.column_letter, f_cell.row), e)
+                            continue
             else:
                 continue
 
 
-    def initialize_cognate(self,
-                 file=r"TG_cognates_online_MASTER.xlsx"):
-        wb = op.load_workbook(filename=file)
-        cogout = (self.path / "cog_init.csv").open("w", encoding="utf8", newline="")
-        cogsetout = (self.path / "cogset_init.csv").open("w", encoding="utf8", newline="")
-
-        header_cog = ["ID", "CogSet_ID", "Form_ID",
-                    "Cognate_Comment", "Phonemic", "Phonetic", "Orthographic", "Comment", "Source"]
-        cogcsv = csv.DictWriter(cogout, header_cog, extrasaction="ignore", quotechar='"',
-                                quoting = csv.QUOTE_MINIMAL)
-        cogcsv.writeheader()
-
-        header_cogset = ["ID", "Set", "Description"]
-
-        cogsetcsv = csv.DictWriter(cogsetout, header_cogset, extrasaction="ignore", quotechar='"',
-                                quoting = csv.QUOTE_MINIMAL)
-        cogsetcsv.writeheader()
-
+    def initialize_cognate(self):
+        wb = op.load_workbook(filename=self.cognatesets_spreadsheet)
         try:
             for sheet in wb.sheetnames:
-                print(sheet+"\n\n")
+                print("\nParsing sheet '{:s}'".format(sheet))
                 ws = wb[sheet]
                 iter_cog = ws.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
                 iter_congset = ws.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
-                self.cogset_cognate(iter_congset, iter_cog, self.lan_dict, ws, cogsetcsv, cogcsv)
+                self.cogset_cognate(iter_congset, iter_cog, self.lan_dict, ws)
         except KeyError:
             pass
-
-        cogout.close()
-        cogsetout.close()
 
     def __init__(self,
                output=Path("initial_data"),
                lexicon_spreadsheet = "TG_comparative_lexical_online_MASTER.xlsx",
-               cognatesets_spreadsheet = "TG_comparative_lexical_online_MASTER.xlsx"):
-        self.path = output
+               cognatesets_spreadsheet = "TG_cognates_online_MASTER.xlsx"):
+        self.path = Path(output)
         if not self.path.exists():
             self.path.mkdir()
         self.lan_dict = {}
         self.lexicon_spreadsheet = lexicon_spreadsheet
+        self.cognatesets_spreadsheet = cognatesets_spreadsheet
         self.cell_parser = CellParser()
 
     def parse(self):

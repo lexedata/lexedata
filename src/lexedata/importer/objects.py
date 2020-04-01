@@ -12,7 +12,7 @@ class Language(DatabaseObjectWithUniqueStringID):
     glottocode = sa.Column(sa.String, name="cldf_glottocode")
     iso639p3 = sa.Column(sa.String, name="cldf_iso639p3code")
     curator = sa.Column(sa.String, name="Curator")
-    comments = sa.Column(sa.String, name="cldf_comment")
+    comment = sa.Column(sa.String, name="cldf_comment")
 
 
 class Source(DatabaseObjectWithUniqueStringID):
@@ -27,22 +27,27 @@ for source_col in ['genre'] + BIBTEX_FIELDS:
 class Form(DatabaseObjectWithUniqueStringID):
     __tablename__ = "FormTable"
     Language_ID = sa.Column(sa.String, sa.ForeignKey(Language.id), name="cldf_languageReference")
-    # FIXME: Use an actual foreign-key relationship here.
+    language = sa.orm.relationship(Language)
 
     phonemic = sa.Column(sa.String, name="Phonemic_Transcription", index=True)
     phonetic = sa.Column(sa.String, name="cldf_form", index=True)
     orthographic = sa.Column(sa.String, name="Orthographic_Transcription", index=True)
     variants = sa.Column(sa.String, name="Variants_of_Form_given_by_Source")
     original = sa.Column(sa.String, name="cldf_value", index=True)
-    form_comment = sa.Column(sa.String, name="cldf_comment")
-    procedural_comment = sa.Column(sa.String, name="cldf_comment")
+    comment = sa.Column(sa.String, name="cldf_comment")
+    procedural_comment = sa.Column(sa.String, name="procedural_comment")
     sources = sa.orm.relationship(
-        "source",
+        Source,
         secondary="FormTable_SourceTable"
     )
     concepts = sa.orm.relationship(
-        "concept",
+        "Concept", # will be parsed to the class once it is defined
         secondary='FormTable_ParameterTable',
+        back_populates="forms"
+    )
+    cognatesets = sa.orm.relationship(
+        "CogSet",
+        secondary="CognateTable",
         back_populates="forms"
     )
 
@@ -61,10 +66,10 @@ class Concept(DatabaseObjectWithUniqueStringID):
     spanish = sa.Column(sa.String, name="Spanish")
     french = sa.Column(sa.String, name="French")
     portuguese = sa.Column(sa.String, name="Portuguese")
-    concept_comment = sa.Column(sa.String, name="cldf_comment")
+    comment = sa.Column(sa.String, name="cldf_comment")
 
     forms = sa.orm.relationship(
-        "Form",
+        Form,
         secondary='FormTable_ParameterTable',
         back_populates="concepts"
     )
@@ -118,3 +123,37 @@ form_sources = sa.Table(
     sa.Column('SourceTable_id', sa.String, sa.ForeignKey(Source.id)),
     sa.Column('context', sa.String),
 )
+
+class CogSet(DatabaseObjectWithUniqueStringID):
+    """
+    A cognateset, which has an ID, an optional reference form, and an optional comment
+    """
+    __tablename__ = 'CognatesetTable'
+
+    reference_form_id = sa.Column('cldf_formReference',
+                     sa.Integer, sa.ForeignKey(Form.ID),
+                     primary_key=True)
+    reference_form = sa.orm.relationship(Form)
+    comment = sa.Column(sa.String, name="cldf_comment")
+    properties = sa.Column(sa.String, name="properties")
+
+    forms = sa.orm.relationship(
+        Form,
+        secondary='CognateTable',
+        back_populates="cognatesets"
+    )
+
+class CognateJudgement(Base):
+    __tablename__ = 'CognateTable'
+
+    form_id = sa.Column('FormTable_cldf_id',
+                     sa.Integer, sa.ForeignKey(Form.ID),
+                     primary_key=True)
+    form = sa.orm.relationship(Form)
+    cognateset_id = sa.Column('CognatesetTable_cldf_id',
+                        sa.Integer, sa.ForeignKey(CogSet.ID),
+                        primary_key=True)
+    cognateset = sa.orm.relationship(CogSet)
+    context = sa.Column('context', sa.String, default="Concept_IDs")
+    comment = sa.Column(sa.String, name="cldf_comment")
+
