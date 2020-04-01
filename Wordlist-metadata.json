@@ -66,6 +66,11 @@
                     },
                     {
                         "datatype": "string",
+                        "required": false,
+                        "name": "procedural_comment"
+                    },
+                    {
+                        "datatype": "string",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
                         "required": false,
                         "name": "Comment"
@@ -76,6 +81,11 @@
                         "required": false,
                         "separator": ";",
                         "name": "Source"
+                    },
+                    {
+                        "datatype": "string",
+                        "required": false,
+                        "name": "cell"
                     }
                 ],
                 "foreignKeys": [

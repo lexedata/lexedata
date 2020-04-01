@@ -36,6 +36,9 @@ class Form(DatabaseObjectWithUniqueStringID):
     original = sa.Column(sa.String, name="cldf_value", index=True)
     comment = sa.Column(sa.String, name="cldf_comment")
     procedural_comment = sa.Column(sa.String, name="procedural_comment")
+
+    cell = sa.Column(sa.String, name="cell")
+
     sources = sa.orm.relationship(
         Source,
         secondary="FormTable_SourceTable"
@@ -130,10 +133,6 @@ class CogSet(DatabaseObjectWithUniqueStringID):
     """
     __tablename__ = 'CognatesetTable'
 
-    reference_form_id = sa.Column('cldf_formReference',
-                     sa.Integer, sa.ForeignKey(Form.ID),
-                     primary_key=True)
-    reference_form = sa.orm.relationship(Form)
     comment = sa.Column(sa.String, name="cldf_comment")
     properties = sa.Column(sa.String, name="properties")
 

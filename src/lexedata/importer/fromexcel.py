@@ -38,7 +38,9 @@ class ExcelParser:
             language_properties = self.language_from_column(lan_col)
             raw_name = language_properties.pop("raw name")
             id = Language.register_new_id(raw_name)
-            self.lan_dict[raw_name] = Language(ID=id, **language_properties)
+            language = Language(ID=id, **language_properties)
+            self.session.add(language)
+            self.lan_dict[raw_name] = language
 
     def get_cell_comment(self, cell):
         return cell.comment.content if cell.comment else ""
@@ -60,10 +62,28 @@ class ExcelParser:
 
                         for f_ele in self.cell_parser.parse(f_cell):
                             form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
-                            # FIXME: Replace this by [look up existing form, otherwise create form]
-                            form_id = Form.register_new_id("{:}_{:}".format(this_lan.ID, concept.ID))
-                            form = Form(ID=form_id, **form_cell)
+                            form = session.query(Form).filter(*[
+                                getattr(Form, key)==value
+                                for key, value in form_cell.items()
+                                if not key in self.ignore_for_match
+                            ]).one_or_none()
+                            if form is None:
+                                form_id = Form.register_new_id("{:}_{:}".format(this_lan.ID, concept.ID))
+                                form = Form(ID=form_id, cell=f_cell.coordinate, **form_cell)
+                                self.session.add(form)
+                            else:
+                                for key, value in form_cell.items():
+                                    # FIXME: Maybe test `if value`? – discuss
+                                    if key in self.ignore_for_match:
+                                        if getattr(form, key)!=value:
+                                            print(
+                                                "{:s}{:d}:".format(f_cell.column_letter, f_cell.row),
+                                                "Property {:s} of form defined here was '{:}', which "
+                                                "did not match '{:}' specified earlier for the same form in {:s}. "
+                                                "I kept the original {:s}.".format(
+                                                    key, value, getattr(form, key), form.cell, key))
                             form.concepts.append(concept)
+                            self.session.commit()
 
     def form_from_cell(self, f_ele, lan, form_cell):
 
@@ -78,8 +98,9 @@ class ExcelParser:
             "phonetic": phonetic,
             "orthographic": ortho,
             "comment": comment,
-            "sources": [source_id],
-            #"procedural_comment": self.get_cell_comment(form_cell),
+            # FIXME: We need to create those source objects so we can refer to them
+            # "sources": [source_id],
+            "procedural_comment": self.get_cell_comment(form_cell),
         }
 
 
@@ -94,6 +115,7 @@ class ExcelParser:
         iter_lan = wb.iter_cols(min_row=1, max_row=2, min_col=7, max_col=44)
 
         self.init_lan(iter_lan)
+        self.session.commit()
         self.init_con_form(iter_concept, iter_forms, wb)
 
     def cogset_from_row(self, cog_row):
@@ -109,7 +131,8 @@ class ExcelParser:
                 continue
             elif cogset_row[1].value.isupper():
                 properties = self.cogset_from_row(cogset_row)
-                cogset = CogSet(**properties)
+                id = CogSet.register_new_id(properties.pop("ID", ""))
+                cogset = CogSet(ID=id, **properties)
 
                 for f_cell in row_forms:
                     if f_cell.value:
@@ -120,11 +143,27 @@ class ExcelParser:
                             for f_ele in self.cell_parser.parse(f_cell):
                                 form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
                                 # FIXME: Replace this by [look up existing form, otherwise create form]
-                                form = Form(**form_cell)
-                                CognateJudgement
-                        except ex.CellParsingError as e:
+                                form = session.query(Form).filter(*[
+                                    getattr(Form, key)==value
+                                    for key, value in form_cell.items()
+                                    if not key in self.ignore_for_match
+                                ]).one_or_none()
+                                if form is None:
+                                    raise ex.CognateCellError(
+                                        "Found form {:} in cognate table that is not in lexicon.".format(f_ele))
+                                judgement = session.query(CognateJudgement).filter(
+                                    CognateJudgement.form==form,
+                                    CognateJudgement.cognateset==cogset).one_or_none()
+                                if judgement is None:
+                                    judgement = CognateJudgement(form=form, cognateset=cogset)
+                                    self.session.add(judgement)
+                                else:
+                                    print("Duplicate cognate judgement found in cell {:}. "
+                                          "(How even is that possible?)".format(f_cell.coordinate))
+                        except (ex.CellParsingError, ex.CognateCellError) as e:
                             print("{:s}{:d}:".format(f_cell.column_letter, f_cell.row), e)
                             continue
+                    session.commit()
             else:
                 continue
 
@@ -142,9 +181,11 @@ class ExcelParser:
             pass
 
     def __init__(self,
+                 session,
                output=Path("initial_data"),
                lexicon_spreadsheet = "TG_comparative_lexical_online_MASTER.xlsx",
                cognatesets_spreadsheet = "TG_cognates_online_MASTER.xlsx"):
+        self.session = session
         self.path = Path(output)
         if not self.path.exists():
             self.path.mkdir()
@@ -152,6 +193,13 @@ class ExcelParser:
         self.lexicon_spreadsheet = lexicon_spreadsheet
         self.cognatesets_spreadsheet = cognatesets_spreadsheet
         self.cell_parser = CellParser()
+        self.ignore_for_match = [
+            "ID",
+            "variants",
+            "comment",
+            "procedural_comment",
+            "original",
+        ]
 
     def parse(self):
         self.initialize_lexical()
@@ -159,4 +207,40 @@ class ExcelParser:
 
 
 if __name__ == "__main__":
-    ExcelParser()
+    import argparse
+    import pycldf
+    parser = argparse.ArgumentParser(description="Load a Maweti-Guarani-style dataset into CLDF")
+    parser.add_argument(
+        "lexicon", nargs="?",
+        default="TG_comparative_lexical_online_MASTER.xlsx",
+        help="Path to an Excel file containing the dataset")
+    parser.add_argument(
+        "--db", nargs="?",
+        default="sqlite:///",
+        help="Where to store the temp DB")
+    parser.add_argument(
+        "output", nargs="?",
+        default="from_excel/",
+        help="Directory to create the output CLDF wordlist in")
+    parser.add_argument(
+        "--debug-level", type=int, default=0,
+        help="Debug level: Higher numbers are less forgiving")
+    args = parser.parse_args(["--db", "sqlite:///intermediate.sqlite"])
+
+    # The Intermediate Storage, in a in-memory DB
+    session = create_db_session(args.db)
+
+    ExcelParser(session).parse()
+    session.commit()
+    session.close()
+
+    if args.db.startswith("sqlite:///"):
+        db_path = args.db[len("sqlite:///"):]
+        if db_path == '':
+            db_path = ':memory:'
+    dataset = pycldf.Wordlist.from_metadata(
+        "Wordlist-metadata.json",
+    )
+    db = pycldf.db.Database(dataset, fname=db_path)
+
+    db.to_cldf(args.output)
