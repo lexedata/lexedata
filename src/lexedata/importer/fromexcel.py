@@ -62,11 +62,12 @@ class ExcelParser:
 
                         for f_ele in self.cell_parser.parse(f_cell):
                             form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
-                            form = session.query(Form).filter(*[
-                                getattr(Form, key)==value
-                                for key, value in form_cell.items()
-                                if not key in self.ignore_for_match
-                            ]).one_or_none()
+                            form = session.query(Form).filter(
+                                Form.language==this_lan,
+                                *[getattr(Form, key)==value
+                                    for key, value in form_cell.items()
+                                    if not key in self.ignore_for_match
+                                ]).one_or_none()
                             if form is None:
                                 form_id = Form.register_new_id("{:}_{:}".format(this_lan.ID, concept.ID))
                                 form = Form(ID=form_id, cell=f_cell.coordinate, **form_cell)
@@ -143,14 +144,16 @@ class ExcelParser:
                             for f_ele in self.cell_parser.parse(f_cell):
                                 form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
                                 # FIXME: Replace this by [look up existing form, otherwise create form]
-                                form = session.query(Form).filter(*[
-                                    getattr(Form, key)==value
-                                    for key, value in form_cell.items()
-                                    if not key in self.ignore_for_match
-                                ]).one_or_none()
+                                form = session.query(Form).filter(
+                                    Form.language==this_lan,
+                                    *[getattr(Form, key)==value
+                                      for key, value in form_cell.items()
+                                      if not key in self.ignore_for_match
+                                    ]).one_or_none()
                                 if form is None:
                                     raise ex.CognateCellError(
-                                        "Found form {:} in cognate table that is not in lexicon.".format(f_ele))
+                                        "Found form {:}:{:} in cognate table that is not in lexicon.".format(
+                                            this_lan.ID, f_ele))
                                 judgement = session.query(CognateJudgement).filter(
                                     CognateJudgement.form==form,
                                     CognateJudgement.cognateset==cogset).one_or_none()
@@ -225,7 +228,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--debug-level", type=int, default=0,
         help="Debug level: Higher numbers are less forgiving")
-    args = parser.parse_args(["--db", "sqlite:///intermediate.sqlite"])
+    args = parser.parse_args()
 
     # The Intermediate Storage, in a in-memory DB
     session = create_db_session(args.db)

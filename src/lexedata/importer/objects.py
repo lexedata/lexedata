@@ -145,14 +145,15 @@ class CogSet(DatabaseObjectWithUniqueStringID):
 class CognateJudgement(Base):
     __tablename__ = 'CognateTable'
 
-    form_id = sa.Column('FormTable_cldf_id',
-                     sa.Integer, sa.ForeignKey(Form.ID),
-                     primary_key=True)
+    form_id = sa.Column(
+        'cldf_formReference',
+        sa.Integer, sa.ForeignKey(Form.ID),
+        primary_key=True)
     form = sa.orm.relationship(Form)
-    cognateset_id = sa.Column('CognatesetTable_cldf_id',
-                        sa.Integer, sa.ForeignKey(CogSet.ID),
-                        primary_key=True)
+    cognateset_id = sa.Column(
+        'cldf_cognatesetReference',
+        sa.Integer, sa.ForeignKey(CogSet.ID),
+        primary_key=True)
     cognateset = sa.orm.relationship(CogSet)
-    context = sa.Column('context', sa.String, default="Concept_IDs")
     comment = sa.Column(sa.String, name="cldf_comment")
 
