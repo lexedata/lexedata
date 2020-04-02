@@ -142,7 +142,7 @@ class CogSet(DatabaseObjectWithUniqueStringID):
         back_populates="cognatesets"
     )
 
-class CognateJudgement(Base):
+class CognateJudgement(DatabaseObjectWithUniqueStringID):
     __tablename__ = 'CognateTable'
 
     form_id = sa.Column(

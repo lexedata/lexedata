@@ -158,7 +158,8 @@ class ExcelParser:
                                     CognateJudgement.form==form,
                                     CognateJudgement.cognateset==cogset).one_or_none()
                                 if judgement is None:
-                                    judgement = CognateJudgement(form=form, cognateset=cogset)
+                                    id = CognateJudgement.register_new_id(form.ID)
+                                    judgement = CognateJudgement(ID=id, form=form, cognateset=cogset)
                                     self.session.add(judgement)
                                 else:
                                     print("Duplicate cognate judgement found in cell {:}. "
