@@ -1,0 +1,299 @@
+{
+    "G3": [
+        {
+            "concept_id": "NA",
+            "form_comment": "(uno; solo)",
+            "id": "no_lan_NA_1",
+            "language_id": "no_lan",
+            "orthographic": "",
+            "phonemic": "/etak\u027e\u00e3/",
+            "phonetic": "[e.ta.'k\u027e\u00e3]",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{4}",
+            "variants": ""
+        },
+        {
+            "concept_id": "NA",
+            "form_comment": "",
+            "id": "no_lan_NA_2",
+            "language_id": "no_lan",
+            "orthographic": "",
+            "phonemic": "/etakra\u0303/",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        }
+    ],
+    "G4": [
+        {
+            "concept_id": "NA",
+            "form_comment": "(cuatro)",
+            "id": "no_lan_NA_12",
+            "language_id": "no_lan",
+            "orthographic": "",
+            "phonemic": "/gw\u0268\u027ea p\u0268\u02a7\u00e3/",
+            "phonetic": "[gw\u0268.'\u027ea p\u0268.'\u02a7a]",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{4}",
+            "variants": ""
+        }
+    ],
+    "G5": [
+        {
+            "concept_id": "NA",
+            "form_comment": "(t) (irr.) (quieto \u00e1 parte)",
+            "id": "no_lan_NA_17",
+            "language_id": "no_lan",
+            "orthographic": "<en(d)\u00e9>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": "~<in(d)\u00e9>"
+        },
+        {
+            "concept_id": "NA",
+            "form_comment": "(silencioso)",
+            "id": "no_lan_NA_18",
+            "language_id": "no_lan",
+            "orthographic": "<quyriri\u0303>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        }
+    ],
+    "H3": [
+        {
+            "concept_id": "NA",
+            "form_comment": "",
+            "id": "no_lan_NA_3",
+            "language_id": "no_lan",
+            "orthographic": "",
+            "phonemic": "",
+            "phonetic": "[\u02c8ha\u0261\u030a\u028a]",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        },
+        {
+            "concept_id": "NA",
+            "form_comment": "",
+            "id": "no_lan_NA_4",
+            "language_id": "no_lan",
+            "orthographic": "",
+            "phonemic": "",
+            "phonetic": "[\u02c8haku]",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        },
+        {
+            "concept_id": "NA",
+            "form_comment": "",
+            "id": "no_lan_NA_5",
+            "language_id": "no_lan",
+            "orthographic": "",
+            "phonemic": "/\u02c8aku/",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        },
+        {
+            "concept_id": "NA",
+            "form_comment": "(esta\u0301 quente)",
+            "id": "no_lan_NA_6",
+            "language_id": "no_lan",
+            "orthographic": "",
+            "phonemic": "",
+            "phonetic": "[\u02c8hakudi\u02ccpa]",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        }
+    ],
+    "H4": [
+        {
+            "concept_id": "NA",
+            "form_comment": "(dos)",
+            "id": "no_lan_NA_13",
+            "language_id": "no_lan",
+            "orthographic": "<mok\u00f5i>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{Guasch1962:616}",
+            "variants": ""
+        }
+    ],
+    "H5": [
+        {
+            "concept_id": "NA",
+            "form_comment": "(cerebro; juicio, talento)",
+            "id": "no_lan_NA_19",
+            "language_id": "no_lan",
+            "orthographic": "<apytu'\u0169>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{Guasch1962:508}",
+            "variants": ""
+        }
+    ],
+    "I3": [
+        {
+            "concept_id": "NA",
+            "form_comment": "",
+            "id": "no_lan_NA_7",
+            "language_id": "no_lan",
+            "orthographic": "<e\u0268re1>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        },
+        {
+            "concept_id": "NA",
+            "form_comment": "",
+            "id": "no_lan_NA_8",
+            "language_id": "no_lan",
+            "orthographic": "<e\u0268>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        },
+        {
+            "concept_id": "NA",
+            "form_comment": "(piel)",
+            "id": "no_lan_NA_9",
+            "language_id": "no_lan",
+            "orthographic": "",
+            "phonemic": "",
+            "phonetic": "[e\u0268\u0301\u027ee]",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        },
+        {
+            "concept_id": "NA",
+            "form_comment": "(piel humana)",
+            "id": "no_lan_NA_10",
+            "language_id": "no_lan",
+            "orthographic": "",
+            "phonemic": "",
+            "phonetic": "[e\u0301\u0268]",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{2}",
+            "variants": ""
+        }
+    ],
+    "I4": [
+        {
+            "concept_id": "NA",
+            "form_comment": "(codo (va=vaa))",
+            "id": "no_lan_NA_14",
+            "language_id": "no_lan",
+            "orthographic": "<te\u00f1yvanga>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{Guasch1962:724}",
+            "variants": "~<re\u00f1yvanga>,~<he\u00f1yvanga>"
+        },
+        {
+            "concept_id": "NA",
+            "form_comment": "(codo)",
+            "id": "no_lan_NA_15",
+            "language_id": "no_lan",
+            "orthographic": "<jyvaanga>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{Guasch1962:565}",
+            "variants": ""
+        }
+    ],
+    "I5": [
+        {
+            "concept_id": "NA",
+            "form_comment": "",
+            "id": "no_lan_NA_20",
+            "language_id": "no_lan",
+            "orthographic": "<petei\u0303>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        }
+    ],
+    "J3": [
+        {
+            "concept_id": "NA",
+            "form_comment": "(uno)",
+            "id": "no_lan_NA_11",
+            "language_id": "no_lan",
+            "orthographic": "<pete\u0129>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{Guasch1962:670}",
+            "variants": ""
+        }
+    ],
+    "J4": [
+        {
+            "concept_id": "NA",
+            "form_comment": "(tres)",
+            "id": "no_lan_NA_16",
+            "language_id": "no_lan",
+            "orthographic": "<mbohapy>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{Guasch1962:598}",
+            "variants": ""
+        }
+    ],
+    "J5": [
+        {
+            "concept_id": "NA",
+            "form_comment": "",
+            "id": "no_lan_NA_21",
+            "language_id": "no_lan",
+            "orthographic": "<irundy>",
+            "phonemic": "",
+            "phonetic": "",
+            "procedural_comment": "",
+            "procedural_comment_concept": "NA",
+            "source": "no_lan{1}",
+            "variants": ""
+        }
+    ]
+}
