@@ -112,11 +112,11 @@ def insert_cognates(dir_path, session):
         # create dict with not empty attributes
         myfilters = {}
         if cog.Phonemic != "":
-            myfilters["Phonemic"] = cog.Phonemic
+            myfilters["phonemic"] = cog.Phonemic
         if cog.Phonetic != "":
-            myfilters["Phonetic"] = cog.Phonetic
+            myfilters["phonetic"] = cog.Phonetic
         if cog.Orthographic != "":
-            myfilters["Orthographic"] = cog.Orthographic
+            myfilters["orthographic"] = cog.Orthographic
 
         res = query_cognates(cog, session, myfilters)
         try:

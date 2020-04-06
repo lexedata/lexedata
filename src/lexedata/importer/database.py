@@ -35,14 +35,14 @@ class DatabaseObjectWithUniqueStringID(Base):
     >>> class ObjectWithID(DatabaseObjectWithUniqueStringID):
     ...   pass
     >>> session = create_db_session(location='sqlite:///:memory:')
-    >>> ObjectWithID(ID="this")
-    <ObjectWithID(ID='this')>
+    >>> ObjectWithID(id="this")
+    <ObjectWithID(id='this')>
     >>> session.connection().engine.dispose()
 
     '''
     __abstract__ = True
     session = None # These objects need a database session to look up existing IDs
-    ID = sa.Column(sa.String, primary_key=True)
+    id = sa.Column(sa.String, primary_key=True)
 
     def __init__(self, *initial_data, **kwargs):
         for dictionary in initial_data:
@@ -70,7 +70,7 @@ class DatabaseObjectWithUniqueStringID(Base):
 
     @staticmethod
     def string_to_id(string):
-        """Generate a useful ID string from the string
+        """Generate a useful id string from the string
 
         >>> d = DatabaseObjectWithUniqueStringID
         >>> d.string_to_id("trivial")
@@ -93,26 +93,26 @@ class DatabaseObjectWithUniqueStringID(Base):
 
     @classmethod
     def register_new_id(cl, string):
-        """Turn the current string into a unique ID
+        """Turn the current string into a unique id
 
-        Turn the string into a useful ID string using string_to_id, then append
+        Turn the string into a useful id string using string_to_id, then append
         a decimal integer number to that string that is large enough to make
-        the ID different from all objects added to the database so far.
+        the id different from all objects added to the database so far.
 
         >>> class Ex(DatabaseObjectWithUniqueStringID):
         ...   pass
         >>> session = create_db_session(location='sqlite:///:memory:')
-        >>> session.add(Ex(ID=Ex.register_new_id("unique")))
-        >>> session.add(Ex(ID=Ex.register_new_id("unique")))
+        >>> session.add(Ex(id=Ex.register_new_id("unique")))
+        >>> session.add(Ex(id=Ex.register_new_id("unique")))
         >>> list(session.query(Ex))
-        [<Ex(ID='unique1')>, <Ex(ID='unique2')>]
+        [<Ex(id='unique1')>, <Ex(id='unique2')>]
         >>> session.connection().engine.dispose()
 
         """
         ID = cl.string_to_id(string)
         i = 0
         candidate = ID
-        while cl.session.query(cl.ID).filter(cl.ID == candidate).one_or_none():
+        while cl.session.query(cl.id).filter(cl.id == candidate).one_or_none():
             i += 1
             candidate = "{:s}{:d}".format(ID, i)
         return candidate

@@ -22,7 +22,7 @@ class PartialMatchError(MatchingError):
 
 class NoSourceMatchError(MatchingError):
 
-    def __init__(self, cog, form, type="No Source"):
+    def __init__(self, cog, form, type="No source"):
         super().__init__(cog, form, type)
 
 

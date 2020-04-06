@@ -2,8 +2,8 @@ import re
 import attr
 from collections import defaultdict
 import unidecode as uni
-from database import create_db_session, DatabaseObjectWithUniqueStringID, sa
-from exceptions import *
+from lexedata.importer.database import create_db_session, DatabaseObjectWithUniqueStringID, sa
+from lexedata.importer.exceptions import *
 # lambda function for getting comment of excel cell if comment given
 comment_getter = lambda x: x.comment.content if x.comment else ""
 #functions for bracket checking
@@ -15,12 +15,12 @@ comment_bracket = lambda str: str.count("(") == str.count(")")
 class Language(DatabaseObjectWithUniqueStringID):
     """Metadata for a language"""
     __tablename__ = "LanguageTable"
-    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    Name = sa.Column(sa.String, name="cldf_name")
-    Curator = sa.Column(sa.String, name="Curator")
-    Comment = sa.Column(sa.String, name="cldf_comment")
+    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
+    name = sa.Column(sa.String, name="cldf_name")
+    curator = sa.Column(sa.String, name="Curator")
+    comment = sa.Column(sa.String, name="cldf_comment")
     iso639p3 = sa.Column(sa.String, name="cldf_iso639p3code")
-    Excel_name = attr.ib()
+    excel_name = attr.ib()
 
     forms = sa.orm.relationship("Form", back_populates="language_ids")
 
@@ -29,7 +29,7 @@ class Language(DatabaseObjectWithUniqueStringID):
         excel_name, curator = [cell.value or "" for cell in column]
         id = k.create_id_from_string(excel_name)
         name, comment = "", ""
-        return k(ID=id, Name=name, Curator=curator, Comment=comment, Excel_name=excel_name)
+        return k(id=id, name=name, curator=curator, comment=comment, excel_name=excel_name)
 
     # id creation encapuslated
     __valid = re.compile(r"\W+")
@@ -65,13 +65,13 @@ for source_col in ['genre'] + BIBTEX_FIELDS:
 
 class Form(DatabaseObjectWithUniqueStringID):
     __tablename__ = "FormTable"
-    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    Language_ID = sa.Column(sa.String, sa.ForeignKey('LanguageTable.cldf_id'), name="cldf_languageReference")
+    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
+    language_id = sa.Column(sa.String, sa.ForeignKey('LanguageTable.cldf_id'), name="cldf_languageReference")
 
-    Phonemic = sa.Column(sa.String, name="Phonemic_Transcription")
-    Phonetic = sa.Column(sa.String, name="cldf_form")
-    Orthographic = sa.Column(sa.String, name="Orthographic_Transcription")
-    Variants = sa.Column(sa.String, name="Variants_of_Form_given_by_Source") #does it need this column name?
+    phonemic = sa.Column(sa.String, name="Phonemic_Transcription")
+    phonetic = sa.Column(sa.String, name="cldf_form")
+    orthographic = sa.Column(sa.String, name="Orthographic_Transcription")
+    variants = sa.Column(sa.String, name="Variants_of_Form_given_by_Source") #does it need this column name?
 
    # sources_gereon = sa.orm.relationship(
     #    "Source",
@@ -84,11 +84,11 @@ class Form(DatabaseObjectWithUniqueStringID):
     #)
 
     #melvin
-    Form_Comment = attr.ib()
-    Source = sa.Column(sa.String, name="Source")
-    Concept_ID = attr.ib()
-    Procedural_Comment = attr.ib()
-    Procedural_Comment_Concept = attr.ib()
+    form_comment = attr.ib()
+    source = sa.Column(sa.String, name="source")
+    concept_id = attr.ib()
+    procedural_comment = attr.ib()
+    procedural_comment_concept = attr.ib()
 
     language_ids = sa.orm.relationship("Language", back_populates="forms")
     toconcepts = sa.orm.relationship("FormToConcept", back_populates="fromforms")
@@ -107,13 +107,13 @@ class Form(DatabaseObjectWithUniqueStringID):
 
         phonemic, phonetic, ortho, comment, source, variants = f_ele
 
-        form_id = cls.id_creator(lan_id, concept.ID)
+        form_id = cls.id_creator(lan_id, concept.id)
         # replace source if not given
         source_id = lan_id + ("{1}" if source == "" else source).strip()
 
-        return cls(ID=form_id, Language_ID=lan_id, Phonemic=phonemic, Phonetic=phonetic, Orthographic=ortho,
-                   Variants=variants, Form_Comment=comment, Source=source_id, Procedural_Comment=comment_getter(form_cell),
-                   Procedural_Comment_Concept=concept.Concept_Comment,  Concept_ID=concept.ID)
+        return cls(id=form_id, language_id=lan_id, phonemic=phonemic, phonetic=phonetic, orthographic=ortho,
+                   variants=variants, form_comment=comment, source=source_id, procedural_comment=comment_getter(form_cell),
+                   procedural_comment_concept=concept.concept_comment,  concept_id=concept.id)
 
 
 class Concept(DatabaseObjectWithUniqueStringID):
@@ -125,14 +125,14 @@ class Concept(DatabaseObjectWithUniqueStringID):
     """
     __tablename__ = "ParameterTable"
 
-    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    Set = sa.Column(sa.String, name="Set")
-    English = sa.Column(sa.String, name="cldf_name")
-    English_Strict = sa.Column(sa.String, name="English_Strict")
-    Spanish = sa.Column(sa.String, name="Spanish")
-    Portuguese = sa.Column(sa.String, name="Portuguese")
-    French = sa.Column(sa.String, name="French")
-    Concept_comment = attr.ib()
+    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
+    set = sa.Column(sa.String, name="Set")
+    english = sa.Column(sa.String, name="cldf_name")
+    english_strict = sa.Column(sa.String, name="English_Strict")
+    spanish = sa.Column(sa.String, name="Spanish")
+    portuguese = sa.Column(sa.String, name="Portuguese")
+    french = sa.Column(sa.String, name="French")
+    concept_comment = attr.ib()
 
     toforms = sa.orm.relationship("FormToConcept", back_populates="fromconcepts")
 
@@ -142,8 +142,8 @@ class Concept(DatabaseObjectWithUniqueStringID):
         set, english, english_strict, spanish, portuguese, french = [cell.value or "" for cell in conceptrow]
         concept_id = cls.create_id(english)
         comment = comment_getter(conceptrow[1])
-        return cls(ID=concept_id, Set=set, English=english, English_Strict=english_strict, Spanish=spanish,
-                   Portuguese=portuguese, French=french, Concept_Comment=comment)
+        return cls(id=concept_id, set=set, english=english, english_Strict=english_strict, spanish=spanish,
+                   portuguese=portuguese, french=french, concept_comment=comment)
 
     # protected static class variable for creating unique ids, regex-pattern
     _conceptdict = defaultdict(int)
@@ -169,12 +169,12 @@ class Concept(DatabaseObjectWithUniqueStringID):
 class FormToConcept(DatabaseObjectWithUniqueStringID):
     __tablename__ = 'FormTable_ParameterTable'
 
-    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    Form_ID = sa.Column(sa.String, sa.ForeignKey('FormTable.cldf_id'), name="cldf_?")
-    Concept_ID = sa.Column(sa.String, sa.ForeignKey('ParameterTable.cldf_id'), name="cldf_?!")
-    Form_Comment = sa.Column(sa.String, name="cldf_??")
-    Procedural_Comment = sa.Column(sa.String, name="cldf_???")
-    Procedural_Comment_Concept = sa.Column(sa.String, name="cldf_????")
+    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
+    form_id = sa.Column(sa.String, sa.ForeignKey('FormTable.cldf_id'), name="cldf_?")
+    concept_id = sa.Column(sa.String, sa.ForeignKey('ParameterTable.cldf_id'), name="cldf_?!")
+    form_comment = sa.Column(sa.String, name="cldf_??")
+    procedural_comment = sa.Column(sa.String, name="cldf_???")
+    procedural_comment_concept = sa.Column(sa.String, name="cldf_????")
 
     fromconcepts = sa.orm.relationship("Concept", back_populates="toforms")
     fromforms = sa.orm.relationship("Form", back_populates="toconcepts")
@@ -182,38 +182,38 @@ class FormToConcept(DatabaseObjectWithUniqueStringID):
 
     @classmethod
     def from_form(cls, form):
-        id = form.ID + "c"
-        return cls(ID=id, Form_ID=form.ID, Concept_ID=form.Concept_ID,
-                   Form_Comment=form.Form_Comment, Procedural_Comment=form.Procedural_Comment,
-                   Procedural_Comment_Concept=form.Procedural_Comment_Concept)
+        myid = form.ID + "c"
+        return cls(id=myid, form_id=form.id, concept_id=form.concept_id,
+                   form_comment=form.form_comment, procedural_comment=form.procedural_comment,
+                   procedural_comment_concept=form.procedural_comment_concept)
 
 
 class CogSet(DatabaseObjectWithUniqueStringID):
     __tablename__ = 'CognatesetTable'
 
-    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    Set = sa.Column(sa.String, name="Set")
-    Description = sa.Column(sa.String, name="cldf_description") # meaning comment of excel sheet
+    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
+    set = sa.Column(sa.String, name="Set")
+    description = sa.Column(sa.String, name="cldf_description") # meaning comment of excel sheet
 
     @classmethod
     def from_excel(cls, cog_row):
         values = [cell.value or "" for cell in cog_row]
-        return cls(ID=values[1], Set=values[0], Description=comment_getter(cog_row[1]))
+        return cls(id=values[1], set=values[0], description=comment_getter(cog_row[1]))
 
 
-class Cognate(DatabaseObjectWithUniqueStringID):
+class CognateJudgement(DatabaseObjectWithUniqueStringID):
     __tablename__ = 'CognateTable'
 
-    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    Language_ID = sa.Column(sa.String, name="Language_ID")
-    CogSet_ID = sa.Column(sa.String, name="cldf_cognatesetReference")
-    Form_ID = sa.Column(sa.String, name="cldf_formReference")
-    Cognate_Comment = sa.Column(sa.String, name="Cognate_Comment")
-    Phonemic = sa.Column(sa.String, name="Phonemic")
-    Phonetic = sa.Column(sa.String, name="Phonetic")
-    Orthographic = sa.Column(sa.String, name="Orthographic")
-    Source = sa.Column(sa.String, name="Source")
-    Procedural_Comment = sa.Column(sa.String, name="Comment")
+    id = sa.Column(sa.String, name="cldf_id", primary_key=True)
+    language_id = sa.Column(sa.String, name="language_id")
+    cog_set_id = sa.Column(sa.String, name="cldf_cognatesetReference")
+    form_id = sa.Column(sa.String, name="cldf_formReference")
+    cognate_comment = sa.Column(sa.String, name="cognate_comment")
+    phonemic = sa.Column(sa.String, name="phonemic")
+    phonetic = sa.Column(sa.String, name="phonetic")
+    orthographic = sa.Column(sa.String, name="orthographic")
+    source = sa.Column(sa.String, name="source")
+    procedural_comment = sa.Column(sa.String, name="comment")
 
     __cog_counter = defaultdict(int)
 
@@ -231,8 +231,8 @@ class Cognate(DatabaseObjectWithUniqueStringID):
         form_id = ""
         pro_com = comment_getter(cog_cell)
         source = lan_id + ("{1}" if source == "" else source).strip()
-        return cls(ID=id, Language_ID=lan_id, CogSet_ID=cogset_id, Form_ID=form_id, Cognate_Comment=comment,
-                   Phonemic=phonemic, Phonetic=phonetic, Orthographic=ortho, Source=source, Procedural_Comment=pro_com)
+        return cls(id=id, language_id=lan_id, cog_set_id=cogset_id, form_id=form_id, cognate_comment=comment,
+                   phonemic=phonemic, phonetic=phonetic, orthographic=ortho, source=source, procedural_comment=pro_com)
 
     # ________________________________________________________________________
     #gereon
@@ -245,9 +245,9 @@ class FormMeaningAssociation(DatabaseObjectWithUniqueStringID):
     # gereon, why are ids here integers?
     # why parameter names context and internal/procedural_comment?
     form = sa.Column('forms.csv_ID',
-                     sa.Integer, sa.ForeignKey(Form.ID), primary_key=True)
+                     sa.Integer, sa.ForeignKey(Form.id), primary_key=True)
     concept = sa.Column('concepts.csv_ID',
-                        sa.Integer, sa.ForeignKey(Concept.ID), primary_key=True)
+                        sa.Integer, sa.ForeignKey(Concept.id), primary_key=True)
     context = sa.Column('context', sa.String)
     procedural_comment = sa.Column('Internal_Comment', sa.String)
 
@@ -257,7 +257,7 @@ class FormMeaningAssociation(DatabaseObjectWithUniqueStringID):
 # why here no indent?
 #form_sources = sa.Table(
 #    'FormTable_SourceTable', Base.metadata,
-#    sa.Column('FormTable_cldf_id', sa.String, sa.sa.ForeignKey(Form.ID)),
-#    sa.Column('SourceTable_id', sa.String, sa.sa.ForeignKey(Source.ID)),
+#    sa.Column('FormTable_cldf_id', sa.String, sa.sa.ForeignKey(Form.id)),
+#    sa.Column('SourceTable_id', sa.String, sa.sa.ForeignKey(Source.id)),
 #    sa.Column('context', sa.String),
 #)

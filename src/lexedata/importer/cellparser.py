@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 
-from exceptions import *
+from lexedata.importer.exceptions import *
 
 
 # functions for bracket checking
