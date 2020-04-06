@@ -11,6 +11,7 @@ one_bracket = lambda opening, closing, str, nr: str[0] == opening and str[-1] ==
                                                 (str.count(opening) == str.count(closing) == nr)
 comment_bracket = lambda str: str.count("(") == str.count(")")
 
+
 class Language(DatabaseObjectWithUniqueStringID):
     """Metadata for a language"""
     __tablename__ = "LanguageTable"
@@ -51,9 +52,13 @@ class Language(DatabaseObjectWithUniqueStringID):
 #what is this?
 from pycldf.db import BIBTEX_FIELDS
 
+
 class Source(DatabaseObjectWithUniqueStringID):
     __tablename__ = "SourceTable"
     ID = sa.Column(sa.String, name="id", primary_key=True)
+
+
+# global name space
 for source_col in ['genre'] + BIBTEX_FIELDS:
     setattr(Source, source_col, sa.Column(sa.String, name=source_col, default=""))
 
