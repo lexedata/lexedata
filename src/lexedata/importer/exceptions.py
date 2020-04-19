@@ -6,7 +6,7 @@ class Error(Exception):
     pass
 
 
-class AlreadyExistsErorr(Error):
+class AlreadyExistsError(Error):
 
     def __init__(self, element, value):
         message = """The value {} of element {} already exists in the table {}
