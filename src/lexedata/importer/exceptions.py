@@ -6,6 +6,16 @@ class Error(Exception):
     pass
 
 
+class AlreadyExistsErorr(Error):
+
+    def __init__(self, element, value):
+        message = """The value {} of element {} already exists in the table {}
+         of the database""".format(element, value,element. __tablename__)
+        self.message = message
+        super().__init__(message)
+
+
+# ------------------------------ Matching Errors ------------------------------
 class MatchingError(Error):
 
     def __init__(self, cog, form, type="None"):
@@ -32,6 +42,7 @@ class MultipleMatchError(MatchingError):
         super().__init__(cog, form, type)
 
 
+# ------------------------------ Cell Errors ------------------------------
 class CellError(Error):
     """base class for formatting errors inside an element"""
 
@@ -76,7 +87,7 @@ class CellParsingError(CellError):
 
 
 class IgnoreCellError(CellError):
-
+"special warning for ignored values"
     def __init__(self, values, cell):
         type = "IGNORE"
         super().__init__(values, type, cell)
