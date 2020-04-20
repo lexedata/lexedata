@@ -2,7 +2,7 @@ import re
 import attr
 from collections import defaultdict
 import unidecode as uni
-from lexedata.importer.database import create_db_session, DatabaseObjectWithUniqueStringID, sa
+from lexedata.importer.database import DatabaseObjectWithUniqueStringID, sa
 from lexedata.importer.exceptions import *
 # lambda function for getting comment of excel cell if comment given
 comment_getter = lambda x: x.comment.content if x.comment else ""
@@ -44,9 +44,6 @@ class Language(DatabaseObjectWithUniqueStringID):
         string += str(k._languagedict[string])
         return string
 
-    # pycldf.Dataset.write assumes a `get` method to access attributes, so we
-    # can make `LanguageCell` outputtable to CLDF by providing such a method,
-    # mapping attributes to CLDF column names
 
 
 #what is this?
@@ -76,11 +73,6 @@ class Form(DatabaseObjectWithUniqueStringID):
    # sources_gereon = sa.orm.relationship(
     #    "Source",
     #    secondary="FormTable_SourceTable"
-    #)
-    #concepts = sa.orm.relationship(
-    #    "Concept",
-    #    secondary='FormTable_ParameterTable',
-    #    back_populates="forms"
     #)
 
     #melvin
@@ -138,6 +130,9 @@ class Concept(DatabaseObjectWithUniqueStringID):
 
     @classmethod
     def from_default_excel(cls, conceptrow):
+        # at least english meaning must be provided
+        if conceptrow[1].value is None:
+            raise CellParsingError("Column English", conceptrow[1])
         # values of cell
         set, english, english_strict, spanish, portuguese, french = [cell.value or "" for cell in conceptrow]
         concept_id = cls.create_id(english)
@@ -234,30 +229,4 @@ class CognateJudgement(DatabaseObjectWithUniqueStringID):
         return cls(id=id, language_id=lan_id, cog_set_id=cogset_id, form_id=form_id, cognate_comment=comment,
                    phonemic=phonemic, phonetic=phonetic, orthographic=ortho, source=source, procedural_comment=pro_com)
 
-    # ________________________________________________________________________
-    #gereon
 
-class FormMeaningAssociation(DatabaseObjectWithUniqueStringID):
-    __tablename__ = 'FormTable_ParameterTable2' # no such table....
-    # Actually pycldf looks for 'forms.csv_concepts.csv', there could probably
-    # be a translation in pycldf to tie it to the 'conformsTo' objects.
-    # Previous line kept for posterity.
-    # gereon, why are ids here integers?
-    # why parameter names context and internal/procedural_comment?
-    form = sa.Column('forms.csv_ID',
-                     sa.Integer, sa.ForeignKey(Form.id), primary_key=True)
-    concept = sa.Column('concepts.csv_ID',
-                        sa.Integer, sa.ForeignKey(Concept.id), primary_key=True)
-    context = sa.Column('context', sa.String)
-    procedural_comment = sa.Column('Internal_Comment', sa.String)
-
-
-
-
-# why here no indent?
-#form_sources = sa.Table(
-#    'FormTable_SourceTable', Base.metadata,
-#    sa.Column('FormTable_cldf_id', sa.String, sa.sa.ForeignKey(Form.id)),
-#    sa.Column('SourceTable_id', sa.String, sa.sa.ForeignKey(Source.id)),
-#    sa.Column('context', sa.String),
-#)
