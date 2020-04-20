@@ -200,15 +200,31 @@ class CognateJudgement(DatabaseObjectWithUniqueStringID):
     __tablename__ = 'CognateTable'
 
     id = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    language_id = sa.Column(sa.String, name="language_id")
-    cog_set_id = sa.Column(sa.String, name="cldf_cognatesetReference")
+    cogset_id = sa.Column(sa.String, name="cldf_cognatesetReference")
     form_id = sa.Column(sa.String, name="cldf_formReference")
     cognate_comment = sa.Column(sa.String, name="cognate_comment")
-    phonemic = sa.Column(sa.String, name="phonemic")
-    phonetic = sa.Column(sa.String, name="phonetic")
-    orthographic = sa.Column(sa.String, name="orthographic")
-    source = sa.Column(sa.String, name="source")
     procedural_comment = sa.Column(sa.String, name="comment")
+
+    @classmethod
+    def from_cognate_and_form(cls, cognate, form):
+        id = cognate.id + "_" + form.id
+        return cls(id=id, cogset_id=cognate.cog_set_id, form_id=form.id, 
+                   cognate_comment=cognate.cognate_comment, procedural_comment=cognate.procedural_comment)
+
+
+@attr.s
+class Cognate:
+
+    id = attr.ib()
+    language_id = attr.ib()
+    cog_set_id = attr.ib()
+    form_id = attr.ib()
+    cognate_comment = attr.ib()
+    phonemic = attr.ib()
+    phonetic = attr.ib()
+    orthographic = attr.ib()
+    source = attr.ib()
+    procedural_comment = attr.ib()
 
     __cog_counter = defaultdict(int)
 
