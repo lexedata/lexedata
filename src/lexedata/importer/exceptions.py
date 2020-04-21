@@ -8,7 +8,7 @@ class Error(Exception):
 
 class AlreadyExistsError(Error):
 
-    def __init__(self, element, value):
+    def __init__(self, element):
         message = """The Element {} already exists in the table {}
          of the database""".format(element, element. __tablename__)
         self.message = message
@@ -87,7 +87,7 @@ class CellParsingError(CellError):
 
 
 class IgnoreCellError(CellError):
-"special warning for ignored values"
+    "special warning for ignored values"
     def __init__(self, values, cell):
         type = "IGNORE"
         super().__init__(values, type, cell)
