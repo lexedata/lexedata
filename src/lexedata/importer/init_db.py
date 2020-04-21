@@ -2,29 +2,26 @@
 from pathlib import Path
 
 from sqlalchemy import or_, and_
-from csv import DictReader
+import openpyxl as op
 
-from lexedata.importer.objects import Language, Concept, Form, FormToConcept, Cognate, CogSet, CognateJudgement\
+from lexedata.importer.objects import Language, Concept, Form, FormToConcept, Cognate, CogSet, CognateJudgement, \
     DatabaseObjectWithUniqueStringID, create_db_session
+from lexedata.importer.database import LEXICAL_ORIGIN, COGNATE_ORIGIN, DATABASE_ORIGIN
+from lexedata.importer.cellparser import CellParser, CogCellParser
 from lexedata.importer.exceptions import *
 
-DIR_DATABASE = Path.cwd().parent.parent.parent / "lexicaldata" / "database"
-LEXICAL_ORIGIN = DIR_DATABASE / "TG_comparative_lexical_online_MASTER.xlsx"
-COGNATE_ORIGIN = DIR_DATABASE / "TG_cognates_online_MASTER.xlsx"
 
-
-def create_db(location=DIR_DATABASE, lexical=LEXICAL_ORIGIN, cogset_file=COGNATE_ORIGIN, echo=False):
+def create_db(db_path=DATABASE_ORIGIN, lexical=LEXICAL_ORIGIN, cogset_file=COGNATE_ORIGIN, echo=False):
     # check for existing resources and database
     if not lexical.exists():
         print("Necessary data not found: {}".format(lexical))
         print("exit")
         exit()
-    if not cogset.exists():
+    if not cogset_file.exists():
         print("Necessary data not found: {}".format(cogset))
         print("exit")
         exit()
 
-    db_path = location / "lexedata.db"
     if db_path.exists():
         answer = input("Do you want do delete the existing data base?y/n?")
         if answer == "y":
@@ -33,9 +30,7 @@ def create_db(location=DIR_DATABASE, lexical=LEXICAL_ORIGIN, cogset_file=COGNATE
             print("exit")
             exit()
 
-    # create db path for sql module
-    db_path = "sqlite:///" + str(db_path)
-    db_path = db_path.replace("\\", "\\\\")  # can this cause problems on IOS?
+
     session = create_db_session(location=db_path, echo=echo)
 
     # add languages
@@ -76,7 +71,7 @@ def create_db(location=DIR_DATABASE, lexical=LEXICAL_ORIGIN, cogset_file=COGNATE
                     continue
     except KeyError: # end of excel sheet
         pass
-    print("--- Congnate sets and cognate judgement successfully inserted ---")
+    print("--- Cognate sets and cognate judgement successfully inserted ---")
     session.close()
 
 
@@ -97,22 +92,25 @@ def insert_languages(session, source=LEXICAL_ORIGIN, return_dictionary=True):
             session.add(language)
             if return_dictionary:
                 # add language id to lan dict:
-                lan_dict[language[0].column_letter] = l.id
+                lan_dict[language_cell[0].column_letter] = language.id
     session.commit()
     if return_dictionary:
         return lan_dict
 
 
 def insert_concepts(session, my_concept):
-    exists = session.query(Concept).filter(Concept.id == my_concept.id)
-    if exists is not None:
-        raise AlreadyExistsError(my_concept)
-    session.add(my_concept)
-    session.commit()
+    try:
+        exists = session.query(Concept).filter(Concept.id == my_concept.id).scalar()
+        if exists is not None:
+            raise AlreadyExistsError(my_concept)
+        session.add(my_concept)
+        session.commit()
+    except AlreadyExistsError as err:
+        print(err)
 
 
 def insert_congsets(session, my_cogset):
-    exists = session.query(CogSet).filter(CogSet.id == my_cogset.id)
+    exists = session.query(CogSet).filter(CogSet.id == my_cogset.id).scalar()
     if exists is not None:
         raise AlreadyExistsError(my_cogset)
     session.add(my_cogset)
@@ -141,20 +139,20 @@ def insert_forms_and_forms_to_concepts(session, form):
         session.add(form_to_concept)
     else:
         existing_form = already_existing
-        existing_variants = existing_form.Variants.split(";")
-        new_variants = form.Variants.split(";")
+        existing_variants = existing_form.variants.split(";")
+        new_variants = form.variants.split(";")
         if set(new_variants) - set(existing_variants):
             print(
                 "Variants {:} of form {:} were not mentioned earlier. Adding them to the form nonetheless".format(
                     set(new_variants) - set(existing_variants),
                     form))
-            form.Variants = ";".join(set(new_variants) | set(existing_variants))
+            form.variants = ";".join(set(new_variants) | set(existing_variants))
         if set(existing_variants) - set(new_variants):
             print(set(existing_variants) - set(new_variants))
             # print("{:}: Variants {:} of form {:} were not mentioned here.".format(
             #        set(existing_variants) - set(new_variants), existing_form))
         # link form_to_concept element to existing form
-        form_to_concept.Form_ID = existing_form.ID
+        form_to_concept.form_id = existing_form.id
 
     session.add(form_to_concept)
 
@@ -176,7 +174,7 @@ def query_forms_to_cognate(cog, session, myfilters):
         return one_transcription
 
     # match for the source
-    one_transcription_source = myquery.filter(Form.Source == cog.Source)
+    one_transcription_source = myquery.filter(Form.source == cog.source)
     one_transcription_source = one_transcription_source.all()
 
     # if just one match with source, exit here; if no match with source, return without source
@@ -194,6 +192,7 @@ def query_forms_to_cognate(cog, session, myfilters):
         return one_transcription
     else:
         return myquery
+
 
 def insert_cognates(session, cog):
     # create dict with not empty attributes
@@ -233,7 +232,7 @@ def compare_cognates(cog, form, myfilters):
     elif len(form) > 1:
         raise MultipleMatchError(cog, form)
 
-    elif cog.Source != form[0].Source:
+    elif cog.source != form[0].source:
         raise NoSourceMatchError(cog, form)
 
     elif not all(getattr(form[0], attribute) == getattr(cog, attribute) for attribute in myfilters):
@@ -258,12 +257,12 @@ def yield_cognates(row, cogset, lan_dict):
 
             # get corresponding language_id to column
             this_lan_id = lan_dict[f_cell.column_letter]
-            for f_ele in CellParser(f_cell):
+            for f_ele in CogCellParser(f_cell):
                 yield Cognate.from_excel(f_ele, this_lan_id, f_cell, cogset)
 
 
 def test():
-    db_path = DIR_DATABASE / "lexedata.db"
+    db_path = DIR_DATA / "lexedata.db"
     db_path = "sqlite:///" + str(db_path)
     db_path = db_path.replace("\\", "\\\\")  # can this cause problems on IOS?
     session = create_db_session(location=db_path, echo=False)
