@@ -9,8 +9,8 @@ class Error(Exception):
 class AlreadyExistsError(Error):
 
     def __init__(self, element, value):
-        message = """The value {} of element {} already exists in the table {}
-         of the database""".format(element, value,element. __tablename__)
+        message = """The Element {} already exists in the table {}
+         of the database""".format(element, element. __tablename__)
         self.message = message
         super().__init__(message)
 
