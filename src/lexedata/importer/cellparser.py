@@ -251,6 +251,10 @@ class CellParser():
         try:
             ele = next(self._elements)
             ele = CellParser.parsecell(ele, self.coordinate)
+            # check core values not empty
+            phonemic, phonetic, ortho = ele[0], ele[1], ele[2]
+            if phonemic == phonetic == ortho == "":
+                raise CellParsingError("empty values ''", self.coordinate)
             return ele
 
         except CellParsingError as err:
