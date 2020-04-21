@@ -5,18 +5,22 @@
 True
 
 """
-
+import os
 import re
 import attr
-import unidecode as uni
 from pathlib import Path
+
+import unidecode as uni
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import sessionmaker
 
 
-import os
-
+# global paths
+DIR_DATA = Path.cwd().parent.parent.parent / "lexicaldata" / "database"
+DATABASE_ORIGIN = DIR_DATA / "lexedata.db"
+LEXICAL_ORIGIN = DIR_DATA / "TG_comparative_lexical_online_MASTER.xlsx"
+COGNATE_ORIGIN = DIR_DATA / "TG_cognates_online_MASTER.xlsx"
 
 @declarative_base
 class Base(object):
@@ -118,43 +122,32 @@ class DatabaseObjectWithUniqueStringID(Base):
         return candidate
 
 
-def create_db_session(location='sqlite:///:memory:', echo=True):
-    # FIXME: Give this a parameter to decide whether or not an existing DB should be overwritten
-    try:
-        os.remove("cldf.sqlite")
-    except FileNotFoundError:
-        pass
-    dir_path = Path.cwd() / "initial_data"
-    if not dir_path.exists():
-        print("Initialize fromexcel.py first")
-        exit()
-    engine = sa.create_engine(location, echo=echo) # Create an SQLite database in this directory
-    # use `echo=True` to see the SQL stamenets echoed
+def create_db_session(location=DATABASE_ORIGIN, echo=True, in_memory=False):
+    "only use to create database. Use connect_db to connect to existing database"
+    if in_memory:
+        location = "sqlite:///:memory:"
 
+    # create db path for sql module, and escape \ for windows
+    location = "sqlite:///" + str(location)
+    location = location.replace("\\", "\\\\")  # can this cause problems on IOS?
+    # Create an SQLite database in this directory. Use `echo=True` to see the SQL statements echoed
+    engine = sa.create_engine(location, echo=echo)
+    # bind to session
     session = sessionmaker(bind=engine)()
+    # this part is only for creation
+    # bind session to object and create tables
     DatabaseObjectWithUniqueStringID.session = session
     DatabaseObjectWithUniqueStringID.metadata.create_all(engine, checkfirst=True)
-    #session.commit()
     return session
 
 
-def connect_engine():
-    dir_path = Path.cwd() / "initial_data"
-    db_path = dir_path / "lexedata.db"
-    if not db_path.exists():
-        print("Initialize_db first")
-        exit()
-    db_path = "sqlite:///" + str(db_path)
-    db_path = db_path.replace("\\", "\\\\")
-
-    # create database
-    engine = sa.create_engine(db_path, echo=False)  # Create an SQLite database in this directory
-    # use `echo=True` to see the SQL stamenets echoed
-    return engine
-
-def connect_session():
-
-    engine = connect_engine()
+def connect_db(location=DATABASE_ORIGIN, echo=False):
+    "connects to existing database at location and returns session"
+    # path to db
+    location = "sqlite:///" + str(location)
+    location = location.replace("\\", "\\\\")
+    # create engine and connect session
+    engine = sa.create_engine(location, echo=echo)
     session = sessionmaker(bind=engine)()
     return session
 
