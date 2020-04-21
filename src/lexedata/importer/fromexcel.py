@@ -6,18 +6,16 @@ from lexedata.importer.objects import *
 from lexedata.importer.cellparser import *
 
 
-
-def init_lan(dir_path, lan_iter, lan_dict):
-    header_languages = ["id", "Name", "Curator", "Comment", "iso639p3", "Excel_name"]
-    with (dir_path / "lan_init.csv").open("w", encoding="utf8", newline="") as lanout:
-        lancsv = csv.DictWriter(lanout, header_languages, extrasaction="ignore", quotechar='"',
-                                quoting=csv.QUOTE_MINIMAL)
-        lancsv.writeheader()
-        for lan_col in lan_iter:
-            # iterate over language columns
-            lan_cell = Language.from_column(lan_col)
-            lan_dict[lan_cell.excel_name] = lan_cell.id
-            lancsv.writerow(lan_cell)
+def init_lan(dir_path, iter_lan, lan_dict):
+    # create iterator over excel cells
+    with (dir_path / "language_init.csv").open("w", encoding="utf8", newline="") as lanout:
+        for language in iter_lan:
+            if language[0].value is None:
+                continue
+            else:
+                l = Language.from_column(language)
+                lan_dict[language[0].column] = l.id
+                lanout.write(l)
 
 
 def init_con_form(dir_path, con_iter, form_iter, lan_dict, wb):
@@ -62,7 +60,7 @@ def initialize_lexical(dir_path, lan_dict,
     wb = op.load_workbook(filename=file)
     sheets = wb.sheetnames
     wb = wb[sheets[0]]
-    iter_forms = wb.iter_rows(min_row=3, min_col=7, max_col=44)  # iterates over rows with forms
+    iter_forms = wb.iter_rows(min_row=3, min_col=7)  # iterates over rows with forms
     iter_concept = wb.iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
     iter_lan = wb.iter_cols(min_row=1, max_row=2, min_col=7, max_col=44)
 
@@ -85,7 +83,7 @@ def cogset_cognate(cogset_iter, cog_iter, lan_dict, wb, cogsetcsv, cogcsv):
                     this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
 
                     for f_ele in CogCellParser(f_cell):
-                        cog = CognateJudgement.from_excel(f_ele, this_lan_id, f_cell, cogset)
+                        cog = Cognate.from_excel(f_ele, this_lan_id, f_cell, cogset)
                         cogcsv.writerow(cog)
         # line not to be processed
         else:
@@ -94,7 +92,7 @@ def cogset_cognate(cogset_iter, cog_iter, lan_dict, wb, cogsetcsv, cogcsv):
 
 def initialize_cognate(dir_path, lan_dict,
                  file=r"C:\Users\walter.fuchs\Desktop\outofasia\stuff\TG_cognates_online_MASTER.xlsx"):
-    wb = op.load_workbook(filename=file)
+
     cogout = (dir_path / "cog_init.csv").open("w", encoding="utf8", newline="")
     cogsetout = (dir_path / "cogset_init.csv").open("w", encoding="utf8", newline="")
 
@@ -109,7 +107,7 @@ def initialize_cognate(dir_path, lan_dict,
     cogsetcsv = csv.DictWriter(cogsetout, header_cogset, extrasaction="ignore", quotechar='"',
                                quoting = csv.QUOTE_MINIMAL)
     cogsetcsv.writeheader()
-
+    wb = op.load_workbook(filename=file)
     try:
         for sheet in wb.sheetnames:
             print(sheet+"\n\n")
