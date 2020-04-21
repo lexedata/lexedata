@@ -84,6 +84,7 @@ class Form(DatabaseObjectWithUniqueStringID):
 
     language_ids = sa.orm.relationship("Language", back_populates="forms")
     toconcepts = sa.orm.relationship("FormToConcept", back_populates="fromforms")
+    judgments = sa.orm.relationship("CognateJudgement", back_populates="forms")
 
     __form_id_counter = defaultdict(int)
 
@@ -190,6 +191,8 @@ class CogSet(DatabaseObjectWithUniqueStringID):
     set = sa.Column(sa.String, name="Set")
     description = sa.Column(sa.String, name="cldf_description") # meaning comment of excel sheet
 
+    judgments = sa.orm.relationship("CognateJudgement", back_populates="cogsets")
+
     @classmethod
     def from_excel(cls, cog_row):
         values = [cell.value or "" for cell in cog_row]
@@ -200,15 +203,18 @@ class CognateJudgement(DatabaseObjectWithUniqueStringID):
     __tablename__ = 'CognateTable'
 
     id = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    cogset_id = sa.Column(sa.String, name="cldf_cognatesetReference")
-    form_id = sa.Column(sa.String, name="cldf_formReference")
+    cogset_id = sa.Column(sa.String, sa.ForeignKey('CognatesetTable.cldf_id'), name="cldf_cognatesetReference")
+    form_id = sa.Column(sa.String, sa.ForeignKey('FormTable.cldf_id'), name="cldf_formReference")
     cognate_comment = sa.Column(sa.String, name="cognate_comment")
     procedural_comment = sa.Column(sa.String, name="comment")
+
+    cogsets = sa.orm.relationship("CogSet", back_populates="judgements")
+    forms = sa.orm.relationship("Form", back_populates="judgements")
 
     @classmethod
     def from_cognate_and_form(cls, cognate, form):
         id = cognate.id + "_" + form.id
-        return cls(id=id, cogset_id=cognate.cog_set_id, form_id=form.id, 
+        return cls(id=id, cogset_id=cognate.cog_set_id, form_id=form.id,
                    cognate_comment=cognate.cognate_comment, procedural_comment=cognate.procedural_comment)
 
 
@@ -218,7 +224,6 @@ class Cognate:
     id = attr.ib()
     language_id = attr.ib()
     cog_set_id = attr.ib()
-    form_id = attr.ib()
     cognate_comment = attr.ib()
     phonemic = attr.ib()
     phonetic = attr.ib()
@@ -237,12 +242,11 @@ class Cognate:
     def from_excel(cls, f_ele, lan_id, cog_cell, cogset):
 
         phonemic, phonetic, ortho, comment, source, variants = f_ele
-        cogset_id = cogset.ID
+        cogset_id = cogset.id
         id = cls.create_id(cogset_id)
-        form_id = ""
         pro_com = comment_getter(cog_cell)
         source = lan_id + ("{1}" if source == "" else source).strip()
-        return cls(id=id, language_id=lan_id, cog_set_id=cogset_id, form_id=form_id, cognate_comment=comment,
+        return cls(id=id, cog_set_id=cogset_id, cognate_comment=comment,
                    phonemic=phonemic, phonetic=phonetic, orthographic=ortho, source=source, procedural_comment=pro_com)
 
 
