@@ -5,7 +5,6 @@
 True
 
 """
-import os
 import re
 import attr
 from pathlib import Path
@@ -95,6 +94,7 @@ class DatabaseObjectWithUniqueStringID(Base):
             "_", uni.unidecode(
                 invalid_id_elements.sub("_", string)).lower()).strip("_")
 
+    # TODO: register_new_id should just query candidate and raise int if already in db, not create ids
     @classmethod
     def register_new_id(cl, string):
         """Turn the current string into a unique id
@@ -135,8 +135,8 @@ def create_db_session(location=DATABASE_ORIGIN, echo=True, in_memory=False):
     # bind to session
     session = sessionmaker(bind=engine)()
     # this part is only for creation
-    # bind session to object and create tables
     DatabaseObjectWithUniqueStringID.session = session
+    # bind session to object and create tables
     DatabaseObjectWithUniqueStringID.metadata.create_all(engine, checkfirst=True)
     return session
 
