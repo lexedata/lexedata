@@ -284,6 +284,6 @@ def show_empty_forms():
 
 
 if __name__ == "__main__":
-    #create_db()
-    test()
+    create_db()
+
 
