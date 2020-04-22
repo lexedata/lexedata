@@ -2,7 +2,7 @@ import re
 import attr
 from collections import defaultdict
 import unidecode as uni
-from lexedata.importer.database import DatabaseObjectWithUniqueStringID, sa
+from lexedata.importer.database import DatabaseObjectWithUniqueStringID, sa, create_db_session
 from lexedata.importer.exceptions import *
 # lambda function for getting comment of excel cell if comment given
 comment_getter = lambda x: x.comment.content if x.comment else ""
@@ -45,7 +45,6 @@ class Language(DatabaseObjectWithUniqueStringID):
         return string
 
 
-
 #what is this?
 from pycldf.db import BIBTEX_FIELDS
 
@@ -83,8 +82,10 @@ class Form(DatabaseObjectWithUniqueStringID):
     procedural_comment_concept = attr.ib()
 
     language_ids = sa.orm.relationship("Language", back_populates="forms")
-    toconcepts = sa.orm.relationship("FormToConcept", back_populates="fromforms")
-    judgments = sa.orm.relationship("CognateJudgement", back_populates="forms")
+    # toconcepts may contain various FormToConcept
+    toconcepts = sa.orm.relationship("FormToConcept", back_populates="form")
+    # judgements may contain various CognateJudgement
+    judgments = sa.orm.relationship("CognateJudgement", back_populates="form")
 
     __form_id_counter = defaultdict(int)
 
@@ -99,7 +100,6 @@ class Form(DatabaseObjectWithUniqueStringID):
     def create_form(cls, f_ele, lan_id, form_cell, concept):
 
         phonemic, phonetic, ortho, comment, source, variants = f_ele
-
         form_id = cls.id_creator(lan_id, concept.id)
         # replace source if not given
         source_id = lan_id + ("{1}" if source == "" else source).strip()
@@ -126,8 +126,9 @@ class Concept(DatabaseObjectWithUniqueStringID):
     portuguese = sa.Column(sa.String, name="Portuguese")
     french = sa.Column(sa.String, name="French")
     concept_comment = attr.ib()
+    # toform may contain various FormToConcept
+    toform = sa.orm.relationship("FormToConcept", uselist=False, back_populates="concept")
 
-    toforms = sa.orm.relationship("FormToConcept", back_populates="fromconcepts")
 
     @classmethod
     def from_default_excel(cls, conceptrow):
@@ -171,14 +172,16 @@ class FormToConcept(DatabaseObjectWithUniqueStringID):
     form_comment = sa.Column(sa.String, name="cldf_??")
     procedural_comment = sa.Column(sa.String, name="cldf_???")
     procedural_comment_concept = sa.Column(sa.String, name="cldf_????")
+    # relations to one Form and one Concept
+    concept = sa.orm.relationship("Concept", back_populates="toform")
+    form = sa.orm.relationship("Form", back_populates="toconcepts")
 
-    fromconcepts = sa.orm.relationship("Concept", back_populates="toforms")
-    fromforms = sa.orm.relationship("Form", back_populates="toconcepts")
+
 
 
     @classmethod
     def from_form(cls, form):
-        myid = form.ID + "c"
+        myid = form.id + "c"
         return cls(id=myid, form_id=form.id, concept_id=form.concept_id,
                    form_comment=form.form_comment, procedural_comment=form.procedural_comment,
                    procedural_comment_concept=form.procedural_comment_concept)
@@ -190,8 +193,8 @@ class CogSet(DatabaseObjectWithUniqueStringID):
     id = sa.Column(sa.String, name="cldf_id", primary_key=True)
     set = sa.Column(sa.String, name="Set")
     description = sa.Column(sa.String, name="cldf_description") # meaning comment of excel sheet
-
-    judgments = sa.orm.relationship("CognateJudgement", back_populates="cogsets")
+    # judgements may contain various CognateJudgement
+    judgments = sa.orm.relationship("CognateJudgement", back_populates="cogset")
 
     @classmethod
     def from_excel(cls, cog_row):
@@ -207,9 +210,9 @@ class CognateJudgement(DatabaseObjectWithUniqueStringID):
     form_id = sa.Column(sa.String, sa.ForeignKey('FormTable.cldf_id'), name="cldf_formReference")
     cognate_comment = sa.Column(sa.String, name="cognate_comment")
     procedural_comment = sa.Column(sa.String, name="comment")
-
-    cogsets = sa.orm.relationship("CogSet", back_populates="judgements")
-    forms = sa.orm.relationship("Form", back_populates="judgements")
+    # relations to one Cogset and one form
+    cogset = sa.orm.relationship("CogSet", back_populates="judgements")
+    form = sa.orm.relationship("Form", back_populates="judgements")
 
     @classmethod
     def from_cognate_and_form(cls, cognate, form):
