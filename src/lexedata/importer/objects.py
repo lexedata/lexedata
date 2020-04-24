@@ -1,9 +1,13 @@
 import re
 import attr
 from collections import defaultdict
+
 import unidecode as uni
+from pycldf.db import BIBTEX_FIELDS
+
 from lexedata.importer.database import DatabaseObjectWithUniqueStringID, sa, create_db_session
 from lexedata.importer.exceptions import *
+
 # lambda function for getting comment of excel cell if comment given
 comment_getter = lambda x: x.comment.content if x.comment else ""
 #functions for bracket checking
@@ -21,8 +25,9 @@ class Language(DatabaseObjectWithUniqueStringID):
     comment = sa.Column(sa.String, name="cldf_comment")
     iso639p3 = sa.Column(sa.String, name="cldf_iso639p3code")
     excel_name = attr.ib()
-
-    forms = sa.orm.relationship("Form", back_populates="language_ids")
+    # contains all forms and judgements of this language
+    forms = sa.orm.relationship("Form", back_populates="language")
+    judgements = sa.orm.relationship("CognateJudgement", back_populates="language")
 
     @classmethod
     def from_column(k, column):
@@ -43,10 +48,6 @@ class Language(DatabaseObjectWithUniqueStringID):
         k._languagedict[string] += 1
         string += str(k._languagedict[string])
         return string
-
-
-#what is this?
-from pycldf.db import BIBTEX_FIELDS
 
 
 class Source(DatabaseObjectWithUniqueStringID):
@@ -81,11 +82,11 @@ class Form(DatabaseObjectWithUniqueStringID):
     procedural_comment = attr.ib()
     procedural_comment_concept = attr.ib()
 
-    language_ids = sa.orm.relationship("Language", back_populates="forms")
+    language = sa.orm.relationship("Language", back_populates="forms")
     # toconcepts may contain various FormToConcept
     toconcepts = sa.orm.relationship("FormToConcept", back_populates="form")
     # judgements may contain various CognateJudgement
-    judgments = sa.orm.relationship("CognateJudgement", back_populates="form")
+    judgements = sa.orm.relationship("CognateJudgement", back_populates="form")
 
     __form_id_counter = defaultdict(int)
 
@@ -194,7 +195,7 @@ class CogSet(DatabaseObjectWithUniqueStringID):
     set = sa.Column(sa.String, name="Set")
     description = sa.Column(sa.String, name="cldf_description") # meaning comment of excel sheet
     # judgements may contain various CognateJudgement
-    judgments = sa.orm.relationship("CognateJudgement", back_populates="cogset")
+    judgements = sa.orm.relationship("CognateJudgement", back_populates="cogset")
 
     @classmethod
     def from_excel(cls, cog_row):
@@ -208,16 +209,18 @@ class CognateJudgement(DatabaseObjectWithUniqueStringID):
     id = sa.Column(sa.String, name="cldf_id", primary_key=True)
     cogset_id = sa.Column(sa.String, sa.ForeignKey('CognatesetTable.cldf_id'), name="cldf_cognatesetReference")
     form_id = sa.Column(sa.String, sa.ForeignKey('FormTable.cldf_id'), name="cldf_formReference")
+    language_id = sa.Column(sa.String, sa.ForeignKey('LanguageTable.cldf_id'), name="cldf_languageReference")
     cognate_comment = sa.Column(sa.String, name="cognate_comment")
     procedural_comment = sa.Column(sa.String, name="comment")
-    # relations to one Cogset and one form
+    # relations to one Cogset, one Form, one Language
     cogset = sa.orm.relationship("CogSet", back_populates="judgements")
     form = sa.orm.relationship("Form", back_populates="judgements")
+    language = sa.orm.relationship("Language", back_populates="judgements")
 
     @classmethod
     def from_cognate_and_form(cls, cognate, form):
         id = cognate.id + "_" + form.id
-        return cls(id=id, cogset_id=cognate.cog_set_id, form_id=form.id,
+        return cls(id=id, cogset_id=cognate.cog_set_id, form_id=form.id, language_id=cognate.language_id,
                    cognate_comment=cognate.cognate_comment, procedural_comment=cognate.procedural_comment)
 
 
@@ -249,7 +252,7 @@ class Cognate:
         id = cls.create_id(cogset_id)
         pro_com = comment_getter(cog_cell)
         source = lan_id + ("{1}" if source == "" else source).strip()
-        return cls(id=id, cog_set_id=cogset_id, cognate_comment=comment,
+        return cls(id=id, language_id=lan_id, cog_set_id=cogset_id, cognate_comment=comment,
                    phonemic=phonemic, phonetic=phonetic, orthographic=ortho, source=source, procedural_comment=pro_com)
 
 
