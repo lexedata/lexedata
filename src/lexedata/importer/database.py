@@ -134,14 +134,15 @@ def create_db_session(location=DATABASE_ORIGIN, echo=True, in_memory=False):
     engine = sa.create_engine(location, echo=echo)
     # bind to session
     session = sessionmaker(bind=engine)()
-    # this part is only for creation
+    # pass session to object
     DatabaseObjectWithUniqueStringID.session = session
+    # this part is only for creation
     # bind session to object and create tables
     DatabaseObjectWithUniqueStringID.metadata.create_all(engine, checkfirst=True)
     return session
 
 
-def connect_db(location=DATABASE_ORIGIN, echo=False):
+def connect_db(location=DATABASE_ORIGIN, echo=False, read_only=True):
     "connects to existing database at location and returns session"
     # path to db
     location = "sqlite:///" + str(location)
@@ -149,6 +150,8 @@ def connect_db(location=DATABASE_ORIGIN, echo=False):
     # create engine and connect session
     engine = sa.create_engine(location, echo=echo)
     session = sessionmaker(bind=engine)()
+    if not read_only:
+        DatabaseObjectWithUniqueStringID.session = session
     return session
 
 
