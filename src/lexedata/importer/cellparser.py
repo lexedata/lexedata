@@ -293,6 +293,7 @@ class CogCellParser(CellParser):
         self.set_elements(values)
 
 
+
 class Tester():
 
     def __init__(self, string, coordinate="asf"):
@@ -313,7 +314,7 @@ if __name__ == "__main__":
     for ele in [c1, c2, c3, c4, c5]:
         print(ele.value)
         print("is represented as: ")
-        for f in CellParser(ele):
+        for f in CogCellParser(ele):
             print(f)
 
 
