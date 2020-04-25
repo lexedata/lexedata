@@ -24,17 +24,17 @@ class Language(DatabaseObjectWithUniqueStringID):
     curator = sa.Column(sa.String, name="Curator")
     comment = sa.Column(sa.String, name="cldf_comment")
     iso639p3 = sa.Column(sa.String, name="cldf_iso639p3code")
-    excel_name = attr.ib()
+    #excel_name = attr.ib()
     # contains all forms and judgements of this language
     forms = sa.orm.relationship("Form", back_populates="language")
     judgements = sa.orm.relationship("CognateJudgement", back_populates="language")
 
     @classmethod
     def from_column(k, column):
-        excel_name, curator = [cell.value or "" for cell in column]
-        id = k.create_id_from_string(excel_name)
-        name, comment = "", ""
-        return k(id=id, name=name, curator=curator, comment=comment, excel_name=excel_name)
+        name, curator = [cell.value or "" for cell in column]
+        id = k.create_id_from_string(name)
+        comment = ""
+        return k(id=id, name=name, curator=curator, comment=comment)
 
     # id creation encapuslated
     __valid = re.compile(r"\W+")
