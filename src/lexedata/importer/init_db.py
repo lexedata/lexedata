@@ -6,7 +6,7 @@ import openpyxl as op
 
 from lexedata.importer.objects import Language, Concept, Form, FormToConcept, Cognate, CogSet, CognateJudgement, \
     DatabaseObjectWithUniqueStringID, create_db_session
-from lexedata.importer.database import LEXICAL_ORIGIN, COGNATE_ORIGIN, DATABASE_ORIGIN
+from lexedata.importer.database import LEXICAL_ORIGIN, COGNATE_ORIGIN, DATABASE_ORIGIN, connect_db
 from lexedata.importer.cellparser import CellParser, CogCellParser
 from lexedata.importer.exceptions import *
 
@@ -51,9 +51,48 @@ def create_db(db_path=DATABASE_ORIGIN, lexical=LEXICAL_ORIGIN, cogset_file=COGNA
 
     # add cogsets and cognatejudgements
     wb = op.load_workbook(filename=cogset_file)
-    try:
-        for sheet in wb.sheetnames:
-            ws = wb[sheet]
+    for sheet in ['Numbers, Body Parts, Food, Anim', 'Kinship, Colors, Time, Nature', 'Tools, Adj, Adv', 'Verbs']:
+        ws = wb[sheet]
+        for cogset_row, cog_row in zip(ws.iter_rows(min_row=3, max_col=4), ws.iter_rows(min_row=3, min_col=5)):
+            # ignore empty rows
+            if not cogset_row[1].value:
+                continue
+            if cogset_row[1].value.isupper():
+                cogset = CogSet.from_excel(cogset_row)
+                insert_congsets(session, cogset)
+
+                for cognate in yield_cognates(cog_row, cogset, lan_dict):
+                    # within the insert function the db is queried for forms corresponding forms
+                    # the actually inserted element links form, cognatejudgement and cogset
+                    insert_cognates(session, cognate)
+            # line not to be processed
+            else:
+                continue
+    print("--- Cognate sets and cognate judgement successfully inserted ---")
+    session.close()
+
+
+def my_error(cogset_file=COGNATE_ORIGIN):
+    wb = op.load_workbook(filename=LEXICAL_ORIGIN)
+    sheets = wb.sheetnames
+    wb = wb[sheets[0]]
+    language_iter = wb.iter_cols(min_row=1, max_row=2, min_col=7)
+    lan_dict = dict()
+    for language_cell in language_iter:
+        if language_cell[0].value is None:
+            continue
+        else:
+            language = Language.from_column(language_cell)
+            lan_dict[language_cell[0].column_letter] = language.id
+    session = connect_db(read_only=False)
+    session.query(CogSet).delete()
+    session.query(CognateJudgement).delete()
+    session.commit()
+    # add cogsets and cognatejudgements
+    wb = op.load_workbook(filename=cogset_file)
+    for sheet in ['Numbers, Body Parts, Food, Anim', 'Kinship, Colors, Time, Nature', 'Tools, Adj, Adv', 'Verbs']:
+        ws = wb[sheet]
+        try:
             for cogset_row, cog_row in zip(ws.iter_rows(min_row=3, max_col=4), ws.iter_rows(min_row=3, min_col=5)):
                 # ignore empty rows
                 if not cogset_row[1].value:
@@ -62,15 +101,18 @@ def create_db(db_path=DATABASE_ORIGIN, lexical=LEXICAL_ORIGIN, cogset_file=COGNA
                     cogset = CogSet.from_excel(cogset_row)
                     insert_congsets(session, cogset)
 
+
                     for cognate in yield_cognates(cog_row, cogset, lan_dict):
                         # within the insert function the db is queried for forms corresponding forms
                         # the actually inserted element links form, cognatejudgement and cogset
                         insert_cognates(session, cognate)
+
                 # line not to be processed
                 else:
                     continue
-    except KeyError: # end of excel sheet
-        pass
+        except AlreadyExistsError as err:
+            print(err)
+
     print("--- Cognate sets and cognate judgement successfully inserted ---")
     session.close()
 
@@ -213,6 +255,7 @@ def insert_cognates(session, cog):
 
     except MultipleMatchError as err:
         print(err)
+        #
         input()
     except NoSourceMatchError as err:
         print(err)
@@ -254,9 +297,9 @@ def yield_forms(row, concept, lan_dict):
 def yield_cognates(row, cogset, lan_dict):
     for f_cell in row:
         if f_cell.value:
-
             # get corresponding language_id to column
             this_lan_id = lan_dict[f_cell.column_letter]
+
             for f_ele in CogCellParser(f_cell):
                 yield Cognate.from_excel(f_ele, this_lan_id, f_cell, cogset)
 
@@ -283,6 +326,6 @@ def show_empty_forms():
 
 
 if __name__ == "__main__":
-    create_db()
+    my_error()
 
 
