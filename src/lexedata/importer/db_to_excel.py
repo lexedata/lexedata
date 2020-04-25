@@ -1,16 +1,27 @@
 # -*- coding: utf-8 -*-
+from collections import defaultdict, OrderedDict
 
 import openpyxl as op
 
 from lexedata.importer.objects import Form, CogSet, Language
-from lexedata.importer.database import DATABASE_ORIGIN, connect_db
+from lexedata.importer.database import DATABASE_ORIGIN, connect_db, DIR_DATA
 from lexedata.importer.exceptions import CellParsingError
 
 WARNING = "\u26A0"
-URL_BASE = ""
+URL_BASE = r"https://myhost.com"
+
+# ----------- Remark: Indices in excel are always 1-based. -----------
 
 
 def create_excel(out, db_path=DATABASE_ORIGIN):
+    """
+    creates excel with:
+        columns: cogset(A) tags(B) languages(C-AN)
+        rows: all cogsets in database
+    :param out: path for created excel
+    :param db_path: path to database
+    :return:
+    """
     wb = op.Workbook()
     ws = wb.active
 
@@ -26,30 +37,74 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
 
     ws.append(tuple(header))
 
+    # iterate over all cogset
     row_index = 2
     for cogset in session.query(CogSet):
-        cogset_cell = ws.Cell(row=row_index, column=1, value=cogset.id)
+
+        # create cell for cogset in column A, add comment to excel cell if given description
+        cogset_cell = ws.cell(row=row_index, column=1, value=cogset.id)
         if cogset.description != "":
-            cogset_cell.comment.text = cogset.description
-        tag_cell = ws.Cell(row=row_index, column=2, value=cogset.set)
+            cogset_cell.comment = op.comments.Comment(cogset.description, "lexicaldata")
+        # create cell for tag in column B
+        tag_cell = ws.cell(row=row_index, column=2, value=cogset.set)
+        # TODO should there be cogsets with no jdugements or is this just a temporal state?
+        if cogset.judgements:
+            row_index = create_formcells_for_cogset(cogset, ws, row_index, lan_dict)
+
+        # just for debugging
+        v = input()
+        if v == "s":
+            break
+    wb.save(filename=out)
 
 
-def render_judgement_for_cogset(cogset, ws, row_index, lan_dict):
+def create_formcells_for_cogset(cogset, ws, row_index, lan_dict):
+    """
+    writes all forms for given cogset to excel
+    modifying row_index to fit maximum of forms given for a language for this cogset
+    returns modified row_index
+    :param cogset:
+    :param ws:
+    :param row_index:
+    :param lan_dict:
+    :return:
+    """
+    # get sorted version of judgements for this cogset, language with maximum of forms first
+    row_dict = defaultdict(list)
     for judgement in cogset.judgements:
-        # TODO check if multiple judgments for a languag for given cogset -> modify row_index
-        pass
+        row_dict[judgement.language_id].append(judgement)
+    ordered_dict = OrderedDict(sorted(row_dict.items(), key=lambda t: len(t[1]), reverse=True))
+    # maximum of rows to be added
+    maximum_cogset = len(ordered_dict[next(iter(ordered_dict.keys()))])
+    for i in range(maximum_cogset):
+        this_row = row_index + i
+        for k, v in list(ordered_dict.items()):
+            this_judgement = v.pop(0)
+            # if it was last form, remove this language from dict
+            if len(v) == 0:
+                del ordered_dict[k]
+            # create cell for this judgement
+            create_formcell(this_judgement, ws, this_row, lan_dict[k])
+    # increase row_index and return
+    row_index += (maximum_cogset-1)
+    return row_index
 
 
-def create_formcell(form, judgement, ws, row, col):
-    cellvalue = form_to_cell_value(form)
-    formcell = ws.Cell(row=row, column=col, value=cellvalue)
-    comment = judgement.procedural_commen
-    formcell.comment.text = comment
+def create_formcell(judgement, ws, row, col):
+    "Creates formcell for judgment in ws at row, col. With Return None"
+    form = judgement.form
+    cell_value = form_to_cell_value(form)
+    form_cell = ws.cell(row=row, column=col, value=cell_value)
+    if judgement.procedural_comment != "":
+        comment = judgement.procedural_comment
+        form_cell.comment = op.comments.Comment(comment, "lexicaldata")
     link = "{}/{}".format(URL_BASE, form.id)
-    formcell.hyperlink(link)
+    print(link)
+    form_cell.hyperlink = link
 
 
 def form_to_cell_value(form):
+    "returns cell value of formcell: best transcription +  all translations"
     transcription = get_best_transcription(form)
     mywarning = ""
     translations = []
@@ -76,9 +131,6 @@ def get_best_transcription(form):
 
 
 if __name__ == "__main__":
-    session = connect_db()
-    for cogset in session.query(CogSet).all():
-        print(cogset)
-        print(cogset.judgements)
-        input()
+    out = DIR_DATA / "output.xlsx"
+    create_excel(out)
 
