@@ -40,7 +40,7 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
     # iterate over all cogset
     row_index = 2
     for cogset in session.query(CogSet):
-
+        print(cogset)
         # create cell for cogset in column A, add comment to excel cell if given description
         cogset_cell = ws.cell(row=row_index, column=1, value=cogset.id)
         if cogset.description != "":
@@ -48,15 +48,14 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
         # create cell for tag in column B
         tag_cell = ws.cell(row=row_index, column=2, value=cogset.set)
         # TODO should there be cogsets with no jdugements or is this just a temporal state?
-        if cogset.judgements:
-            row_index = create_formcells_for_cogset(cogset, ws, row_index, lan_dict)
+        row_index = create_formcells_for_cogset(cogset, ws, row_index, lan_dict)
 
         # just for debugging
         v = input()
         if v == "s":
             break
     wb.save(filename=out)
-
+    session.close()
 
 def create_formcells_for_cogset(cogset, ws, row_index, lan_dict):
     """
@@ -69,6 +68,11 @@ def create_formcells_for_cogset(cogset, ws, row_index, lan_dict):
     :param lan_dict:
     :return:
     """
+    # skip this row, if no judgements given
+    if not cogset.judgements:
+        row_index += 1
+        return row_index
+
     # get sorted version of judgements for this cogset, language with maximum of forms first
     row_dict = defaultdict(list)
     for judgement in cogset.judgements:
@@ -86,7 +90,7 @@ def create_formcells_for_cogset(cogset, ws, row_index, lan_dict):
             # create cell for this judgement
             create_formcell(this_judgement, ws, this_row, lan_dict[k])
     # increase row_index and return
-    row_index += (maximum_cogset-1)
+    row_index += (maximum_cogset)
     return row_index
 
 
@@ -133,4 +137,3 @@ def get_best_transcription(form):
 if __name__ == "__main__":
     out = DIR_DATA / "output.xlsx"
     create_excel(out)
-
