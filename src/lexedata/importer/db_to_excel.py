@@ -2,6 +2,7 @@
 from collections import defaultdict, OrderedDict
 
 import openpyxl as op
+import unidecode as uni
 
 from lexedata.importer.objects import Form, CogSet, Language
 from lexedata.importer.database import DATABASE_ORIGIN, connect_db, DIR_DATA
@@ -102,8 +103,9 @@ def create_formcell(judgement, ws, row, col):
     if judgement.procedural_comment != "":
         comment = judgement.procedural_comment
         form_cell.comment = op.comments.Comment(comment, "lexicaldata")
+    my_formid = uni.unidecode(form.id)  # no illegal characters in URL
     link = "{}/{}".format(URL_BASE, form.id)
-    print(link)
+    print(cell_value)
     form_cell.hyperlink = link
 
 
