@@ -72,7 +72,8 @@ def create_db(db_path=DATABASE_ORIGIN, lexical=LEXICAL_ORIGIN, cogset_file=COGNA
     session.close()
 
 
-def my_error(cogset_file=COGNATE_ORIGIN):
+# just for debugging
+def inspect_cognates(cogset_file=COGNATE_ORIGIN):
     wb = op.load_workbook(filename=LEXICAL_ORIGIN)
     sheets = wb.sheetnames
     wb = wb[sheets[0]]
@@ -84,10 +85,10 @@ def my_error(cogset_file=COGNATE_ORIGIN):
         else:
             language = Language.from_column(language_cell)
             lan_dict[language_cell[0].column_letter] = language.id
-    session = connect_db(read_only=False)
-    session.query(CogSet).delete()
-    session.query(CognateJudgement).delete()
-    session.commit()
+    #session = connect_db(read_only=False)
+    #session.query(CogSet).delete()
+    #session.query(CognateJudgement).delete()
+    #session.commit()
     # add cogsets and cognatejudgements
     wb = op.load_workbook(filename=cogset_file)
     for sheet in ['Numbers, Body Parts, Food, Anim', 'Kinship, Colors, Time, Nature', 'Tools, Adj, Adv', 'Verbs']:
@@ -99,14 +100,15 @@ def my_error(cogset_file=COGNATE_ORIGIN):
                     continue
                 if cogset_row[1].value.isupper():
                     cogset = CogSet.from_excel(cogset_row)
-                    insert_congsets(session, cogset)
+                    #insert_congsets(session, cogset)
 
 
                     for cognate in yield_cognates(cog_row, cogset, lan_dict):
                         # within the insert function the db is queried for forms corresponding forms
                         # the actually inserted element links form, cognatejudgement and cogset
-                        insert_cognates(session, cognate)
-
+                        #insert_cognates(session, cognate)
+                        print(cognate)
+                        input()
                 # line not to be processed
                 else:
                     continue
@@ -114,7 +116,7 @@ def my_error(cogset_file=COGNATE_ORIGIN):
             print(err)
 
     print("--- Cognate sets and cognate judgement successfully inserted ---")
-    session.close()
+    #session.close()
 
 
 def insert_languages(session, source=LEXICAL_ORIGIN, return_dictionary=True):
@@ -206,32 +208,29 @@ def query_forms_to_cognate(cog, session, myfilters):
     myquery = session.query(Form).filter(Form.language_id == cog.language_id)
 
     # select with just one matching transcription, i.e. using or_
-    myquery = myquery.filter(or_(getattr(Form, attribute) == value for attribute, value in myfilters.items()))
+    one_transcription = myquery.filter(or_(getattr(Form, attribute) == value for attribute, value in myfilters.items()))
 
-    one_transcription = myquery.all()
-
-    len_one = len(one_transcription)
+    len_one = one_transcription.scalar()
     # if just one match or no match so far, exit here
     if len_one == 1 or len_one == 0:
-        return one_transcription
+        return one_transcription.all()
 
     # match for the source
-    one_transcription_source = myquery.filter(Form.source == cog.source)
-    one_transcription_source = one_transcription_source.all()
+    one_transcription_source = one_transcription.filter(Form.source == cog.source)
 
     # if just one match with source, exit here; if no match with source, return without source
-    len_source = len(one_transcription_source)
+    len_source = one_transcription_source.scalar()
     if len_source == 1:
-        return one_transcription_source
+        return one_transcription_source.all()
     elif len_source == 0:
-        return one_transcription
+        return one_transcription.all()
 
     # match all given transcriptions
-    myquery = myquery.filter(and_(getattr(Form, attribute) == value for attribute, value in myfilters.items())).all()
+    myquery = one_transcription_source.filter(and_(getattr(Form, attribute) == value for attribute, value in myfilters.items())).all()
 
     # if no exact match, return match with source
     if len(myquery) == 0:
-        return one_transcription
+        return one_transcription_source.all()
     else:
         return myquery
 
@@ -299,8 +298,9 @@ def yield_cognates(row, cogset, lan_dict):
         if f_cell.value:
             # get corresponding language_id to column
             this_lan_id = lan_dict[f_cell.column_letter]
-
+            print(f_cell.value)
             for f_ele in CogCellParser(f_cell):
+                print(f_ele)
                 yield Cognate.from_excel(f_ele, this_lan_id, f_cell, cogset)
 
 
@@ -326,6 +326,6 @@ def show_empty_forms():
 
 
 if __name__ == "__main__":
-    my_error()
+    inspect_cognates()
 
 
