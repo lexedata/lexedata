@@ -157,6 +157,7 @@ class Concept(DatabaseObjectWithUniqueStringID):
         if mymatch:
             mymatch = mymatch.group(1)
             mymatch = mymatch.replace(" ", "")
+            mymatch = uni.unidecode(mymatch)
             Concept._conceptdict[mymatch] += 1
             mymatch += str(Concept._conceptdict[mymatch])
             return mymatch
