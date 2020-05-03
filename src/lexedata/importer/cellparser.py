@@ -11,8 +11,9 @@ comment_bracket = lambda str: str.count("(") == str.count(")")
 
 
 class CellParser():
-    """
-    Iterator class over all form elements contained in a form cell
+    """Iterator class over all form elements contained in a form cell.
+
+    Parse the content of a cell with one or more transcriptions sparated by ';'.
     """
     phonemic_pattern = re.compile(r"""(?:^| # start of the line or
     (.*?(?<=[^&]))) #capture anything before phonemic, phonemic must not follow a &, i.e. & escapes
@@ -36,8 +37,6 @@ class CellParser():
 
     _cleaner = re.compile(r"^(.+)#.+?#(.*)$")  # will clean using re.sub
 
-    def __init__(self, cell):
-
     #pattern for splitting form cell into various form elements
     form_separator = re.compile(r"""
     (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
@@ -47,9 +46,33 @@ class CellParser():
     (?=[</\[])        # Followed by the beginnig of any transcription, but don't consume that bit""",
         re.VERBOSE)
     # pattern for parsing content of cell
-    __cell_value_pattern = re.compile(r"^(/.+?/)?\s?(\[.+?\])?\s?(<.+?>)?\s?(\(.+\))?\s?(\{.+\})?$")
+    cell_value_pattern = re.compile(r"""
+    ^                 # Start of the form
+    (/.+?/)?          # A /phonetic/ transcription
+    \s*               # optional whitespace
+    (\[.+?\])?        # a [phonetic] transcription
+    \s*               # optional whitespace
+    (<.+?>)?          # an <orthographic> transcription
+    \s*               # optional whitespace
+    (\(.+\))?         # A (comment), most likely a translation
+    \s*               # optional whitespace
+    (\{.+\})?         # {source}, assumed to be language-specific
+    $                 # End string
+    """)
+    __special_pattern = [re.compile(e) for e in [r"^.*(/.+/).*$",
+                                                r"^.*(\[.+?\]).*$",
+                                                r"^.*(<.+?>).*$",
+                                                r"^.*(\(.+\)).*$",
+                                                r"^.*(\{.+?\}).*$"]
+                       ]
 
-    def parse(self, cell):
+    def __init__(self):
+        pass
+
+    def parse(self, cell, on_error: Literal["except", "guess", "ignore"] = "except"):
+        """Parse the entire cell content
+
+        """
         # FIXME: Avoid side-effects to the parser class
         values = cell.value
         self.coordinate = cell.coordinate
@@ -82,6 +105,8 @@ class CellParser():
         ['<jaoca> (apartar-se, separar-se){2}']
         >>> CellParser.separate("<eruguasu> (adj); <eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water){2}; <beyiruubu tuti> (tasty (re: meat with salt, honey, all good things)){2}; <eniacõ> (tasty (re: eggnog with flavoring)){2}; <eracũpũ> (tasty, good re: taste of honey, smell of flowers)){2}; <eribia tuti> (very tasty){2}; <ericute~ecute> (tasty, good (boiled foods)){2}; <eriya sui tuti> (very tasty, re: fermented fruit){2}; <erochĩpu> (good, tasty (re: tembe, pig meat)){2}; <ichẽẽ> (tasty (taste of roasted meat)){2}")[1]
         '<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water){2}'
+        >>> CellParser.separate("<form> (Example; has a semicolon in the comment); <otherform>")
+        ['<form> (Example; has a semicolon in the comment)', '<otherform>']
 
         Returns
         =======
