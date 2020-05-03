@@ -19,7 +19,8 @@ class Source(DatabaseObjectWithUniqueStringID):
     __tablename__ = "SourceTable"
 
 
-# global name space
+# Now, we post-hoc manipulate the Source class, which is now defined, and add
+# all possible BibTeX fields as columns.
 for source_col in ['genre'] + BIBTEX_FIELDS:
     setattr(Source, source_col, sa.Column(sa.String, name=source_col, default=""))
 
