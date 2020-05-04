@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from pathlib import Path
 from collections import defaultdict, OrderedDict
 
+import sqlalchemy
 import openpyxl as op
 import unidecode as uni
 
@@ -14,34 +16,41 @@ URL_BASE = r"https://myhost.com"
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
 
-def create_excel(out, db_session):
-    """
-    creates excel with:
-        columns: cogset(A) tags(B) languages(C-AN)
-        rows: all cogsets in database
-    :param out: path for created excel
-    :param db_path: path to database
-    :return:
+def create_excel(out: Path, db_session: sqlalchemy.orm.session.Session) -> None:
+    """Convert the CLDF behind db_session into an Excel cognate view
+
+    The Excel file has columns "CogSet", "Tags", and then one column per language.
+
+    The rows contain cognate data. If a language has multiple reflexes in the
+    same cognateset, these appear in different cells, one below the other.
+
+    Parameters
+    ==========
+    out: The path of the Excel file to be written.
+    db_session: A SQLAlchemy database session connecting to a standardized CLDF
+        dataset.
+
     """
     wb = op.Workbook()
     ws = wb.active
 
     languages = db_session.query(Language).all()
 
-    header = ["Cogset", "Tags"]
-    # mapping language.id : excel column
+    # Define the columns
+    header = ["CogSet", "Tags"]
     lan_dict = dict()
     for col, lan in enumerate(languages, 3):
+        # Excel indices are 1-based, not zero-based, so 3 is column C, as
+        # intended.
         lan_dict[lan.id] = col
         header.append(lan.name)
 
     ws.append(tuple(header))
 
-    # iterate over all cogset
+    # Iterate over all cognate sets, and prepare the rows.
     row_index = 2
     for cogset in db_session.query(CogSet):
-        print(cogset)
-        # create cell for cogset in column A, add comment to excel cell if given description
+        # Create cell for cogset in column A, add comment to excel cell if given description
         cogset_cell = ws.cell(row=row_index, column=1, value=cogset.id)
         if cogset.description != "":
             cogset_cell.comment = op.comments.Comment(cogset.description, "lexicaldata")
@@ -55,6 +64,7 @@ def create_excel(out, db_session):
         if v == "s":
             break
     wb.save(filename=out)
+
 
 def create_formcells_for_cogset(cogset, ws, row_index, lan_dict):
     """
