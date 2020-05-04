@@ -38,7 +38,7 @@ class CellParser():
 
     _cleaner = re.compile(r"^(.+)#.+?#(.*)$")  # will clean using re.sub
 
-    #pattern for splitting form cell into various form elements
+    # pattern for splitting form cell into various form elements
     form_separator = re.compile(r"""
     (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
     \s*               # Any amount of spaces
@@ -79,14 +79,14 @@ class CellParser():
         self.coordinate = cell.coordinate
         if not values:  # capture None values
             raise CellParsingError(values, self.coordinates)
-        self.set_elements(values)
+        return self.set_elements(values)
 
     def set_elements(self, values):
 
         #remove #
         while self._cleaner.match(values):
             values = self._cleaner.sub(r"\1\2", values)
-        elements = CellParser.separate(values)
+        elements = self.separate(values)
 
         if len(elements) == 0:  # check that not empty
             raise CellParsingError(values, self.coordinate)
@@ -98,8 +98,7 @@ class CellParser():
         self._elements = iter(elements)
         return self
 
-    @classmethod
-    def separate(cl, values):
+    def separate(self, values):
         """Splits the content of a form cell into single form descriptions
 
         >>> CellParser.separate("<jaoca> (apartar-se, separar-se){2}")
@@ -113,9 +112,7 @@ class CellParser():
         =======
         list of form strings
         """
-        while cl._form_separator.match(values):
-            values = cl._form_separator.sub(r"\1&&\2", values)
-        return values.split("&&")
+        return re.split(self.form_separator, values)
 
     @classmethod
     def parsecell(cls, ele, coordinates, cellsize=5):

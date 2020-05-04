@@ -7,7 +7,8 @@ True
 """
 import os
 import re
-import attr
+from typing import Dict
+
 from pathlib import Path
 
 import unidecode as uni
@@ -19,7 +20,7 @@ from sqlalchemy.orm import sessionmaker
 @declarative_base
 class Base(object):
     """Database declarative base class"""
-    pass
+    metadata: Dict
 
 
 invalid_id_elements = re.compile(r"\W+")

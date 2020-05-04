@@ -38,7 +38,10 @@ class ExcelParser:
             language_properties = self.language_from_column(lan_col)
             raw_name = language_properties.pop("raw name")
             id = Language.register_new_id(raw_name)
-            language = Language(ID=id, **language_properties)
+            if not raw_name or not id:
+                print(f"Language {language_properties:} could not be created")
+                continue
+            language = Language(id=id, **language_properties)
             self.session.add(language)
             self.lan_dict[raw_name] = language
 
@@ -107,7 +110,6 @@ class ExcelParser:
 
 
     def initialize_lexical(self):
-
         wb = op.load_workbook(filename=self.lexicon_spreadsheet)
         sheets = wb.sheetnames
         wb = wb[sheets[0]]
