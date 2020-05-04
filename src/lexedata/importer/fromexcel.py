@@ -10,6 +10,7 @@ import lexedata.importer.exceptions as ex
 
 create_db_session()
 
+
 class ExcelParser:
     def language_from_column(self, column):
         excel_name, curator = [cell.value or "" for cell in column]
@@ -56,7 +57,7 @@ class ExcelParser:
                 concept_properties = self.concept_from_row(row_con)
                 concept_id = Concept.register_new_id(concept_properties.pop("gloss"))
                 comment = self.get_cell_comment(row_con[0])
-                concept = Concept(ID=concept_id, comment=comment, **concept_properties)
+                concept = Concept(id=concept_id, comment=comment, **concept_properties)
 
                 for f_cell in row_forms:
                     if f_cell.value:
@@ -72,8 +73,8 @@ class ExcelParser:
                                     if not key in self.ignore_for_match
                                 ]).one_or_none()
                             if form is None:
-                                form_id = Form.register_new_id("{:}_{:}".format(this_lan.ID, concept.ID))
-                                form = Form(ID=form_id, cell=f_cell.coordinate, **form_cell)
+                                form_id = Form.register_new_id("{:}_{:}".format(this_lan.id, concept.id))
+                                form = Form(id=form_id, cell=f_cell.coordinate, **form_cell)
                                 self.session.add(form)
                             else:
                                 for key, value in form_cell.items():
@@ -90,11 +91,10 @@ class ExcelParser:
                             self.session.commit()
 
     def form_from_cell(self, f_ele, lan, form_cell):
-
-        phonemic, phonetic, ortho, comment, source = f_ele
+        phonemic, phonetic, ortho, comment, source, _ = f_ele
 
         # replace source if not given
-        source_id = "{:s}_{:}".format(lan.ID, (source if source else "{1}").strip())
+        source_id = "{:s}_{:}".format(lan.id, (source if source else "{1}").strip())
 
         return {
             "language": lan,
@@ -135,7 +135,7 @@ class ExcelParser:
             elif cogset_row[1].value.isupper():
                 properties = self.cogset_from_row(cogset_row)
                 id = CogSet.register_new_id(properties.pop("ID", ""))
-                cogset = CogSet(ID=id, **properties)
+                cogset = CogSet(id=id, **properties)
 
                 for f_cell in row_forms:
                     if f_cell.value:
@@ -155,13 +155,13 @@ class ExcelParser:
                                 if form is None:
                                     raise ex.CognateCellError(
                                         "Found form {:}:{:} in cognate table that is not in lexicon.".format(
-                                            this_lan.ID, f_ele))
+                                            this_lan.id, f_ele))
                                 judgement = session.query(CognateJudgement).filter(
                                     CognateJudgement.form==form,
                                     CognateJudgement.cognateset==cogset).one_or_none()
                                 if judgement is None:
-                                    id = CognateJudgement.register_new_id(form.ID)
-                                    judgement = CognateJudgement(ID=id, form=form, cognateset=cogset)
+                                    id = CognateJudgement.register_new_id(form.id)
+                                    judgement = CognateJudgement(id=id, form=form, cognateset=cogset)
                                     self.session.add(judgement)
                                 else:
                                     print("Duplicate cognate judgement found in cell {:}. "

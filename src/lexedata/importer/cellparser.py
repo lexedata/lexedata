@@ -12,7 +12,7 @@ comment_bracket = lambda str: str.count("(") == str.count(")")
 
 
 class CellParser():
-    """Iterator class over all form elements contained in a form cell.
+    """class over all form elements contained in a form cell.
 
     Parse the content of a cell with one or more transcriptions sparated by ';'.
     """
@@ -79,10 +79,15 @@ class CellParser():
         self.coordinate = cell.coordinate
         if not values:  # capture None values
             raise CellParsingError(values, self.coordinates)
-        return self.set_elements(values)
+        self.set_elements(values)
+        while True:
+            # Ewwwww. FIXME: This whole class needs an overhaul.
+            try:
+                yield next(self)
+            except StopIteration:
+                break
 
     def set_elements(self, values):
-
         #remove #
         while self._cleaner.match(values):
             values = self._cleaner.sub(r"\1\2", values)
@@ -92,11 +97,10 @@ class CellParser():
             raise CellParsingError(values, self.coordinate)
 
         # clean elements list
-        elements = [e.rstrip(" ").lstrip(" ") for e in elements]  # no tailing white spaces
+        elements = [e.strip() for e in elements]  # no tailing white spaces
         elements[-1] = elements[-1].rstrip("\n").rstrip(",").rstrip(";") # remove possible line break and ending commas
 
         self._elements = iter(elements)
-        return self
 
     def separate(self, values):
         """Splits the content of a form cell into single form descriptions
@@ -121,7 +125,7 @@ class CellParser():
         :return: list of cellsize containing parsed data of form string
         """
         if ele == "...":
-            mymatch = ["No value"] * cellsize
+            mymatch = [None] * cellsize
 
         else:
             mymatch = cls.parse_form(ele, coordinates)
@@ -272,9 +276,6 @@ class CellParser():
         else:
             return string
 
-    def __iter__(self):
-        return self
-
     def __next__(self):
         try:
             ele = next(self._elements)
@@ -304,9 +305,6 @@ class CellParser():
             print(err)
             # input()
             return self.__next__()
-
-    def __iter__(self):
-        return self
 
 
 class CogCellParser(CellParser):
