@@ -66,7 +66,7 @@ class ExcelParser:
 
                         for f_ele in self.cell_parser.parse(f_cell):
                             form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
-                            form = session.query(Form).filter(
+                            form = self.session.query(Form).filter(
                                 Form.language==this_lan,
                                 *[getattr(Form, key)==value
                                     for key, value in form_cell.items()
@@ -146,7 +146,7 @@ class ExcelParser:
                             for f_ele in self.cell_parser.parse(f_cell):
                                 form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
                                 # FIXME: Replace this by [look up existing form, otherwise create form]
-                                form = session.query(Form).filter(
+                                form = self.session.query(Form).filter(
                                     Form.language==this_lan,
                                     *[getattr(Form, key)==value
                                       for key, value in form_cell.items()
@@ -155,8 +155,8 @@ class ExcelParser:
                                 if form is None:
                                     raise ex.CognateCellError(
                                         "Found form {:}:{:} in cognate table that is not in lexicon.".format(
-                                            this_lan.id, f_ele))
-                                judgement = session.query(CognateJudgement).filter(
+                                            this_lan.id, f_ele), f_cell)
+                                judgement = self.session.query(CognateJudgement).filter(
                                     CognateJudgement.form==form,
                                     CognateJudgement.cognateset==cogset).one_or_none()
                                 if judgement is None:
@@ -169,7 +169,7 @@ class ExcelParser:
                         except (ex.CellParsingError, ex.CognateCellError) as e:
                             print("{:s}{:d}:".format(f_cell.column_letter, f_cell.row), e)
                             continue
-                    session.commit()
+                    self.session.commit()
             else:
                 continue
 
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     # The Intermediate Storage, in a in-memory DB
     session = create_db_session(args.db)
 
-    ExcelParser(session).parse()
+    ExcelParser(session, output=args.output, lexicon_spreadsheet=args.lexicon).parse()
     session.commit()
     session.close()
 

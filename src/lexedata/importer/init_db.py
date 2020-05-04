@@ -4,14 +4,13 @@ from pathlib import Path
 from sqlalchemy import or_, and_
 import openpyxl as op
 
-from lexedata.importer.objects import Language, Concept, Form, Cognate, CogSet, CognateJudgement, \
+from lexedata.importer.objects import Language, Concept, Form, CogSet, CognateJudgement, \
     DatabaseObjectWithUniqueStringID, create_db_session
-from lexedata.importer.database import LEXICAL_ORIGIN, COGNATE_ORIGIN, DATABASE_ORIGIN, connect_db
 from lexedata.importer.cellparser import CellParser, CogCellParser
 from lexedata.importer.exceptions import *
 
 
-def create_db(db_path=DATABASE_ORIGIN, lexical=LEXICAL_ORIGIN, cogset_file=COGNATE_ORIGIN, echo=False):
+def create_db(db_path, lexical, cogset_file, echo=False):
     # check for existing resources and database
     if not lexical.exists():
         print("Necessary data not found: {}".format(lexical))
@@ -73,8 +72,8 @@ def create_db(db_path=DATABASE_ORIGIN, lexical=LEXICAL_ORIGIN, cogset_file=COGNA
 
 
 # just for debugging
-def inspect_cognates(cogset_file=COGNATE_ORIGIN):
-    wb = op.load_workbook(filename=LEXICAL_ORIGIN)
+def inspect_cognates(cogset_file):
+    wb = op.load_workbook(filename)
     sheets = wb.sheetnames
     wb = wb[sheets[0]]
     language_iter = wb.iter_cols(min_row=1, max_row=2, min_col=7)
@@ -119,7 +118,7 @@ def inspect_cognates(cogset_file=COGNATE_ORIGIN):
     #session.close()
 
 
-def insert_languages(session, source=LEXICAL_ORIGIN, return_dictionary=True):
+def insert_languages(session, source, return_dictionary=True):
     "Reads languages from excel and inserts into db. optionally return dict: column_letter : language.id"
     # create iterator over excel cells
     wb = op.load_workbook(filename=source)

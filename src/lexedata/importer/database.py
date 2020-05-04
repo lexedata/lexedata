@@ -75,13 +75,13 @@ class DatabaseObjectWithUniqueStringID(Base):
         >>> d.string_to_id("trivial")
         'trivial'
         >>> d.string_to_id("Just 4 non-alphanumerical characters.")
-        'just_4_non_alphanumerical_characters_'
+        'just_4_non_alphanumerical_characters'
         >>> d.string_to_id("Это русский.")
-        'eto_russkii_'
+        'eto_russkii'
         >>> d.string_to_id("该语言有一个音节。")
-        'gai_yu_yan_you_yi_ge_yin_jie__'
+        'gai_yu_yan_you_yi_ge_yin_jie'
         >>> d.string_to_id("この言語には音節があります。")
-        'konoyan_yu_nihayin_jie_gaarimasu_'
+        'konoyan_yu_nihayin_jie_gaarimasu'
 
         """
         # We nee to run this through valid_id_elements twice, because some word
@@ -90,7 +90,6 @@ class DatabaseObjectWithUniqueStringID(Base):
             "_", uni.unidecode(
                 invalid_id_elements.sub("_", string)).lower()).strip("_")
 
-    # TODO: register_new_id should just query candidate and raise int if already in db, not create ids
     @classmethod
     def register_new_id(cl, string):
         """Turn the current string into a unique id
@@ -105,16 +104,16 @@ class DatabaseObjectWithUniqueStringID(Base):
         >>> session.add(Ex(id=Ex.register_new_id("unique")))
         >>> session.add(Ex(id=Ex.register_new_id("unique")))
         >>> list(session.query(Ex))
-        [<Ex(id='unique1')>, <Ex(id='unique2')>]
+        [<Ex(id='unique')>, <Ex(id='unique1')>]
         >>> session.connection().engine.dispose()
 
         """
-        ID = cl.string_to_id(string)
+        id = cl.string_to_id(string)
         i = 0
-        candidate = ID
+        candidate = id
         while cl.session.query(cl.id).filter(cl.id == candidate).one_or_none():
             i += 1
-            candidate = "{:s}{:d}".format(ID, i)
+            candidate = "{:s}{:d}".format(id, i)
         return candidate
 
 

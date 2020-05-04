@@ -105,11 +105,12 @@ class CellParser():
     def separate(self, values):
         """Splits the content of a form cell into single form descriptions
 
-        >>> CellParser.separate("<jaoca> (apartar-se, separar-se){2}")
+        >>> parser = CellParser()
+        >>> parser.separate("<jaoca> (apartar-se, separar-se){2}")
         ['<jaoca> (apartar-se, separar-se){2}']
-        >>> CellParser.separate("<eruguasu> (adj); <eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water){2}; <beyiruubu tuti> (tasty (re: meat with salt, honey, all good things)){2}; <eniacõ> (tasty (re: eggnog with flavoring)){2}; <eracũpũ> (tasty, good re: taste of honey, smell of flowers)){2}; <eribia tuti> (very tasty){2}; <ericute~ecute> (tasty, good (boiled foods)){2}; <eriya sui tuti> (very tasty, re: fermented fruit){2}; <erochĩpu> (good, tasty (re: tembe, pig meat)){2}; <ichẽẽ> (tasty (taste of roasted meat)){2}")[1]
+        >>> parser.separate("<eruguasu> (adj); <eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water){2}; <beyiruubu tuti> (tasty (re: meat with salt, honey, all good things)){2}; <eniacõ> (tasty (re: eggnog with flavoring)){2}; <eracũpũ> (tasty, good re: taste of honey, smell of flowers)){2}; <eribia tuti> (very tasty){2}; <ericute~ecute> (tasty, good (boiled foods)){2}; <eriya sui tuti> (very tasty, re: fermented fruit){2}; <erochĩpu> (good, tasty (re: tembe, pig meat)){2}; <ichẽẽ> (tasty (taste of roasted meat)){2}")[1]
         '<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water){2}'
-        >>> CellParser.separate("<form> (Example; has a semicolon in the comment); <otherform>")
+        >>> parser.separate("<form> (Example; has a semicolon in the comment); <otherform>")
         ['<form> (Example; has a semicolon in the comment)', '<otherform>']
 
         Returns
