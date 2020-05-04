@@ -5,7 +5,7 @@ from collections import defaultdict
 import unidecode as uni
 from pycldf.db import BIBTEX_FIELDS
 
-from lexedata.importer.database import DatabaseObjectWithUniqueStringID, sa, create_db_session
+from lexedata.importer.database import Base, DatabaseObjectWithUniqueStringID, sa, create_db_session
 from lexedata.importer.exceptions import *
 
 # lambda function for getting comment of excel cell if comment given
@@ -29,7 +29,6 @@ class Language(DatabaseObjectWithUniqueStringID):
 
 class Source(DatabaseObjectWithUniqueStringID):
     __tablename__ = "SourceTable"
-    ID = sa.Column(sa.String, name="id", primary_key=True)
 
 
 # global name space
@@ -39,8 +38,7 @@ for source_col in ['genre'] + BIBTEX_FIELDS:
 
 class Form(DatabaseObjectWithUniqueStringID):
     __tablename__ = "FormTable"
-    ID = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    Language_ID = sa.Column(sa.String, sa.ForeignKey(Language.ID), name="cldf_languageReference")
+    Language_ID = sa.Column(sa.String, sa.ForeignKey(Language.id), name="cldf_languageReference")
     # FIXME: Use an actual foreign-key relationship here.
 
     phonemic = sa.Column(sa.String, name="Phonemic_Transcription", index=True)
@@ -127,7 +125,7 @@ class Concept(DatabaseObjectWithUniqueStringID):
 
     def get(self, property, default=None):
         if property == "concept_id":
-            return self.ID
+            return self.id
         elif property == "set":
             return self.set
         elif property == "english":
@@ -146,10 +144,10 @@ class Concept(DatabaseObjectWithUniqueStringID):
 class FormMeaningAssociation(Base):
     __tablename__ = 'FormTable_ParameterTable'
     form = sa.Column('FormTable_cldf_id',
-                     sa.Integer, sa.ForeignKey(Form.ID),
+                     sa.Integer, sa.ForeignKey(Form.id),
                      primary_key=True)
     concept = sa.Column('ParameterTable_cldf_id',
-                        sa.Integer, sa.ForeignKey(Concept.ID),
+                        sa.Integer, sa.ForeignKey(Concept.id),
                         primary_key=True)
     context = sa.Column('context', sa.String, default="Concept_IDs")
 
@@ -224,7 +222,7 @@ class Cognate:
 
 form_sources = sa.Table(
     'FormTable_SourceTable', Base.metadata,
-    sa.Column('FormTable_cldf_id', sa.String, sa.ForeignKey(Form.ID)),
-    sa.Column('SourceTable_id', sa.String, sa.ForeignKey(Source.ID)),
+    sa.Column('FormTable_cldf_id', sa.String, sa.ForeignKey(Form.id)),
+    sa.Column('SourceTable_id', sa.String, sa.ForeignKey(Source.id)),
     sa.Column('context', sa.String),
 )

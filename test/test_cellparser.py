@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 from pathlib import Path
-from unittest import TestCase, TestSuite, TextTestRunner
+from unittest import TestCase, TextTestRunner
 
 import openpyxl as op
 
@@ -10,7 +10,6 @@ from lexedata.importer.objects import Form, Concept
 
 
 class TestCellparser(TestCase):
-
     def setUp(self, file="test_cellparser.xlsx"):
         # set path and check for existing excel test file
         file = Path.cwd() / file
@@ -64,4 +63,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

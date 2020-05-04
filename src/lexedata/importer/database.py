@@ -5,6 +5,7 @@
 True
 
 """
+import os
 import re
 import attr
 from pathlib import Path
@@ -122,7 +123,7 @@ class DatabaseObjectWithUniqueStringID(Base):
         return candidate
 
 
-def create_db_session(location='sqlite:///:memory:'):
+def create_db_session(location='sqlite:///:memory:', echo=False):
     # FIXME: Give this a parameter to decide whether or not an existing DB should be overwritten
     try:
         os.remove("cldf.sqlite")
@@ -133,7 +134,8 @@ def create_db_session(location='sqlite:///:memory:'):
     # use `echo=True` to see the SQL stamenets echoed
 
     # create db path for sql module, and escape \ for windows
-    location = "sqlite:///" + str(location)
+    if not location.startswith("sqlite:///"):
+        location = f"sqlite:///{location:}"
     location = location.replace("\\", "\\\\")  # can this cause problems on IOS?
     # Create an SQLite database in this directory. Use `echo=True` to see the SQL statements echoed
     engine = sa.create_engine(location, echo=echo)

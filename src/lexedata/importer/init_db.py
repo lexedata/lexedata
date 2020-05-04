@@ -4,7 +4,7 @@ from pathlib import Path
 from sqlalchemy import or_, and_
 import openpyxl as op
 
-from lexedata.importer.objects import Language, Concept, Form, FormToConcept, Cognate, CogSet, CognateJudgement, \
+from lexedata.importer.objects import Language, Concept, Form, Cognate, CogSet, CognateJudgement, \
     DatabaseObjectWithUniqueStringID, create_db_session
 from lexedata.importer.database import LEXICAL_ORIGIN, COGNATE_ORIGIN, DATABASE_ORIGIN, connect_db
 from lexedata.importer.cellparser import CellParser, CogCellParser
@@ -170,6 +170,9 @@ def insert_forms_and_forms_to_concepts(session, form):
         or in case of existing form: linking concept and existing form
     :return: None
     """
+
+    #FIXME: FormToConcept got lost in translation
+
     form_to_concept = FormToConcept.from_form(form)
     # check if existing, and if so add variants to variants
     # only when exact match
