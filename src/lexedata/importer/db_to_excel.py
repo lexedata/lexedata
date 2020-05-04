@@ -135,5 +135,10 @@ def get_best_transcription(form):
 
 
 if __name__ == "__main__":
-    out = DIR_DATA / "output.xlsx"
-    create_excel(out)
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Create an Excel cognate view from a CLDF dataset")
+    parser.add_argument("excel", help="Excel output file path")
+    parser.add_argument("sqlite", help="SQlite input")
+    args = parser.parse_args()
+    create_excel(args.excel, create_db_session(args.sqlite))
