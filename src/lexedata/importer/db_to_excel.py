@@ -5,7 +5,7 @@ import openpyxl as op
 import unidecode as uni
 
 from lexedata.importer.objects import Form, CogSet, Language
-from lexedata.importer.database import DATABASE_ORIGIN, connect_db, DIR_DATA
+from lexedata.importer.database import create_db_session
 from lexedata.importer.exceptions import CellParsingError
 
 WARNING = "\u26A0"
@@ -14,7 +14,7 @@ URL_BASE = r"https://myhost.com"
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
 
-def create_excel(out, db_path=DATABASE_ORIGIN):
+def create_excel(out, db_session):
     """
     creates excel with:
         columns: cogset(A) tags(B) languages(C-AN)
@@ -26,8 +26,7 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
     wb = op.Workbook()
     ws = wb.active
 
-    session = connect_db(location=db_path)
-    languages = session.query(Language).all()
+    languages = db_session.query(Language).all()
 
     header = ["Cogset", "Tags"]
     # mapping language.id : excel column
@@ -40,7 +39,7 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
 
     # iterate over all cogset
     row_index = 2
-    for cogset in session.query(CogSet):
+    for cogset in db_session.query(CogSet):
         print(cogset)
         # create cell for cogset in column A, add comment to excel cell if given description
         cogset_cell = ws.cell(row=row_index, column=1, value=cogset.id)
@@ -56,7 +55,6 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
         if v == "s":
             break
     wb.save(filename=out)
-    session.close()
 
 def create_formcells_for_cogset(cogset, ws, row_index, lan_dict):
     """

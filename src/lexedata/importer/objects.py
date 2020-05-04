@@ -5,6 +5,9 @@ from pycldf.db import BIBTEX_FIELDS
 
 from lexedata.importer.database import create_db_session, Base, DatabaseObjectWithUniqueStringID, sa
 
+Base.metadata.clear()
+
+
 class Language(DatabaseObjectWithUniqueStringID):
     """Metadata for a language"""
     __tablename__ = "LanguageTable"
@@ -95,24 +98,42 @@ class CogSet(DatabaseObjectWithUniqueStringID):
 
     id = sa.Column(sa.String, name="cldf_id", primary_key=True)
     set = sa.Column(sa.String, name="Set")
+    properties = sa.Column(sa.String, name="properties")
     description = sa.Column(sa.String, name="cldf_description") # meaning comment of excel sheet
     # judgements may contain various CognateJudgement
     judgements = sa.orm.relationship("CognateJudgement", back_populates="cogset")
 
+    comment = sa.Column(sa.String, name="cldf_comment")
+
+    forms = sa.orm.relationship(
+        Form,
+        secondary='CognateTable',
+        back_populates="cognatesets"
+    )
 
 class CognateJudgement(DatabaseObjectWithUniqueStringID):
     __tablename__ = 'CognateTable'
 
     id = sa.Column(sa.String, name="cldf_id", primary_key=True)
-    cogset_id = sa.Column(sa.String, sa.ForeignKey('CognatesetTable.cldf_id'), name="cldf_cognatesetReference")
+    cogset_id = sa.Column(sa.String, sa.ForeignKey(CogSet.id), name="cldf_languageReference")
     form_id = sa.Column(sa.String, sa.ForeignKey('FormTable.cldf_id'), name="cldf_formReference")
-    language_id = sa.Column(sa.String, sa.ForeignKey('LanguageTable.cldf_id'), name="cldf_languageReference")
     cognate_comment = sa.Column(sa.String, name="cognate_comment")
     procedural_comment = sa.Column(sa.String, name="comment")
     # relations to one Cogset, one Form, one Language
     cogset = sa.orm.relationship("CogSet", back_populates="judgements")
     form = sa.orm.relationship("Form", back_populates="judgements")
-    language = sa.orm.relationship("Language", back_populates="judgements")
+
+    form_id = sa.Column(
+        'cldf_formReference',
+        sa.Integer, sa.ForeignKey(Form.id),
+        primary_key=True)
+    form = sa.orm.relationship(Form)
+    cognateset_id = sa.Column(
+        'cldf_cognatesetReference',
+        sa.Integer, sa.ForeignKey(CogSet.id),
+        primary_key=True)
+    cognateset = sa.orm.relationship(CogSet)
+    comment = sa.Column(sa.String, name="cldf_comment")
 
     @classmethod
     def from_cognate_and_form(cls, cognate, form):
@@ -127,34 +148,3 @@ form_sources = sa.Table(
     sa.Column('SourceTable_id', sa.String, sa.ForeignKey(Source.id)),
     sa.Column('context', sa.String),
 )
-
-class CogSet(DatabaseObjectWithUniqueStringID):
-    """
-    A cognateset, which has an ID, an optional reference form, and an optional comment
-    """
-    __tablename__ = 'CognatesetTable'
-
-    comment = sa.Column(sa.String, name="cldf_comment")
-    properties = sa.Column(sa.String, name="properties")
-
-    forms = sa.orm.relationship(
-        Form,
-        secondary='CognateTable',
-        back_populates="cognatesets"
-    )
-
-class CognateJudgement(DatabaseObjectWithUniqueStringID):
-    __tablename__ = 'CognateTable'
-
-    form_id = sa.Column(
-        'cldf_formReference',
-        sa.Integer, sa.ForeignKey(Form.ID),
-        primary_key=True)
-    form = sa.orm.relationship(Form)
-    cognateset_id = sa.Column(
-        'cldf_cognatesetReference',
-        sa.Integer, sa.ForeignKey(CogSet.ID),
-        primary_key=True)
-    cognateset = sa.orm.relationship(CogSet)
-    comment = sa.Column(sa.String, name="cldf_comment")
-

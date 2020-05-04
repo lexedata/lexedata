@@ -16,12 +16,6 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import sessionmaker
 
 
-# global paths
-DIR_DATA = Path.cwd().parent.parent.parent / "lexicaldata" / "database"
-DATABASE_ORIGIN = DIR_DATA / "lexedata.db"
-LEXICAL_ORIGIN = DIR_DATA / "TG_comparative_lexical_online_MASTER.xlsx"
-COGNATE_ORIGIN = DIR_DATA / "TG_cognates_online_MASTER.xlsx"
-
 @declarative_base
 class Base(object):
     """Database declarative base class"""
@@ -147,20 +141,3 @@ def create_db_session(location='sqlite:///:memory:', echo=False):
     # bind session to object and create tables
     DatabaseObjectWithUniqueStringID.metadata.create_all(engine, checkfirst=True)
     return session
-
-
-def connect_db(location=DATABASE_ORIGIN, echo=False, read_only=True):
-    "connects to existing database at location and returns session"
-    # path to db
-    location = "sqlite:///" + str(location)
-    location = location.replace("\\", "\\\\")
-    # create engine and connect session
-    engine = sa.create_engine(location, echo=echo)
-    session = sessionmaker(bind=engine)()
-    if not read_only:
-        DatabaseObjectWithUniqueStringID.session = session
-    return session
-
-
-
-
