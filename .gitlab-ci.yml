@@ -4,6 +4,7 @@ image: continuumio/miniconda3:latest
 # only cache local items.
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PATH: "C:\\Python27"
 
 cache:
   paths:
