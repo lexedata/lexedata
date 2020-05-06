@@ -113,7 +113,7 @@ class DatabaseObjectWithUniqueStringID(Base):
         candidate = id
         while cl.session.query(cl.id).filter(cl.id == candidate).one_or_none():
             i += 1
-            candidate = "{:s}{:d}".format(id, i)
+            candidate = "{:s}_{:d}".format(id, i)
         return candidate
 
 
