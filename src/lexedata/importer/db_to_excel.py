@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import defaultdict, OrderedDict
+from pathlib import Path
+import re
 
 import openpyxl as op
 import unidecode as uni
@@ -14,6 +16,12 @@ URL_BASE = r"https://myhost.com"
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
 
+def string_cleaner(string):
+    while re.search(r"[^A-z_0-9]", string):
+        string = re.sub(r"[^A-z_0-9]", "", string)
+    return string
+
+
 def create_excel(out, db_path=DATABASE_ORIGIN):
     """
     creates excel with:
@@ -23,6 +31,11 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
     :param db_path: path to database
     :return:
     """
+    # delete existing output file:
+    out = Path(out)
+    if out.exists():
+        out.unlink()
+
     wb = op.Workbook()
     ws = wb.active
 
@@ -41,7 +54,7 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
     # iterate over all cogset
     row_index = 2
     for cogset in session.query(CogSet):
-        print(cogset)
+
         # create cell for cogset in column A, add comment to excel cell if given description
         cogset_cell = ws.cell(row=row_index, column=1, value=cogset.id)
         if cogset.description != "":
@@ -52,11 +65,12 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
         row_index = create_formcells_for_cogset(cogset, ws, row_index, lan_dict)
 
         # just for debugging
-        v = input()
-        if v == "s":
-            break
+        #v = input()
+        #if v == "s":
+        #    break
     wb.save(filename=out)
     session.close()
+
 
 def create_formcells_for_cogset(cogset, ws, row_index, lan_dict):
     """
@@ -91,7 +105,8 @@ def create_formcells_for_cogset(cogset, ws, row_index, lan_dict):
             # create cell for this judgement
             create_formcell(this_judgement, ws, this_row, lan_dict[k])
     # increase row_index and return
-    row_index += (maximum_cogset)
+    row_index += maximum_cogset
+
     return row_index
 
 
@@ -103,9 +118,9 @@ def create_formcell(judgement, ws, row, col):
     if judgement.procedural_comment != "":
         comment = judgement.procedural_comment
         form_cell.comment = op.comments.Comment(comment, "lexicaldata")
-    my_formid = uni.unidecode(form.id)  # no illegal characters in URL
-    link = "{}/{}".format(URL_BASE, form.id)
-    print(cell_value)
+    my_formid = string_cleaner(uni.unidecode(form.id))  # no illegal characters in URL
+    link = "{}/{}".format(URL_BASE, my_formid)
+    print(link)
     form_cell.hyperlink = link
 
 
