@@ -158,6 +158,8 @@ class Concept(DatabaseObjectWithUniqueStringID):
             mymatch = mymatch.group(1)
             mymatch = mymatch.replace(" ", "")
             mymatch = uni.unidecode(mymatch)
+            while re.search(r"\W", mymatch):
+                mymatch = re.sub(r"\W", "", mymatch)
             Concept._conceptdict[mymatch] += 1
             mymatch += str(Concept._conceptdict[mymatch])
             return mymatch
@@ -256,4 +258,9 @@ class Cognate:
         return cls(id=id, language_id=lan_id, cog_set_id=cogset_id, cognate_comment=comment,
                    phonemic=phonemic, phonetic=phonetic, orthographic=ortho, source=source, procedural_comment=pro_com)
 
+    def get(self, property, default=None):
+        for ele in dir(self):
+            if ele == property:
+                return getattr(self, ele)
+        return default
 
