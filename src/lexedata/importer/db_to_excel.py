@@ -2,6 +2,8 @@
 from typing import Dict
 from pathlib import Path
 from collections import defaultdict, OrderedDict
+from pathlib import Path
+import re
 
 import sqlalchemy
 import openpyxl as op
@@ -16,6 +18,10 @@ URL_BASE = r"https://myhost.com"
 
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
+def string_cleaner(string):
+    while re.search(r"[^A-z_0-9]", string):
+        string = re.sub(r"[^A-z_0-9]", "", string)
+    return string
 
 def create_excel(out: Path, db_session: sqlalchemy.orm.session.Session) -> None:
     """Convert the CLDF behind db_session into an Excel cognate view
@@ -57,12 +63,12 @@ def create_excel(out: Path, db_session: sqlalchemy.orm.session.Session) -> None:
     row_index = 2
     for cogset in db_session.query(CogSet):
         # Create cell for cogset in column A
+        # create cell for cogset in column A, add comment to excel cell if given description
         cogset_cell = ws.cell(row=row_index, column=1, value=cogset.id)
         # Transfer the cognateset comment to the Excel cell comment.
         if cogset.description != "":
             cogset_cell.comment = op.comments.Comment(
                 cogset.description, __package__)
-
         # Put the cognateset's tags in column B.
         ws.cell(row=row_index, column=2, value=cogset.set)
 
@@ -112,7 +118,8 @@ def create_formcells_for_cogset(
             # create cell for this judgement
             create_formcell(this_judgement, ws, this_row, lan_dict[k])
     # increase row_index and return
-    row_index += (maximum_cogset)
+    row_index += maximum_cogset
+
     return row_index
 
 
@@ -124,9 +131,9 @@ def create_formcell(judgement, ws, row, col):
     if judgement.procedural_comment != "":
         comment = judgement.procedural_comment
         form_cell.comment = op.comments.Comment(comment, "lexicaldata")
-    my_formid = uni.unidecode(form.id)  # no illegal characters in URL
-    link = "{}/{}".format(URL_BASE, form.id)
-    print(cell_value)
+    my_formid = string_cleaner(uni.unidecode(form.id))  # no illegal characters in URL
+    link = "{}/{}".format(URL_BASE, my_formid)
+    print(link)
     form_cell.hyperlink = link
 
 
