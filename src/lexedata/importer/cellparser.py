@@ -26,25 +26,30 @@ class CellParser():
     # is repeated for phonetic and orthographic
     phonemic_pattern = re.compile(r"""(?:^| # start of the line or
     (.*?(?<=[^&]))) #capture anything before phonemic, phonemic must not follow a &, i.e. & escapes
-    (/.+?/  #first phonemic element, not greedy
-    (?:\s*[~%]\s*/.+?/)*  #non capturing pattern for any repetition of [%~]/..../
+    (/[^/]+? #first phonemic element, not greedy, 
+             # special for phonemic: use [^/] instead of . to ensure correct escaping
+    (?<=[^&])/  # applies only to phonemic: closer must not follow &, otherwise &/a/ texttext &/b/ will render / texttext &/
+    (?:\s*[~%]\s*/[^/]+?/)*  #non capturing pattern for any repetition of [%~]/..../
     )  #capture whole group
     (.*)$ #capture the rest""", re.VERBOSE)
     phonetic_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(\[.+?](?:\s*[~%]\s*\[.+?])*)(.*)$")
     ortho_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(<.+?>(?:\s*[~%]\s*<.+?>)*)(.*)$")
 
     source_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))({.+?})(.*)$")  # just one source per form, must not be empty
-    _comment_pattern = re.compile(r"^(.*?)(\(.+\))(.*)$")  # all in brackets, not greedy
+    _comment_pattern = re.compile(r"^(.*?)(\(.+\))(.*)$")  # all in brackets, greedy
 
     _form_pattern = [(phonemic_pattern, "phonemic"),
                         (phonetic_pattern, "phonetic"),
                         (ortho_pattern, "orthographic"),
                         (source_pattern, "source")]
 
-    _comment_checker = re.compile(r"[^&][</[{].*[>/\]}]")  # for checking with re.search
-    _illegal_chars = re.compile(r"[;=]")  # for checking with re.search
+    _comment_illegal_chars = re.compile(r"[</[{]")  # for checking with re.search
+    # all escaped transcriptions in comment, followed by white space or if not one character and EOL
+    _comment_escapes = re.compile(r"&[</\[{].+?(?:\s|.$)")
+    _transcriptions_illegal_chars = re.compile(r"[;]")  # for checking with re.search
 
-    _cleaner = re.compile(r"^(.+)#.+?#(.*)$")  # will clean using re.sub
+    # will clean everything between ## using re.sub
+    _cleaner = re.compile(r"^(.+)#.+?#(.*)$")
 
     def __init__(self, cell):
         values = cell.value
@@ -111,22 +116,13 @@ class CellParser():
         variants = ",".join(variants)
 
         if phonemic == phonetic == ortho == "":
-            raise FormCellError((phonemic + phonetic + ortho), "Empty Cell", coordinates)
-        # those tests have currently become obsolete
-        #if phonemic != "" and phonemic != "No value":
-            #if not one_bracket("/", "/", phonemic, 2):
-                #raise FormCellError(phonemic, "phonemic", coordinates)
-            # phonemic = phonemic.strip("/")
-
-        #if phonetic != "" and phonetic != "No value":
-            #if not one_bracket("[", "]", phonetic, 1):
-                #raise FormCellError(phonetic, "phonetic", coordinates)
-            # phonetic = phonetic.strip("[").strip("]")
-
-        #if ortho != "" and ortho != "No value":
-            #if not one_bracket("<", ">", ortho, 1):
-                #raise FormCellError(ortho, "orthographic", coordinates)
-            # ortho = ortho.strip("<").strip(">")
+            ele_dummy = (ele + " ")[:-1]
+            while " " in ele_dummy:
+                ele_dummy = ele.replace(" ", "")
+            if not ele_dummy:
+                raise FormCellError((phonemic + phonetic + ortho), "Empty Excel Cell", coordinates)
+            else:
+                raise FormCellError(ele, "Empty Form Cell", coordinates)
 
         if comment != "" and comment != "No value":
             if not comment_bracket(comment):
@@ -138,6 +134,7 @@ class CellParser():
     def parse_form(cls, formele, coordinates):
         """checks if values of cells not in expected order, extract each value"""
         ele = (formele + ".")[:-1] # force python to hard copy string
+        # parse transcriptions and fill dictionary d
         d = {"phonemic": None, "phonetic": None, "orthographic": None, "comment": None, "source": None}
         for pat, lable in cls._form_pattern:
 
@@ -147,27 +144,36 @@ class CellParser():
                 d[lable] = mymatch.group(2)
                 ele = pat.sub(r"\1\3", ele)
 
-        # get all that is left of the string in () and add it to the comment
         mycomment = ""
+        # get all that is left of the string in () and add it to the comment
         while cls._comment_pattern.match(ele):
             comment_candidate = cls._comment_pattern.match(ele).group(2)
-            if not re.search(r"[^&][</\[{]", comment_candidate):
+            # no transcription symbols in comment
+            if not cls._comment_illegal_chars.search(comment_candidate):
                 mycomment += comment_candidate
                 ele = cls._comment_pattern.sub(r"\1\3", ele)
-            else:
-                raise FormCellError(comment_candidate, "comment", coordinates)
+            else:  # check if comment is escaped correctly, if not, raise error
 
-        # check that ele was parsed entirely
-        # add wrong ordered cell to error message of CellParser
-        # raise error
+                # replace escaped elements and check for illegal content, if all good, add original_form
+                escapes = cls._comment_escapes.findall(comment_candidate)
+                original_form = comment_candidate
+                for e in escapes:
+                    comment_candidate = comment_candidate.replace(e, "")
+                if not cls._comment_illegal_chars.search(comment_candidate):
+                    mycomment += original_form
+                    ele = cls._comment_pattern.sub(r"\1\3", ele)
+                else:  # illegal comment
+                    raise FormCellError(comment_candidate, "comment", coordinates)
+
+        # check that ele was parsed entirely, if not raise parsing error
         ele = ele.strip(" ")
         if not ele == "":
             # if just text left and no comment given, put text in comment
             # more than one token
-            if len(ele) >= 1 and (not re.search(r"[<>/\[\]}{]", ele)):
+            if len(ele) >= 1 and (not cls._comment_illegal_chars.search(ele)):
 
                 if not mycomment:
-                    mycomment =  ele
+                    mycomment = ele
                 else:
                     mycomment += ele
 
@@ -216,11 +222,12 @@ class CellParser():
 
     @classmethod
     def variants_separator(cls, variants_list, string, coordinate):
-        if cls._illegal_chars.search(string):
+        if cls._transcriptions_illegal_chars.search(string):
             raise SeparatorCellError(string, coordinate)
         # force python to copy string
         text = (string + "&")[:-1]
-        text = text.replace(" ", "")
+        while " " in text:
+            text = text.replace(" ", "")
         if "~" in string:
             values = cls.variants_scanner(text, "~")
             values = values.split("~")
@@ -257,6 +264,7 @@ class CellParser():
                 raise CellParsingError("empty values ''", self.coordinate)
             return ele
 
+        # error handling
         except CellParsingError as err:
             print("CellParsingError: " + err.message)
             # input()
@@ -282,7 +290,7 @@ class CellParser():
 
 
 class CogCellParser(CellParser):
-
+    "Like CellParser, but ignores cells in capital letters"
     def __init__(self, cell):
         values = cell.value
         self.coordinate = cell.coordinate
@@ -291,7 +299,6 @@ class CogCellParser(CellParser):
             print(IgnoreCellError(values, self.coordinate))
 
         self.set_elements(values)
-
 
 
 class Tester():
@@ -310,12 +317,13 @@ if __name__ == "__main__":
     c2 = Tester("/pãlĩ/ (de froment = wheat) (NCP: loan from french farine), /pɨlatɨ/ (de mais cru), /kuʔi/ (de mais grillé)")
     c3 = Tester("/pãlĩ/ (de froment = wheat(NCP: loan from french farine), &<dummy>), /pɨlatɨ/ (de mais cru), /kuʔi/ (de mais grillé)")
     c4 = Tester("/popɨãpat/ 'back of elbow' {4}")
-    c5 = Tester("<ayu> (&<yayu> 'sein Hals') {2}")
+    c5 = Tester("<ayu> (nominalized &/afaaa/ version of &/ete/ 'about') {2}")
     for ele in [c1, c2, c3, c4, c5]:
         print(ele.value)
         print("is represented as: ")
         for f in CogCellParser(ele):
             print(f)
+        input()
 
 
 
