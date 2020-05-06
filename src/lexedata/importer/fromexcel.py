@@ -4,18 +4,24 @@ import csv
 from pathlib import Path
 from lexedata.importer.objects import *
 from lexedata.importer.cellparser import *
+from lexedata.importer.database import LEXICAL_ORIGIN, COGNATE_ORIGIN
 
 
 def init_lan(dir_path, iter_lan, lan_dict):
     # create iterator over excel cells
     with (dir_path / "language_init.csv").open("w", encoding="utf8", newline="") as lanout:
+        header_lan = ["id",
+                           "name", "curator", "comment"]
+        lanout = csv.DictWriter(lanout, header_lan, extrasaction="ignore", quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL)
+        lanout.writeheader()
         for language in iter_lan:
             if language[0].value is None:
                 continue
             else:
                 l = Language.from_column(language)
-                lan_dict[language[0].column] = l.id
-                lanout.write(l)
+                lan_dict[language[0].column_letter] = l.id
+                lanout.writerow(l)
 
 
 def init_con_form(dir_path, con_iter, form_iter, lan_dict, wb):
@@ -24,7 +30,7 @@ def init_con_form(dir_path, con_iter, form_iter, lan_dict, wb):
             (dir_path / "concept_init.csv").open( "w", encoding="utf8", newline="") as conceptsout:
 
         header_concepts = ["id",
-                           "Set", "English", "English_Strict", "Spanish", "Portuguese", "French"]
+                           "set", "english", "english_Strict", "spanish", "portuguese", "french"]
         concsv = csv.DictWriter(conceptsout, header_concepts, extrasaction="ignore", quotechar='"',
                                 quoting=csv.QUOTE_MINIMAL)
         concsv.writeheader()
@@ -46,7 +52,7 @@ def init_con_form(dir_path, con_iter, form_iter, lan_dict, wb):
                 if f_cell.value:
 
                     # get corresponding language_id to column
-                    this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
+                    this_lan_id = lan_dict[f_cell.column_letter]
 
                     for f_ele in CellParser(f_cell):
 
@@ -55,7 +61,7 @@ def init_con_form(dir_path, con_iter, form_iter, lan_dict, wb):
 
 
 def initialize_lexical(dir_path, lan_dict,
-                       file=r"C:\Users\walter.fuchs\Desktop\outofasia\stuff\TG_comparative_lexical_online_MASTER.xlsx"):
+                       file=LEXICAL_ORIGIN):
 
     wb = op.load_workbook(filename=file)
     sheets = wb.sheetnames
@@ -80,7 +86,7 @@ def cogset_cognate(cogset_iter, cog_iter, lan_dict, wb, cogsetcsv, cogcsv):
             for f_cell in cog_row:
                 if f_cell.value:
                     # get corresponding language_id to column
-                    this_lan_id = lan_dict[wb[(f_cell.column_letter + "1")].value]
+                    this_lan_id = lan_dict[f_cell.column_letter]
 
                     for f_ele in CogCellParser(f_cell):
                         cog = Cognate.from_excel(f_ele, this_lan_id, f_cell, cogset)
@@ -91,7 +97,7 @@ def cogset_cognate(cogset_iter, cog_iter, lan_dict, wb, cogsetcsv, cogcsv):
 
 
 def initialize_cognate(dir_path, lan_dict,
-                 file=r"C:\Users\walter.fuchs\Desktop\outofasia\stuff\TG_cognates_online_MASTER.xlsx"):
+                 file=COGNATE_ORIGIN):
 
     cogout = (dir_path / "cog_init.csv").open("w", encoding="utf8", newline="")
     cogsetout = (dir_path / "cogset_init.csv").open("w", encoding="utf8", newline="")
