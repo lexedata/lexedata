@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from lexedata.importer.database import create_db_session
+from lexedata.database.database import create_db_session
 from lexedata.importer.fromexcel import ExcelParser
 
 

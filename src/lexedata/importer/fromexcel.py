@@ -3,8 +3,8 @@ import openpyxl as op
 import csv
 from pathlib import Path
 
-from lexedata.importer.objects import Language, Concept, Form, CogSet, CognateJudgement
-from lexedata.importer.database import create_db_session
+from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement
+from lexedata.database.database import create_db_session
 from lexedata.importer.cellparser import CellParser
 import lexedata.importer.exceptions as ex
 

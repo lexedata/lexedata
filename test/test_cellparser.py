@@ -6,7 +6,7 @@ from unittest import TestCase, TextTestRunner
 import openpyxl as op
 
 from lexedata.importer.cellparser import CellParser
-from lexedata.importer.objects import Form, Concept
+from lexedata.database.objects import Form, Concept
 
 
 class TestCellparser(TestCase):

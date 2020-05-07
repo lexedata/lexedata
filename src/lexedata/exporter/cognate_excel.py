@@ -6,8 +6,8 @@ from typing import Dict, DefaultDict, List
 import sqlalchemy
 import openpyxl as op
 
-from lexedata.importer.objects import Form, CogSet, Language
-from lexedata.importer.database import create_db_session
+from lexedata.database.objects import Form, CogSet, Language
+from lexedata.database.database import create_db_session
 from lexedata.importer.exceptions import CellParsingError
 
 WARNING = "\u26A0"

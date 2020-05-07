@@ -4,7 +4,7 @@ from pathlib import Path
 from sqlalchemy import or_, and_
 import openpyxl as op
 
-from lexedata.importer.objects import Language, Concept, Form, CogSet, CognateJudgement, \
+from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement, \
     DatabaseObjectWithUniqueStringID, create_db_session
 from lexedata.importer.cellparser import CellParser, CogCellParser
 from lexedata.importer.exceptions import *
