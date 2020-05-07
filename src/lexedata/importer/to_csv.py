@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import openpyxl as op
 import csv
-from pathlib import Path
-<<<<<<< ours
 from lexedata.importer.objects import *
 from lexedata.importer.cellparser import *
 from lexedata.importer.database import LEXICAL_ORIGIN, COGNATE_ORIGIN, DIR_DATA
@@ -127,8 +125,11 @@ def initialize_cognate(dir_path, lan_dict,
     cogout.close()
     cogsetout.close()
 
+
 if __name__ == "__main__":
     lan_dict = dict()
     dir_path = DIR_DATA
     initialize_lexical(dir_path, lan_dict)
     initialize_cognate(dir_path, lan_dict)
+
+
