@@ -1,3 +1,0 @@
-[console_scripts]
-import-data-mg = importer.cells:main
-
