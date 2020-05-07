@@ -1,9 +1,0 @@
-README.md
-setup.py
-src/lexedata.egg-info/PKG-INFO
-src/lexedata.egg-info/SOURCES.txt
-src/lexedata.egg-info/dependency_links.txt
-src/lexedata.egg-info/entry_points.txt
-src/lexedata.egg-info/requires.txt
-src/lexedata.egg-info/top_level.txt
-test/test_database.py

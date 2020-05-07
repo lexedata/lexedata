@@ -2,9 +2,10 @@
 import openpyxl as op
 import csv
 from pathlib import Path
+<<<<<<< ours
 from lexedata.importer.objects import *
 from lexedata.importer.cellparser import *
-from lexedata.importer.database import LEXICAL_ORIGIN, COGNATE_ORIGIN
+from lexedata.importer.database import LEXICAL_ORIGIN, COGNATE_ORIGIN, DIR_DATA
 
 
 def init_lan(dir_path, iter_lan, lan_dict):
@@ -17,8 +18,7 @@ def init_lan(dir_path, iter_lan, lan_dict):
         lanout.writeheader()
         for language in iter_lan:
             if language[0].value is None:
-                continue
-            else:
+
                 l = Language.from_column(language)
                 lan_dict[language[0].column_letter] = l.id
                 lanout.writerow(l)
@@ -127,18 +127,8 @@ def initialize_cognate(dir_path, lan_dict,
     cogout.close()
     cogsetout.close()
 
-
-def initialize():
-    dir_path = Path.cwd() / "initial_data"
-    if not dir_path.exists():
-        dir_path.mkdir()
-    dir_path = Path(dir_path)
-
-    lan_dict = {} # just for getting of language_id
-    initialize_lexical(dir_path, lan_dict)
-    print("\n\ncognates\n\n")
-    initialize_cognate(dir_path, lan_dict)
-
-
 if __name__ == "__main__":
-    initialize()
+    lan_dict = dict()
+    dir_path = DIR_DATA
+    initialize_lexical(dir_path, lan_dict)
+    initialize_cognate(dir_path, lan_dict)

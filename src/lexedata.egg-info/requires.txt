@@ -1,5 +1,0 @@
-attr
-openpyxl
-pycldf
-sqlalchemy
-unidecode

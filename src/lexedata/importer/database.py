@@ -16,10 +16,11 @@ from sqlalchemy.orm import sessionmaker
 
 
 # global paths
-DIR_DATA = Path.cwd().parent.parent.parent / "lexicaldata" / "database"
-DATABASE_ORIGIN = DIR_DATA / "lexedata.db"
-LEXICAL_ORIGIN = DIR_DATA / "TG_comparative_lexical_online_MASTER.xlsx"
-COGNATE_ORIGIN = DIR_DATA / "TG_cognates_online_MASTER.xlsx"
+DIR_DATA =  Path.cwd().parent.parent.parent / "lexicaldata"
+DIR_DATABASE = DIR_DATA / "database"
+DATABASE_ORIGIN = DIR_DATABASE / "lexedata.db"
+LEXICAL_ORIGIN = DIR_DATABASE / "TG_comparative_lexical_online_MASTER.xlsx"
+COGNATE_ORIGIN = DIR_DATABASE / "TG_cognates_online_MASTER.xlsx"
 
 @declarative_base
 class Base(object):

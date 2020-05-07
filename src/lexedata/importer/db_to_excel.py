@@ -7,7 +7,7 @@ import openpyxl as op
 import unidecode as uni
 
 from lexedata.importer.objects import Form, CogSet, Language
-from lexedata.importer.database import DATABASE_ORIGIN, connect_db, DIR_DATA
+from lexedata.importer.database import connect_db, DATABASE_ORIGIN, DIR_DATA
 from lexedata.importer.exceptions import CellParsingError
 
 WARNING = "\u26A0"
@@ -39,24 +39,28 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
     wb = op.Workbook()
     ws = wb.active
 
-    session = connect_db(location=db_path)
+    session = connect_db(db_path)
     languages = session.query(Language).all()
 
-    header = ["Cogset", "Tags"]
-    # mapping language.id : excel column
+    # Define the columns
+    header = ["CogSet", "Tags"]
     lan_dict = dict()
     for col, lan in enumerate(languages, 3):
+        # Excel indices are 1-based, not zero-based, so 3 is column C, as
+        # intended.
         lan_dict[lan.id] = col
         header.append(lan.name)
 
-    ws.append(tuple(header))
+    ws.append(header)
 
-    # iterate over all cogset
+    # Iterate over all cognate sets, and prepare the rows.
+    # Again, row_index 2 is indeed row 2, because indices are 1-based.
     row_index = 2
     for cogset in session.query(CogSet):
 
         # create cell for cogset in column A, add comment to excel cell if given description
         cogset_cell = ws.cell(row=row_index, column=1, value=cogset.id)
+        # Transfer the cognateset comment to the Excel cell comment.
         if cogset.description != "":
             cogset_cell.comment = op.comments.Comment(cogset.description, "lexicaldata")
         # create cell for tag in column B
@@ -69,7 +73,6 @@ def create_excel(out, db_path=DATABASE_ORIGIN):
         #if v == "s":
         #    break
     wb.save(filename=out)
-    session.close()
 
 
 def create_formcells_for_cogset(cogset, ws, row_index, lan_dict):

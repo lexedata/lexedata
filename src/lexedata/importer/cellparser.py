@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+from typing import Literal
 
 from lexedata.importer.exceptions import *
 
@@ -11,19 +12,10 @@ comment_bracket = lambda str: str.count("(") == str.count(")")
 
 
 class CellParser():
-    """
-    Iterator class over all form elements contained in a form cell
-    """
+    """class over all form elements contained in a form cell.
 
-    # pattern for splitting form cell into various form elements, re.sub will be used
-    _form_separator = re.compile(r"""^(.+[}\]>)/])        # Anything until the first separator
-    \s*              # Any amount of spaces
-    [,;]             # Some separator
-    \s*              # Any amount of spaces
-    ([<{/[].+)       # Followed by the rest of the string""", re.VERBOSE)
-
-    # exemplary pattern to catch phonemic transcription: /.+/ or /.+[%~].+/ or /.+/ [%~]/.+/ [%~]/.+/ ....
-    # is repeated for phonetic and orthographic
+    Parse the content of a cell with one or more transcriptions sparated by ';'.
+    """
     phonemic_pattern = re.compile(r"""(?:^| # start of the line or
     (.*?(?<=[^&]))) #capture anything before phonemic, phonemic must not follow a &, i.e. & escapes
     (/[^/]+? #first phonemic element, not greedy, 
@@ -51,45 +43,86 @@ class CellParser():
     # will clean everything between ## using re.sub
     _cleaner = re.compile(r"^(.+)#.+?#(.*)$")
 
-    def __init__(self, cell):
+    # pattern for splitting form cell into various form elements
+    form_separator = re.compile(r"""
+    (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
+    \s*               # Any amount of spaces
+    [,;]              # Some separator
+    \s*               # Any amount of spaces
+    (?=[</\[])        # Followed by the beginnig of any transcription, but don't consume that bit""",
+        re.VERBOSE)
+    # pattern for parsing content of cell
+    cell_value_pattern = re.compile(r"""
+    ^                 # Start of the form
+    (/.+?/)?          # A /phonetic/ transcription
+    \s*               # optional whitespace
+    (\[.+?\])?        # a [phonetic] transcription
+    \s*               # optional whitespace
+    (<.+?>)?          # an <orthographic> transcription
+    \s*               # optional whitespace
+    (\(.+\))?         # A (comment), most likely a translation
+    \s*               # optional whitespace
+    (\{.+\})?         # {source}, assumed to be language-specific
+    $                 # End string
+    """)
+    __special_pattern = [re.compile(e) for e in [r"^.*(/.+/).*$",
+                                                r"^.*(\[.+?\]).*$",
+                                                r"^.*(<.+?>).*$",
+                                                r"^.*(\(.+\)).*$",
+                                                r"^.*(\{.+?\}).*$"]
+                       ]
+
+    def __init__(self):
+        pass
+
+    def parse(self, cell, on_error: Literal["except", "guess", "ignore"] = "except"):
+        """Parse the entire cell content
+
+        """
+        # FIXME: Avoid side-effects to the parser class
         values = cell.value
         self.coordinate = cell.coordinate
         if not values:  # capture None values
             raise CellParsingError(values, self.coordinates)
         self.set_elements(values)
+        while True:
+            # Ewwwww. FIXME: This whole class needs an overhaul.
+            try:
+                yield next(self)
+            except StopIteration:
+                break
 
     def set_elements(self, values):
-
         #remove #
         while self._cleaner.match(values):
             values = self._cleaner.sub(r"\1\2", values)
-        elements = CellParser.separate(values)
+        elements = self.separate(values)
 
         if len(elements) == 0:  # check that not empty
             raise CellParsingError(values, self.coordinate)
 
         # clean elements list
-        elements = [e.rstrip(" ").lstrip(" ") for e in elements]  # no tailing white spaces
+        elements = [e.strip() for e in elements]  # no tailing white spaces
         elements[-1] = elements[-1].rstrip("\n").rstrip(",").rstrip(";") # remove possible line break and ending commas
 
         self._elements = iter(elements)
 
-    @classmethod
-    def separate(cl, values):
+    def separate(self, values):
         """Splits the content of a form cell into single form descriptions
 
-        >>> CellParser.separate("<jaoca> (apartar-se, separar-se){2}")
+        >>> parser = CellParser()
+        >>> parser.separate("<jaoca> (apartar-se, separar-se){2}")
         ['<jaoca> (apartar-se, separar-se){2}']
-        >>> CellParser.separate("<eruguasu> (adj); <eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water){2}; <beyiruubu tuti> (tasty (re: meat with salt, honey, all good things)){2}; <eniacõ> (tasty (re: eggnog with flavoring)){2}; <eracũpũ> (tasty, good re: taste of honey, smell of flowers)){2}; <eribia tuti> (very tasty){2}; <ericute~ecute> (tasty, good (boiled foods)){2}; <eriya sui tuti> (very tasty, re: fermented fruit){2}; <erochĩpu> (good, tasty (re: tembe, pig meat)){2}; <ichẽẽ> (tasty (taste of roasted meat)){2}")[1]
+        >>> parser.separate("<eruguasu> (adj); <eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water){2}; <beyiruubu tuti> (tasty (re: meat with salt, honey, all good things)){2}; <eniacõ> (tasty (re: eggnog with flavoring)){2}; <eracũpũ> (tasty, good re: taste of honey, smell of flowers)){2}; <eribia tuti> (very tasty){2}; <ericute~ecute> (tasty, good (boiled foods)){2}; <eriya sui tuti> (very tasty, re: fermented fruit){2}; <erochĩpu> (good, tasty (re: tembe, pig meat)){2}; <ichẽẽ> (tasty (taste of roasted meat)){2}")[1]
         '<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water){2}'
+        >>> parser.separate("<form> (Example; has a semicolon in the comment); <otherform>")
+        ['<form> (Example; has a semicolon in the comment)', '<otherform>']
 
         Returns
         =======
         list of form strings
         """
-        while cl._form_separator.match(values):
-            values = cl._form_separator.sub(r"\1&&\2", values)
-        return values.split("&&")
+        return re.split(self.form_separator, values)
 
     @classmethod
     def parsecell(cls, ele, coordinates, cellsize=5):
@@ -98,7 +131,7 @@ class CellParser():
         :return: list of cellsize containing parsed data of form string
         """
         if ele == "...":
-            mymatch = ["No value"] * cellsize
+            mymatch = [None] * cellsize
 
         else:
             mymatch = cls.parse_form(ele, coordinates)
@@ -251,9 +284,6 @@ class CellParser():
         else:
             return string
 
-    def __iter__(self):
-        return self
-
     def __next__(self):
         try:
             ele = next(self._elements)
@@ -285,15 +315,14 @@ class CellParser():
             # input()
             return self.__next__()
 
-    def __iter__(self):
-        return self
-
 
 class CogCellParser(CellParser):
     "Like CellParser, but ignores cells in capital letters"
     def __init__(self, cell):
         values = cell.value
         self.coordinate = cell.coordinate
+        ele = next(self._elements)
+        return CellParser.parsecell(ele)
 
         if values.isupper():
             print(IgnoreCellError(values, self.coordinate))
