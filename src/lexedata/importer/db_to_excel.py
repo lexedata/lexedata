@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-from typing import Dict
-from pathlib import Path
 from collections import defaultdict, OrderedDict
+from pathlib import Path
+import re
 
-import sqlalchemy
 import openpyxl as op
 import unidecode as uni
 
-from lexedata.database.objects import Form, CogSet, Language
-from lexedata.database.database import create_db_session
+from lexedata.importer.objects import Form, CogSet, Language
+from lexedata.importer.database import connect_db, DATABASE_ORIGIN, DIR_DATA
 from lexedata.importer.exceptions import CellParsingError
 
 WARNING = "\u26A0"
@@ -17,29 +16,31 @@ URL_BASE = r"https://myhost.com"
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
 
-def create_excel(out: Path, db_session: sqlalchemy.orm.session.Session) -> None:
-    """Convert the CLDF behind db_session into an Excel cognate view
+def string_cleaner(string):
+    while re.search(r"[^A-z_0-9]", string):
+        string = re.sub(r"[^A-z_0-9]", "", string)
+    return string
 
-    The Excel file has columns "CogSet", "Tags", and then one column per
-    language.
 
-    The rows contain cognate data. If a language has multiple reflexes in the
-    same cognateset, these appear in different cells, one below the other.
-
-    Parameters
-    ==========
-    out: The path of the Excel file to be written.
-    db_session: A SQLAlchemy database session connecting to a standardized CLDF
-        dataset.
-
+def create_excel(out, db_path=DATABASE_ORIGIN):
     """
-    # TODO: Check whether openpyxl.worksheet._write_only.WriteOnlyWorksheet
-    # will be useful:
-    # https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode
-    wb = op.Workbook()
-    ws: op.worksheet.worksheet.Worksheet = wb.active
+    creates excel with:
+        columns: cogset(A) tags(B) languages(C-AN)
+        rows: all cogsets in database
+    :param out: path for created excel
+    :param db_path: path to database
+    :return:
+    """
+    # delete existing output file:
+    out = Path(out)
+    if out.exists():
+        out.unlink()
 
-    languages = db_session.query(Language).all()
+    wb = op.Workbook()
+    ws = wb.active
+
+    session = connect_db(db_path)
+    languages = session.query(Language).all()
 
     # Define the columns
     header = ["CogSet", "Tags"]
@@ -55,40 +56,35 @@ def create_excel(out: Path, db_session: sqlalchemy.orm.session.Session) -> None:
     # Iterate over all cognate sets, and prepare the rows.
     # Again, row_index 2 is indeed row 2, because indices are 1-based.
     row_index = 2
-    for cogset in db_session.query(CogSet):
-        # Create cell for cogset in column A
+    for cogset in session.query(CogSet):
+
+        # create cell for cogset in column A, add comment to excel cell if given description
         cogset_cell = ws.cell(row=row_index, column=1, value=cogset.id)
         # Transfer the cognateset comment to the Excel cell comment.
         if cogset.description != "":
-            cogset_cell.comment = op.comments.Comment(
-                cogset.description, __package__)
+            cogset_cell.comment = op.comments.Comment(cogset.description, "lexicaldata")
+        # create cell for tag in column B
+        tag_cell = ws.cell(row=row_index, column=2, value=cogset.set)
+        # TODO should there be cogsets with no jdugements or is this just a temporal state?
+        row_index = create_formcells_for_cogset(cogset, ws, row_index, lan_dict)
 
-        # Put the cognateset's tags in column B.
-        ws.cell(row=row_index, column=2, value=cogset.set)
-
-        new_row_index = create_formcells_for_cogset(
-            cogset, ws, row_index, lan_dict)
-        assert new_row_index > row_index, ("""
-        There can, by the data model, be cognate sets with no judgements, but
-        create_formcells_for_cogset did not increase the row index.""")
-        row_index = new_row_index
+        # just for debugging
+        #v = input()
+        #if v == "s":
+        #    break
     wb.save(filename=out)
 
 
-def create_formcells_for_cogset(
-        cogset: CogSet,
-        ws: op.worksheet.worksheet.Worksheet,
-        row_index: int,
-        language_columns: Dict[str, int]) -> int:
-    """Writes all forms for given cognate set to Excel.
-
-    Take all forms for a given cognate set as given by the database, create a
-    hyperlink cell for each form, and write those into rows starting at
-    row_index.
-
-    Return the row number of the first empty row after this cognate set, which
-    can then be filled by the following cognate set.
-
+def create_formcells_for_cogset(cogset, ws, row_index, lan_dict):
+    """
+    writes all forms for given cogset to excel
+    modifying row_index to fit maximum of forms given for a language for this cogset
+    returns modified row_index
+    :param cogset:
+    :param ws:
+    :param row_index:
+    :param lan_dict:
+    :return:
     """
     # skip this row, if no judgements given
     if not cogset.judgements:
@@ -112,7 +108,8 @@ def create_formcells_for_cogset(
             # create cell for this judgement
             create_formcell(this_judgement, ws, this_row, lan_dict[k])
     # increase row_index and return
-    row_index += (maximum_cogset)
+    row_index += maximum_cogset
+
     return row_index
 
 
@@ -124,9 +121,9 @@ def create_formcell(judgement, ws, row, col):
     if judgement.procedural_comment != "":
         comment = judgement.procedural_comment
         form_cell.comment = op.comments.Comment(comment, "lexicaldata")
-    my_formid = uni.unidecode(form.id)  # no illegal characters in URL
-    link = "{}/{}".format(URL_BASE, form.id)
-    print(cell_value)
+    my_formid = string_cleaner(uni.unidecode(form.id))  # no illegal characters in URL
+    link = "{}/{}".format(URL_BASE, my_formid)
+    print(link)
     form_cell.hyperlink = link
 
 
@@ -158,10 +155,5 @@ def get_best_transcription(form):
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(
-        description="Create an Excel cognate view from a CLDF dataset")
-    parser.add_argument("excel", help="Excel output file path")
-    parser.add_argument("sqlite", help="SQlite input")
-    args = parser.parse_args()
-    create_excel(args.excel, create_db_session(args.sqlite))
+    out = DIR_DATA / "output.xlsx"
+    create_excel(out)
