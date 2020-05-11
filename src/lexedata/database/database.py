@@ -104,7 +104,7 @@ class DatabaseObjectWithUniqueStringID(Base):
         >>> session.add(Ex(id=Ex.register_new_id("unique")))
         >>> session.add(Ex(id=Ex.register_new_id("unique")))
         >>> list(session.query(Ex))
-        [<Ex(id='unique')>, <Ex(id='unique1')>]
+        [<Ex(id='unique')>, <Ex(id='unique_1')>]
         >>> session.connection().engine.dispose()
 
         """
