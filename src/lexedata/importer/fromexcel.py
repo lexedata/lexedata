@@ -229,6 +229,10 @@ if __name__ == "__main__":
         default="sqlite:///",
         help="Where to store the temp DB")
     parser.add_argument(
+        "--metadeta", nargs="?",
+        default="Wordlist-metadata.json",
+        help="Path to the metadata.json")
+    parser.add_argument(
         "output", nargs="?",
         default="from_excel/",
         help="Directory to create the output CLDF wordlist in")
@@ -248,9 +252,10 @@ if __name__ == "__main__":
         db_path = args.db[len("sqlite:///"):]
         if db_path == '':
             db_path = ':memory:'
+
     dataset = pycldf.Wordlist.from_metadata(
-        "Wordlist-metadata.json",
+        args.metadeta,
     )
-    db = pycldf.db.Database(dataset, fname=db_path)
+    db = pycldf.db.Database(dataset, fname=args.db)
 
     db.to_cldf(args.output)
