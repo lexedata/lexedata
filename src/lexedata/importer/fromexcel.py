@@ -221,6 +221,10 @@ if __name__ == "__main__":
         default="TG_comparative_lexical_online_MASTER.xlsx",
         help="Path to an Excel file containing the dataset")
     parser.add_argument(
+        "cogsets", nargs="?",
+        default="TG_cognates_online_MASTER.xlsx",
+        help="Path to an Excel file containing cogsets and cognatejudgements")
+    parser.add_argument(
         "--db", nargs="?",
         default="sqlite:///",
         help="Where to store the temp DB")
@@ -236,7 +240,7 @@ if __name__ == "__main__":
     # The Intermediate Storage, in a in-memory DB
     session = create_db_session(args.db)
 
-    ExcelParser(session, output=args.output, lexicon_spreadsheet=args.lexicon).parse()
+    ExcelParser(session, output=args.output, lexicon_spreadsheet=args.lexicon, cognatesets_spreadsheet=args.cogsets).parse()
     session.commit()
     session.close()
 
