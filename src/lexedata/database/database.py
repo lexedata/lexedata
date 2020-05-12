@@ -123,8 +123,9 @@ def create_db_session(location='sqlite:///:memory:', echo=False):
         os.remove("cldf.sqlite")
     except FileNotFoundError:
         pass
-    engine = sa.create_engine(location, echo=False) # Create an SQLite database in this directory
-    engine.execute('pragma foreign_keys=ON')
+    # Todo: if you create the engine here without prefixing sqlite:/// it throws an error
+    #engine = sa.create_engine(location, echo=False) # Create an SQLite database in this directory
+    #engine.execute('pragma foreign_keys=ON')
     # use `echo=True` to see the SQL stamenets echoed
 
     # create db path for sql module, and escape \ for windows
