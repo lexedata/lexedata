@@ -8,8 +8,6 @@ from lexedata.database.database import create_db_session
 from lexedata.importer.cellparser import CellParser
 import lexedata.importer.exceptions as ex
 
-create_db_session()
-
 
 class ExcelParser:
 
