@@ -31,7 +31,7 @@ for source_col in ['genre'] + BIBTEX_FIELDS:
 
 class Form(DatabaseObjectWithUniqueStringID):
     __tablename__ = "FormTable"
-    Language_ID = sa.Column(sa.String, sa.ForeignKey(Language.id), name="cldf_languageReference")
+    language_id = sa.Column(sa.String, sa.ForeignKey(Language.id), name="cldf_languageReference")
     language = sa.orm.relationship(Language)
 
     phonemic = sa.Column(sa.String, name="Phonemic_Transcription", index=True)
@@ -82,7 +82,7 @@ class Concept(DatabaseObjectWithUniqueStringID):
         back_populates="concepts"
     )
 
-
+# Todo: has become obsolete since forms has now a direct relation to concepts
 class FormMeaningAssociation(Base):
     __tablename__ = 'FormTable_ParameterTable'
     form = sa.Column('FormTable_cldf_id',
