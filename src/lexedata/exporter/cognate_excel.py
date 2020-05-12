@@ -2,6 +2,7 @@
 import urllib.parse
 from pathlib import Path
 from typing import Dict, DefaultDict, List
+from collections import OrderedDict, defaultdict
 
 import sqlalchemy
 import openpyxl as op
@@ -42,7 +43,7 @@ class ExcelWriter():
         """
         # TODO: Check whether openpyxl.worksheet._write_only.WriteOnlyWorksheet
         # will be useful:
-        # https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode
+        # https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode; why does it matter?
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
 
@@ -71,7 +72,7 @@ class ExcelWriter():
                     cogset.description, __package__)
 
             # Put the cognateset's tags in column B.
-            ws.cell(row=row_index, column=2, value=cogset.set)
+            ws.cell(row=row_index, column=2, value=cogset.properties)
 
             new_row_index = self.create_formcells_for_cogset(
                 cogset, ws, row_index, lan_dict)
@@ -86,9 +87,9 @@ class ExcelWriter():
             cogset: CogSet,
             ws: op.worksheet.worksheet.Worksheet,
             row_index: int,
-            # FIXME: That's not just a str, it's a Language_ID, but String()
+            # FIXME: That's not just a str, it's a language_id, but String()
             # alias Language.id.type is not a Type, according to `typing`.
-            language_columns: Dict[str, int]) -> int:
+            lan_dict: Dict[str, int]) -> int:
         """Writes all forms for given cognate set to Excel.
 
         Take all forms for a given cognate set as given by the database, create
@@ -99,24 +100,30 @@ class ExcelWriter():
         which can then be filled by the following cognate set.
 
         """
-        # skip this row, if no judgements given
-        if not cogset.judgements:
+        # skip this row, if no forms given
+        if not cogset.forms:
             row_index += 1
             return row_index
 
-        # Read the forms from the database and group them by language
-        forms = DefaultDict[int, List[Form]](list)
-        for judgement in cogset.judgements:
-            form: Form = judgement.form
-            comment: str = judgement.procedural_comment
-            forms[language_columns[form.language]].append((form, comment))
+        # get sorted version of forms for this cogset, language with maximum of forms first
+        row_dict = defaultdict(list)
+        for form in cogset.forms:
+            row_dict[form.language_id].append(form)
+        ordered_dict = OrderedDict(sorted(row_dict.items(), key=lambda t: len(t[1]), reverse=True))
         # maximum of rows to be added
-        maximum_cogset = max([len(c) for c in forms.values()])
-        for column, cells in forms.items():
-            for row, form in enumerate(cells, row_index):
-                self.create_formcell(form, comment, ws, column, row)
+        maximum_cogset = len(ordered_dict[next(iter(ordered_dict.keys()))])
+        for i in range(maximum_cogset):
+            this_row = row_index + i
+            for k, v in list(ordered_dict.items()):
+                form = v.pop(0)
+                # if it was last form, remove this language from dict
+                if len(v) == 0:
+                    del ordered_dict[k]
+                # create cell for this judgement
+                self.create_formcell(form, form.procedural_comment, ws, this_row, lan_dict[k])
         # increase row_index and return
         row_index += maximum_cogset
+
         return row_index
 
     def create_formcell(
@@ -124,8 +131,8 @@ class ExcelWriter():
             form: Form,
             procedural_comment: str,
             ws: op.worksheet.worksheet.Worksheet,
-            column: int,
-            row: int) -> None:
+            row: int,
+            column: int) -> None:
         """Fill the given cell with the form's data.
 
         In the cell described by ws, column, row, dump the data for the form:
@@ -139,7 +146,6 @@ class ExcelWriter():
             comment = procedural_comment
             form_cell.comment = op.comments.Comment(comment, __package__)
         link = self.URL_BASE.format(urllib.parse.quote(form.id))
-        print(cell_value, link)
         form_cell.hyperlink = link
 
     def form_to_cell_value(self, form: Form) -> str:
@@ -149,15 +155,16 @@ class ExcelWriter():
         together.
 
         """
+
         transcription = self.get_best_transcription(form)
         suffix = ""
         translations = []
 
         # iterate over corresponding concepts
-        for form_to_concept in form.concepts:
-            if form_to_concept.procedural_comment:
+        for concept in form.concepts:
+            if form.procedural_comment:
                 suffix = f" {WARNING:}"
-            translations.append(form_to_concept.concept.english)
+            translations.append(concept.english)
 
         return "{:} ‘{:}’{:}".format(
             transcription, ", ".join(translations), suffix)
