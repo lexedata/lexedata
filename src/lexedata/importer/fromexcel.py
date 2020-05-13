@@ -135,7 +135,9 @@ class ExcelParser:
                                                     "Property {:s} of form defined here was '{:}', which "
                                                     "did not match '{:}' specified earlier for the same form in {:s}. "
                                                     "I took the non-empty {:s}.".format(
-                                                        key, value, getattr(form, key), form.cell, key))
+                                                        key, value, getattr(form, key), form.cell, key)
+                                                    .replace("\n", "\t")
+                                                )
                                                 setattr(form, key, value)
                                             else:
                                                 print(
@@ -143,7 +145,9 @@ class ExcelParser:
                                                     "Property {:s} of form defined here was '{:}', which "
                                                     "did not match '{:}' specified earlier for the same form in {:s}. "
                                                     "I kept the original {:s}.".format(
-                                                        key, value, getattr(form, key), form.cell, key))
+                                                        key, value, getattr(form, key), form.cell, key)
+                                                    .replace("\n", "\t")
+                                                )
                             form.concepts.append(concept)
                             self.session.commit()
 
@@ -151,7 +155,8 @@ class ExcelParser:
         phonemic, phonetic, ortho, comment, source, _ = f_ele
 
         # Source number {1} is not always specified
-        source_id = "{:s}_{:}".format(lan.id, (source if source else "{1}").strip())
+        source_id = Source.string_to_id(
+            "{:s}_{:}".format(lan.id, (source if source else "{1}").strip()))
 
         source = self.session.query(Source).filter(
             Source.id == source_id).one_or_none()
@@ -194,17 +199,25 @@ class ExcelParser:
                         try:
                             for f_ele in self.cell_parser.parse(f_cell):
                                 form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
-                                # FIXME: Replace this by [look up existing form, otherwise create form]
-                                form = self.session.query(Form).filter(
+                                form_query = self.session.query(Form).filter(
                                     Form.language==this_lan,
                                     *[getattr(Form, key)==value
-                                      for key, value in form_cell.items()
-                                      if not key in self.ignore_for_match
-                                    ]).one_or_none()
+                                    for key, value in form_cell.items()
+                                    # We cannot compare in SQL collection to an object
+                                    if type(value) != list
+                                    if not key in self.ignore_for_match
+                                    ],
+                                    *[getattr(Form, key).contains(value)
+                                    for key, values in form_cell.items()
+                                    if type(values) == list
+                                    for value in values
+                                    if not key in self.ignore_for_match
+                                    ])
+                                form = form_query.one_or_none()
                                 if form is None:
                                     raise ex.CognateCellError(
-                                        "Found form {:}:{:} in cognate table that is not in lexicon.".format(
-                                            this_lan.id, f_ele), f_cell)
+                                        "Found form {:}:{:} ({:}) in cognate table that is not in lexicon.".format(
+                                            this_lan.id, f_ele, form_cell), f_cell)
                                 judgement = self.session.query(CognateJudgement).filter(
                                     CognateJudgement.form==form,
                                     CognateJudgement.cognateset==cogset).one_or_none()

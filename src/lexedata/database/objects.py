@@ -21,6 +21,8 @@ class Language(DatabaseObjectWithUniqueStringID):
 
 class Source(DatabaseObjectWithUniqueStringID):
     __tablename__ = "SourceTable"
+    # The ID column CLDF expects from the SourceTable is just id, not cldf_id
+    id = sa.Column(sa.String, name="id", primary_key=True)
 
 
 # Now, we post-hoc manipulate the Source class, which is now defined, and add
@@ -58,6 +60,7 @@ class Form(DatabaseObjectWithUniqueStringID):
         secondary="CognateTable",
         back_populates="forms"
     )
+
 
 class Concept(DatabaseObjectWithUniqueStringID):
     """
