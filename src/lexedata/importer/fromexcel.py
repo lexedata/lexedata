@@ -242,7 +242,8 @@ class ExcelParser:
                                     if source in form.sources:
                                         break
                                 else:
-                                    print("{f_cell.column_letter}{f_cell.row}: Form was given as {form_cell}, but cloesest match has different sources {form.sources:}!")
+                                    source_ids = [s.id for s in form.sources]
+                                    print(f"{f_cell.column_letter}{f_cell.row}: Form was given with source {form_cell['source'][0].id}, but closest match (form.cldf_id) has different sources {source_ids:}!")
 
                                 judgement = self.session.query(CognateJudgement).filter(
                                     CognateJudgement.form==form,
