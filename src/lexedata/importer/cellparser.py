@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
-from typing import Literal
+from typing import Literal, Tuple, Optional
 
 from lexedata.importer.exceptions import *
 
@@ -125,13 +125,13 @@ class CellParser():
         return re.split(self.form_separator, values)
 
     @classmethod
-    def parsecell(cls, ele, coordinates, cellsize=5):
+    def parsecell(cls, ele, coordinates, cellsize=5) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]:
         """
         :param ele: is a form string; form string referring to a possibly (semicolon or)comma separated string of a form cell
         :return: list of cellsize containing parsed data of form string
         """
         if ele == "...":
-            mymatch = [None] * cellsize
+            return [None] * 6
 
         else:
             mymatch = cls.parse_form(ele, coordinates)
