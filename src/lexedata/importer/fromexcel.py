@@ -228,7 +228,7 @@ if __name__ == "__main__":
         default="sqlite:///",
         help="Where to store the temp DB")
     parser.add_argument(
-        "--metadeta", nargs="?",
+        "--metadata", nargs="?",
         default="Wordlist-metadata.json",
         help="Path to the metadata.json")
     parser.add_argument(
@@ -240,7 +240,7 @@ if __name__ == "__main__":
         help="Debug level: Higher numbers are less forgiving")
     args = parser.parse_args()
 
-    # The Intermediate Storage, in a in-memory DB
+    # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     session = create_db_session(args.db)
 
     ExcelParser(session, output=args.output, lexicon_spreadsheet=args.lexicon, cognatesets_spreadsheet=args.cogsets).parse()
@@ -253,8 +253,8 @@ if __name__ == "__main__":
             db_path = ':memory:'
 
     dataset = pycldf.Wordlist.from_metadata(
-        args.metadeta,
+        args.metadata,
     )
-    db = pycldf.db.Database(dataset, fname=args.db)
+    db = pycldf.db.Database(dataset, fname=db_path)
 
     db.to_cldf(args.output)
