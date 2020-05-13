@@ -109,8 +109,8 @@ class DatabaseObjectWithUniqueStringID(Base):
 
         """
         id = cl.string_to_id(string)
-        i = 1
-        candidate = "{:s}_{:d}".format(id, i)
+        i = 0
+        candidate = id
         while cl.session.query(cl.id).filter(cl.id == candidate).one_or_none():
             i += 1
             candidate = "{:s}_{:d}".format(id, i)
