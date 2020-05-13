@@ -3,7 +3,7 @@ import openpyxl as op
 import csv
 from pathlib import Path
 
-from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement
+from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement, Source
 from lexedata.database.database import create_db_session
 from lexedata.importer.cellparser import CellParser
 import lexedata.importer.exceptions as ex
@@ -25,7 +25,7 @@ class ExcelParser:
         self.cognatesets_spreadsheet = cognatesets_spreadsheet
         self.cell_parser = CellParser()
         self.ignore_for_match = [
-            "ID",
+            "id",
             "variants",
             "comment",
             "procedural_comment",
@@ -105,12 +105,21 @@ class ExcelParser:
 
                         for f_ele in self.cell_parser.parse(f_cell):
                             form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
-                            form = self.session.query(Form).filter(
+                            form_query = self.session.query(Form).filter(
                                 Form.language==this_lan,
                                 *[getattr(Form, key)==value
-                                    for key, value in form_cell.items()
-                                    if not key in self.ignore_for_match
-                                ]).one_or_none()
+                                  for key, value in form_cell.items()
+                                  # We cannot compare in SQL collection to an object
+                                  if type(value) != list
+                                  if not key in self.ignore_for_match
+                                ],
+                                *[getattr(Form, key).contains(value)
+                                  for key, values in form_cell.items()
+                                  if type(values) == list
+                                  for value in values
+                                  if not key in self.ignore_for_match
+                                ])
+                            form = form_query.one_or_none()
                             if form is None:
                                 form_id = Form.register_new_id("{:}_{:}".format(this_lan.id, concept.id))
                                 form = Form(id=form_id, cell=f_cell.coordinate, **form_cell)
@@ -120,35 +129,50 @@ class ExcelParser:
                                     # FIXME: Maybe test `if value`? – discuss
                                     if key in self.ignore_for_match:
                                         if getattr(form, key)!=value:
-                                            print(
-                                                "{:s}{:d}:".format(f_cell.column_letter, f_cell.row),
-                                                "Property {:s} of form defined here was '{:}', which "
-                                                "did not match '{:}' specified earlier for the same form in {:s}. "
-                                                "I kept the original {:s}.".format(
-                                                    key, value, getattr(form, key), form.cell, key))
+                                            if not getattr(form, key):
+                                                print(
+                                                    "{:s}{:d}:".format(f_cell.column_letter, f_cell.row),
+                                                    "Property {:s} of form defined here was '{:}', which "
+                                                    "did not match '{:}' specified earlier for the same form in {:s}. "
+                                                    "I took the non-empty {:s}.".format(
+                                                        key, value, getattr(form, key), form.cell, key))
+                                                setattr(form, key, value)
+                                            else:
+                                                print(
+                                                    "{:s}{:d}:".format(f_cell.column_letter, f_cell.row),
+                                                    "Property {:s} of form defined here was '{:}', which "
+                                                    "did not match '{:}' specified earlier for the same form in {:s}. "
+                                                    "I kept the original {:s}.".format(
+                                                        key, value, getattr(form, key), form.cell, key))
                             form.concepts.append(concept)
                             self.session.commit()
 
     def form_from_cell(self, f_ele, lan, form_cell):
         phonemic, phonetic, ortho, comment, source, _ = f_ele
 
-        # replace source if not given
+        # Source number {1} is not always specified
         source_id = "{:s}_{:}".format(lan.id, (source if source else "{1}").strip())
+
+        source = self.session.query(Source).filter(
+            Source.id == source_id).one_or_none()
+        if source is None:
+            source = Source(id=source_id)
+            self.session.add(source)
 
         return {
             "language": lan,
             "phonemic": phonemic,
             "phonetic": phonetic,
             "orthographic": ortho,
-            "comment": comment,
+            "comment": None if comment is None else comment.strip(),
             # FIXME: We need to create those source objects so we can refer to them
-            # "sources": [source_id],
-            "procedural_comment": self.get_cell_comment(form_cell),
+            "sources": [source],
+            "procedural_comment": self.get_cell_comment(form_cell).strip(),
         }
 
     def cogset_from_row(self, cog_row):
         values = [cell.value or "" for cell in cog_row]
-        return {"ID": values[1],
+        return {"id": values[1],
                 "properties": values[0],
                 "comment": self.get_cell_comment(cog_row[1])}
 
@@ -159,7 +183,7 @@ class ExcelParser:
                 continue
             elif cogset_row[1].value.isupper():
                 properties = self.cogset_from_row(cogset_row)
-                id = CogSet.register_new_id(properties.pop("ID", ""))
+                id = CogSet.register_new_id(properties.pop("id", ""))
                 cogset = CogSet(id=id, **properties)
 
                 for f_cell in row_forms:
