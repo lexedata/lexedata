@@ -49,7 +49,7 @@ class CellParser():
     \s*               # Any amount of spaces
     [,;]              # Some separator
     \s*               # Any amount of spaces
-    (?=[</\[])        # Followed by the beginnig of any transcription, but don't consume that bit""",
+    (?=[</\[])        # Followed by the beginning of any transcription, but don't consume that bit""",
         re.VERBOSE)
     # pattern for parsing content of cell
     cell_value_pattern = re.compile(r"""
@@ -75,7 +75,7 @@ class CellParser():
     def __init__(self):
         pass
 
-    def parse(self, cell, on_error: Literal["except", "guess", "ignore"] = "except"):
+    def parse(self, cell):  # , on_error: Literal["except", "guess", "ignore"] = "except"
         """Parse the entire cell content
 
         """

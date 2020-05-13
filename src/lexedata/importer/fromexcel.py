@@ -10,6 +10,44 @@ import lexedata.importer.exceptions as ex
 
 
 class ExcelParser:
+
+    def __init__(self,
+                 session,
+               output=Path("initial_data"),
+               lexicon_spreadsheet = "TG_comparative_lexical_online_MASTER.xlsx",
+               cognatesets_spreadsheet = "TG_cognates_online_MASTER.xlsx"):
+        self.session = session
+        self.path = Path(output)
+        if not self.path.exists():
+            self.path.mkdir()
+        self.lan_dict = {}
+        self.lexicon_spreadsheet = lexicon_spreadsheet
+        self.cognatesets_spreadsheet = cognatesets_spreadsheet
+        self.cell_parser = CellParser()
+        self.ignore_for_match = [
+            "ID",
+            "variants",
+            "comment",
+            "procedural_comment",
+            "original",
+        ]
+
+    def parse(self):
+        self.initialize_lexical()
+        self.initialize_cognate()
+
+    def initialize_lexical(self):
+        wb = op.load_workbook(filename=self.lexicon_spreadsheet)
+        sheets = wb.sheetnames
+        wb = wb[sheets[0]]
+        iter_forms = wb.iter_rows(min_row=3, min_col=7, max_col=44)  # iterates over rows with forms
+        iter_concept = wb.iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
+        iter_lan = wb.iter_cols(min_row=1, max_row=2, min_col=7, max_col=44)
+
+        self.init_lan(iter_lan)
+        self.session.commit()
+        self.init_con_form(iter_concept, iter_forms)
+
     def language_from_column(self, column):
         excel_name, curator = [cell.value or "" for cell in column]
         name, comment = "", ""
@@ -40,16 +78,19 @@ class ExcelParser:
             if not raw_name or not id:
                 print(f"Language {language_properties:} could not be created")
                 continue
+            if not language_properties["name"]:
+                language_properties["name"] = raw_name
+
             language = Language(id=id, **language_properties)
             self.session.add(language)
-            self.lan_dict[raw_name] = language
+            self.lan_dict[lan_col[0].column] = language
 
     def get_cell_comment(self, cell):
         return cell.comment.content if cell.comment else ""
 
-    def init_con_form(self, con_iter, form_iter, wb):
-        with (self.path / "form_init.csv").open( "w", encoding="utf8", newline="") as formsout, \
-                (self.path / "concept_init.csv").open( "w", encoding="utf8", newline="") as conceptsout:
+    def init_con_form(self, con_iter, form_iter):
+        with (self.path / "form_init.csv").open("w", encoding="utf8", newline="") as formsout, \
+                (self.path / "concept_init.csv").open("w", encoding="utf8", newline="") as conceptsout:
 
             for row_forms, row_con in zip(form_iter, con_iter):
                 concept_properties = self.concept_from_row(row_con)
@@ -60,7 +101,7 @@ class ExcelParser:
                 for f_cell in row_forms:
                     if f_cell.value:
                         # get corresponding language_id to column
-                        this_lan = self.lan_dict[wb[(f_cell.column_letter + "1")].value]
+                        this_lan = self.lan_dict[f_cell.column]
 
                         for f_ele in self.cell_parser.parse(f_cell):
                             form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
@@ -105,27 +146,13 @@ class ExcelParser:
             "procedural_comment": self.get_cell_comment(form_cell),
         }
 
-
-
-    def initialize_lexical(self):
-        wb = op.load_workbook(filename=self.lexicon_spreadsheet)
-        sheets = wb.sheetnames
-        wb = wb[sheets[0]]
-        iter_forms = wb.iter_rows(min_row=3, min_col=7, max_col=44)  # iterates over rows with forms
-        iter_concept = wb.iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
-        iter_lan = wb.iter_cols(min_row=1, max_row=2, min_col=7, max_col=44)
-
-        self.init_lan(iter_lan)
-        self.session.commit()
-        self.init_con_form(iter_concept, iter_forms, wb)
-
     def cogset_from_row(self, cog_row):
         values = [cell.value or "" for cell in cog_row]
         return {"ID": values[1],
                 "properties": values[0],
                 "comment": self.get_cell_comment(cog_row[1])}
 
-    def cogset_cognate(self, cogset_iter, cog_iter, lan_dict, wb):
+    def cogset_cognate(self, cogset_iter, cog_iter):
 
         for cogset_row, row_forms in zip(cogset_iter, cog_iter):
             if not cogset_row[1].value:
@@ -138,7 +165,7 @@ class ExcelParser:
                 for f_cell in row_forms:
                     if f_cell.value:
                         # get corresponding language_id to column
-                        this_lan = self.lan_dict[wb[(f_cell.column_letter + "1")].value]
+                        this_lan = self.lan_dict[f_cell.column]
 
                         try:
                             for f_ele in self.cell_parser.parse(f_cell):
@@ -171,7 +198,6 @@ class ExcelParser:
             else:
                 continue
 
-
     def initialize_cognate(self):
         wb = op.load_workbook(filename=self.cognatesets_spreadsheet)
         try:
@@ -180,34 +206,9 @@ class ExcelParser:
                 ws = wb[sheet]
                 iter_cog = ws.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
                 iter_congset = ws.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
-                self.cogset_cognate(iter_congset, iter_cog, self.lan_dict, ws)
+                self.cogset_cognate(iter_congset, iter_cog)
         except KeyError:
             pass
-
-    def __init__(self,
-                 session,
-               output=Path("initial_data"),
-               lexicon_spreadsheet = "TG_comparative_lexical_online_MASTER.xlsx",
-               cognatesets_spreadsheet = "TG_cognates_online_MASTER.xlsx"):
-        self.session = session
-        self.path = Path(output)
-        if not self.path.exists():
-            self.path.mkdir()
-        self.lan_dict = {}
-        self.lexicon_spreadsheet = lexicon_spreadsheet
-        self.cognatesets_spreadsheet = cognatesets_spreadsheet
-        self.cell_parser = CellParser()
-        self.ignore_for_match = [
-            "ID",
-            "variants",
-            "comment",
-            "procedural_comment",
-            "original",
-        ]
-
-    def parse(self):
-        self.initialize_lexical()
-        self.initialize_cognate()
 
 
 if __name__ == "__main__":
@@ -219,9 +220,17 @@ if __name__ == "__main__":
         default="TG_comparative_lexical_online_MASTER.xlsx",
         help="Path to an Excel file containing the dataset")
     parser.add_argument(
+        "cogsets", nargs="?",
+        default="TG_cognates_online_MASTER.xlsx",
+        help="Path to an Excel file containing cogsets and cognatejudgements")
+    parser.add_argument(
         "--db", nargs="?",
         default="sqlite:///",
         help="Where to store the temp DB")
+    parser.add_argument(
+        "--metadeta", nargs="?",
+        default="Wordlist-metadata.json",
+        help="Path to the metadata.json")
     parser.add_argument(
         "output", nargs="?",
         default="from_excel/",
@@ -234,7 +243,7 @@ if __name__ == "__main__":
     # The Intermediate Storage, in a in-memory DB
     session = create_db_session(args.db)
 
-    ExcelParser(session, output=args.output, lexicon_spreadsheet=args.lexicon).parse()
+    ExcelParser(session, output=args.output, lexicon_spreadsheet=args.lexicon, cognatesets_spreadsheet=args.cogsets).parse()
     session.commit()
     session.close()
 
@@ -242,9 +251,10 @@ if __name__ == "__main__":
         db_path = args.db[len("sqlite:///"):]
         if db_path == '':
             db_path = ':memory:'
+
     dataset = pycldf.Wordlist.from_metadata(
-        "Wordlist-metadata.json",
+        args.metadeta,
     )
-    db = pycldf.db.Database(dataset, fname=db_path)
+    db = pycldf.db.Database(dataset, fname=args.db)
 
     db.to_cldf(args.output)
