@@ -315,7 +315,8 @@ if __name__ == "__main__":
         db_path = args.db[len("sqlite:///"):]
         if db_path == '':
             db_path = ':memory:'
-
+    else:
+        db_path = args.db
     dataset = pycldf.Wordlist.from_metadata(
         args.metadata,
     )
