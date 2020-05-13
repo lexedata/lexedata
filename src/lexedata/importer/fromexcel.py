@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+from typing import Optional, Tuple
+
 import openpyxl as op
 import csv
 from pathlib import Path
 
-from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement, Source
+from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement, Source, Reference
 from lexedata.database.database import create_db_session
 from lexedata.importer.cellparser import CellParser
 import lexedata.importer.exceptions as ex
@@ -88,6 +90,9 @@ class ExcelParser:
     def get_cell_comment(self, cell):
         return cell.comment.content if cell.comment else ""
 
+    def find_form(self, properties):
+        ...
+
     def init_con_form(self, con_iter, form_iter):
         with (self.path / "form_init.csv").open("w", encoding="utf8", newline="") as formsout, \
                 (self.path / "concept_init.csv").open("w", encoding="utf8", newline="") as conceptsout:
@@ -106,24 +111,28 @@ class ExcelParser:
                         for f_ele in self.cell_parser.parse(f_cell):
                             form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
                             form_query = self.session.query(Form).filter(
-                                Form.language==this_lan,
-                                *[getattr(Form, key)==value
+                                Form.language == this_lan,
+                                Form.sources.contains(
+                                    form_cell["source"][0]),
+                                *[getattr(Form, key) == value
                                   for key, value in form_cell.items()
-                                  # We cannot compare in SQL collection to an object
-                                  if type(value) != list
-                                  if not key in self.ignore_for_match
-                                ],
-                                *[getattr(Form, key).contains(value)
-                                  for key, values in form_cell.items()
-                                  if type(values) == list
-                                  for value in values
-                                  if not key in self.ignore_for_match
+                                  if type(value) != tuple
+                                  if key not in self.ignore_for_match
                                 ])
                             form = form_query.one_or_none()
                             if form is None:
                                 form_id = Form.register_new_id("{:}_{:}".format(this_lan.id, concept.id))
-                                form = Form(id=form_id, cell=f_cell.coordinate, **form_cell)
+                                source, context = form_cell.pop("source")
+                                form = Form(id=form_id,
+                                            cell=f_cell.coordinate,
+                                            sources=[source],
+                                            **form_cell)
                                 self.session.add(form)
+                                if context:
+                                    assoc = self.session.query(Reference).filter(
+                                        Reference.form==form.id,
+                                        Reference.source==source.id).one()
+                                    assoc.context = context
                             else:
                                 for key, value in form_cell.items():
                                     # FIXME: Maybe test `if value`? – discuss
@@ -151,18 +160,35 @@ class ExcelParser:
                             form.concepts.append(concept)
                             self.session.commit()
 
-    def form_from_cell(self, f_ele, lan, form_cell):
-        phonemic, phonetic, ortho, comment, source, _ = f_ele
-
+    def source_from_source_string(
+            self,
+            language: Language,
+            source_string: str) -> Tuple[Source, Optional[str]]:
         # Source number {1} is not always specified
-        source_id = Source.string_to_id(
-            "{:s}_{:}".format(lan.id, (source if source else "{1}").strip()))
+        if not source_string or not source_string.strip():
+            source_string = "{1}"
 
+        context: Optional[str]
+        if ":" in source_string:
+            source_string, context = source_string.split(":", maxsplit=1)
+            assert context.endswith("}")
+            source_string += "}"
+            context = context[:-1].strip()
+        else:
+            context = None
+
+        source_id = Source.string_to_id(f"{language.id:}_s{source_string}")
         source = self.session.query(Source).filter(
             Source.id == source_id).one_or_none()
         if source is None:
             source = Source(id=source_id)
             self.session.add(source)
+        return source, context
+
+    def form_from_cell(self, f_ele, lan, form_cell):
+        phonemic, phonetic, ortho, comment, source, _ = f_ele
+
+        source, context = self.source_from_source_string(lan, source)
 
         return {
             "language": lan,
@@ -170,8 +196,7 @@ class ExcelParser:
             "phonetic": phonetic,
             "orthographic": ortho,
             "comment": None if comment is None else comment.strip(),
-            # FIXME: We need to create those source objects so we can refer to them
-            "sources": [source],
+            "source": (source, context),
             "procedural_comment": self.get_cell_comment(form_cell).strip(),
         }
 
@@ -200,24 +225,25 @@ class ExcelParser:
                             for f_ele in self.cell_parser.parse(f_cell):
                                 form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
                                 form_query = self.session.query(Form).filter(
-                                    Form.language==this_lan,
-                                    *[getattr(Form, key)==value
-                                    for key, value in form_cell.items()
-                                    # We cannot compare in SQL collection to an object
-                                    if type(value) != list
-                                    if not key in self.ignore_for_match
-                                    ],
-                                    *[getattr(Form, key).contains(value)
-                                    for key, values in form_cell.items()
-                                    if type(values) == list
-                                    for value in values
-                                    if not key in self.ignore_for_match
+                                    Form.language == this_lan,
+                                    *[getattr(Form, key) == value
+                                      for key, value in form_cell.items()
+                                      if type(value) != tuple
+                                      if key not in self.ignore_for_match
                                     ])
-                                form = form_query.one_or_none()
-                                if form is None:
+                                forms = form_query.all()
+
+                                if not forms:
                                     raise ex.CognateCellError(
-                                        "Found form {:}:{:} ({:}) in cognate table that is not in lexicon.".format(
-                                            this_lan.id, f_ele, form_cell), f_cell)
+                                        "Found form {:}:{:} in cognate table that is not in lexicon.".format(
+                                            this_lan.id, f_ele), f_cell)
+                                source, context = form_cell["source"]
+                                for form in forms:
+                                    if source in form.sources:
+                                        break
+                                else:
+                                    print("{f_cell.column_letter}{f_cell.row}: Form was given as {form_cell}, but cloesest match has different sources {form.sources:}!")
+
                                 judgement = self.session.query(CognateJudgement).filter(
                                     CognateJudgement.form==form,
                                     CognateJudgement.cognateset==cogset).one_or_none()

@@ -144,6 +144,6 @@ class CognateJudgement(DatabaseObjectWithUniqueStringID):
 
 class Reference(Base):
     __tablename__ = 'FormTable_SourceTable'
-    form = sa.Column('FormTable_cldf_id', sa.String, sa.ForeignKey(Form.id))
-    source = sa.Column('SourceTable_id', sa.String, sa.ForeignKey(Source.id))
+    form = sa.Column('FormTable_cldf_id', sa.String, sa.ForeignKey(Form.id), primary_key=True)
+    source = sa.Column('SourceTable_id', sa.String, sa.ForeignKey(Source.id), primary_key=True)
     context = sa.Column('context', sa.String)
