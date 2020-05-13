@@ -5,7 +5,8 @@ from sqlalchemy import or_, and_
 import openpyxl as op
 
 from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement, \
-    DatabaseObjectWithUniqueStringID, create_db_session
+    DatabaseObjectWithUniqueStringID
+from lexedata.database.database import create_db_session
 from lexedata.importer.cellparser import CellParser, CogCellParser
 from lexedata.importer.exceptions import *
 
