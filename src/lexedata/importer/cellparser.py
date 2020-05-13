@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
-from typing import Literal, Tuple, Optional
+from typing import Tuple, Optional  # Literal,
 
 from lexedata.importer.exceptions import *
 
@@ -51,26 +51,6 @@ class CellParser():
     \s*               # Any amount of spaces
     (?=[</\[])        # Followed by the beginning of any transcription, but don't consume that bit""",
         re.VERBOSE)
-    # pattern for parsing content of cell
-    cell_value_pattern = re.compile(r"""
-    ^                 # Start of the form
-    (/.+?/)?          # A /phonetic/ transcription
-    \s*               # optional whitespace
-    (\[.+?\])?        # a [phonetic] transcription
-    \s*               # optional whitespace
-    (<.+?>)?          # an <orthographic> transcription
-    \s*               # optional whitespace
-    (\(.+\))?         # A (comment), most likely a translation
-    \s*               # optional whitespace
-    (\{.+\})?         # {source}, assumed to be language-specific
-    $                 # End string
-    """)
-    __special_pattern = [re.compile(e) for e in [r"^.*(/.+/).*$",
-                                                r"^.*(\[.+?\]).*$",
-                                                r"^.*(<.+?>).*$",
-                                                r"^.*(\(.+\)).*$",
-                                                r"^.*(\{.+?\}).*$"]
-                       ]
 
     def __init__(self):
         pass
