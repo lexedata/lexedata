@@ -4,7 +4,7 @@ import sqlalchemy as sa
 from collections import defaultdict
 from pycldf.db import BIBTEX_FIELDS
 
-from lexedata.database.database import (create_db_session, Base, DatabaseObjectWithUniqueStringID)
+from lexedata.database.database import (Base, DatabaseObjectWithUniqueStringID)
 
 Base.metadata.clear()
 
@@ -48,7 +48,7 @@ class Form(DatabaseObjectWithUniqueStringID):
 
     sources = sa.orm.relationship(
         Source,
-        secondary="FormTable_SourceTable"
+        secondary="FormTable_SourceTable",
     )
     concepts = sa.orm.relationship(
         "Concept", # will be parsed to the class once it is defined
@@ -142,9 +142,8 @@ class CognateJudgement(DatabaseObjectWithUniqueStringID):
                    cognate_comment=cognate.cognate_comment, procedural_comment=cognate.procedural_comment)
 
 
-form_sources = sa.Table(
-    'FormTable_SourceTable', Base.metadata,
-    sa.Column('FormTable_cldf_id', sa.String, sa.ForeignKey(Form.id)),
-    sa.Column('SourceTable_id', sa.String, sa.ForeignKey(Source.id)),
-    sa.Column('context', sa.String),
-)
+class Reference(Base):
+    __tablename__ = 'FormTable_SourceTable'
+    form = sa.Column('FormTable_cldf_id', sa.String, sa.ForeignKey(Form.id))
+    source = sa.Column('SourceTable_id', sa.String, sa.ForeignKey(Source.id))
+    context = sa.Column('context', sa.String)
