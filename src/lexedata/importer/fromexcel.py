@@ -264,15 +264,12 @@ class ExcelParser:
 
     def initialize_cognate(self):
         wb = op.load_workbook(filename=self.cognatesets_spreadsheet)
-        try:
-            for sheet in wb.sheetnames:
-                print("\nParsing sheet '{:s}'".format(sheet))
-                ws = wb[sheet]
-                iter_cog = ws.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
-                iter_congset = ws.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
-                self.cogset_cognate(iter_congset, iter_cog)
-        except KeyError:
-            pass
+        for sheet in wb.sheetnames:
+            print("\nParsing sheet '{:s}'".format(sheet))
+            ws = wb[sheet]
+            iter_cog = ws.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
+            iter_congset = ws.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
+            self.cogset_cognate(iter_congset, iter_cog)
 
 
 if __name__ == "__main__":
