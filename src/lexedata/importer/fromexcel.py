@@ -251,8 +251,10 @@ class ExcelParser:
                                     judgement = CognateJudgement(id=id, form=form, cognateset=cogset)
                                     self.session.add(judgement)
                                 else:
-                                    print("Duplicate cognate judgement found in cell {:}. "
-                                          "(How even is that possible?)".format(f_cell.coordinate))
+                                    print(
+                                        f"{f_cell.coordinate:}: [W] "
+                                        "Duplicate cognate judgement found for form {form:}. "
+                                        "(I assume it is fine, I added it once.)")
                         except (ex.CellParsingError, ex.CognateCellError) as e:
                             print("{:s}{:d}: [E]".format(f_cell.column_letter, f_cell.row), e)
                             continue
