@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import unicodedata
 from typing import Literal, Tuple, Optional
 
 from lexedata.importer.exceptions import *
@@ -80,7 +81,12 @@ class CellParser():
 
         """
         # FIXME: Avoid side-effects to the parser class
-        values = cell.value
+
+        # In the process of writing to SQLite, unicode normalization happens at
+        # some point, which makes some comparisons fail. If we manually
+        # pre-normalize here, we reduce pain later.
+        values = unicodedata.normalize('NFKC', cell.value)
+
         self.coordinate = cell.coordinate
         if not values:  # capture None values
             raise CellParsingError(values, self.coordinates)

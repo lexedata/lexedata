@@ -113,7 +113,7 @@ class ExcelParser:
                             form_query = self.session.query(Form).filter(
                                 Form.language == this_lan,
                                 Form.sources.contains(
-                                    form_cell["source"][0]),
+                                    form_cell["sources"][0]),
                                 *[getattr(Form, key) == value
                                   for key, value in form_cell.items()
                                   if type(value) != tuple
@@ -122,7 +122,7 @@ class ExcelParser:
                             form = form_query.one_or_none()
                             if form is None:
                                 form_id = Form.register_new_id("{:}_{:}".format(this_lan.id, concept.id))
-                                source, context = form_cell.pop("source")
+                                source, context = form_cell.pop("sources")
                                 form = Form(id=form_id,
                                             cell=f_cell.coordinate,
                                             sources=[source],
@@ -135,28 +135,16 @@ class ExcelParser:
                                     assoc.context = context
                             else:
                                 for key, value in form_cell.items():
-                                    # FIXME: Maybe test `if value`? – discuss
-                                    if key in self.ignore_for_match:
-                                        if getattr(form, key)!=value:
-                                            if not getattr(form, key):
-                                                print(
-                                                    "{:s}{:d}:".format(f_cell.column_letter, f_cell.row),
-                                                    "Property {:s} of form defined here was '{:}', which "
-                                                    "did not match '{:}' specified earlier for the same form in {:s}. "
-                                                    "I took the non-empty {:s}.".format(
-                                                        key, value, getattr(form, key), form.cell, key)
-                                                    .replace("\n", "\t")
-                                                )
-                                                setattr(form, key, value)
-                                            else:
-                                                print(
-                                                    "{:s}{:d}:".format(f_cell.column_letter, f_cell.row),
-                                                    "Property {:s} of form defined here was '{:}', which "
-                                                    "did not match '{:}' specified earlier for the same form in {:s}. "
-                                                    "I kept the original {:s}.".format(
-                                                        key, value, getattr(form, key), form.cell, key)
-                                                    .replace("\n", "\t")
-                                                )
+                                    try:
+                                        old_value = getattr(form, key) or ''
+                                    except AttributeError:
+                                        continue
+                                    if value and key in self.ignore_for_match:
+                                        # FIXME: Maybe test `if value`? – discuss
+                                        if value.lstrip("(").rstrip(")") not in old_value:
+                                            new_value = f"{value:}; {old_value:}".strip().strip(";").strip()
+                                            print(f"{f_cell.coordinate}: Property {key:} of form defined here was '{value:}', which was not part of '{old_value:}' specified earlier for the same form in {form.cell}. I combined those values to '{new_value:}'.".replace("\n", "\t"))
+                                            setattr(form, key, new_value)
                             form.concepts.append(concept)
                             self.session.commit()
 
@@ -196,8 +184,9 @@ class ExcelParser:
             "phonetic": phonetic,
             "orthographic": ortho,
             "comment": None if comment is None else comment.strip(),
-            "source": (source, context),
+            "sources": (source, context),
             "procedural_comment": self.get_cell_comment(form_cell).strip(),
+            "original": Form.string_to_id(f"{phonemic:}{phonetic:}{ortho:}")
         }
 
     def cogset_from_row(self, cog_row):
@@ -207,7 +196,6 @@ class ExcelParser:
                 "comment": self.get_cell_comment(cog_row[1])}
 
     def cogset_cognate(self, cogset_iter, cog_iter):
-
         for cogset_row, row_forms in zip(cogset_iter, cog_iter):
             if not cogset_row[1].value:
                 continue
@@ -217,9 +205,13 @@ class ExcelParser:
                 cogset = CogSet(id=id, **properties)
 
                 for f_cell in row_forms:
+                    try:
+                        this_lan = self.lan_dict[f_cell.column]
+                    except KeyError:
+                        continue
+
                     if f_cell.value:
                         # get corresponding language_id to column
-                        this_lan = self.lan_dict[f_cell.column]
 
                         try:
                             for f_ele in self.cell_parser.parse(f_cell):
@@ -234,16 +226,21 @@ class ExcelParser:
                                 forms = form_query.all()
 
                                 if not forms:
+                                    similar_forms = self.session.query(Form).filter(
+                                        Form.language == this_lan,
+                                        Form.original.contains(Form.string_to_id(form_cell["phonemic"])),
+                                        Form.original.contains(Form.string_to_id(form_cell["phonetic"])),
+                                        Form.original.contains(Form.string_to_id(form_cell["orthographic"])),
+                                    ).all()
                                     raise ex.CognateCellError(
-                                        "Found form {:}:{:} in cognate table that is not in lexicon.".format(
-                                            this_lan.id, f_ele), f_cell)
-                                source, context = form_cell["source"]
+                                        f"Found form {this_lan.id:}:{f_ele:} in cognate table that is not in lexicon. Stripping special characters, did you mean one of {similar_forms:}?", f_cell.coordinate)
+                                source, context = form_cell["sources"]
                                 for form in forms:
                                     if source in form.sources:
                                         break
                                 else:
                                     source_ids = [s.id for s in form.sources]
-                                    print(f"{f_cell.column_letter}{f_cell.row}: Form was given with source {form_cell['source'][0].id}, but closest match (form.cldf_id) has different sources {source_ids:}!")
+                                    print(f"{f_cell.column_letter}{f_cell.row}: [W] Form was given with source {form_cell['sources'][0].id}, but closest match (form.cldf_id) has different sources {source_ids:}. I assume that's a mistake and I'll add that closest match to the current cognate set.")
 
                                 judgement = self.session.query(CognateJudgement).filter(
                                     CognateJudgement.form==form,
@@ -256,7 +253,7 @@ class ExcelParser:
                                     print("Duplicate cognate judgement found in cell {:}. "
                                           "(How even is that possible?)".format(f_cell.coordinate))
                         except (ex.CellParsingError, ex.CognateCellError) as e:
-                            print("{:s}{:d}:".format(f_cell.column_letter, f_cell.row), e)
+                            print("{:s}{:d}: [E]".format(f_cell.column_letter, f_cell.row), e)
                             continue
                     self.session.commit()
             else:
