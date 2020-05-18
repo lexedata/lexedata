@@ -87,7 +87,7 @@ class Concept(DatabaseObjectWithUniqueStringID):
         back_populates="concepts"
     )
 
-# Todo: has become obsolete since forms has now a direct relation to concepts
+# Todo: might be obsolete since forms has now a direct relation to concepts
 class FormMeaningAssociation(Base):
     __tablename__ = 'FormTable_ParameterTable'
     form = sa.Column('FormTable_cldf_id',
