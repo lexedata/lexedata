@@ -44,6 +44,8 @@ class Form(DatabaseObjectWithUniqueStringID):
     comment = sa.Column(sa.String, name="cldf_comment")
     procedural_comment = sa.Column(sa.String, name="procedural_comment")
 
+    def __repr__(self):
+        return f"{self.language_id:}{self.phonemic:}{self.phonetic:}{self.orthographic:} ({self.cell})"
     cell = sa.Column(sa.String, name="cell")
 
     sources = sa.orm.relationship(
