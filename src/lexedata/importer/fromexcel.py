@@ -7,7 +7,7 @@ from pathlib import Path
 
 from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement, Source, Reference
 from lexedata.database.database import create_db_session
-from lexedata.importer.cellparser import CellParser
+from lexedata.importer.cellparser import  CellParserLexical
 import lexedata.importer.exceptions as ex
 
 
@@ -25,7 +25,7 @@ class ExcelParser:
         self.lan_dict = {}
         self.lexicon_spreadsheet = lexicon_spreadsheet
         self.cognatesets_spreadsheet = cognatesets_spreadsheet
-        self.cell_parser = CellParser()
+        self.cell_parser = CellParserLexical()
         self.ignore_for_match = [
             "id",
             "variants",
@@ -108,7 +108,7 @@ class ExcelParser:
                         # get corresponding language_id to column
                         this_lan = self.lan_dict[f_cell.column]
 
-                        for f_ele in self.cell_parser.parse(f_cell):
+                        for f_ele in self.cell_parser.parse(f_cell.value, f_cell.coordinate):
                             form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
                             form_query = self.session.query(Form).filter(
                                 Form.language == this_lan,
