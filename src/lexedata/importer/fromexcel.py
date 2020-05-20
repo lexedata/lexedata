@@ -174,7 +174,7 @@ class ExcelParser:
         return source, context
 
     def form_from_cell(self, f_ele, lan, form_cell):
-        phonemic, phonetic, ortho, comment, source, _ = f_ele
+        phonemic, phonetic, ortho, comment, source, variants = f_ele
 
         source, context = self.source_from_source_string(lan, source)
 
@@ -183,6 +183,7 @@ class ExcelParser:
             "phonemic": phonemic,
             "phonetic": phonetic,
             "orthographic": ortho,
+            "variants": variants,
             "comment": None if comment is None else comment.strip(),
             "sources": (source, context),
             "procedural_comment": self.get_cell_comment(form_cell).strip(),
