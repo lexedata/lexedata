@@ -2,7 +2,7 @@
 import re
 import unicodedata
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Pattern, List, Dict
 
 from lexedata.importer.exceptions import *
 
@@ -25,37 +25,46 @@ ortho_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(<.+?>(?:\s*[~%]\s*<.+?>)*)(.*)
 
 source_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))({.+?})(.*)$")  # just one source per form, must not be empty
 
-my_form_pattern = [(phonemic_pattern, "phonemic"),
-                    (phonetic_pattern, "phonetic"),
-                    (ortho_pattern, "orthographic"),
-                    (source_pattern, "source")]
+my_form_pattern = {"phonemic": phonemic_pattern,
+                   "phonetic": phonetic_pattern,
+                   "orthographic": ortho_pattern,
+                   "source": source_pattern}
 
-lexical_parser_default_settings = {
-    "illegal_symbols_description": re.compile(r"[</[{]"),
-    "illegal_symbols_transcription": re.compile(r"[;]"),
-    "form_pattern": my_form_pattern,
-    "description_pattern": re.compile(r"^(.*?)(\(.+\))(.*)$"),
-    "separator_pattern": re.compile(r"""
+
+class CellParser:
+    illegal_symbols_description = re.compile(r"[</[{]"),
+    illegal_symbols_transcription = re.compile(r"[;]"),
+    form_pattern = my_form_pattern,
+    description_pattern = re.compile(r"^(.*?)(\(.+\))(.*)$"),
+    separator_pattern = re.compile(r"""
                  (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
                  \s*               # Any amount of spaces
                  [,;]              # Some separator
                  \s*               # Any amount of spaces
                  (?=[</\[])        # Followed by the beginning of any transcription, but don't consume that bit""",
                                     re.VERBOSE),
-    "ignore_pattern": re.compile(r"^(.+)#.+?#(.*)$")  # anything between # # is replaced by an empty string
-}
+    ignore_pattern = re.compile(r"^(.+)#.+?#(.*)$")  # anything between # # is replaced by an empty string
 
-
-class CellParser(ABC):
-
-    def __init__(self, illegal_symbols_description, illegal_symbols_transcription, form_pattern, description_pattern,
-                separator_pattern, ignore_pattern, **kwargs):
-        self.separator_pattern = separator_pattern
-        self.illegal_symbols_description = illegal_symbols_description
-        self.illegal_symbols_transcription = illegal_symbols_transcription
-        self.form_pattern = form_pattern
-        self.description_pattern = description_pattern
-        self.ignore_pattern = ignore_pattern
+    def __init__(
+            self,
+            illegal_symbols_description: Optional[Pattern],
+            illegal_symbols_transcription: Optional[Pattern],
+            form_pattern: Optional[Dict[str, Pattern, str]],
+            description_pattern: Optional[Pattern],
+            separator_pattern: Optional[Pattern],
+            ignore_pattern: Optional[Pattern]):
+        if separator_pattern is not None:
+            self.separator_pattern = separator_pattern
+        if illegal_symbols_description is not None:
+            self.illegal_symbols_description = illegal_symbols_description
+        if illegal_symbols_transcription is not None:
+            self.illegal_symbols_transcription = illegal_symbols_transcription
+        if form_pattern is not None:
+            self.form_pattern = form_pattern
+        if description_pattern is not None:
+            self.description_pattern = description_pattern
+        if ignore_pattern is not None:
+            self.ignore_pattern = ignore_pattern
 
     def separate(self, values):
         values = unicodedata.normalize('NFKC', values)
@@ -71,16 +80,20 @@ class CellParser(ABC):
 
     @classmethod
     def bracket_checker(cls, opening, closing, string):
-        if not string:
-            return False
-        else:
-            return string.count(opening) == string.count(closing)
+        assert len(opening) == len(closing) == 1, "Can only check single-character bracketing"
+        b = 0
+        for c in string:
+            if c == opening:
+                b += 1
+            if c == closing:
+                b -= 1
+            if b < 0:
+                return False
+        return b == 0
 
-    @abstractmethod
     def parse_value(self, values, coordinate):
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def parse(self, values, coordinate):
         self.coordinate = coordinate
         # replace ignore pattern with empty string
@@ -180,8 +193,7 @@ class CellParserLexical(CellParser):
         ele = (formele + ".")[:-1]  # force python to hard copy string
         # parse transcriptions and fill dictionary d
         d = dict()
-        for pat, lable in self.form_pattern:
-
+        for lable, pat in self.form_pattern.items():
             mymatch = pat.match(ele)
             if mymatch:
                 # delete match in cell
