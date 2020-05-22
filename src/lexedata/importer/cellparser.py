@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
 import unicodedata
-from abc import ABC, abstractmethod
 from typing import Tuple, Optional, Pattern, List, Dict
 
 from lexedata.importer.exceptions import *
@@ -292,6 +291,14 @@ class CellParserLexical(CellParser):
         else:
             return string
 
+
+class CellParserCognate(CellParserLexical):
+
+    def parse_value(self, values, coordinate):
+        if values.isupper():
+            raise IgnoreCellError(values, coordinate)
+        else:
+            return super().parse_value(values, coordinate)
 
 
 class CellParserLD():
