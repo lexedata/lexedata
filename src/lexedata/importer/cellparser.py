@@ -32,27 +32,27 @@ my_form_pattern = {"phonemic": phonemic_pattern,
 
 
 class CellParser:
-    illegal_symbols_description = re.compile(r"[</[{]"),
-    illegal_symbols_transcription = re.compile(r"[;]"),
-    form_pattern = my_form_pattern,
-    description_pattern = re.compile(r"^(.*?)(\(.+\))(.*)$"),
+    illegal_symbols_description = re.compile(r"[</[{]")
+    illegal_symbols_transcription = re.compile(r"[;]")
+    form_pattern = my_form_pattern
+    description_pattern = re.compile(r"^(.*?)(\(.+\))(.*)$")
     separator_pattern = re.compile(r"""
                  (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
                  \s*               # Any amount of spaces
                  [,;]              # Some separator
                  \s*               # Any amount of spaces
                  (?=[</\[])        # Followed by the beginning of any transcription, but don't consume that bit""",
-                                    re.VERBOSE),
+                                    re.VERBOSE)
     ignore_pattern = re.compile(r"^(.+)#.+?#(.*)$")  # anything between # # is replaced by an empty string
 
     def __init__(
             self,
-            illegal_symbols_description: Optional[Pattern],
-            illegal_symbols_transcription: Optional[Pattern],
-            form_pattern: Optional[Dict[str, Pattern, str]],
-            description_pattern: Optional[Pattern],
-            separator_pattern: Optional[Pattern],
-            ignore_pattern: Optional[Pattern]):
+            illegal_symbols_description: Optional[Pattern] = None,
+            illegal_symbols_transcription: Optional[Pattern] = None,
+            form_pattern: Optional[Dict[str, Pattern]] = None,
+            description_pattern: Optional[Pattern] = None,
+            separator_pattern: Optional[Pattern] = None,
+            ignore_pattern: Optional[Pattern] = None):
         if separator_pattern is not None:
             self.separator_pattern = separator_pattern
         if illegal_symbols_description is not None:
@@ -131,21 +131,6 @@ class CellParser:
 
 
 class CellParserLexical(CellParser):
-
-    def __init__(self, illegal_symbols_description=None, illegal_symbols_transcription=None, form_pattern=None,
-                 description_pattern=None, separator_pattern=None, ignore_pattern=None, **kwargs):
-        # personalized used if arguments not None
-        if any(kwargs.values()):
-            super().__init__(illegal_symbols_description,
-                             illegal_symbols_transcription, form_pattern,
-                             description_pattern, separator_pattern, ignore_pattern)
-        else: # use with default settings
-            super().__init__(**lexical_parser_default_settings)
-
-    def parse(self, values, coordinate):
-        for element in super().parse(values, coordinate):
-            yield element
-
     def parse_value(self, values, coordinate):
         return self.parsecell(values, coordinate)
 
