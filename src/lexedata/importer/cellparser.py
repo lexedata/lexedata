@@ -12,14 +12,15 @@ comment_bracket = lambda str: str.count("(") == str.count(")")
 # TODO: ask Gereon about escaping
 comment_escapes = re.compile(r"&[</\[{].+?(?:\s|.$)")
 
-phonemic_pattern = re.compile(r"""(?:^| # start of the line or
-        (.*?(?<=[^&]))) #capture anything before phonemic, phonemic must not follow a &, i.e. & escapes
-        (/[^/]+? #first phonemic element, not greedy, 
-                 # special for phonemic: use [^/] instead of . to ensure correct escaping
-        (?<=[^&])/  # applies only to phonemic: closer must not follow &, otherwise &/a/ texttext &/b/ will render / texttext &/
-        (?:\s*[~%]\s*/[^/]+?/)*  #non capturing pattern for any repetition of [%~]/..../
-        )  #capture whole group
-        (.*)$ #capture the rest""", re.VERBOSE)
+phonemic_pattern = re.compile(r"""
+(?:^| # start of the line or
+  (.*?(?<=[^&]))) #capture anything before phonemic, phonemic must not follow a &, i.e. & escapes
+  (/[^/]+? #first phonemic element, not greedy,
+           # special for phonemic: use [^/] instead of . to ensure correct escaping
+  (?<=[^&])/  # applies only to phonemic: closer must not follow &, otherwise &/a/ texttext &/b/ will render / texttext &/
+  (?:\s*[~%]\s*/[^/]+?/)*  #non capturing pattern for any repetition of [%~]/..../
+)  #capture whole group
+(.*)$ #capture the rest""", re.VERBOSE)
 phonetic_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(\[.+?](?:\s*[~%]\s*\[.+?])*)(.*)$")
 ortho_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(<.+?>(?:\s*[~%]\s*<.+?>)*)(.*)$")
 
@@ -598,30 +599,3 @@ class CogCellParser(CellParser):
 
         self.set_elements(values)
 
-
-class Tester():
-
-    def __init__(self, string, coordinate="asf"):
-        self.value = string
-        self.coordinate = coordinate
-
-    def __hash__(self):
-        return self
-
-
-if __name__ == "__main__":
-
-    c1 = Tester(
-        "<tatatĩ>(humo){Guasch1962:717}, <timbo>(vapor, vaho, humareda, humo){Guasch1962:729};<tĩ> (humo, vapor de agua)$LDM:deleted 'nariz, pico, hocico, punta, and ápica' meanings; source incorrectly merges 'point' and 'smoke' meanings ${Guasch1962:729}")
-    c2 = Tester(
-        "/pãlĩ/ (de froment = wheat) (NCP: loan from french farine), /pɨlatɨ/ (de mais cru), /kuʔi/ (de mais grillé)")
-    c3 = Tester(
-        "/pãlĩ/ (de froment = wheat(NCP: loan from french farine), &<dummy>), /pɨlatɨ/ (de mais cru), /kuʔi/ (de mais grillé)")
-    c4 = Tester("/popɨãpat/ 'back of elbow' {4}")
-    c5 = Tester("<ayu> (nominalized &/afaaa/ version of &/ete/ 'about') {2}")
-    for ele in [c1, c2, c3, c4, c5]:
-        print(ele.value)
-        print("is represented as: ")
-        for f in CogCellParser(ele):
-            print(f)
-        input()
