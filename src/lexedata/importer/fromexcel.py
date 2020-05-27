@@ -153,9 +153,6 @@ class ExcelParser:
     def get_cell_comment(cell):
         return cell.comment.content if cell.comment else ""
 
-    def find_form(self, properties):
-        ...
-
     def init_con_form(self, con_iter, form_iter):
             for row_forms, row_con in zip(form_iter, con_iter):
                 concept_properties = self.concept_from_row(row_con)
@@ -170,7 +167,7 @@ class ExcelParser:
                         for f_ele in self.cell_parser.parse(f_cell.value, f_cell.coordinate):
                             form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
                             form_query = self.session.query(self.Form).filter(
-                                self.Form.cldf_languageReference == this_lan.cldf_id,
+                                self.Form == this_lan,
                                 # FIXME: self.Form.cldf_source.contains(form_cell["sources"][0]),
                                 *[getattr(self.Form, key) == value
                                   for key, value in form_cell.items()
@@ -291,7 +288,7 @@ class ExcelParser:
 
                                 if not forms:
                                     similar_forms = self.session.query(self.Form).filter(
-                                        self.Form.cldf_languageReference == this_lan.cldf_id,
+                                        self.Form.language == this_lan,
                                         Form.original.contains(Form.string_to_id(form_cell["phonemic"])),
                                         Form.original.contains(Form.string_to_id(form_cell["phonetic"])),
                                         Form.original.contains(Form.string_to_id(form_cell["orthographic"])),
