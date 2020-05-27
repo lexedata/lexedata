@@ -117,6 +117,48 @@ class DatabaseObjectWithUniqueStringID(Base):
         return candidate
 
 
+def string_to_id(string):
+    """Generate a useful id string from the string
+
+    >>> string_to_id("trivial")
+    'trivial'
+    >>> string_to_id("Just 4 non-alphanumerical characters.")
+    'just_4_non_alphanumerical_characters'
+    >>> string_to_id("Это русский.")
+    'eto_russkii'
+    >>> string_to_id("该语言有一个音节。")
+    'gai_yu_yan_you_yi_ge_yin_jie'
+    >>> string_to_id("この言語には音節があります。")
+    'konoyan_yu_nihayin_jie_gaarimasu'
+
+    """
+    # We nee to run this through valid_id_elements twice, because some word
+    # characters (eg. Chinese) are unidecoded to contain non-word characters.
+    return invalid_id_elements.sub(
+        "_", uni.unidecode(
+            invalid_id_elements.sub("_", string)).lower()).strip("_")
+
+
+def new_id(maybe_not_unique: str, cl, session: sa.engine.Connectable):
+    """Turn the current string into a unique id for the table
+
+    Turn the string into a useful id string using string_to_id, then append a
+    decimal integer number to that string that is large enough to make the id
+    different from all objects added to the database so far.
+
+    >>> session = create_db_session(location='sqlite:///:memory:')
+
+    """
+    id = string_to_id(maybe_not_unique)
+    i = 0
+    candidate = id
+    while session.query(cl.cldf_id).filter(cl.cldf_id == candidate).one_or_none():
+        i += 1
+        candidate = "{:s}_{:d}".format(id, i)
+    return candidate
+
+
+
 def create_db_session(location='sqlite:///:memory:', echo=False):
     # FIXME: Give this a parameter to decide whether or not an existing DB should be overwritten
     try:

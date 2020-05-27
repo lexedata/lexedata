@@ -1,24 +1,45 @@
 # -*- coding: utf-8 -*-
-from typing import Optional, Tuple
 
-import openpyxl as op
 import csv
+import typing as t
 from pathlib import Path
 
-from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement, Source, Reference
-from lexedata.database.database import create_db_session
-from lexedata.importer.cellparser import  CellParserLexical
-import lexedata.importer.exceptions as ex
+import pycldf
+import openpyxl as op
+import sqlalchemy as sa
+from sqlalchemy.ext.automap import automap_base
 
+from lexedata.database.database import create_db_session, new_id, string_to_id
+from lexedata.importer.cellparser import CellParserLexical
+import lexedata.importer.exceptions as ex
+import lexedata.cldf.db as db
+
+CLDFObject = t.Any
 
 class ExcelParser:
+    def __init__(
+            self,
+            output=Path("initial_data/cldf-metadata.json"),
+            lexicon_spreadsheet="TG_comparative_lexical_online_MASTER.xlsx",
+            cognatesets_spreadsheet="TG_cognates_online_MASTER.xlsx"):
+        dataset = pycldf.Dataset.from_metadata(output)
+        database = db.Database(dataset)
+        database.write()
+        connection = database.connection()
+        def creator():
+            return connection
+        Base = automap_base()
+        engine = sa.create_engine("sqlite:///:memory:", creator=creator)
+        Base.prepare(engine, reflect=True)
+        self.session = sa.orm.Session(engine)
 
-    def __init__(self,
-                 session,
-               output=Path("initial_data"),
-               lexicon_spreadsheet = "TG_comparative_lexical_online_MASTER.xlsx",
-               cognatesets_spreadsheet = "TG_cognates_online_MASTER.xlsx"):
-        self.session = session
+        print(dir(Base.classes))
+        self.Form = Base.classes.FormTable
+        self.Language = Base.classes.LanguageTable
+        self.Concept = Base.classes.ParameterTable
+        self.Source = Base.classes.SourceTable
+        self.Reference = Base.classes.FormTable_SourceTable__cldf_source
+
         self.path = Path(output)
         if not self.path.exists():
             self.path.mkdir()
@@ -51,57 +72,48 @@ class ExcelParser:
         self.init_con_form(iter_concept, iter_forms)
 
     def language_from_column(self, column):
-        excel_name, curator = [cell.value or "" for cell in column]
-        name, comment = "", ""
+        data = [cell.value or "" for cell in column[:2]]
+        comment = self.get_cell_comment(column[0])
         return {
-            "name": name,
-            "curator": curator,
-            "comment": comment,
-            "raw name": excel_name,
+            "cldf_name": data[0],
+            "Curator": data[1],
+            "cldf_comment": comment
         }
 
     def concept_from_row(self, row):
         set, english, english_strict, spanish, portuguese, french = [cell.value or "" for cell in row]
+        comment = self.get_cell_comment(row[0])
         return {
-            "set": set,
-            "english": english,
-            "english_strict": english_strict,
-            "spanish": portuguese,
-            "french": french,
-            "gloss": english,
+            # "set": set,
+            # "english": english,
+            # "english_strict": english_strict,
+            # "spanish": portuguese,
+            # "french": french,
+            "cldf_name": english,
+            "cldf_comment": comment
         }
 
     def init_lan(self, lan_iter):
         for lan_col in lan_iter:
             # iterate over language columns
             language_properties = self.language_from_column(lan_col)
-            raw_name = language_properties.pop("raw name")
-            id = Language.register_new_id(raw_name)
-            if not raw_name or not id:
-                print(f"Language {language_properties:} could not be created")
-                continue
-            if not language_properties["name"]:
-                language_properties["name"] = raw_name
-
-            language = Language(id=id, **language_properties)
+            id = new_id(language_properties["cldf_name"], self.Language, self.session)
+            language = self.Language(cldf_id=id, **language_properties)
             self.session.add(language)
             self.lan_dict[lan_col[0].column] = language
 
-    def get_cell_comment(self, cell):
+    @staticmethod
+    def get_cell_comment(cell):
         return cell.comment.content if cell.comment else ""
 
     def find_form(self, properties):
         ...
 
     def init_con_form(self, con_iter, form_iter):
-        with (self.path / "form_init.csv").open("w", encoding="utf8", newline="") as formsout, \
-                (self.path / "concept_init.csv").open("w", encoding="utf8", newline="") as conceptsout:
-
             for row_forms, row_con in zip(form_iter, con_iter):
                 concept_properties = self.concept_from_row(row_con)
-                concept_id = Concept.register_new_id(concept_properties.pop("gloss"))
-                comment = self.get_cell_comment(row_con[0])
-                concept = Concept(id=concept_id, comment=comment, **concept_properties)
+                concept_id = new_id(concept_properties["cldf_name"], self.Concept, self.session)
+                concept = self.Concept(cldf_id=concept_id, **concept_properties)
 
                 for f_cell in row_forms:
                     if f_cell.value:
@@ -110,29 +122,29 @@ class ExcelParser:
 
                         for f_ele in self.cell_parser.parse(f_cell.value, f_cell.coordinate):
                             form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
-                            form_query = self.session.query(Form).filter(
-                                Form.language == this_lan,
-                                Form.sources.contains(
-                                    form_cell["sources"][0]),
-                                *[getattr(Form, key) == value
+                            form_query = self.session.query(self.Form).filter(
+                                self.Form.cldf_languageReference == this_lan.cldf_id,
+                                # FIXME: self.Form.cldf_source.contains(form_cell["sources"][0]),
+                                *[getattr(self.Form, key) == value
                                   for key, value in form_cell.items()
                                   if type(value) != tuple
                                   if key not in self.ignore_for_match
                                 ])
                             form = form_query.one_or_none()
                             if form is None:
-                                form_id = Form.register_new_id("{:}_{:}".format(this_lan.id, concept.id))
-                                source, context = form_cell.pop("sources")
-                                form = Form(id=form_id,
-                                            cell=f_cell.coordinate,
-                                            sources=[source],
+                                form_id = new_id("{:}_{:}".format(this_lan.cldf_id, concept.cldf_id),
+                                                 self.Form, self.session)
+                                # source, context = form_cell.pop("sources")
+                                form = self.Form(cldf_id=form_id,
+                                            # cell=f_cell.coordinate,
+                                            # sources=[source],
                                             **form_cell)
                                 self.session.add(form)
-                                if context:
-                                    assoc = self.session.query(Reference).filter(
-                                        Reference.form==form.id,
-                                        Reference.source==source.id).one()
-                                    assoc.context = context
+                                # if context:
+                                #     assoc = self.session.query(Reference).filter(
+                                #         Reference.form==form.id,
+                                #         Reference.source==source.id).one()
+                                #     assoc.context = context
                             else:
                                 for key, value in form_cell.items():
                                     try:
@@ -145,18 +157,14 @@ class ExcelParser:
                                             new_value = f"{value:}; {old_value:}".strip().strip(";").strip()
                                             print(f"{f_cell.coordinate}: Property {key:} of form defined here was '{value:}', which was not part of '{old_value:}' specified earlier for the same form in {form.cell}. I combined those values to '{new_value:}'.".replace("\n", "\t"))
                                             setattr(form, key, new_value)
-                            form.concepts.append(concept)
+                            form.parametertable_collection.append(concept)
                             self.session.commit()
 
     def source_from_source_string(
             self,
-            language: Language,
-            source_string: str) -> Tuple[Source, Optional[str]]:
-        # Source number {1} is not always specified
-        if not source_string or not source_string.strip():
-            source_string = "{1}"
-
-        context: Optional[str]
+            source_string: str,
+            language: t.Optional[CLDFObject] = None) -> t.Tuple[CLDFObject, t.Optional[str]]:
+        context: t.Optional[str]
         if ":" in source_string:
             source_string, context = source_string.split(":", maxsplit=1)
             assert context.endswith("}")
@@ -165,29 +173,37 @@ class ExcelParser:
         else:
             context = None
 
-        source_id = Source.string_to_id(f"{language.id:}_s{source_string}")
-        source = self.session.query(Source).filter(
-            Source.id == source_id).one_or_none()
+        if language is None:
+            source_id = string_to_id(source_string)
+        else:
+            source_id = string_to_id(f"{language.cldf_id:}_s{source_string}")
+
+        source = self.session.query(self.Source).filter(
+            self.Source.id == source_id).one_or_none()
         if source is None:
-            source = Source(id=source_id)
+            source = self.Source(id=source_id)
             self.session.add(source)
         return source, context
 
     def form_from_cell(self, f_ele, lan, form_cell):
         phonemic, phonetic, ortho, comment, source, variants = f_ele
 
-        source, context = self.source_from_source_string(lan, source)
+        # Source number {1} is not always specified
+        if not source or not source.strip():
+            source = "{1}"
+
+        source, context = self.source_from_source_string(source, lan)
 
         return {
-            "language": lan,
-            "phonemic": phonemic,
-            "phonetic": phonetic,
-            "orthographic": ortho,
-            "variants": variants,
-            "comment": None if comment is None else comment.strip(),
-            "sources": (source, context),
-            "procedural_comment": self.get_cell_comment(form_cell).strip(),
-            "original": Form.string_to_id(f"{phonemic:}{phonetic:}{ortho:}")
+            "cldf_languageReference": lan.cldf_id,
+            "cldf_form": phonemic or "-",
+            "cldf_segments": phonetic or "-",
+            # "orthographic": ortho,
+            # "variants": variants,
+            "cldf_comment": None if comment is None else comment.strip(),
+            # "cldf_source": (source, context),
+            # "procedural_comment": self.get_cell_comment(form_cell).strip(),
+            "cldf_value": string_to_id(f"{phonemic:}{phonetic:}{ortho:}")
         }
 
     def cogset_from_row(self, cog_row):
@@ -217,9 +233,9 @@ class ExcelParser:
                         try:
                             for f_ele in self.cell_parser.parse(f_cell):
                                 form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
-                                form_query = self.session.query(Form).filter(
-                                    Form.language == this_lan,
-                                    *[getattr(Form, key) == value
+                                form_query = self.session.query(self.Form).filter(
+                                    self.Form.cldf_languageReference == this_lan,
+                                    *[getattr(self.Form, key) == value
                                       for key, value in form_cell.items()
                                       if type(value) != tuple
                                       if key not in self.ignore_for_match
@@ -227,15 +243,15 @@ class ExcelParser:
                                 forms = form_query.all()
 
                                 if not forms:
-                                    similar_forms = self.session.query(Form).filter(
-                                        Form.language == this_lan,
+                                    similar_forms = self.session.query(self.Form).filter(
+                                        self.Form.cldf_languageReference == this_lan.cldf_id,
                                         Form.original.contains(Form.string_to_id(form_cell["phonemic"])),
                                         Form.original.contains(Form.string_to_id(form_cell["phonetic"])),
                                         Form.original.contains(Form.string_to_id(form_cell["orthographic"])),
                                     ).all()
                                     raise ex.CognateCellError(
                                         f"Found form {this_lan.id:}:{f_ele:} in cognate table that is not in lexicon. Stripping special characters, did you mean one of {similar_forms:}?", f_cell.coordinate)
-                                source, context = form_cell["sources"]
+                                # source, context = form_cell["sources"]
                                 for form in forms:
                                     if source in form.sources:
                                         break

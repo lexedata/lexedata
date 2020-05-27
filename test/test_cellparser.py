@@ -40,7 +40,6 @@ class TestCellparser(TestCase):
 
 
 def main():
-
     test = TestCellparser()
     test.setUp()
     empyt_concept = Concept(id="NA", set="NA", english="NA", english_strict="NA", spanish="NA", portuguese="NA",

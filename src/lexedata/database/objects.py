@@ -9,9 +9,14 @@ from lexedata.database.database import (Base, DatabaseObjectWithUniqueStringID)
 Base.metadata.clear()
 
 
-class Language(DatabaseObjectWithUniqueStringID):
+Language = sa.Table(
+    "LanguageTable",
+    Base.metadata,
+    sa.Column(sa.String, name="cldf_name"))
+
+class LanguageX(DatabaseObjectWithUniqueStringID):
     """Metadata for a language"""
-    __tablename__ = "LanguageTable"
+    __tablename__ = "LanguageTableX"
     name = sa.Column(sa.String, name="cldf_name")
     glottocode = sa.Column(sa.String, name="cldf_glottocode")
     iso639p3 = sa.Column(sa.String, name="cldf_iso639p3code")
@@ -33,8 +38,7 @@ for source_col in ['genre'] + BIBTEX_FIELDS:
 
 class Form(DatabaseObjectWithUniqueStringID):
     __tablename__ = "FormTable"
-    language_id = sa.Column(sa.String, sa.ForeignKey(Language.id), name="cldf_languageReference")
-    language = sa.orm.relationship(Language)
+    language_id = sa.Column(sa.String, sa.ForeignKey("LanguageTableX.cldf_name"), name="cldf_languageReference")
 
     phonemic = sa.Column(sa.String, name="Phonemic_Transcription", index=True)
     phonetic = sa.Column(sa.String, name="cldf_form", index=True)
