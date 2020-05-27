@@ -11,6 +11,7 @@ from sqlalchemy.ext.automap import automap_base
 
 from lexedata.database.database import create_db_session, new_id, string_to_id
 from lexedata.importer.cellparser import CellParserLexical
+from lexedata.importer.cellparser import CellParserLexical, CellParserCognate
 import lexedata.importer.exceptions as ex
 import lexedata.cldf.db as db
 
@@ -94,6 +95,7 @@ class ExcelParser:
         self.lexicon_spreadsheet = lexicon_spreadsheet
         self.cognatesets_spreadsheet = cognatesets_spreadsheet
         self.cell_parser = CellParserLexical()
+        self.cognate_cell_parser = CellParserCognate()
         self.ignore_for_match = [
             "id",
             "variants",
@@ -275,7 +277,7 @@ class ExcelParser:
                         # get corresponding language_id to column
 
                         try:
-                            for f_ele in self.cell_parser.parse(f_cell):
+                            for f_ele in self.cognate_cell_parser.parse(f_cell.value, f_cell.coordinate):
                                 form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
                                 form_query = self.session.query(self.Form).filter(
                                     self.Form.cldf_languageReference == this_lan,

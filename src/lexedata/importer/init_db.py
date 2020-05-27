@@ -7,10 +7,10 @@ import openpyxl as op
 from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement, \
     DatabaseObjectWithUniqueStringID
 from lexedata.database.database import create_db_session
-from lexedata.importer.cellparser import CellParser, CogCellParser
+from lexedata.importer.cellparser import CellParserLexical, CellParserCognate
 from lexedata.importer.exceptions import *
 
-
+# TODO: this whole scripts need an overhaul. Script relies on old implementation of objects.py
 def create_db(db_path, lexical, cogset_file, echo=False):
     # check for existing resources and database
     if not lexical.exists():
@@ -70,53 +70,6 @@ def create_db(db_path, lexical, cogset_file, echo=False):
                 continue
     print("--- Cognate sets and cognate judgement successfully inserted ---")
     session.close()
-
-
-# just for debugging
-def inspect_cognates(cogset_file):
-    wb = op.load_workbook(filename)
-    sheets = wb.sheetnames
-    wb = wb[sheets[0]]
-    language_iter = wb.iter_cols(min_row=1, max_row=2, min_col=7)
-    lan_dict = dict()
-    for language_cell in language_iter:
-        if language_cell[0].value is None:
-            continue
-        else:
-            language = Language.from_column(language_cell)
-            lan_dict[language_cell[0].column_letter] = language.id
-    #session = connect_db(read_only=False)
-    #session.query(CogSet).delete()
-    #session.query(CognateJudgement).delete()
-    #session.commit()
-    # add cogsets and cognatejudgements
-    wb = op.load_workbook(filename=cogset_file)
-    for sheet in ['Numbers, Body Parts, Food, Anim', 'Kinship, Colors, Time, Nature', 'Tools, Adj, Adv', 'Verbs']:
-        ws = wb[sheet]
-        try:
-            for cogset_row, cog_row in zip(ws.iter_rows(min_row=3, max_col=4), ws.iter_rows(min_row=3, min_col=5)):
-                # ignore empty rows
-                if not cogset_row[1].value:
-                    continue
-                if cogset_row[1].value.isupper():
-                    cogset = CogSet.from_excel(cogset_row)
-                    #insert_congsets(session, cogset)
-
-
-                    for cognate in yield_cognates(cog_row, cogset, lan_dict):
-                        # within the insert function the db is queried for forms corresponding forms
-                        # the actually inserted element links form, cognatejudgement and cogset
-                        #insert_cognates(session, cognate)
-                        print(cognate)
-                        input()
-                # line not to be processed
-                else:
-                    continue
-        except AlreadyExistsError as err:
-            print(err)
-
-    print("--- Cognate sets and cognate judgement successfully inserted ---")
-    #session.close()
 
 
 def insert_languages(session, source, return_dictionary=True):
