@@ -16,6 +16,50 @@ import lexedata.cldf.db as db
 
 CLDFObject = t.Any
 
+
+def name_of_object_in_table(base, tablename, table):
+    """Give the name of objects in the table.
+
+    >>> Dummy = None
+    >>> name_of_object_in_table(Dummy, "FormTable", Dummy)
+    'Form'
+    >>> name_of_object_in_table(Dummy, "objectTable", Dummy)
+    'Object'
+    """
+    s = str(tablename)
+    if s.lower().endswith("table"):
+        s = s[:-len("table")]
+    return s[0].upper() + s[1:]
+
+
+def name_of_object_in_table_relation(base, local_cls, referred_cls, constraint):
+    """Give the name of objects in the table.
+
+    >>> Dummy = None
+    >>> name_of_object_in_table_relation(Dummy, Dummy, ExcelParser, Dummy)
+    'excelparser'
+    >>> class FormTable_SourceTable__cldf_source:
+    ...   pass
+    >>> name_of_object_in_table_relation(Dummy, Dummy, FormTable_SourceTable__cldf_source, Dummy)
+    'cldf_source'
+    """
+    return referred_cls.__name__.split("__")[-1].lower()
+
+
+def name_of_objects_in_table_relation(base, local_cls, referred_cls, constraint):
+    """Give the name of objects in the table.
+
+    >>> Dummy = None
+    >>> name_of_objects_in_table_relation(Dummy, Dummy, ExcelParser, Dummy)
+    'excelparsers'
+    >>> class FormTable_SourceTable__cldf_source:
+    ...   pass
+    >>> name_of_objects_in_table_relation(Dummy, Dummy, FormTable_SourceTable__cldf_source, Dummy)
+    'cldf_sources'
+    """
+    return referred_cls.__name__.split("__")[-1].lower() + "s"
+
+
 class ExcelParser:
     def __init__(
             self,
@@ -30,14 +74,17 @@ class ExcelParser:
             return connection
         Base = automap_base()
         engine = sa.create_engine("sqlite:///:memory:", creator=creator)
-        Base.prepare(engine, reflect=True)
+        Base.prepare(engine, reflect=True,
+                     classname_for_table=name_of_object_in_table,
+                     name_for_scalar_relationship=name_of_object_in_table_relation,
+                     name_for_collection_relationship=name_of_objects_in_table_relation)
         self.session = sa.orm.Session(engine)
 
         print(dir(Base.classes))
-        self.Form = Base.classes.FormTable
-        self.Language = Base.classes.LanguageTable
-        self.Concept = Base.classes.ParameterTable
-        self.Source = Base.classes.SourceTable
+        self.Form = Base.classes.Form
+        self.Language = Base.classes.Language
+        self.Concept = Base.classes.Parameter
+        self.Source = Base.classes.Source
         self.Reference = Base.classes.FormTable_SourceTable__cldf_source
 
         self.path = Path(output)
@@ -157,7 +204,7 @@ class ExcelParser:
                                             new_value = f"{value:}; {old_value:}".strip().strip(";").strip()
                                             print(f"{f_cell.coordinate}: Property {key:} of form defined here was '{value:}', which was not part of '{old_value:}' specified earlier for the same form in {form.cell}. I combined those values to '{new_value:}'.".replace("\n", "\t"))
                                             setattr(form, key, new_value)
-                            form.parametertable_collection.append(concept)
+                            form.parameters.append(concept)
                             self.session.commit()
 
     def source_from_source_string(
@@ -195,7 +242,7 @@ class ExcelParser:
         source, context = self.source_from_source_string(source, lan)
 
         return {
-            "cldf_languageReference": lan.cldf_id,
+            "language": lan,
             "cldf_form": phonemic or "-",
             "cldf_segments": phonetic or "-",
             # "orthographic": ortho,

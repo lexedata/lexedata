@@ -11,9 +11,11 @@ from lexedata.importer.fromexcel import ExcelParser
 def excel_wordlist():
     return Path(__file__).parent / "data/excel/small.xlsx"
 
+
 @pytest.fixture
 def cldf_wordlist():
     return Path(__file__).parent / "data/cldf/cldf-metadata.json"
+
 
 def test_fromexcel_runs(excel_wordlist, cldf_wordlist):
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
