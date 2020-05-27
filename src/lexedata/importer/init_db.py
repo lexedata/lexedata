@@ -7,10 +7,10 @@ import openpyxl as op
 from lexedata.database.objects import Language, Concept, Form, CogSet, CognateJudgement, \
     DatabaseObjectWithUniqueStringID
 from lexedata.database.database import create_db_session
-from lexedata.importer.cellparser import CellParserLexical, CogCellParser
+from lexedata.importer.cellparser import CellParserLexical, CellParserCognate
 from lexedata.importer.exceptions import *
 
-
+# TODO: this whole scripts need an overhaul. Script relies on old implementation of objects.py
 def create_db(db_path, lexical, cogset_file, echo=False):
     # check for existing resources and database
     if not lexical.exists():
