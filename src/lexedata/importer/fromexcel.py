@@ -14,68 +14,24 @@ from lexedata.importer.cellparser import CellParserLexical
 from lexedata.importer.cellparser import CellParserLexical, CellParserCognate
 import lexedata.importer.exceptions as ex
 import lexedata.cldf.db as db
-
-CLDFObject = t.Any
-
-
-def name_of_object_in_table(base: t.Any, tablename: str, table: sa.schema.Table):
-    """Give the name of objects in the table.
-
-    >>> Dummy = None
-    >>> name_of_object_in_table(Dummy, "FormTable", Dummy)
-    'Form'
-    >>> name_of_object_in_table(Dummy, "objectTable", Dummy)
-    'Object'
-    """
-    if tablename.lower().endswith("table"):
-        tablename = tablename[:-len("table")]
-    return tablename[0].upper() + tablename[1:]
-
-
-def name_of_object_in_table_relation(base, local_cls, referred_cls, constraint):
-    """Give the name of objects in the table.
-
-    >>> Dummy = None
-    >>> name_of_object_in_table_relation(Dummy, Dummy, ExcelParser, Dummy)
-    'excelparser'
-    >>> class FormTable_SourceTable__cldf_source:
-    ...   pass
-    >>> name_of_object_in_table_relation(Dummy, Dummy, FormTable_SourceTable__cldf_source, Dummy)
-    'cldf_source'
-    """
-    return referred_cls.__name__.split("__")[-1].lower()
-
-
-def name_of_objects_in_table_relation(base, local_cls, referred_cls, constraint):
-    """Give the name of objects in the table.
-
-    >>> Dummy = None
-    >>> name_of_objects_in_table_relation(Dummy, Dummy, ExcelParser, Dummy)
-    'excelparsers'
-    >>> class FormTable_SourceTable__cldf_source:
-    ...   pass
-    >>> name_of_objects_in_table_relation(Dummy, Dummy, FormTable_SourceTable__cldf_source, Dummy)
-    'cldf_sources'
-    """
-    return referred_cls.__name__.split("__")[-1].lower() + "s"
+import lexedata.cldf.db_automap as automap
 
 
 class ExcelParser:
-    def __init__(
-            self,
-            output: Path = Path("initial_data/cldf-metadata.json")):
-        dataset = pycldf.Dataset.from_metadata(output)
-        self.cldfdatabase = db.Database(dataset)
+    def __init__(self, output_dataset: pycldf.Dataset):
+        self.cldfdatabase = db.Database(output_dataset)
         self.cldfdatabase.write()
         connection = self.cldfdatabase.connection()
+
         def creator():
             return connection
+
         Base = automap_base()
         engine = sa.create_engine("sqlite:///:memory:", creator=creator)
         Base.prepare(engine, reflect=True,
-                     classname_for_table=name_of_object_in_table,
-                     name_for_scalar_relationship=name_of_object_in_table_relation,
-                     name_for_collection_relationship=name_of_objects_in_table_relation)
+                     classname_for_table=automap.name_of_object_in_table,
+                     name_for_scalar_relationship=automap.name_of_object_in_table_relation,
+                     name_for_collection_relationship=automap.name_of_objects_in_table_relation)
         self.session = sa.orm.Session(engine)
 
         print(dir(Base.classes))
@@ -200,7 +156,7 @@ class ExcelParser:
     def source_from_source_string(
             self,
             source_string: str,
-            language: t.Optional[CLDFObject] = None) -> t.Tuple[CLDFObject, t.Optional[str]]:
+            language: t.Optional[sa.ext.automap.AutomapBase] = None) -> t.Tuple[sa.ext.automap.AutomapBase, t.Optional[str]]:
         context: t.Optional[str]
         if ":" in source_string:
             source_string, context = source_string.split(":", maxsplit=1)
@@ -345,15 +301,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    parser = ExcelParser(session, output=args.output)
+    excel_parser = ExcelParser(pycldf.Dataset.from_metadata(args.output))
 
     wb = op.load_workbook(filename=args.lexicon)
-    parser.initialize_cognate(wb.worksheets[0])
+    excel_parser.initialize_cognate(wb.worksheets[0])
 
     wb = op.load_workbook(filename=args.cogsets)
     for sheet in wb.sheetnames:
         print("\nParsing sheet '{:s}'".format(sheet))
         ws = wb[sheet]
-        parser.initialize_cognate(ws)
+        excel_parser.initialize_cognate(ws)
 
-    parser.cldfdatabase.to_cldf(args.output.parent)
+    excel_parser.cldfdatabase.to_cldf(args.output.parent)

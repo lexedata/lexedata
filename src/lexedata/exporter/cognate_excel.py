@@ -1,31 +1,59 @@
 # -*- coding: utf-8 -*-
+import typing as t
 import urllib.parse
 from pathlib import Path
-from typing import Dict, DefaultDict, List
 from collections import OrderedDict, defaultdict
 
+import pycldf
 import sqlalchemy
 import openpyxl as op
+import sqlalchemy
+import sqlalchemy.ext.automap
+from sqlalchemy.ext.automap import automap_base
 
-from lexedata.database.objects import Form, CogSet, Language
-from lexedata.database.database import create_db_session
-from lexedata.importer.exceptions import CellParsingError
+import lexedata.cldf.db as db
+import lexedata.cldf.db_automap as automap
 
 WARNING = "\u26A0"
+
+Form = t.TypeVar("Form", bound=sqlalchemy.ext.automap.AutomapBase)
+CogSet = t.TypeVar("CogSet", bound=sqlalchemy.ext.automap.AutomapBase)
 
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
 
 class ExcelWriter():
     """Class logic for cognateset Excel export."""
-    def __init__(self):
+    def __init__(self, dataset: pycldf.Dataset):
+        self.cldfdatabase = db.Database(dataset)
+        self.cldfdatabase.write()
+        connection = self.cldfdatabase.connection()
+
+        def creator():
+            return connection
+
+        Base = automap_base()
+        engine = sqlalchemy.create_engine("sqlite:///:memory:", creator=creator)
+        Base.prepare(engine, reflect=True,
+                     classname_for_table=automap.name_of_object_in_table,
+                     name_for_scalar_relationship=automap.name_of_object_in_table_relation,
+                     name_for_collection_relationship=automap.name_of_objects_in_table_relation)
+        self.session = sqlalchemy.orm.Session(engine)
+
+        self.Form = Base.classes.Form
+        self.Language = Base.classes.Language
+        self.Concept = Base.classes.Parameter
+        self.Source = Base.classes.Source
+        self.Reference = Base.classes.FormTable_SourceTable__cldf_source
+        self.CognateJudgement = Base.classes.Cognate
+        self.Cognateset = Base.classes.Cognateset
+
         self.URL_BASE = "https://example.org/{:s}"
 
     def create_excel(
             self,
-            out: Path,
-            db_session: sqlalchemy.orm.session.Session) -> None:
-        """Convert the CLDF behind db_session into an Excel cognate view
+            out: Path) -> None:
+        """Convert the initial CLDF into an Excel cognate view
 
         The Excel file has columns "CogSet", "Tags", and then one column per
         language.
@@ -37,33 +65,30 @@ class ExcelWriter():
         Parameters
         ==========
         out: The path of the Excel file to be written.
-        db_session: An SQLAlchemy database session connecting to a standardized
-            CLDF dataset.
 
         """
         # TODO: Check whether openpyxl.worksheet._write_only.WriteOnlyWorksheet
-        # will be useful:
-        # https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode; why does it matter?
+        # will be useful (maybe it's faster or prevents us from some mistakes)?
+        # https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
-
-        languages = db_session.query(Language).all()
 
         # Define the columns
         header = ["CogSet", "Tags"]
         lan_dict = dict()
-        for col, lan in enumerate(languages, 3):
+        for col, lan in enumerate(
+                self.session.query(self.Language), len(header) + 1):
             # Excel indices are 1-based, not zero-based, so 3 is column C, as
             # intended.
-            lan_dict[lan.id] = col
+            lan_dict[lan.cldf_id] = col
             header.append(lan.name)
 
         ws.append(header)
 
         # Iterate over all cognate sets, and prepare the rows.
         # Again, row_index 2 is indeed row 2, because indices are 1-based.
-        row_index = 2
-        for cogset in db_session.query(CogSet):
+        row_index = 1 + 1
+        for cogset in self.session.query(self.Cognateset):
             # Create cell for cogset in column A
             cogset_cell = ws.cell(row=row_index, column=1, value=cogset.id)
             # Transfer the cognateset comment to the Excel cell comment.
@@ -89,7 +114,7 @@ class ExcelWriter():
             row_index: int,
             # FIXME: That's not just a str, it's a language_id, but String()
             # alias Language.id.type is not a Type, according to `typing`.
-            lan_dict: Dict[str, int]) -> int:
+            lan_dict: t.Dict[str, int]) -> int:
         """Writes all forms for given cognate set to Excel.
 
         Take all forms for a given cognate set as given by the database, create
@@ -184,8 +209,8 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(
         description="Create an Excel cognate view from a CLDF dataset")
-    parser.add_argument("sqlite", help="SQlite input")
+    parser.add_argument("dataset", help="Dataset input")
     parser.add_argument("excel", help="Excel output file path")
     args = parser.parse_args()
-    E = ExcelWriter()
-    E.create_excel(args.excel, create_db_session(args.sqlite))
+    E = ExcelWriter(pycldf.Dataset.from_metadata(args.dataset))
+    E.create_excel(args.excel)

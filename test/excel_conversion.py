@@ -3,6 +3,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import pycldf
+
 from lexedata.importer.fromexcel import ExcelParser, op
 
 
@@ -21,7 +23,7 @@ def cldf_wordlist():
 
 
 def test_fromexcel_runs(excel_wordlist, cldf_wordlist):
-    parser = ExcelParser(output=cldf_wordlist)
+    parser = ExcelParser(pycldf.Dataset.from_metadata(cldf_wordlist))
 
     wb = op.load_workbook(filename=excel_wordlist)
     parser.initialize_cognate(wb.worksheets[0])
@@ -33,3 +35,4 @@ def test_fromexcel_runs(excel_wordlist, cldf_wordlist):
         parser.initialize_cognate(ws)
 
     parser.cldfdatabase.to_cldf(cldf_wordlist.parent)
+

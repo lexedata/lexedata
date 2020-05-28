@@ -1,16 +1,25 @@
 import functools
-import collections
+import typing as t
 from collections import OrderedDict, defaultdict
 
 import csvw.db
 import pycldf.db
 
-from csvw.db import ColSpec, quoted
-from pycldf.db import BIBTEX_FIELDS, TableTranslation, TERMS
+from csvw.db import ColSpec, quoted, insert
+from pycldf.db import BIBTEX_FIELDS, TableTranslation, TERMS, PRIMARY_KEY_NAMES, clean_bibtex_key
+
+T = t.TypeVar('T', bound="TableSpec")
+
 
 class TableSpec(csvw.db.TableSpec):
     @classmethod
-    def association_table(cls, atable, apk, btable, bpk, context=None):
+    def association_table(
+            cls: t.Type[T],
+            atable: str,
+            apk: str,
+            btable: str,
+            bpk: str,
+            context: t.Optional[str] = None) -> T:
         suffix = f"__{context:}" if context else ""
         print(f"Creating {atable:}_{btable:}{suffix:}")
 
@@ -32,7 +41,9 @@ class TableSpec(csvw.db.TableSpec):
         )
 
     @classmethod
-    def from_table_metadata(cls, table):
+    def from_table_metadata(
+            cls: t.Type[T],
+            table: csvw.metadata.Table) -> T:
         """
         Create a `TableSpec` from the schema description of a `csvw.metadata.Table`.
 
@@ -79,7 +90,9 @@ class TableSpec(csvw.db.TableSpec):
         return spec
 
     @classmethod
-    def schema(cl, tg):
+    def schema(
+            cls: t.Type[T],
+            tg: csvw.TableGroup) -> t.List[T]:
         """
         Convert the table and column descriptions of a `TableGroup` into specifications for the
         DB schema.
@@ -89,7 +102,7 @@ class TableSpec(csvw.db.TableSpec):
         """
         tables = {}
         for tname, table in tg.tabledict.items():
-            t = cl.from_table_metadata(table)
+            t = cls.from_table_metadata(table)
             tables[t.name] = t
             for at in t.many_to_many.values():
                 tables[at.name] = at
@@ -113,7 +126,10 @@ class TableSpec(csvw.db.TableSpec):
         return list(ordered.values())
 
 
-def translate(d, table, col=None):
+def translate(
+        d: t.Dict[str, TableTranslation],
+        table: str,
+        col: t.Optional[str] = None) -> str:
     """
     Translate a db object name.
 
@@ -143,13 +159,13 @@ def translate(d, table, col=None):
 # `TableSpec.schema` for `pycldf.db.schema == pycldf.db.TableSpec.schema` and
 # add more translations.
 class Database(pycldf.db.Database):
-    def init_schema(self, tg):
+    def init_schema(self, tg: csvw.TableGroup) -> None:
         self.tg = tg
         self.tables = TableSpec.schema(self.tg) if self.tg else []
 
-    def __init__(self, dataset, **kw):
+    def __init__(self, dataset: pycldf.Dataset, **kw) -> None:
         self.dataset = dataset
-        self._retranslate = collections.defaultdict(dict)
+        self._retranslate = t.DefaultDict[t.Any, t.Dict[t.Any, t.Any]](dict)
         self._source_cols = ['id', 'genre'] + BIBTEX_FIELDS
         self._duplicate_relationship_separator = ";\t"
 
@@ -231,16 +247,16 @@ class Database(pycldf.db.Database):
         csvw.db.Database.__init__(
             self, tg, translate=functools.partial(translate, translations), **kw)
 
-    def write(self, *, force=False, _exists_ok=False, _skip_extra=False, **items):
+    def write(self, *, force=False, exists_ok=False, skip_extra=False, **items):
         """
         Creates a db file with the core schema.
 
         :param force: If `True` an existing db file will be overwritten.
         """
         if self.fname and self.fname.exists():
-            if _force:
+            if force:
                 self.fname.unlink()
-            elif _exists_ok:
+            elif exists_ok:
                 raise NotImplementedError()
             else:
                 raise ValueError('db file already exists, use force=True to overwrite')
@@ -272,7 +288,7 @@ class Database(pycldf.db.Database):
                                 refs[atkey][pk, fkey].append(context)
                         else:
                             if k not in cols:
-                                if _skip_extra:
+                                if skip_extra:
                                     continue
                                 else:
                                     raise ValueError(
