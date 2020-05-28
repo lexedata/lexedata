@@ -5,7 +5,7 @@ from collections import OrderedDict, defaultdict
 import csvw.db
 import pycldf.db
 
-from csvw.db import ColSpec
+from csvw.db import ColSpec, quoted
 from pycldf.db import BIBTEX_FIELDS, TableTranslation, TERMS
 
 class TableSpec(csvw.db.TableSpec):
@@ -295,3 +295,29 @@ class Database(pycldf.db.Database):
                        [[key1, key2, self._duplicate_relationship_separator.join(values)]
                         for (key1, key2), values in rows.items()])
             db.commit()
+
+    def select_many_to_many(self, db, table, _=None):
+        if len(table.columns) == 2:
+            context = False
+            context_sql = 'null'
+        elif len(table.columns) == 3:
+            context = True
+            context_column = table.columns[-1]
+            assert context_column.name not in table.primary_key
+            context_column_name = quoted(context_column.name)
+            context_sql = f"group_concat(COALESCE({context_column_name}, ''), '||')"
+        else:
+            raise ValueError(
+                f"Table {table.name} is not an association table")
+        sql = """\
+SELECT {0}, group_concat({1}, ' '), {3}
+FROM {2} GROUP BY {0}""".format(
+                quoted(self.translate(table.name, table.columns[0].name)),
+                quoted(self.translate(table.name, table.columns[1].name)),
+                quoted(self.translate(table.name)),
+                context_sql)
+        cu = db.execute(sql)
+        return {
+            r[0]: [(k, v) if context else k
+                   for k, v in zip(r[1].split(), r[2].split('||'))] for r in cu.fetchall()}
+

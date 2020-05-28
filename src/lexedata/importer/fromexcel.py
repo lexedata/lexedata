@@ -18,7 +18,7 @@ import lexedata.cldf.db as db
 CLDFObject = t.Any
 
 
-def name_of_object_in_table(base, tablename, table):
+def name_of_object_in_table(base: t.Any, tablename: str, table: sa.schema.Table):
     """Give the name of objects in the table.
 
     >>> Dummy = None
@@ -27,10 +27,9 @@ def name_of_object_in_table(base, tablename, table):
     >>> name_of_object_in_table(Dummy, "objectTable", Dummy)
     'Object'
     """
-    s = str(tablename)
-    if s.lower().endswith("table"):
-        s = s[:-len("table")]
-    return s[0].upper() + s[1:]
+    if tablename.lower().endswith("table"):
+        tablename = tablename[:-len("table")]
+    return tablename[0].upper() + tablename[1:]
 
 
 def name_of_object_in_table_relation(base, local_cls, referred_cls, constraint):
@@ -64,13 +63,11 @@ def name_of_objects_in_table_relation(base, local_cls, referred_cls, constraint)
 class ExcelParser:
     def __init__(
             self,
-            output=Path("initial_data/cldf-metadata.json"),
-            lexicon_spreadsheet="TG_comparative_lexical_online_MASTER.xlsx",
-            cognatesets_spreadsheet="TG_cognates_online_MASTER.xlsx"):
+            output: Path = Path("initial_data/cldf-metadata.json")):
         dataset = pycldf.Dataset.from_metadata(output)
-        database = db.Database(dataset)
-        database.write()
-        connection = database.connection()
+        self.cldfdatabase = db.Database(dataset)
+        self.cldfdatabase.write()
+        connection = self.cldfdatabase.connection()
         def creator():
             return connection
         Base = automap_base()
@@ -88,14 +85,9 @@ class ExcelParser:
         self.Source = Base.classes.Source
         self.Reference = Base.classes.FormTable_SourceTable__cldf_source
 
-        self.path = Path(output)
-        if not self.path.exists():
-            self.path.mkdir()
-        self.lan_dict = {}
-        self.lexicon_spreadsheet = lexicon_spreadsheet
-        self.cognatesets_spreadsheet = cognatesets_spreadsheet
         self.cell_parser = CellParserLexical()
         self.cognate_cell_parser = CellParserCognate()
+
         self.ignore_for_match = [
             "id",
             "variants",
@@ -104,14 +96,8 @@ class ExcelParser:
             "original",
         ]
 
-    def parse(self):
-        self.initialize_lexical()
-        self.initialize_cognate()
-
-    def initialize_lexical(self):
-        wb = op.load_workbook(filename=self.lexicon_spreadsheet)
-        sheets = wb.sheetnames
-        wb = wb[sheets[0]]
+    def initialize_lexical(self, sheet: op.worksheet.worksheet.Worksheet):
+        wb = sheet
         iter_forms = wb.iter_rows(min_row=3, min_col=7, max_col=44)  # iterates over rows with forms
         iter_concept = wb.iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
         iter_lan = wb.iter_cols(min_row=1, max_row=2, min_col=7, max_col=44)
@@ -119,6 +105,11 @@ class ExcelParser:
         self.init_lan(iter_lan)
         self.session.commit()
         self.init_con_form(iter_concept, iter_forms)
+
+    def initialize_cognate(self, sheet: op.worksheet.worksheet.Worksheet):
+        iter_cog = sheet.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
+        iter_congset = sheet.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
+        self.cogset_cognate(iter_congset, iter_cog)
 
     def language_from_column(self, column):
         data = [cell.value or "" for cell in column[:2]]
@@ -153,7 +144,7 @@ class ExcelParser:
 
     @staticmethod
     def get_cell_comment(cell):
-        return cell.comment.content if cell.comment else ""
+        return cell.comment.content if cell.comment else None
 
     def init_con_form(self, con_iter, form_iter):
             for row_forms, row_con in zip(form_iter, con_iter):
@@ -324,16 +315,6 @@ class ExcelParser:
             else:
                 continue
 
-    def initialize_cognate(self):
-        wb = op.load_workbook(filename=self.cognatesets_spreadsheet)
-        for sheet in wb.sheetnames:
-            print("\nParsing sheet '{:s}'".format(sheet))
-            ws = wb[sheet]
-            iter_cog = ws.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
-            iter_congset = ws.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
-            self.cogset_cognate(iter_congset, iter_cog)
-
-
 if __name__ == "__main__":
     import argparse
     import pycldf
@@ -364,21 +345,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    session = create_db_session(args.db)
+    parser = ExcelParser(session, output=args.output)
 
-    ExcelParser(session, output=args.output, lexicon_spreadsheet=args.lexicon, cognatesets_spreadsheet=args.cogsets).parse()
-    session.commit()
-    session.close()
+    wb = op.load_workbook(filename=args.lexicon)
+    parser.initialize_cognate(wb.worksheets[0])
 
-    if args.db.startswith("sqlite:///"):
-        db_path = args.db[len("sqlite:///"):]
-        if db_path == '':
-            db_path = ':memory:'
-    else:
-        db_path = args.db
-    dataset = pycldf.Wordlist.from_metadata(
-        args.metadata,
-    )
-    db = pycldf.db.Database(dataset, fname=db_path)
+    wb = op.load_workbook(filename=args.cogsets)
+    for sheet in wb.sheetnames:
+        print("\nParsing sheet '{:s}'".format(sheet))
+        ws = wb[sheet]
+        parser.initialize_cognate(ws)
 
-    db.to_cldf(args.output)
+    parser.cldfdatabase.to_cldf(args.output.parent)
