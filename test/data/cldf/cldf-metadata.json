@@ -188,9 +188,12 @@
             "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
             "required": true
           }
+        ],
+        "primaryKey": [
+          "ID"
         ]
       },
-      "url": "cognatesets.csv"
+      "url": "cognate.csv"
     },
     {
       "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognatesetTable",
