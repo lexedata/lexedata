@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import re
+import typing as t
 import unicodedata
 from typing import Tuple, Optional, Pattern, List, Dict
 
 from lexedata.importer.exceptions import *
+from lexedata.database.database import string_to_id
 
 # functions for bracket checking, becoming obsolete with new cellparser
 comment_bracket = lambda str: str.count("(") == str.count(")")
@@ -94,7 +96,30 @@ class CellParser:
     def parse_value(self, values, coordinate):
         raise NotImplementedError
 
-    def parse(self, values, coordinate):
+    def source_from_source_string(
+            self,
+            source_string: str,
+            language):
+        context: t.Optional[str]
+        if ":" in source_string:
+            source_string, context = source_string.split(":", maxsplit=1)
+            assert context.endswith("}")
+            source_string += "}"
+            context = context[:-1].strip()
+        else:
+            context = None
+
+        if language is None:
+            source_id = string_to_id(source_string)
+        else:
+            source_id = string_to_id(f"{language.cldf_id:}_s{source_string}")
+
+        return source_id, context
+
+    def parse(self, values: str, coordinate, **known):
+        if not values:
+            return None
+        lan = known["language"]
         self.coordinate = coordinate
         # replace ignore pattern with empty string
         while self.ignore_pattern.match(values):
@@ -107,7 +132,28 @@ class CellParser:
                 # assert no empty element
                 if all(ele == "" for ele in element):
                     raise CellParsingError("empty values ''", self.coordinate)
-                yield element
+
+                phonemic, phonetic, ortho, comment, source, variants = element
+
+                # Source number {1} is not always specified
+                if not source or not source.strip():
+                    source = "{1}"
+
+                source, context = self.source_from_source_string(source, lan)
+
+                yield {
+                    "language": lan,
+                    "cldf_form": phonemic or "-",
+                    # "cldf_segments": phonetic or "-",
+                    # "orthographic": ortho,
+                    # "variants": variants,
+                    "cldf_comment": None if comment is None else comment.strip(),
+                    "sources": [(source, context)],
+                    # "procedural_comment": self.get_cell_comment(form_cell).strip(),
+                    "cldf_value": string_to_id(f"{phonemic:}{phonetic:}{ortho:}")
+                }
+
+
             # error handling
             except CellParsingError as err:
                 print("CellParsingError: " + err.message)

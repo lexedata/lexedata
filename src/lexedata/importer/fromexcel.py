@@ -50,6 +50,7 @@ class Form(t.Generic[L, C], sa.ext.automap.AutomapBase):
 class Association(t.Generic[A, B], sa.ext.automap.AutomapBase):
     ...
 
+
 class ExcelParser:
     def __init__(self, output_dataset: pycldf.Dataset) -> None:
         self.cldfdatabase = db.Database(output_dataset)
@@ -86,6 +87,18 @@ class ExcelParser:
         ]
 
         self.lan_dict: t.Dict[str, Language] = {}
+
+        class Sources(t.DefaultDict[str, Source]):
+            def __missing__(inner_self, key: str) -> Source:
+                source = self.session.query(self.Source).filter(
+                    self.Source.id == key).one_or_none()
+                if source is None:
+                    source = self.Source(id=key, genre='misc', author='', editor='')
+                    self.session.add(source)
+                inner_self.__setitem__(key, source)
+                return source
+
+        self.sources = Sources()
 
     def initialize_lexical(self, sheet: op.worksheet.worksheet.Worksheet) -> None:
         wb = sheet
@@ -137,116 +150,73 @@ class ExcelParser:
     def get_cell_comment(cell):
         return cell.comment.content if cell.comment else None
 
+    def create_form_with_sources(
+            self, sources: t.List[t.Tuple[Source, str]] = [], **properties) -> Form:
+        concept: t.Optional[Concept] = properties.get("parameter") or properties.get("parameters", [None])[0]
+        form_id = new_id(
+            "{:}_{:}".format(
+                properties["language"].cldf_id,
+                concept and concept.cldf_id),
+            self.Form, self.session)
+        form = self.Form(cldf_id=form_id, **properties)
+        self.session.add(form)
+        for source, context in sources:
+            self.session.add(self.Reference(
+                form=form,
+                source=source,
+                context=context))
+        self.session.commit()
+        return form
+
     def init_con_form(self, con_iter, form_iter):
-            for row_forms, row_con in zip(form_iter, con_iter):
-                concept_properties = self.concept_from_row(row_con)
-                concept_id = new_id(concept_properties["cldf_name"], self.Concept, self.session)
-                concept = self.Concept(cldf_id=concept_id, **concept_properties)
+        for row_forms, row_con in zip(form_iter, con_iter):
+            concept_properties = self.concept_from_row(row_con)
+            concept_id = new_id(concept_properties["cldf_name"], self.Concept, self.session)
+            concept = self.Concept(cldf_id=concept_id, **concept_properties)
 
-                for f_cell in row_forms:
-                    if f_cell.value:
-                        # get corresponding language_id to column
-                        this_lan = self.lan_dict[f_cell.column]
+            for f_cell in row_forms:
+                # get corresponding language_id to column
+                this_lan = self.lan_dict[f_cell.column]
 
-                        for f_ele in self.cell_parser.parse(f_cell.value, f_cell.coordinate):
-                            form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
-                            if not hasattr(self.Form, "parameters"):
-                                # There is no complex relationship between
-                                # forms and concepts. Just add this form here.
-                                form_id = new_id("{:}_{:}".format(this_lan.cldf_id, concept.cldf_id),
-                                                 self.Form, self.session)
-                                form = self.Form(cldf_id=form_id,
-                                                 # cell=f_cell.coordinate,
-                                                 # sources=[source],
-                                                 parameter = concept,
-                                                 **form_cell)
+                for form_cell in self.cell_parser.parse(f_cell.value, f_cell.coordinate,
+                            language=this_lan):
+                    sources = [(self.sources[k], c or None)
+                                for k, c in form_cell.pop("sources", [])]
+                    if not hasattr(self.Form, "parameters"):
+                        # There is no complex relationship between
+                        # forms and concepts. Just add this form here.
+                        self.create_form_with_sources(parameter=concept,
+                                                        **form_cell)
+                        continue
+
+                    # Otherwise, deal with the alternative data model,
+                    # where every form can have more than one meaning!
+                    form_query = self.session.query(self.Form).filter(
+                        self.Form == this_lan,
+                        # FIXME: self.Form.cldf_source.contains(form_cell["sources"][0]),
+                        *[getattr(self.Form, key) == value
+                            for key, value in form_cell.items()
+                            if type(value) != tuple
+                            if key not in self.ignore_for_match
+                        ])
+                    form = form_query.one_or_none()
+                    if form is None:
+                        self.create_form_with_sources(parameters=[concept],
+                                                        **form_cell)
+                        continue
+                    else:
+                        for key, value in form_cell.items():
+                            try:
+                                old_value = getattr(form, key) or ''
+                            except AttributeError:
                                 continue
-
-                            # Otherwise, deal with the alternative data model,
-                            # where every form can have more than one meaning!
-                            form_query = self.session.query(self.Form).filter(
-                                self.Form == this_lan,
-                                # FIXME: self.Form.cldf_source.contains(form_cell["sources"][0]),
-                                *[getattr(self.Form, key) == value
-                                  for key, value in form_cell.items()
-                                  if type(value) != tuple
-                                  if key not in self.ignore_for_match
-                                ])
-                            form = form_query.one_or_none()
-                            if form is None:
-                                form_id = new_id("{:}_{:}".format(this_lan.cldf_id, concept.cldf_id),
-                                                 self.Form, self.session)
-                                # source, context = form_cell.pop("sources")
-                                form = self.Form(cldf_id=form_id,
-                                            # cell=f_cell.coordinate,
-                                            # sources=[source],
-                                            **form_cell)
-                                self.session.add(form)
-                                # if context:
-                                #     assoc = self.session.query(Reference).filter(
-                                #         Reference.form==form.id,
-                                #         Reference.source==source.id).one()
-                                #     assoc.context = context
-                            else:
-                                for key, value in form_cell.items():
-                                    try:
-                                        old_value = getattr(form, key) or ''
-                                    except AttributeError:
-                                        continue
-                                    if value and key in self.ignore_for_match:
-                                        # FIXME: Maybe test `if value`? – discuss
-                                        if value.lstrip("(").rstrip(")") not in old_value:
-                                            new_value = f"{value:}; {old_value:}".strip().strip(";").strip()
-                                            print(f"{f_cell.coordinate}: Property {key:} of form defined here was '{value:}', which was not part of '{old_value:}' specified earlier for the same form in {form.cell}. I combined those values to '{new_value:}'.".replace("\n", "\t"))
-                                            setattr(form, key, new_value)
-                            form.parameters.append(concept)
-                            self.session.commit()
-
-    def source_from_source_string(
-            self,
-            source_string: str,
-            language: t.Optional[sa.ext.automap.AutomapBase] = None) -> t.Tuple[sa.ext.automap.AutomapBase, t.Optional[str]]:
-        context: t.Optional[str]
-        if ":" in source_string:
-            source_string, context = source_string.split(":", maxsplit=1)
-            assert context.endswith("}")
-            source_string += "}"
-            context = context[:-1].strip()
-        else:
-            context = None
-
-        if language is None:
-            source_id = string_to_id(source_string)
-        else:
-            source_id = string_to_id(f"{language.cldf_id:}_s{source_string}")
-
-        source = self.session.query(self.Source).filter(
-            self.Source.id == source_id).one_or_none()
-        if source is None:
-            source = self.Source(id=source_id, genre='misc', author='', editor='')
-            self.session.add(source)
-        return source, context
-
-    def form_from_cell(self, f_ele, lan, form_cell):
-        phonemic, phonetic, ortho, comment, source, variants = f_ele
-
-        # Source number {1} is not always specified
-        if not source or not source.strip():
-            source = "{1}"
-
-        source, context = self.source_from_source_string(source, lan)
-
-        return {
-            "language": lan,
-            "cldf_form": phonemic or "-",
-            # "cldf_segments": phonetic or "-",
-            # "orthographic": ortho,
-            # "variants": variants,
-            "cldf_comment": None if comment is None else comment.strip(),
-            # "cldf_source": (source, context),
-            # "procedural_comment": self.get_cell_comment(form_cell).strip(),
-            "cldf_value": string_to_id(f"{phonemic:}{phonetic:}{ortho:}")
-        }
+                            if value and key in self.ignore_for_match:
+                                # FIXME: Maybe test `if value`? – discuss
+                                if value.lstrip("(").rstrip(")") not in old_value:
+                                    new_value = f"{value:}; {old_value:}".strip().strip(";").strip()
+                                    print(f"{f_cell.coordinate}: Property {key:} of form defined here was '{value:}', which was not part of '{old_value:}' specified earlier for the same form in {form.cell}. I combined those values to '{new_value:}'.".replace("\n", "\t"))
+                                    setattr(form, key, new_value)
+                        self.session.commit()
 
     def cogset_from_row(self, cog_row):
         values = [cell.value or "" for cell in cog_row]
@@ -273,8 +243,9 @@ class ExcelParser:
                         # get corresponding language_id to column
 
                         try:
-                            for f_ele in self.cognate_cell_parser.parse(f_cell.value, f_cell.coordinate):
-                                form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
+                            for form_cell in self.cognate_cell_parser.parse(
+                                    f_cell.value, f_cell.coordinate,
+                                    language=this_lan):
                                 form_query = self.session.query(self.Form).filter(
                                     self.Form.cldf_languageReference == this_lan,
                                     *[getattr(self.Form, key) == value
