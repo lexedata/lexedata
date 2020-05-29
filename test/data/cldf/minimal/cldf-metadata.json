@@ -1,0 +1,206 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/csvw",
+    {
+      "@language": "en"
+    }
+  ],
+  "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#Wordlist",
+  "dialect": {
+    "commentPrefix": null
+  },
+  "tables": [
+    {
+      "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
+      "tableSchema": {
+        "columns": [
+          {
+            "datatype": {
+              "base": "string",
+              "format": "[a-zA-Z0-9_\\-]+"
+            },
+            "name": "ID",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+            "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "Language_ID",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#languageReference",
+            "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "Concept_ID",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#parameterReference",
+            "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "Form",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#form"
+          },
+          {
+            "datatype": "string",
+            "name": "Value",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#value",
+            "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "Comment",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
+          },
+          {
+            "datatype": {
+              "base": "string"
+            },
+            "name": "Source",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#source",
+            "separator": ";"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "columnReference": [
+              "Language_ID"
+            ],
+            "reference": {
+              "columnReference": [
+                "ID"
+              ],
+              "resource": "languages.csv"
+            }
+          },
+          {
+            "columnReference": [
+              "Concept_ID"
+            ],
+            "reference": {
+              "columnReference": [
+                "ID"
+              ],
+              "resource": "concepts.csv"
+            }
+          }
+        ],
+        "primaryKey": [
+          "ID"
+        ]
+      },
+      "url": "forms.csv"
+    },
+    {
+      "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#ParameterTable",
+      "tableSchema": {
+        "columns": [
+          {
+            "datatype": {
+              "base": "string",
+              "format": "[a-zA-Z0-9_\\-]+"
+            },
+            "name": "ID",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+            "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "Name",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#name",
+            "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "Comment",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
+          }
+        ],
+        "primaryKey": [
+          "ID"
+        ]
+      },
+      "url": "concepts.csv"
+    },
+    {
+      "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#LanguageTable",
+      "tableSchema": {
+        "columns": [
+          {
+            "datatype": {
+              "base": "string",
+              "format": "[a-zA-Z0-9_\\-]+"
+            },
+            "name": "ID",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+            "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "Name",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#name",
+            "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "Comment",
+              "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
+          }
+        ],
+        "primaryKey": [
+          "ID"
+        ]
+      },
+      "url": "languages.csv"
+    },
+    {
+      "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognateTable",
+      "tableSchema": {
+        "columns": [
+          {
+            "datatype": {
+              "base": "string",
+              "format": "[a-zA-Z0-9_\\-]+"
+            },
+            "name": "ID",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+            "required": true
+          },
+          {
+            "name": "Form_ID",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#formReference",
+            "required": true
+          },
+          {
+              "name": "Cognateset",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
+            "required": true
+          }
+        ],
+        "primaryKey": [
+          "ID"
+        ]
+      },
+      "url": "cognate.csv"
+    },
+    {
+      "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognatesetTable",
+      "tableSchema": {
+        "columns": [
+          {
+            "datatype": {
+              "base": "string",
+              "format": "[a-zA-Z0-9_\\-]+"
+            },
+            "name": "ID",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+            "required": true
+          }
+        ],
+        "primaryKey": [
+          "ID"
+        ]
+      },
+      "url": "cognatesets.csv"
+    }
+  ]
+}

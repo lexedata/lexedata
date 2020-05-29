@@ -54,7 +54,7 @@ class ExcelParser:
             "original",
         ]
 
-        self.lan_dict = {}
+        self.lan_dict: t.Dict[str, Language] = {}
 
     def initialize_lexical(self, sheet: op.worksheet.worksheet.Worksheet):
         wb = sheet
@@ -76,7 +76,7 @@ class ExcelParser:
         comment = self.get_cell_comment(column[0])
         return {
             "cldf_name": data[0],
-            "Curator": data[1],
+            # "Curator": data[1],
             "cldf_comment": comment
         }
 
@@ -93,7 +93,7 @@ class ExcelParser:
             "cldf_comment": comment
         }
 
-    def init_lan(self, lan_iter: t.Iterable[t.List[op.cell.Cell]]) -> t.Dict[int, Language]:
+    def init_lan(self, lan_iter: t.Iterable[t.List[op.cell.Cell]]):
         for lan_col in lan_iter:
             # iterate over language columns
             language_properties = self.language_from_column(lan_col)
@@ -119,6 +119,20 @@ class ExcelParser:
 
                         for f_ele in self.cell_parser.parse(f_cell.value, f_cell.coordinate):
                             form_cell = self.form_from_cell(f_ele, this_lan, f_cell)
+                            if not hasattr(self.Form, "parameters"):
+                                # There is no complex relationship between
+                                # forms and concepts. Just add this form here.
+                                form_id = new_id("{:}_{:}".format(this_lan.cldf_id, concept.cldf_id),
+                                                 self.Form, self.session)
+                                form = self.Form(cldf_id=form_id,
+                                                 # cell=f_cell.coordinate,
+                                                 # sources=[source],
+                                                 parameter = concept,
+                                                 **form_cell)
+                                continue
+
+                            # Otherwise, deal with the alternative data model,
+                            # where every form can have more than one meaning!
                             form_query = self.session.query(self.Form).filter(
                                 self.Form == this_lan,
                                 # FIXME: self.Form.cldf_source.contains(form_cell["sources"][0]),
@@ -194,7 +208,7 @@ class ExcelParser:
         return {
             "language": lan,
             "cldf_form": phonemic or "-",
-            "cldf_segments": phonetic or "-",
+            # "cldf_segments": phonetic or "-",
             # "orthographic": ortho,
             # "variants": variants,
             "cldf_comment": None if comment is None else comment.strip(),

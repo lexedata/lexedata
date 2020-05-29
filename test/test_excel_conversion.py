@@ -14,9 +14,16 @@ def excel_wordlist():
     return Path(__file__).parent / "data/excel/small.xlsx"
 
 
+@pytest.fixture(params=[
+        "data/cldf/minimal/cldf-metadata.json",
+        "data/cldf/minimal/cldf-metadata.json"])
+def cldf_wordlist(request):
+    return Path(__file__).parent / request.param
+
+
 @pytest.fixture
-def empty_cldf_wordlist():
-    original = Path(__file__).parent / "data/cldf/cldf-metadata.json"
+def empty_cldf_wordlist(cldf_wordlist):
+    original = cldf_wordlist
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
     shutil.copyfile(original, target)
@@ -24,8 +31,8 @@ def empty_cldf_wordlist():
 
 
 @pytest.fixture
-def filled_cldf_wordlist():
-    original = Path(__file__).parent / "data/cldf/cldf-metadata.json"
+def filled_cldf_wordlist(cldf_wordlist):
+    original = cldf_wordlist
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
     shutil.copyfile(original, target)
@@ -60,8 +67,11 @@ def test_toexcel_runs(filled_cldf_wordlist):
 
 
 def test_roundtrip(filled_cldf_wordlist):
-    old_judgements = [
-        row for row in filled_cldf_wordlist["CognateTable"].iterdicts()]
+    c_formReference = filled_cldf_wordlist["CognateTable", "formReference"].name
+    c_cogsetReference = filled_cldf_wordlist["CognateTable", "cognatesetReference"].name
+    old_judgements = {
+        (row[c_formReference], row[c_cogsetReference])
+        for row in filled_cldf_wordlist["CognateTable"].iterdicts()}
     writer = ExcelWriter(filled_cldf_wordlist)
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
@@ -77,7 +87,8 @@ def test_roundtrip(filled_cldf_wordlist):
 
     # Really? Isn't there a shortcut to do this?
     parser.cldfdatabase.to_cldf(filled_cldf_wordlist.tablegroup._fname.parent)
-    new_judgements = [
-        row for row in filled_cldf_wordlist["CognateTable"].iterdicts()]
+    new_judgements = {
+        (row[c_formReference], row[c_cogsetReference])
+        for row in filled_cldf_wordlist["CognateTable"].iterdicts()}
 
     assert new_judgements == old_judgements

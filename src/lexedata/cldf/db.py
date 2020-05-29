@@ -312,7 +312,12 @@ class Database(pycldf.db.Database):
                         for (key1, key2), values in rows.items()])
             db.commit()
 
-    def select_many_to_many(self, db, table, _=None):
+    def select_many_to_many(
+            self,
+            db,  # Why does it need this argument? Can't we just `with self.connection() as db:`?
+            table: TableSpec,
+            _=None
+    ) -> t.Dict[str, t.List[t.Tuple[str, t.Optional[str]]]]:
         if len(table.columns) == 2:
             context = False
             context_sql = 'null'
@@ -335,9 +340,10 @@ FROM {2} GROUP BY {0}""".format(
         cu = db.execute(sql)
         if context:
             return {
-                key: [(k, v) for k, v in zip(vals.split(), coxntexts.split('||'))]
+                key: [(k, v) for k, v in zip(vals.split(), contexts.split('||'))]
                 for key, vals, contexts in cu.fetchall()}
         else:
             return {
-                key: val.split() for key, val, _ in cu.fetchall()}
+                key: [(v, None) for v in val.split()]
+                for key, val, _ in cu.fetchall()}
 
