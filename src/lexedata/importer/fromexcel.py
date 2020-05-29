@@ -17,19 +17,41 @@ import lexedata.cldf.db as db
 import lexedata.cldf.db_automap as automap
 
 
-class Language(t.Protocol, sa.ext.automap.AutomapBase):
+A = t.TypeVar("A", bound=sa.ext.automap.AutomapBase, covariant=True)
+B = t.TypeVar("B", bound=sa.ext.automap.AutomapBase, covariant=True)
+
+
+class Language(sa.ext.automap.AutomapBase):
     cldf_id: t.Hashable
+
 
 L = t.TypeVar("L", bound=Language, covariant=True)
 
-class Form(t.Protocol, t.Generic[L], sa.ext.automap.AutomapBase):
+
+class Concept(sa.ext.automap.AutomapBase):
+    cldf_id: t.Hashable
+
+
+C = t.TypeVar("C", bound=Concept, covariant=True)
+
+
+class Source(sa.ext.automap.AutomapBase):
+    ...
+
+S = t.TypeVar("S", bound=Source, covariant=True)
+
+
+class Form(t.Generic[L, C], sa.ext.automap.AutomapBase):
+    cldf_id: t.Hashable
     language: L
-    def __init__(self, language: L, **kwargs):
+    def __init__(self, cldf_id: t.Hashable, language: L, **kwargs):
         ...
 
+class Association(t.Generic[A, B], sa.ext.automap.AutomapBase):
+    ...
 
 class ExcelParser:
-    def __init__(self, output_dataset: pycldf.Dataset):
+    def __init__(self, output_dataset: pycldf.Dataset) -> None:
         self.cldfdatabase = db.Database(output_dataset)
         self.cldfdatabase.write()
         connection = self.cldfdatabase.connection()
@@ -47,10 +69,10 @@ class ExcelParser:
 
         print(dir(Base.classes))
         self.Language: t.Type[Language] = Base.classes.Language
-        self.Concept = Base.classes.Parameter
-        self.Form: t.Type[Form[Language]] = Base.classes.Form
-        self.Source = Base.classes.Source
-        self.Reference = Base.classes.FormTable_SourceTable__cldf_source
+        self.Concept: t.Type[Concept] = Base.classes.Parameter
+        self.Source: t.Type[Source] = Base.classes.Source
+        self.Form: t.Type[Form[Language, Concept]] = Base.classes.Form
+        self.Reference: t.Type[Association[Form, Source]] = Base.classes.FormTable_SourceTable__cldf_source
 
         self.cell_parser = CellParserLexical()
         self.cognate_cell_parser = CellParserCognate()
@@ -65,19 +87,19 @@ class ExcelParser:
 
         self.lan_dict: t.Dict[str, Language] = {}
 
-    def initialize_lexical(self, sheet: op.worksheet.worksheet.Worksheet):
+    def initialize_lexical(self, sheet: op.worksheet.worksheet.Worksheet) -> None:
         wb = sheet
-        iter_forms = wb.iter_rows(min_row=3, min_col=7, max_col=44)  # iterates over rows with forms
+        iter_forms = wb.iter_rows(min_row=3, min_col=7)  # iterates over rows with forms
         iter_concept = wb.iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
-        iter_lan = wb.iter_cols(min_row=1, max_row=2, min_col=7, max_col=44)
+        iter_lan = wb.iter_cols(min_row=1, max_row=2, min_col=7)
 
         self.init_lan(iter_lan)
         self.session.commit()
         self.init_con_form(iter_concept, iter_forms)
 
     def initialize_cognate(self, sheet: op.worksheet.worksheet.Worksheet):
-        iter_cog = sheet.iter_rows(min_row=3, min_col=5, max_col=42)  # iterates over rows with forms
-        iter_congset = sheet.iter_rows(min_row=3, max_col=4)  # iterates over rows with concepts
+        iter_cog = sheet.iter_rows(min_row=3, min_col=5)  # iterates over rows with forms
+        iter_congset = sheet.iter_rows(min_row=3)  # iterates over rows with concepts
         self.cogset_cognate(iter_congset, iter_cog)
 
     def language_from_column(self, column):
