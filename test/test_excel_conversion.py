@@ -16,7 +16,7 @@ def excel_wordlist():
 
 @pytest.fixture(params=[
         "data/cldf/minimal/cldf-metadata.json",
-        "data/cldf/minimal/cldf-metadata.json"])
+        "data/cldf/smallmawetiguarani/cldf-metadata.json"])
 def cldf_wordlist(request):
     return Path(__file__).parent / request.param
 

@@ -16,7 +16,16 @@ import lexedata.importer.exceptions as ex
 import lexedata.cldf.db as db
 import lexedata.cldf.db_automap as automap
 
-Language = t.TypeVar("Language", bound=sa.ext.automap.AutomapBase)
+
+class Language(t.Protocol, sa.ext.automap.AutomapBase):
+    cldf_id: t.Hashable
+
+L = t.TypeVar("L", bound=Language, covariant=True)
+
+class Form(t.Protocol, t.Generic[L], sa.ext.automap.AutomapBase):
+    language: L
+    def __init__(self, language: L, **kwargs):
+        ...
 
 
 class ExcelParser:
@@ -37,9 +46,9 @@ class ExcelParser:
         self.session = sa.orm.Session(engine)
 
         print(dir(Base.classes))
-        self.Form = Base.classes.Form
-        self.Language = Base.classes.Language
+        self.Language: t.Type[Language] = Base.classes.Language
         self.Concept = Base.classes.Parameter
+        self.Form: t.Type[Form[Language]] = Base.classes.Form
         self.Source = Base.classes.Source
         self.Reference = Base.classes.FormTable_SourceTable__cldf_source
 

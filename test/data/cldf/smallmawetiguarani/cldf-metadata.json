@@ -149,8 +149,7 @@
           },
           {
             "datatype": "string",
-            "name": "Curator",
-            "required": true
+            "name": "Curator"
           },
           {
             "datatype": "string",
