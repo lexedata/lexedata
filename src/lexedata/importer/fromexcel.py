@@ -16,6 +16,8 @@ import lexedata.importer.exceptions as ex
 import lexedata.cldf.db as db
 import lexedata.cldf.db_automap as automap
 
+Language = t.TypeVar("Language", bound=sa.ext.automap.AutomapBase)
+
 
 class ExcelParser:
     def __init__(self, output_dataset: pycldf.Dataset):
@@ -51,6 +53,8 @@ class ExcelParser:
             "procedural_comment",
             "original",
         ]
+
+        self.lan_dict = {}
 
     def initialize_lexical(self, sheet: op.worksheet.worksheet.Worksheet):
         wb = sheet
@@ -89,7 +93,7 @@ class ExcelParser:
             "cldf_comment": comment
         }
 
-    def init_lan(self, lan_iter):
+    def init_lan(self, lan_iter: t.Iterable[t.List[op.cell.Cell]]) -> t.Dict[int, Language]:
         for lan_col in lan_iter:
             # iterate over language columns
             language_properties = self.language_from_column(lan_col)
@@ -174,7 +178,7 @@ class ExcelParser:
         source = self.session.query(self.Source).filter(
             self.Source.id == source_id).one_or_none()
         if source is None:
-            source = self.Source(id=source_id)
+            source = self.Source(id=source_id, genre='misc', author='', editor='')
             self.session.add(source)
         return source, context
 

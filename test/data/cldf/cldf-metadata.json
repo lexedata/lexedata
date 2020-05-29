@@ -119,8 +119,7 @@
           {
             "datatype": "string",
             "name": "Comment",
-            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
-            "required": true
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
           }
         ],
         "primaryKey": [
@@ -184,7 +183,7 @@
             "required": true
           },
           {
-              "name": "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations",
+              "name": "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict",
             "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
             "required": true
           }

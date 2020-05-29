@@ -333,7 +333,11 @@ FROM {2} GROUP BY {0}""".format(
                 quoted(self.translate(table.name)),
                 context_sql)
         cu = db.execute(sql)
-        return {
-            r[0]: [(k, v) if context else k
-                   for k, v in zip(r[1].split(), r[2].split('||'))] for r in cu.fetchall()}
+        if context:
+            return {
+                key: [(k, v) for k, v in zip(vals.split(), coxntexts.split('||'))]
+                for key, vals, contexts in cu.fetchall()}
+        else:
+            return {
+                key: val.split() for key, val, _ in cu.fetchall()}
 
