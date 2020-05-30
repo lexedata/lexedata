@@ -6,6 +6,7 @@
     }
   ],
   "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#Wordlist",
+  "dc:source": "sources.bib",
   "dialect": {
     "commentPrefix": null
   },
@@ -143,7 +144,7 @@
           {
             "datatype": "string",
             "name": "Comment",
-              "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
           }
         ],
         "primaryKey": [
@@ -171,7 +172,7 @@
             "required": true
           },
           {
-              "name": "Cognateset",
+            "name": "Cognateset",
             "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
             "required": true
           }
@@ -194,6 +195,11 @@
             "name": "ID",
             "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
             "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "Comment",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
           }
         ],
         "primaryKey": [

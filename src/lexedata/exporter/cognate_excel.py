@@ -12,7 +12,7 @@ import sqlalchemy.ext.automap
 from sqlalchemy.ext.automap import automap_base
 
 import lexedata.cldf.db as db
-import lexedata.cldf.db_automap as automap
+from lexedata.cldf.automapped import SQLAlchemyWordlist, Judgement
 
 WARNING = "\u26A0"
 
@@ -22,31 +22,10 @@ CogSet = t.TypeVar("CogSet", bound=sqlalchemy.ext.automap.AutomapBase)
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
 
-class ExcelWriter():
+class ExcelWriter(SQLAlchemyWordlist):
     """Class logic for cognateset Excel export."""
     def __init__(self, dataset: pycldf.Dataset):
-        self.cldfdatabase = db.Database(dataset)
-        self.cldfdatabase.write()
-        connection = self.cldfdatabase.connection()
-
-        def creator():
-            return connection
-
-        Base = automap_base()
-        engine = sqlalchemy.create_engine("sqlite:///:memory:", creator=creator)
-        Base.prepare(engine, reflect=True,
-                     classname_for_table=automap.name_of_object_in_table,
-                     name_for_scalar_relationship=automap.name_of_object_in_table_relation,
-                     name_for_collection_relationship=automap.name_of_objects_in_table_relation)
-        self.session = sqlalchemy.orm.Session(engine)
-
-        self.Form = Base.classes.Form
-        self.Language = Base.classes.Language
-        self.Concept = Base.classes.Parameter
-        self.Source = Base.classes.Source
-        self.Reference = Base.classes.FormTable_SourceTable__cldf_source
-        self.CognateJudgement = Base.classes.Cognate
-        self.Cognateset = Base.classes.Cognateset
+        super().__init__(dataset)
 
         self.URL_BASE = "https://example.org/{:s}"
 
@@ -75,32 +54,36 @@ class ExcelWriter():
 
         # Define the columns
         header = ["CogSet", "Tags"]
-        lan_dict = dict()
+        self.lan_dict: t.Dict[str, int] = {}
         for col, lan in enumerate(
                 self.session.query(self.Language), len(header) + 1):
             # Excel indices are 1-based, not zero-based, so 3 is column C, as
             # intended.
-            lan_dict[lan.cldf_id] = col
-            header.append(lan.name)
+            self.lan_dict[lan.cldf_id] = col
+            header.append(lan.cldf_name)
 
         ws.append(header)
 
         # Iterate over all cognate sets, and prepare the rows.
         # Again, row_index 2 is indeed row 2, because indices are 1-based.
         row_index = 1 + 1
-        for cogset in self.session.query(self.Cognateset):
+        for cogset in self.session.query(self.CogSet):
             # Create cell for cogset in column A
-            cogset_cell = ws.cell(row=row_index, column=1, value=cogset.id)
+            cogset_cell = ws.cell(row=row_index, column=1, value=cogset.cldf_id)
             # Transfer the cognateset comment to the Excel cell comment.
-            if cogset.description != "":
+            if cogset.cldf_comment != "":
                 cogset_cell.comment = op.comments.Comment(
-                    cogset.description, __package__)
+                    cogset.cldf_comment, __package__)
+
+            # FIXME: This does not work for arbitrary datasets. We need to find
+            # a way to make it minimally adaptable by sub-classing or other
+            # methods.
 
             # Put the cognateset's tags in column B.
-            ws.cell(row=row_index, column=2, value=cogset.properties)
+            # ws.cell(row=row_index, column=2, value=cogset.properties)
 
             new_row_index = self.create_formcells_for_cogset(
-                cogset, ws, row_index, lan_dict)
+                cogset, ws, row_index, self.lan_dict)
             assert new_row_index > row_index, ("""
             There can, by the data model, be cognate sets with no judgements,
             but create_formcells_for_cogset did not increase the row index.""")
@@ -125,27 +108,20 @@ class ExcelWriter():
         which can then be filled by the following cognate set.
 
         """
-        # skip this row, if no forms given
-        if not cogset.forms:
-            row_index += 1
+        # Read the forms from the database and group them by language
+        forms = t.DefaultDict[int, t.List[Form]](list)
+        for judgement in cogset.cognates:
+            form: Form = judgement.form
+            forms[self.lan_dict[form.language.cldf_id]].append(judgement)
+
+        if not forms:
             return row_index
 
-        # get sorted version of forms for this cogset, language with maximum of forms first
-        row_dict = defaultdict(list)
-        for form in cogset.forms:
-            row_dict[form.language_id].append(form)
-        ordered_dict = OrderedDict(sorted(row_dict.items(), key=lambda t: len(t[1]), reverse=True))
         # maximum of rows to be added
-        maximum_cogset = len(ordered_dict[next(iter(ordered_dict.keys()))])
-        for i in range(maximum_cogset):
-            this_row = row_index + i
-            for k, v in list(ordered_dict.items()):
-                form = v.pop(0)
-                # if it was last form, remove this language from dict
-                if len(v) == 0:
-                    del ordered_dict[k]
-                # create cell for this judgement
-                self.create_formcell(form, form.procedural_comment, ws, this_row, lan_dict[k])
+        maximum_cogset = max([len(c) for c in forms.values()])
+        for column, cells in forms.items():
+            for row, judgement in enumerate(cells, row_index):
+                self.create_formcell(judgement, ws, column, row)
         # increase row_index and return
         row_index += maximum_cogset
 
@@ -153,8 +129,7 @@ class ExcelWriter():
 
     def create_formcell(
             self,
-            form: Form,
-            procedural_comment: str,
+            judgement: Judgement,
             ws: op.worksheet.worksheet.Worksheet,
             row: int,
             column: int) -> None:
@@ -165,12 +140,12 @@ class ExcelWriter():
         if there is one.
 
         """
-        cell_value = self.form_to_cell_value(form)
+        cell_value = self.form_to_cell_value(judgement.form)
         form_cell = ws.cell(row=row, column=column, value=cell_value)
-        if procedural_comment:
-            comment = procedural_comment
+        comment = getattr(judgement, "cldf_comment", None)
+        if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
-        link = self.URL_BASE.format(urllib.parse.quote(form.id))
+        link = self.URL_BASE.format(urllib.parse.quote(judgement.form.cldf_id))
         form_cell.hyperlink = link
 
     def form_to_cell_value(self, form: Form) -> str:
@@ -182,14 +157,18 @@ class ExcelWriter():
         """
 
         transcription = self.get_best_transcription(form)
-        suffix = ""
         translations = []
 
+        suffix = ""
+        if form.cldf_comment:
+            suffix = f" {WARNING:}"
+
         # iterate over corresponding concepts
-        for concept in form.concepts:
-            if form.procedural_comment:
-                suffix = f" {WARNING:}"
-            translations.append(concept.english)
+        try:
+            for concept in form.parameters:
+                translations.append(concept.cldf_name)
+        except AttributeError:
+            translations.append(form.parameter.cldf_name)
 
         return "{:} ‘{:}’{:}".format(
             transcription, ", ".join(translations), suffix)
@@ -203,6 +182,9 @@ class ExcelWriter():
             return form.orthographic
         else:
             ValueError(f"Form {form:} has no transcriptions.")
+
+    def get_best_transcription(self, form):
+        return form.cldf_form
 
 
 if __name__ == "__main__":

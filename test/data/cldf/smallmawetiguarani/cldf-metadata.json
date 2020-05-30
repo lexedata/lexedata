@@ -154,7 +154,7 @@
           {
             "datatype": "string",
             "name": "Comment",
-              "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
           }
         ],
         "primaryKey": [
@@ -182,7 +182,7 @@
             "required": true
           },
           {
-              "name": "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict",
+            "name": "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict",
             "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
             "required": true
           }
@@ -205,6 +205,11 @@
             "name": "ID",
             "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
             "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "Comment",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
           }
         ],
         "primaryKey": [

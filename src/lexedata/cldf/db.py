@@ -21,8 +21,6 @@ class TableSpec(csvw.db.TableSpec):
             bpk: str,
             context: t.Optional[str] = None) -> T:
         suffix = f"__{context:}" if context else ""
-        print(f"Creating {atable:}_{btable:}{suffix:}")
-
         afk = ColSpec('{0}_{1}'.format(atable, apk))
         bfk = ColSpec('{0}_{1}'.format(btable, bpk))
         if afk.name == bfk.name:
@@ -219,7 +217,6 @@ class Database(pycldf.db.Database):
                         break
             for col in table.tableSchema.columns:
                 if col.propertyUrl and col.propertyUrl.uri == TERMS['source'].uri:
-                    print(col)
                     table.tableSchema.foreignKeys.append(csvw.ForeignKey.fromdict({
                         'columnReference': [col.header],
                         'reference': {
@@ -241,7 +238,8 @@ class Database(pycldf.db.Database):
                                 )})
                     break
 
-        print(translations)
+        # FIXME: There is something wrong with translations
+        # print(translations)
         # Make sure `base` directory can be resolved:
         tg._fname = dataset.tablegroup._fname
         csvw.db.Database.__init__(
@@ -308,7 +306,7 @@ class Database(pycldf.db.Database):
 
             for atkey, rows in refs.items():
                 insert(db, self.translate, atkey[0], atkey[1:],
-                       [[key1, key2, self._duplicate_relationship_separator.join(values)]
+                       *[[key1, key2, self._duplicate_relationship_separator.join([v for v in values if v]) or None]
                         for (key1, key2), values in rows.items()])
             db.commit()
 

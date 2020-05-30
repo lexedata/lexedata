@@ -27,7 +27,10 @@ def empty_cldf_wordlist(cldf_wordlist):
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
     shutil.copyfile(original, target)
-    return target
+    dataset = pycldf.Dataset.from_metadata(target)
+    dataset.write(**{str(table.url): []
+                     for table in dataset.tables})
+    return dataset
 
 
 @pytest.fixture
@@ -42,22 +45,26 @@ def filled_cldf_wordlist(cldf_wordlist):
         o = original.parent / link
         t = target.parent / link
         shutil.copyfile(o, t)
+    link = dataset.bibpath.name
+    o = original.parent / link
+    t = target.parent / link
+    shutil.copyfile(o, t)
+    dataset.sources = pycldf.dataset.Sources.from_file(dataset.bibpath)
     return dataset
 
 
 def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
-    parser = ExcelParser(pycldf.Dataset.from_metadata(empty_cldf_wordlist))
+    parser = ExcelParser(empty_cldf_wordlist)
 
     wb = op.load_workbook(filename=excel_wordlist)
     parser.initialize_lexical(wb.worksheets[0])
 
     wb = op.load_workbook(filename=excel_wordlist)
     for sheet in wb.sheetnames:
-        print("\nParsing sheet '{:s}'".format(sheet))
         ws = wb[sheet]
         parser.initialize_cognate(ws)
 
-    parser.cldfdatabase.to_cldf(empty_cldf_wordlist.parent)
+    parser.cldfdatabase.to_cldf(empty_cldf_wordlist.directory)
 
 
 def test_toexcel_runs(filled_cldf_wordlist):
@@ -81,7 +88,6 @@ def test_roundtrip(filled_cldf_wordlist):
 
     wb = op.load_workbook(filename=out_filename)
     for sheet in wb.sheetnames:
-        print("\nParsing sheet '{:s}'".format(sheet))
         ws = wb[sheet]
         parser.initialize_cognate(ws)
 
