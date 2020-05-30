@@ -4,8 +4,11 @@ import typing as t
 import unicodedata
 from typing import Tuple, Optional, Pattern, List, Dict
 
+import openpyxl
+
 from lexedata.importer.exceptions import *
 from lexedata.database.database import string_to_id
+from lexedata.cldf.automapped import Form
 
 # functions for bracket checking, becoming obsolete with new cellparser
 comment_bracket = lambda str: str.count("(") == str.count(")")
@@ -33,7 +36,11 @@ my_form_pattern = {"phonemic": phonemic_pattern,
                    "source": source_pattern}
 
 
-class CellParser:
+class AbstractCellParser():
+    def parse(self, cell: openpyxl.cell.Cell, **known) -> t.Iterable[Form]:
+        raise NotImplementedError
+
+class CellParser(AbstractCellParser):
     illegal_symbols_description = re.compile(r"[</[{]")
     illegal_symbols_transcription = re.compile(r"[;]")
     form_pattern = my_form_pattern
@@ -116,19 +123,19 @@ class CellParser:
 
         return source_id, context
 
-    def parse(self, values: str, coordinate, **known):
-        if not values:
+    def parse(self, cell: openpyxl.cell.Cell, **known):
+        if not cell.value:
             return None
         lan = known["language"]
-        self.coordinate = coordinate
         # replace ignore pattern with empty string
+        values = cell.value
         while self.ignore_pattern.match(values):
             values = self.ignore_pattern.sub(r"\1\2", values)
 
-        self.values = self.separate(values)
-        for element in self.values:
+        values = self.separate(cell.value)
+        for element in values:
             try:
-                element = self.parse_value(element, coordinate)
+                element = self.parse_value(element, cell.coordinate)
                 # assert no empty element
                 if all(ele == "" for ele in element):
                     raise CellParsingError("empty values ''", self.coordinate)
@@ -177,11 +184,7 @@ class CellParser:
 
 
 class CellParserLexical(CellParser):
-    def parse_value(self, values, coordinate):
-        return self.parsecell(values, coordinate)
-
-    def parsecell(self, ele, coordinates) -> Tuple[
-        Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]:
+    def parse_value(self, ele, coordinates):
         """
         :param ele: is a form string; form string referring to a possibly (semicolon or)comma separated string of a form cell
         :return: list of cellsize containing parsed data of form string
@@ -343,9 +346,13 @@ class CellParserLexical(CellParser):
 
 
 class CellParserCognate(CellParserLexical):
-
     def parse_value(self, values, coordinate):
         if values.isupper():
             raise IgnoreCellError(values, coordinate)
         else:
             return super().parse_value(values, coordinate)
+
+class CellParserHyperlink(CellParser):
+    def parse(self, cell: openpyxl.cell.Cell, **known) -> t.Iterable[Form]:
+        url = cell.hyperlink.target
+        yield {"cldf_id": url.split("/")[-1]}

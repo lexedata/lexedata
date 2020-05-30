@@ -10,26 +10,28 @@ import sqlalchemy as sa
 from sqlalchemy.ext.automap import automap_base
 
 from lexedata.database.database import create_db_session, new_id, string_to_id
-from lexedata.importer.cellparser import CellParserLexical
-from lexedata.importer.cellparser import CellParserLexical, CellParserCognate
+from lexedata.importer.cellparser import CellParserLexical, CellParserCognate, CellParserHyperlink
 import lexedata.importer.exceptions as ex
 from lexedata.cldf.automapped import SQLAlchemyWordlist, Language, Source, Form, Concept
 import lexedata.cldf.db as db
 
+# FIXME: Be more systematic in coordinates: Use ColLetterRowNumber where that
+# is easy, (1-based col number, 1-based row number) elsewhere. Currently,
+# topleft for example is indeed top-left, so row-column.
 
 class ExcelParser(SQLAlchemyWordlist):
+    topleft_lexical = (2, 2)
+    topleft_cognate = (2, 2)
+
+    check_for_match = [
+        "cldf_id",
+    ]
+
     def __init__(self, output_dataset: pycldf.Dataset) -> None:
         super().__init__(output_dataset)
         self.cell_parser = CellParserLexical()
         self.cognate_cell_parser = CellParserCognate()
 
-        self.ignore_for_match = [
-            "id",
-            "variants",
-            "comment",
-            "procedural_comment",
-            "original",
-        ]
 
         class Sources(t.DefaultDict[str, Source]):
             def __missing__(inner_self, key: str) -> Source:
@@ -48,18 +50,20 @@ class ExcelParser(SQLAlchemyWordlist):
             self,
             sheet: op.worksheet.worksheet.Worksheet
     ) -> None:
-        iter_forms = sheet.iter_rows(min_row=3, min_col=7)  # iterates over rows with forms
-        iter_concept = sheet.iter_rows(min_row=3, max_col=6)  # iterates over rows with concepts
-        iter_lan = sheet.iter_cols(min_row=1, max_row=2, min_col=7)
+        first_row, first_col = self.topleft_lexical
+        iter_forms = sheet.iter_rows(min_row=first_row, min_col=first_col)  # iterates over rows with forms
+        iter_concept = sheet.iter_rows(min_row=first_row, max_col=first_col - 1)  # iterates over rows with concepts
+        iter_lan = sheet.iter_cols(min_row=1, max_row=first_row - 1, min_col=first_col)
 
         languages_by_column = self.init_lan(iter_lan)
         self.session.commit()
         self.init_con_form(iter_concept, iter_forms, languages_by_column)
 
     def initialize_cognate(self, sheet: op.worksheet.worksheet.Worksheet):
-        iter_cog = sheet.iter_rows(min_row=3, min_col=5)  # iterates over rows with forms
-        iter_congset = sheet.iter_rows(min_row=3)  # iterates over rows with concepts
-        iter_lan = sheet.iter_cols(min_row=1, max_row=2, min_col=7)
+        first_row, first_col = self.topleft_cognate
+        iter_cog = sheet.iter_rows(min_row=first_row, min_col=first_col)  # iterates over rows with forms
+        iter_congset = sheet.iter_rows(min_row=first_row, max_col=first_col - 1)  # iterates over rows with concepts
+        iter_lan = sheet.iter_cols(min_row=1, max_row=first_row - 1, min_col=first_col)
 
         # Because people are not machines, the mapping of columns to languages
         # in cognate sheets can be different from the mapping in lexical
@@ -146,7 +150,7 @@ class ExcelParser(SQLAlchemyWordlist):
                 # get corresponding language_id to column
                 this_lan = lan_dict[f_cell.column]
 
-                for form_cell in self.cell_parser.parse(f_cell.value, f_cell.coordinate, language=this_lan):
+                for form_cell in self.cell_parser.parse(f_cell, language=this_lan):
                     sources = [(self.sources[k], c or None)
                                 for k, c in form_cell.pop("sources", [])]
                     if not hasattr(self.Form, "parameters"):
@@ -164,7 +168,7 @@ class ExcelParser(SQLAlchemyWordlist):
                         *[getattr(self.Form, key) == value
                             for key, value in form_cell.items()
                             if type(value) != tuple
-                            if key not in self.ignore_for_match
+                            if key in self.check_for_match
                         ])
                     form = form_query.one_or_none()
                     if form is None:
@@ -177,7 +181,7 @@ class ExcelParser(SQLAlchemyWordlist):
                                 old_value = getattr(form, key) or ''
                             except AttributeError:
                                 continue
-                            if value and key in self.ignore_for_match:
+                            if value and key not in self.check_for_match:
                                 # FIXME: Maybe test `if value`? – discuss
                                 if value.lstrip("(").rstrip(")") not in old_value:
                                     new_value = f"{value:}; {old_value:}".strip().strip(";").strip()
@@ -203,7 +207,7 @@ class ExcelParser(SQLAlchemyWordlist):
                     continue
 
                 try:
-                    for form_cell in self.cell_parser.parse(f_cell.value, f_cell.coordinate, language=this_lan):
+                    for form_cell in self.cognate_cell_parser.parse(f_cell, language=this_lan):
                         sources = [(self.sources[k], c or None)
                                    for k, c in form_cell.pop("sources", [])]
                         form_query = self.session.query(self.Form).filter(
@@ -211,21 +215,21 @@ class ExcelParser(SQLAlchemyWordlist):
                             *[getattr(self.Form, key) == value
                                 for key, value in form_cell.items()
                                 if type(value) != tuple
-                                if key not in self.ignore_for_match])
+                                if key in self.check_for_match])
                         forms = form_query.all()
 
                         if not forms:
                             similar_forms = self.session.query(self.Form).filter(
                                 self.Form.language == this_lan,
-                                Form.original.contains(Form.string_to_id(form_cell["phonemic"])),
-                                Form.original.contains(Form.string_to_id(form_cell["phonetic"])),
-                                Form.original.contains(Form.string_to_id(form_cell["orthographic"])),
                             ).all()
                             raise ex.CognateCellError(
-                                f"Found form {this_lan.id:}:{form_cell:} in cognate table that is not in lexicon. Stripping special characters, did you mean one of {similar_forms:}?", f_cell.coordinate)
+                                f"Found form {this_lan.cldf_id:}:{form_cell:} in cognate table that is not in lexicon. Stripping special characters, did you mean one of {similar_forms:}?", f_cell.coordinate)
                         # source, context = form_cell["sources"]
+
                         for form in forms:
-                            maybe_sources = set(self.session.query(self.Reference.source).filter(self.Reference.form == form))
+                            maybe_sources = {
+                                reference.source
+                                for reference in self.session.query(self.Reference).filter(self.Reference.form == form)}
                             if {s for s, c in sources} & maybe_sources:
                                 # If described form and the form in the
                                 # database share a source, assume they are the
@@ -253,7 +257,43 @@ class ExcelParser(SQLAlchemyWordlist):
                 self.session.commit()
 
 
+class ExcelCognateParser(ExcelParser):
+    check_for_match = [
+        "sources",
+    ]
+
+    def __init__(self, output_dataset: pycldf.Dataset) -> None:
+        super().__init__(output_dataset)
+        self.cell_parser = None
+        self.cognate_cell_parser = CellParserHyperlink()
+
+    def language_from_column(self, column):
+        print(column)
+        data = [cell.value or "" for cell in column[:1]]
+        return {"cldf_name": data[0]}
+
+    def cogset_from_row(self, cog_row):
+        print(cog_row)
+        values = [cell.value or "" for cell in cog_row[:1]]
+        if values[0]:
+            self.previous_cogset = {"cldf_id": values[0]}
+        return self.previous_cogset
+
+    def concept_from_row(self, row):
+        raise NotImplementedError
+
+
 class MawetiGuaraniExcelParser(ExcelParser):
+    topleft_lexical = (3, 7)
+    topleft_cognate = (3, 5)
+
+    check_for_match = [
+        "cldf_id",
+        "variants",
+        "comment",
+        "procedural_comment",
+        "original",
+    ]
     def language_from_column(self, column):
         data = [cell.value or "" for cell in column[:2]]
         comment = self.get_cell_comment(column[0])

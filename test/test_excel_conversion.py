@@ -4,8 +4,9 @@ import tempfile
 from pathlib import Path
 
 import pycldf
+import openpyxl
 
-from lexedata.importer.fromexcel import ExcelParser, op
+from lexedata.importer.fromexcel import ExcelParser, ExcelCognateParser
 from lexedata.exporter.cognate_excel import ExcelWriter
 
 
@@ -56,10 +57,10 @@ def filled_cldf_wordlist(cldf_wordlist):
 def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
     parser = ExcelParser(empty_cldf_wordlist)
 
-    wb = op.load_workbook(filename=excel_wordlist)
+    wb = openpyxl.load_workbook(filename=excel_wordlist)
     parser.initialize_lexical(wb.worksheets[0])
 
-    wb = op.load_workbook(filename=excel_wordlist)
+    wb = openpyxl.load_workbook(filename=excel_wordlist)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
         parser.initialize_cognate(ws)
@@ -82,11 +83,15 @@ def test_roundtrip(filled_cldf_wordlist):
     writer = ExcelWriter(filled_cldf_wordlist)
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
+
+    # Reset the existing cognatesets and cognate judgements, to avoid
+    # interference with the the data in the Excel file
     filled_cldf_wordlist["CognateTable"].write([])
+    filled_cldf_wordlist["CognatesetTable"].write([])
 
-    parser = ExcelParser(filled_cldf_wordlist)
+    parser = ExcelCognateParser(filled_cldf_wordlist)
 
-    wb = op.load_workbook(filename=out_filename)
+    wb = openpyxl.load_workbook(filename=out_filename)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
         parser.initialize_cognate(ws)

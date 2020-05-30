@@ -71,7 +71,7 @@ class ExcelWriter(SQLAlchemyWordlist):
             # Create cell for cogset in column A
             cogset_cell = ws.cell(row=row_index, column=1, value=cogset.cldf_id)
             # Transfer the cognateset comment to the Excel cell comment.
-            if cogset.cldf_comment != "":
+            if cogset.cldf_comment:
                 cogset_cell.comment = op.comments.Comment(
                     cogset.cldf_comment, __package__)
 
@@ -131,8 +131,8 @@ class ExcelWriter(SQLAlchemyWordlist):
             self,
             judgement: Judgement,
             ws: op.worksheet.worksheet.Worksheet,
-            row: int,
-            column: int) -> None:
+            column: int,
+            row: int) -> None:
         """Fill the given cell with the form's data.
 
         In the cell described by ws, column, row, dump the data for the form:
