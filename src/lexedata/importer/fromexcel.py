@@ -46,6 +46,9 @@ class ExcelParser(SQLAlchemyWordlist):
 
         self.sources = Sources()
 
+    def read(self, sheet: op.worksheet.worksheet.Worksheet) -> None:
+        self.initialize_lexical(sheet)
+
     def initialize_lexical(
             self,
             sheet: op.worksheet.worksheet.Worksheet
@@ -145,6 +148,9 @@ class ExcelParser(SQLAlchemyWordlist):
             concept_properties = self.concept_from_row(row_con)
             concept_id = new_id(concept_properties["cldf_name"], self.Concept, self.session)
             concept = self.Concept(cldf_id=concept_id, **concept_properties)
+            if not concept_id:
+                if any([forms.value for forms in row_forms]):
+                    raise ValueError("Empty Concept, but forms present")
 
             for f_cell in row_forms:
                 # get corresponding language_id to column
@@ -267,6 +273,9 @@ class ExcelCognateParser(ExcelParser):
         self.cell_parser = None
         self.cognate_cell_parser = CellParserHyperlink()
 
+    def read(self, sheet: op.worksheet.worksheet.Worksheet) -> None:
+        self.initialize_cognate(sheet)
+
     def language_from_column(self, column):
         print(column)
         data = [cell.value or "" for cell in column[:1]]
@@ -290,7 +299,7 @@ class MawetiGuaraniExcelParser(ExcelParser):
     check_for_match = [
         "cldf_id",
         "variants",
-        "comment",
+        "cldf_comment",
         "procedural_comment",
         "original",
     ]
@@ -307,11 +316,11 @@ class MawetiGuaraniExcelParser(ExcelParser):
         set, english, english_strict, spanish, portuguese, french = [cell.value or "" for cell in row]
         comment = self.get_cell_comment(row[0])
         return {
-            "set": set,
-            "english": english,
-            "english_strict": english_strict,
-            "spanish": portuguese,
-            "french": french,
+            "Set": set,
+            "English": english_strict,
+            "Spanish": spanish,
+            "Portuguese": portuguese,
+            "French": french,
             "cldf_name": english,
             "cldf_comment": comment
         }
@@ -320,7 +329,12 @@ class MawetiGuaraniExcelParser(ExcelParser):
         values = [cell.value or "" for cell in cog_row[:2]]
         return {"cldf_id": values[1],
                 "properties": values[0],
-                "comment": self.get_cell_comment(cog_row[1])}
+                "cldf_comment": self.get_cell_comment(cog_row[1])}
+
+
+class MawetiGuaraniExcelCognateParser(MawetiGuaraniExcelParser):
+    def read(self, sheet: op.worksheet.worksheet.Worksheet) -> None:
+        self.initialize_cognate(sheet)
 
 if __name__ == "__main__":
     import argparse

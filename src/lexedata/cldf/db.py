@@ -245,6 +245,23 @@ class Database(pycldf.db.Database):
         csvw.db.Database.__init__(
             self, tg, translate=functools.partial(translate, translations), **kw)
 
+    def association_table_context(self, table, column, fkey):
+        """
+        Context for association tables is created calling this method.
+
+        Note: If a custom value for the `context` column is created by overwriting this method,
+        `select_many_to_many` must be adapted accordingly, to make sure the custom
+        context is retrieved when reading the data from the db.
+
+        :param table:
+        :param column:
+        :param fkey:
+        :return: a pair (foreign key, context)
+        """
+        # The default implementation takes the column name as context:
+        return fkey, None
+
+
     def write(self, *, force=False, exists_ok=False, skip_extra=False, **items):
         """
         Creates a db file with the core schema.
@@ -276,38 +293,50 @@ class Database(pycldf.db.Database):
                     pk = row[t.primary_key[0]] \
                         if t.primary_key and len(t.primary_key) == 1 else None
                     values = []
-                    for k, v in row.items():
-                        if k in t.many_to_many:
+                    for column, value in row.items():
+                        if column in t.many_to_many:
                             assert pk
-                            at = t.many_to_many[k]
+                            at = t.many_to_many[column]
                             atkey = tuple([at.name] + [c.name for c in at.columns])
-                            for vv in v:
-                                fkey, context = self.association_table_context(t, k, vv)
-                                refs[atkey][pk, fkey].append(context)
+                            if len(atkey) == 4:
+                                for subvalue in value:
+                                    fkey, context = self.association_table_context(t, column, subvalue)
+                                    refs[atkey][pk, fkey].append(context)
+                            elif len(atkey) == 3:
+                                for subvalue in value:
+                                    fkey, context = self.association_table_context(t, column, subvalue)
+                                    assert context is None
+                                    refs[atkey][pk, fkey] = None
+                            else:
+                                raise ValueError(
+                                    f"Table {table.name} is not an association table")
                         else:
-                            if k not in cols:
+                            if column not in cols:
                                 if skip_extra:
                                     continue
                                 else:
                                     raise ValueError(
-                                        'unspecified column {0} found in data'.format(k))
-                            col = cols[k]
-                            if isinstance(v, list):
+                                        'unspecified column {0} found in data'.format(column))
+                            col = cols[column]
+                            if isinstance(value, list):
                                 # Note: This assumes list-valued columns are of datatype string!
-                                v = (col.separator or ';').join(
-                                    col.convert(vv) for vv in v)
+                                value = (col.separator or ';').join(
+                                    col.convert(vv) for vv in value)
                             else:
-                                v = col.convert(v) if v is not None else None
+                                value = col.convert(value) if value is not None else None
                             if i == 0:
                                 keys.append(col.name)
-                            values.append(v)
+                            values.append(value)
                     rows.append(tuple(values))
                 insert(db, self.translate, t.name, keys, *rows)
 
             for atkey, rows in refs.items():
-                insert(db, self.translate, atkey[0], atkey[1:],
-                       *[[key1, key2, self._duplicate_relationship_separator.join([v for v in values if v]) or None]
-                        for (key1, key2), values in rows.items()])
+                try:
+                    insert(db, self.translate, atkey[0], atkey[1:],
+                           *[[key1, key2, self._duplicate_relationship_separator.join([v for v in values if v])]
+                             for (key1, key2), values in rows.items()])
+                except:
+                    ...
             db.commit()
 
     def select_many_to_many(

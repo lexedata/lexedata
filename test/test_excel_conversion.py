@@ -6,7 +6,7 @@ from pathlib import Path
 import pycldf
 import openpyxl
 
-from lexedata.importer.fromexcel import ExcelParser, ExcelCognateParser
+from lexedata.importer.fromexcel import ExcelParser, ExcelCognateParser, MawetiGuaraniExcelParser, MawetiGuaraniExcelCognateParser
 from lexedata.exporter.cognate_excel import ExcelWriter
 
 
@@ -23,8 +23,8 @@ def cldf_wordlist(request):
 
 
 @pytest.fixture
-def empty_cldf_wordlist(cldf_wordlist):
-    original = cldf_wordlist
+def empty_cldf_wordlist():
+    original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
     shutil.copyfile(original, target)
@@ -55,17 +55,17 @@ def filled_cldf_wordlist(cldf_wordlist):
 
 
 def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
-    parser = ExcelParser(empty_cldf_wordlist)
-
+    parser = MawetiGuaraniExcelParser(empty_cldf_wordlist)
     wb = openpyxl.load_workbook(filename=excel_wordlist)
-    parser.initialize_lexical(wb.worksheets[0])
+    parser.read(wb.worksheets[0])
+    parser.cldfdatabase.to_cldf(empty_cldf_wordlist.directory)
 
+    cparser = MawetiGuaraniExcelCognateParser(empty_cldf_wordlist)
     wb = openpyxl.load_workbook(filename=excel_wordlist)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-        parser.initialize_cognate(ws)
-
-    parser.cldfdatabase.to_cldf(empty_cldf_wordlist.directory)
+        cparser.read(ws)
+    cparser.cldfdatabase.to_cldf(empty_cldf_wordlist.directory)
 
 
 def test_toexcel_runs(filled_cldf_wordlist):
