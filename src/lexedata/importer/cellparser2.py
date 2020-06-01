@@ -375,7 +375,7 @@ class CellParserCognate(TupiFormCellParser):
         if values.isupper():
             raise IgnoreCellError(values, coordinate)
         else:
-            return super(TupiFormCellParser).parse_value(values, coordinate)
+            return self.parse_value(values, coordinate)
 
 
 class CellParserHyperlink(CellParser):
