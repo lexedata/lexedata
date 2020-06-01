@@ -135,6 +135,10 @@ class CellParser(AbstractCellParser):
 
     def parse_value(self, values, coordinate):
         """checks if values of cells not in expected order, extract each value"""
+        # if values is only whitespaces, raise IgnoreError
+        if set(values) == {" "}:
+            raise IgnoreCellError(values, coordinate)
+
         ele = (values + ".")[:-1]  # force python to hard copy string
         # parse transcriptions and fill dictionary d
         d = dict()
@@ -150,7 +154,8 @@ class CellParser(AbstractCellParser):
         # check for illegal symbols in transcriptions (i.e. form-pattern)
         if self.illegal_symbols_transcription:
             for k, string in d.items():
-                if k != "source" and self.illegal_symbols_transcription.search(string):
+                print(string)
+                if k != "source" and string is not None and self.illegal_symbols_transcription.search(string):
                     raise SeparatorCellError(string, coordinate)
         # if description pattern, add description to output
         if self.description_pattern:
@@ -191,22 +196,22 @@ class CellParser(AbstractCellParser):
             else:
                 text = self.description_pattern.sub(r"\1\3", text)
 
-            # check that ele was parsed entirely, if not raise parsing error
-            text = text.strip(" ")
-            if not text == "":
-                # if just text left and no comment given, put text in comment
-                # more than one token
-                if len(text) >= 1 and (not self.illegal_symbols_description.search(text)):
+        # check that ele was parsed entirely, if not raise parsing error
+        text = text.strip(" ")
+        if not text == "":
+            # if just text left and no comment given, put text in comment
+            # more than one token
+            if len(text) >= 1 and (not self.illegal_symbols_description.search(text)):
 
-                    if not description:
-                        description = text
-                    else:
-                        description += text
-
+                if not description:
+                    description = text
                 else:
-                    errmessage = """IncompleteParsingError; probably illegal content\n
-                               after parsing {}  -  {} was left unparsed""".format(original, text)
-                    raise CellParsingError(errmessage, coordinate)
+                    description += text
+
+            else:
+                errmessage = """IncompleteParsingError; probably illegal content\n
+                           after parsing {}  -  {} was left unparsed""".format(original, text)
+                raise CellParsingError(errmessage, coordinate)
 
         # TODO: opening and closing of bracket_checker is hard coded
         # enclose comment if not properly enclosed
@@ -252,7 +257,7 @@ class CellParserLexical(CellParser):
         if self.scann_for_variants:
             variants = []
             for k, v in dictionary.items():
-                if k != "source":
+                if k != "source" and v is not None:
                     dictionary[k] = self.variants_separator(variants, v)
 
             variants = ",".join(variants)
