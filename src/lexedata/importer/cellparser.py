@@ -354,5 +354,6 @@ class CellParserCognate(CellParserLexical):
 
 class CellParserHyperlink(CellParser):
     def parse(self, cell: openpyxl.cell.Cell, **known) -> t.Iterable[Form]:
-        url = cell.hyperlink.target
-        yield {"cldf_id": url.split("/")[-1]}
+        if cell.hyperlink is not None:
+            url = cell.hyperlink.target
+            yield {"cldf_id": url.split("/")[-1]}

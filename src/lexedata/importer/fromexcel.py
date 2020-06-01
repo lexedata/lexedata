@@ -159,14 +159,13 @@ class ExcelParser(SQLAlchemyWordlist):
                 concept and concept.cldf_id),
             self.Form, self.session)
         form = self.Form(cldf_id=form_id, **properties)
-        self.session.add(form)
-        for source, context in sources:
-            self.session.add(self.Reference(
+        references = [
+            self.Reference(
                 form=form,
                 source=source,
-                context=context))
-        self.session.commit()
-        return form
+                context=context)
+            for source, context in sources]
+        return form, references
 
     def parse_cells(
             self,
