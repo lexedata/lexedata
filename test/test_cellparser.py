@@ -6,7 +6,8 @@ from unittest import TestCase, TextTestRunner
 
 import openpyxl as op
 
-from lexedata.importer.cellparser import CellParserLexical, CellParser, CellParserCognate
+from lexedata.importer.cellparser2 import AbstractCellParser, TupiFormCellParser#, CellParserCognate
+from lexedata.importer.cellparser import CellParser, CellParserLexical, CellParserCognate
 from lexedata.importer.exceptions import *
 
 
@@ -26,8 +27,29 @@ def test_cellparserlexical_errors():
     with pytest.raises(SeparatorCellError):
         cellparser.parse_value("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]", "A1")
 
+    # incomplete parsing due to wrong order of variants
+    with pytest.raises(CellParsingError):
+        cellparser.parse_value("/ta/ [ta.'ʔa] ['ta] (cabello púbico){4}", "A1")
+    # incomplete parsing due to wrong order of variants
+    with pytest.raises(CellParsingError):
+        cellparser.parse_value("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "A1")
+    # incomplete parsing due to missing separator
+    with pytest.raises(CellParsingError):
+        cellparser.parse_value(" /a/ [a.'ʔa] (cabello){4} /aʔa/", "A1")
+    # incomplete parsing due to unrecognized separation pattern: (description), (description)
+    with pytest.raises(CellParsingError):
+        cellparser.parse_value("[iɾũndɨ] (H.F.) (parir), (GIVE BIRTH) [mbohaˈpɨ]", "A1")
+    # incomplete parsing due to too manny sources
+    with pytest.raises(CellParsingError):
+        cellparser.parse_value("[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}", "A1")
 
-def more_tests():
+    # comment error due to not matching opening and closing brackets
+    with pytest.raises(FormCellError):
+        cellparser.parse_value("<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water))){2}",
+                               "A1")
+
+
+def more():
     for cell in []:
         for f in CellParser(cell):
             pass
