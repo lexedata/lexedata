@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import csv
+import warnings
 import typing as t
 from pathlib import Path
 
 import pycldf
-import openpyxl as op
-import sqlalchemy as sa
-from sqlalchemy.ext.automap import automap_base
+import openpyxl
+import sqlalchemy
+import sqlalchemy.ext.automap as automap
 
 from lexedata.database.database import create_db_session, new_id, string_to_id
 from lexedata.importer.cellparser import CellParserLexical, CellParserCognate, CellParserHyperlink
@@ -18,6 +19,13 @@ import lexedata.cldf.db as db
 # FIXME: Be more systematic in coordinates: Use ColLetterRowNumber where that
 # is easy, (1-based col number, 1-based row number) elsewhere. Currently,
 # topleft for example is indeed top-left, so row-column.
+
+class ObjectNotFoundWarning(UserWarning):
+    pass
+
+
+MissingHandler = t.Callable[["ExcelParser", sqlalchemy.ext.automap.AutomapBase], None]
+
 
 class ExcelParser(SQLAlchemyWordlist):
     topleft_lexical = (2, 2)
@@ -46,23 +54,44 @@ class ExcelParser(SQLAlchemyWordlist):
 
         self.sources = Sources()
 
-    def read(self, sheet: op.worksheet.worksheet.Worksheet) -> None:
+    def read(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
         self.initialize_lexical(sheet)
+
+    def error(self, database_object: sqlalchemy.ext.automap.AutomapBase) -> None:
+        raise ObjectNotFoundWarning(f"Failed to find object {database_object:} in the database")
+
+    def warn(self, database_object: sqlalchemy.ext.automap.AutomapBase) -> None:
+        warnings.warn(f"Failed to find object {database_object:} in the database",
+                      ObjectNotFoundWarning)
+
+    def create(self, database_object: sqlalchemy.ext.automap.AutomapBase) -> None:
+        self.session.add(database_object)
+
+    def ignore(self, database_object: sqlalchemy.ext.automap.AutomapBase) -> None:
+        pass
 
     def initialize_lexical(
             self,
-            sheet: op.worksheet.worksheet.Worksheet
+            sheet: openpyxl.worksheet.worksheet.Worksheet,
+            on_form_not_found: MissingHandler = create,
+            on_language_not_found: MissingHandler = create,
+            on_row_not_found: MissingHandler = create
     ) -> None:
         first_row, first_col = self.topleft_lexical
         iter_forms = sheet.iter_rows(min_row=first_row, min_col=first_col)  # iterates over rows with forms
         iter_concept = sheet.iter_rows(min_row=first_row, max_col=first_col - 1)  # iterates over rows with concepts
         iter_lan = sheet.iter_cols(min_row=1, max_row=first_row - 1, min_col=first_col)
 
-        languages_by_column = self.init_lan(iter_lan)
-        self.session.commit()
+        languages_by_column = self.init_lan(iter_lan, if_not_found=on_language_not_found)
         self.init_con_form(iter_concept, iter_forms, languages_by_column)
 
-    def initialize_cognate(self, sheet: op.worksheet.worksheet.Worksheet):
+    def initialize_cognate(
+            self,
+            sheet: openpyxl.worksheet.worksheet.Worksheet,
+            on_form_not_found: MissingHandler = warn,
+            on_language_not_found: MissingHandler = ignore,
+            on_row_not_found: MissingHandler = create
+    ) -> None:
         first_row, first_col = self.topleft_cognate
         iter_cog = sheet.iter_rows(min_row=first_row, min_col=first_col)  # iterates over rows with forms
         iter_congset = sheet.iter_rows(min_row=first_row, max_col=first_col - 1)  # iterates over rows with concepts
@@ -71,7 +100,7 @@ class ExcelParser(SQLAlchemyWordlist):
         # Because people are not machines, the mapping of columns to languages
         # in cognate sheets can be different from the mapping in lexical
         # sheets, and each other
-        languages_by_column = self.init_lan(iter_lan, create_if_not_found=False)
+        languages_by_column = self.init_lan(iter_lan, if_not_found=on_language_not_found)
         self.cogset_cognate(iter_congset, iter_cog, languages_by_column)
 
     def language_from_column(self, column):
@@ -82,7 +111,7 @@ class ExcelParser(SQLAlchemyWordlist):
             "cldf_comment": comment
         }
 
-    def concept_from_row(self: "ExcelParser", row: t.List[op.cell.Cell]) -> t.Dict[str, t.Any]:
+    def concept_from_row(self: "ExcelParser", row: t.List[openpyxl.cell.Cell]) -> t.Dict[str, t.Any]:
         data = [cell.value or "" for cell in row[:1]]
         comment = self.get_cell_comment(row[0])
         return {
@@ -97,10 +126,10 @@ class ExcelParser(SQLAlchemyWordlist):
 
     def init_lan(
             self,
-            lan_iter: t.Iterable[t.List[op.cell.Cell]],
-            create_if_not_found: bool = True,
+            lan_iter: t.Iterable[t.List[openpyxl.cell.Cell]],
+            if_not_found: MissingHandler,
             subparser: t.Callable[
-                ["ExcelParser", t.List[op.cell.Cell]], t.Dict[str, t.Any]
+                ["ExcelParser", t.List[openpyxl.cell.Cell]], t.Dict[str, t.Any]
             ] = language_from_column):
         lan_dict: t.Dict[str, Language] = {}
 
@@ -110,13 +139,9 @@ class ExcelParser(SQLAlchemyWordlist):
             language = self.session.query(self.Language).filter(
                 self.Language.cldf_name == language_properties["cldf_name"]).one_or_none()
             if language is None:
-                if create_if_not_found:
-                    id = new_id(language_properties["cldf_name"], self.Language, self.session)
-                    language = self.Language(cldf_id=id, **language_properties)
-                    self.session.add(language)
-                else:
-                    # TODO: Should we raise an error here or not?
-                    continue
+                id = new_id(language_properties["cldf_name"], self.Language, self.session)
+                language = self.Language(cldf_id=id, **language_properties)
+                if_not_found(self, language)
             lan_dict[lan_col[0].column] = language
 
         return lan_dict
@@ -126,7 +151,7 @@ class ExcelParser(SQLAlchemyWordlist):
         return cell.comment.content if cell.comment else None
 
     def create_form_with_sources(
-            self, sources: t.List[t.Tuple[Source, str]] = [], **properties) -> Form:
+            self, sources: t.List[t.Tuple[Source, t.Optional[str]]] = [], **properties) -> Form:
         concept: t.Optional[Concept] = properties.get("parameter") or properties.get("parameters", [None])[0]
         form_id = new_id(
             "{:}_{:}".format(
@@ -142,6 +167,64 @@ class ExcelParser(SQLAlchemyWordlist):
                 context=context))
         self.session.commit()
         return form
+
+    def parse_cells(
+            self,
+            row_iter: t.Iterable[t.List[openpyxl.cell.Cell]],
+            form_iter: t.Iterable[t.List[openpyxl.cell.Cell]],
+            languages: t.Dict[str, int]):
+        for row_header, row_forms in zip(row_iter, form_iter):
+            properties = self.properties_from_row(row_header)
+            if properties:
+                row_id = new_id(
+                    properties.pop("cldf_id", properties.get("cldf_name", "")),
+                    self.RowClass, self.session)
+                row_object = self.RowClass(cldf_id=row_id, **properties)
+            else:
+                # Keep the old row_object from the previous line
+                pass
+            for f_cell in row_forms:
+                try:
+                    this_lan = languages[f_cell.column]
+                except KeyError:
+                    continue
+
+                for form_cell in self.cell_parser.parse(
+                        f_cell, language=this_lan):
+                    sources = [(self.sources[k], c or None)
+                               for k, c in form_cell.pop("sources", [])]
+                    form_query = self.session.query(self.Form).filter(
+                        self.Form.language == this_lan,
+                        *[getattr(self.Form, key) == value
+                            for key, value in form_cell.items()
+                            if type(value) != tuple
+                            if key in self.check_for_match])
+                    forms = form_query.all()
+                    if "sources" in self.check_for_match:
+                        for c in range(len(forms) - 1, -1, -1):
+                            s = set(reference.source for reference in
+                                    self.session.query(self.Reference).filter(
+                                        self.Reference.form == forms[c]))
+                            if s != sources:
+                                if len(s) > 1:
+                                    del forms[s]
+                                else:
+                                    warnings.warn(f"Closest matching form {forms[0]:} had sources {s:} instead of {sources:}")
+                                    break
+                    if len(forms) == 0:
+                        form = self.create_form_with_sources(
+                            sources=sources,
+                            **form_cell)
+                        self.associate(form, row_object)
+                        self.on_form_not_found(form)
+                    else:
+                        if len(forms) > 1:
+                            warnings.warn(f"Found more than one match for {form_cell:}")
+                        form = forms[0]
+                        for attr, value in form_cell:
+                            reference_value = getattr(form, attr, None)
+                            if reference_value != value:
+                                warnings.warn(f"Reference form property {attr:} was {reference_value:}, not the {value:} specified here.")
 
     def init_con_form(self, con_iter, form_iter, lan_dict):
         for row_forms, row_con in zip(form_iter, con_iter):
@@ -198,8 +281,6 @@ class ExcelParser(SQLAlchemyWordlist):
     def cogset_cognate(self, cogset_iter, cog_iter, lan_dict: t.Dict[int, Language]):
         for cogset_row, row_forms in zip(cogset_iter, cog_iter):
             properties = self.cogset_from_row(cogset_row)
-            if not properties:
-                continue
             cogset_id = new_id(
                 properties.pop("cldf_id", properties.get("cldf_name", "")),
                 self.CogSet, self.session)
@@ -273,7 +354,7 @@ class ExcelCognateParser(ExcelParser):
         self.cell_parser = None
         self.cognate_cell_parser = CellParserHyperlink()
 
-    def read(self, sheet: op.worksheet.worksheet.Worksheet) -> None:
+    def read(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
         self.initialize_cognate(sheet)
 
     def language_from_column(self, column):
@@ -333,7 +414,7 @@ class MawetiGuaraniExcelParser(ExcelParser):
 
 
 class MawetiGuaraniExcelCognateParser(MawetiGuaraniExcelParser):
-    def read(self, sheet: op.worksheet.worksheet.Worksheet) -> None:
+    def read(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
         self.initialize_cognate(sheet)
 
 if __name__ == "__main__":
@@ -368,10 +449,10 @@ if __name__ == "__main__":
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     excel_parser = ExcelParser(pycldf.Dataset.from_metadata(args.output))
 
-    wb = op.load_workbook(filename=args.lexicon)
+    wb = openpyxl.load_workbook(filename=args.lexicon)
     excel_parser.initialize_cognate(wb.worksheets[0])
 
-    wb = op.load_workbook(filename=args.cogsets)
+    wb = openpyxl.load_workbook(filename=args.cogsets)
     for sheet in wb.sheetnames:
         print("\nParsing sheet '{:s}'".format(sheet))
         ws = wb[sheet]
