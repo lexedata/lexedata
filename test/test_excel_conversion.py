@@ -12,7 +12,7 @@ from lexedata.exporter.cognate_excel import ExcelWriter
 
 @pytest.fixture
 def excel_wordlist():
-    return Path(__file__).parent / "data/excel/small.xlsx"
+    return Path(__file__).parent / "data/excel/small.xlsx", Path(__file__).parent / "data/excel/small_cog.xlsx"
 
 
 @pytest.fixture(params=[
@@ -56,12 +56,12 @@ def filled_cldf_wordlist(cldf_wordlist):
 
 def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
     parser = MawetiGuaraniExcelParser(empty_cldf_wordlist)
-    wb = openpyxl.load_workbook(filename=excel_wordlist)
+    wb = openpyxl.load_workbook(filename=excel_wordlist[0])
     parser.read(wb.worksheets[0])
     parser.cldfdatabase.to_cldf(empty_cldf_wordlist.directory)
 
     cparser = MawetiGuaraniExcelCognateParser(empty_cldf_wordlist)
-    wb = openpyxl.load_workbook(filename=excel_wordlist)
+    wb = openpyxl.load_workbook(filename=excel_wordlist[1])
     for sheet in wb.sheetnames:
         ws = wb[sheet]
         cparser.read(ws)
@@ -87,14 +87,15 @@ def test_roundtrip(filled_cldf_wordlist):
     # Reset the existing cognatesets and cognate judgements, to avoid
     # interference with the the data in the Excel file
     filled_cldf_wordlist["CognateTable"].write([])
-    filled_cldf_wordlist["CognatesetTable"].write([])
+    # filled_cldf_wordlist["CognatesetTable"].write([])
 
     parser = ExcelCognateParser(filled_cldf_wordlist)
+    parser.left = len(writer.header) + 1
 
     wb = openpyxl.load_workbook(filename=out_filename)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-        parser.initialize_cognate(ws)
+        parser.read(ws)
 
     # Really? Isn't there a shortcut to do this?
     parser.cldfdatabase.to_cldf(filled_cldf_wordlist.tablegroup._fname.parent)
