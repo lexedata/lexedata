@@ -36,6 +36,15 @@ class ExcelParser():
                 yield cell
 
 
+class ExcelParserLexical(ExcelParser):
+
+    @classmethod
+    def from_file(cls, file):
+        wb = op.load_workbook(file)
+        ws = wb.worksheets[0]
+        return cls.__init__(ws, 6, 2, values_only=False)
+
+
 class ExcelParserCognate(ExcelParser):
     pass
 
