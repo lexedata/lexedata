@@ -17,8 +17,9 @@ from lexedata.cldf.automapped import SQLAlchemyWordlist, Language, Source, Form,
 import lexedata.cldf.db as db
 
 # FIXME: Be more systematic in coordinates: Use ColLetterRowNumber where that
-# is easy, (1-based col number, 1-based row number) elsewhere. Currently,
-# topleft for example is indeed top-left, so row-column.
+# is easy, (1-based row number, 1-based column number) elsewhere. This may be
+# counterintuitive, because B1 becomes (1, 2), but it is consistent with
+# openpyxl.utils.cell.coordinate_to_tuple and with matrix indexing.
 
 class ObjectNotFoundWarning(UserWarning):
     pass
