@@ -110,6 +110,26 @@
             "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
             "required": true
           },
+            {
+                "datatype": "string",
+                "name": "Set"
+            },
+            {
+                "datatype": "string",
+                "name": "English"
+            },
+            {
+                "datatype": "string",
+                "name": "Spanish"
+            },
+            {
+                "datatype": "string",
+                "name": "Portuguese"
+            },
+            {
+                "datatype": "string",
+                "name": "French"
+            },
           {
             "datatype": "string",
             "name": "Name",
@@ -205,6 +225,10 @@
             "name": "ID",
             "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
             "required": true
+          },
+          {
+            "datatype": "string",
+            "name": "properties"
           },
           {
             "datatype": "string",

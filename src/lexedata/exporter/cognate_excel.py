@@ -24,6 +24,8 @@ CogSet = t.TypeVar("CogSet", bound=sqlalchemy.ext.automap.AutomapBase)
 
 class ExcelWriter(SQLAlchemyWordlist):
     """Class logic for cognateset Excel export."""
+    header = ["CogSet", "Tags"]
+
     def __init__(self, dataset: pycldf.Dataset):
         super().__init__(dataset)
 
@@ -53,8 +55,8 @@ class ExcelWriter(SQLAlchemyWordlist):
         ws: op.worksheet.worksheet.Worksheet = wb.active
 
         # Define the columns
-        header = ["CogSet", "Tags"]
         self.lan_dict: t.Dict[str, int] = {}
+        header = self.header[:]
         for col, lan in enumerate(
                 self.session.query(self.Language), len(header) + 1):
             # Excel indices are 1-based, not zero-based, so 3 is column C, as
