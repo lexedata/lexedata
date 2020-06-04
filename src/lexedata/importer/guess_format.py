@@ -10,6 +10,8 @@ import typing as t
 import unicodedata
 from pathlib import Path
 
+import csvw
+import pycldf
 import openpyxl
 
 if os.name == 'nt':
@@ -17,7 +19,9 @@ if os.name == 'nt':
         os.system('cls')
 else:
     def clear():
+        return
         os.system('clear')
+
 
 def select_sheet(wb: openpyxl.Workbook) -> openpyxl.worksheet.worksheet.Worksheet:
     sheets = wb.sheetnames
@@ -104,11 +108,11 @@ def to_regex(pattern: str) -> re.Pattern:
     >>> l.fullmatch("Maweti-Guarani ").groupdict()
     {'language': 'Maweti-Guarani'}
 
-    >>> n = to_regex("Name (Abbreviation): Curator")
+    >>> n = to_regex("Name (Abbreviation): Curator_Initials")
     >>> n.fullmatch("German (deu): MBO").groupdict()
-    {'name': 'German', 'abbreviation': 'deu', 'curator': 'MBO'}
+    {'name': 'German', 'abbreviation': 'deu', 'curator_initials': 'MBO'}
     >>> n.fullmatch("German  (deu):MBO	").groupdict()
-    {'name': 'German', 'abbreviation': 'deu', 'curator': 'MBO'}
+    {'name': 'German', 'abbreviation': 'deu', 'curator_initials': 'MBO'}
     """
     elements = re.compile(r"(\w+)").split(pattern)
     for i in range(0, len(elements), 2):
@@ -151,6 +155,22 @@ CELL = re.compile(
     \W*                   # There may be trailing whitespace
     """,
     re.VERBOSE | re.IGNORECASE)
+
+
+def pretty_print_example_cells(example: t.List[openpyxl.cell.Cell]) -> None:
+    i = 0
+    for cell in example:
+        value = cell.value or ''
+        cell_content = '[{:}]'.format("\n     ".join(value.split("\n")))
+        i += 1
+        print(f"{i:2d}:", cell_content)
+        cell_comment = cell.comment.content if cell.comment else ''
+        cell_comment = ''.join((to_width(c, 15) if width(c) > 15 else c)
+                               for c in SEP_C_RE.split(cell_comment))
+        cell_comment = '({:})'.format(
+            '\n     '.join(l for l in cell_comment.split("\n")))
+        i += 1
+        print(f"{i:2d}:", cell_comment)
 
 
 def understand(c: str, top: int, left: int) -> t.Optional[t.Tuple[int, int]]:
@@ -205,46 +225,11 @@ FAV_SEP = '[,:;–]|\n|--'
 SEP_RE = re.compile(FAV_SEP)
 SEP_C_RE = re.compile(f"({FAV_SEP:})")
 
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate a custom lexical dataset parser and dataset metadata for a particular dataset")
-    parser.add_argument("excel", type=Path, help="The Excel file to inspect")
-    args = parser.parse_args()
-
-    wb = openpyxl.load_workbook(filename=args.excel)
-
-    ws = select_sheet(wb)
-
-    tty_columns, tty_rows = shutil.get_terminal_size()
-    running = 0
-    col_widths: t.List[int] = []
-    for col in ws.iter_cols():
-        w = min(15, max(len(c.value or '') for c in col))
-        running += w + len("│")
-        col_widths.append(w)
-        if running >= tty_columns:
-            overshoot = running - tty_columns
-            col_widths[-1] -= overshoot
-            break
-
-    # Guess top and left of data
-    if ws.freeze_panes:
-        top, left = openpyxl.utils.cell.coordinate_to_tuple(ws.freeze_panes)
-    # There can be more guessers here
-    else:
-        top, left = (2, 2)
-
-    while True:
-        clear()
-        pretty(ws, col_widths, top, left, tty_rows)
-        c = input("Enter a target cell or a direction (up/down/left/right) to move the data boundary. Enter [h]elp for more info. Press [Enter] to confirm. >")
-        tl = understand(c, top, left)
-        if tl is None:
-            break
-        top, left = tl
-
+def most_content(
+        cells: t.Iterable[t.List[openpyxl.cell.Cell]]
+) -> t.List[openpyxl.cell.Cell]:
     mcl = 0
-    for col in ws.iter_cols(min_col=left, max_row=top - 1):
+    for col in cells:
         content_length = sum(
             len(cell.value or '') +
             ((len(SEP_RE.split(cell.comment.content)) * 8 + 8)
@@ -253,50 +238,63 @@ def main() -> None:
         if content_length > mcl:
             long_col = col
             mcl = content_length
+    return long_col
 
-    # FIXME: What comes now should be encapsulated in functions, so the same
-    # kind of thing can be re-used for concepts and also tested in small units.
-    clear()
-    i = 0
-    print("Your most verbose language metadata, with all potential cells and comments, looks like this:")
-    for cell in long_col:
-        value = cell.value or ''
-        cell_content = '[{:}]'.format("\n     ".join(value.split("\n")))
-        i += 1
-        print(f"{i:2d}:", cell_content)
-        cell_comment = cell.comment.content if cell.comment else ''
-        cell_comment = ''.join((to_width(c, 15) if width(c) > 15 else c)
-                               for c in SEP_C_RE.split(cell_comment))
-        cell_comment = '({:})'.format(
-            '\n     '.join(l for l in cell_comment.split("\n")))
-        i += 1
-        print(f"{i:2d}:", cell_comment)
-    print("What should these items be mapped to? Enter column names like 'Name' to map objects to.")
-    print("For help: http://git.io/lexedata-g")
 
-    language_properties = {"Name": "cldf_name",
-                           "Description": "cldf_description",
-                           "Comment": "cldf_comment",
-                           "ISO639P3code": "cldf_comment",
-                           "Glottocode": "cldf_glottocode",
-                           "Macroarea": "cldf_macroarea",
-                           "Latitude": "cldf_latitude",
-                           "Longitude": "cldf_longitude"}
+LANGUAGE_PROPERTIES = {
+    "ID": "http://cldf.clld.org/v1.0/terms.rdf#id",
+    "Name": "http://cldf.clld.org/v1.0/terms.rdf#name",
+    "Macroarea": "http://cldf.clld.org/v1.0/terms.rdf#macroarea",
+    "Latitude": "http://cldf.clld.org/v1.0/terms.rdf#latitude",
+    "Longitude": "http://cldf.clld.org/v1.0/terms.rdf#longitude",
+    "Glottocode": "http://cldf.clld.org/v1.0/terms.rdf#glottocode",
+    "ISO639P3code": "http://cldf.clld.org/v1.0/terms.rdf#iso639P3code",
+    "Comment": "http://cldf.clld.org/v1.0/terms.rdf#comment",
+}
 
-    def completer(properties):
-        def complete(text, state):
-            for cmd in properties:
-                if cmd.startswith(text):
-                    if not state:
-                        return cmd
-                    else:
-                        state -= 1
-        return complete
+CONCEPT_PROPERTIES = {
+    "Name": "http://cldf.clld.org/v1.0/terms.rdf#name",
+    "Gloss": "http://cldf.clld.org/v1.0/terms.rdf#gloss",
+    "Description": "http://cldf.clld.org/v1.0/terms.rdf#description",
+    "Part_Of_Speech": "http://cldf.clld.org/v1.0/terms.rdf#partOfSpeech",
+    "Comment": "http://cldf.clld.org/v1.0/terms.rdf#comment",
+}
 
-    readline.set_completer(completer(language_properties))
-    readline.parse_and_bind("tab: complete")
+COGNATESET_PROPERTIES = {
+    "ID": "http://cldf.clld.org/v1.0/terms.rdf#id",
+    "Description": "http://cldf.clld.org/v1.0/terms.rdf#description",
+    "Source": "http://cldf.clld.org/v1.0/terms.rdf#source",
+    "Comment": "http://cldf.clld.org/v1.0/terms.rdf#comment",
+    "Source_Form_ID": "http://cldf.clld.org/v1.0/terms.rdf#sourceFormReference",
+}
+
+CLDF = {}
+CLDF.update(LANGUAGE_PROPERTIES)
+CLDF.update(CONCEPT_PROPERTIES)
+CLDF.update(COGNATESET_PROPERTIES)
+
+
+def completer(properties: t.Iterable[str] = CLDF):
+    def complete(text, state):
+        for cmd in properties:
+            if cmd.lower().startswith(text.lower()):
+                if not state:
+                    return cmd
+                else:
+                    state -= 1
+    return complete
+
+
+
+def create_parsers(
+        i: int,
+        mapping: t.Mapping[str, str] = CLDF,
+        # For testing, one might want to overload the input() fn with a mock,
+        # eg. a dictionary's .get()
+        input: t.Callable[[str], str] = input,
+) -> t.Tuple[t.List[re.Pattern], t.List[re.Pattern]]:
     cell_parsers: t.List[re.Pattern] = []
-    for j in range(1, i + 1):
+    for j in range(1, i * 2 - 1):
         pattern = input(f"{j:2d} > ")
         if not pattern.strip():
             pattern = ".*"
@@ -308,20 +306,118 @@ def main() -> None:
         else:
             # Pattern is a naïve string pattern
             pattern = to_regex(pattern).pattern
-        # FIXME: Compile, unwrap, re-compile seems cumbersome, but how else can
-        # we rename those groups to the CLDF names?
-        for readable, cldf in language_properties.items():
+        # FIXME: Compile, unwrap, re-compile seems cumbersome, but how else
+        # can we rename those groups to the CLDF names?
+        for readable, cldf in mapping.items():
+            name = "cldf_" + cldf.split("#")[-1]
             r = readable.lower()
-            pattern = pattern.replace(f"(?P<{r:}>", f"(?P<{cldf:}>")
-            pattern = pattern.replace(f"(?P={r:})", f"(?P={cldf:})")
+            pattern = pattern.replace(f"(?P<{r:}>", f"(?P<{name:}>")
+            pattern = pattern.replace(f"(?P={r:})", f"(?P={name:})")
         regex = re.compile(pattern, re.IGNORECASE)
         cell_parsers.append(regex)
-    cell_regexes = [x for x in cell_parsers[::2]]
-    comment_regexes = [x for x in cell_parsers[1::2]]
+    return [x for x in cell_parsers[::2]], [x for x in cell_parsers[1::2]]
 
+
+def add_column_with_names(table: str, column_names: t.List[str], data: pycldf.Dataset):
+    data.add_component(table)
+    columns = data[table].tableSchema.columns
+    for c in range(len(columns) - 1, -1, -1):
+        column = columns[c]
+        expected_name = "cldf_{}".format(
+            column.propertyUrl.uri.split("#")[-1].lower())
+        if expected_name not in column_names:
+            del columns[c]
+        else:
+            column_names.remove(expected_name)
+    for column_name in column_names:
+        data.add_columns(
+            table,
+            column_name.replace("cldf_", "http://cldf.clld.org/v1.0/terms.rdf#"))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Generate a custom lexical dataset parser and dataset metadata for a particular dataset")
+    parser.add_argument("excel", type=Path, help="The Excel file to inspect")
+    parser.add_argument(
+        "json", type=Path, nargs="?",
+        default="Wordlist-metadata.json",
+        help="The json metadata file to write")
+    args = parser.parse_args()
+
+    # STEP 1: Select a sheet
+    # ======================
+    wb = openpyxl.load_workbook(filename=args.excel)
+
+    ws = select_sheet(wb)
+
+    tty_columns, tty_rows = shutil.get_terminal_size()
+    running = 0
+    col_widths: t.List[int] = []
+    for col in ws.iter_cols():
+        w = min(15, max(len(cell.value or '') for cell in col))
+        running += w + len("│")
+        col_widths.append(w)
+        if running >= tty_columns:
+            overshoot = running - tty_columns
+            col_widths[-1] -= overshoot
+            break
+
+    # STEP 2: Select the boundary between headers and data
+    # ====================================================
+    if ws.freeze_panes:
+        top, left = openpyxl.utils.cell.coordinate_to_tuple(ws.freeze_panes)
+    # TODO: There can be more guessers here
+    else:
+        # Fall back to one column and one row of headers
+        top, left = (2, 2)
+
+    while True:
+        clear()
+        pretty(ws, col_widths, top, left, tty_rows)
+        command = input("Enter a target cell or a direction (up/down/left/right) to move the data boundary. Enter [h]elp for more info. Press [Enter] to confirm. >")
+        tl = understand(command, top, left)
+        if tl is None:
+            break
+        top, left = tl
+
+    # STEP 3: Select the data type
+    # ============================
+    ms = input("Does this describe a [M]eaning/Concept or a cognate[s]et? > ")
+    if re.search(r'\w', ms) == 's':
+        cognateset = True
+    else:
+        cognateset = False
+
+    data = pycldf.Wordlist(csvw.TableGroup(fname=args.json))
+    # TODO: Should this be necessary? Check with @xrotwang
+    data.properties["dc:conformsTo"] = "http://cldf.clld.org/v1.0/terms.rdf#Wordlist"
+
+    # STEP 3: Determine how languages are mapped to columns
+    # =====================================================
+    example_language = most_content(ws.iter_cols(min_col=left, max_row=top - 1))
+    clear()
+    print("Your most verbose language metadata, with all potential cells and comments, looks like this:")
+    pretty_print_example_cells(example_language)
+    print("What should these items be mapped to? Enter column names and separators like 'Name (Code)'.")
+    print("For help: http://git.io/lexedata-g")
+
+    readline.set_completer(completer(LANGUAGE_PROPERTIES))
+    readline.parse_and_bind("tab: complete")
+    cell_regexes, comment_regexes = create_parsers(top)
+
+    column_names: t.Set[str] = set("cldf_id")
+    for r in cell_regexes:
+        column_names.update(r.groupindex)
+    for r in comment_regexes:
+        column_names.update(r.groupindex)
+
+    add_column_with_names("LanguageTable", column_names, data)
+    data.write(LanguageTable=[])
 
     # TODO: This for loop should be used to provide a language_from_column
-    # method for an ExcelParser subclass.
+    # method for an ExcelParser subclass. Maybe the following for loop could
+    # even use the init_lan method of that ExcelParser!
     for col in ws.iter_cols(min_col=left, max_row=top - 1):
         try:
             d: t.Dict[str, str] = {}
@@ -336,9 +432,57 @@ def main() -> None:
                     d.update(comment_regex.fullmatch(cell.comment.content).groupdict())
             print(d)
         except AttributeError:
-            print(f"Failed to parse {cell.coordinate} using your supplied pattern ({cell_regex.pattern:}), please check manually.")
+            print(f"Failed to parse {cell.coordinate} using the translated version of your supplied pattern ({cell_regex.pattern:}), please check manually.")
 
-    # TODO: The groups encountered here should become CLDF columns of the language.
+    # TODO: The groups encountered here should become CLDF columns of the
+    # language.
+
+    example_row = most_content(ws.iter_rows(max_col=left - 1, min_row=top))
+    clear()
+    print("Your most verbose row metadata, with all potential cells and comments, looks like this:")
+    pretty_print_example_cells(example_row)
+    print("What should these items be mapped to? Enter column names and separators like 'Name (Code)'.")
+    print("For help: http://git.io/lexedata-g")
+
+    readline.set_completer(
+        completer(COGNATESET_PROPERTIES
+                  if cognateset else
+                  CONCEPT_PROPERTIES))
+    readline.parse_and_bind("tab: complete")
+    cell_regexes, comment_regexes = create_parsers(left)
+
+    column_names: t.Set[str] = set("cldf_id")
+    for r in cell_regexes:
+        column_names.update(r.groupindex)
+    for r in comment_regexes:
+        column_names.update(r.groupindex)
+
+    add_column_with_names(
+        "CognatesetTable" if cognateset else "ParameterTable",
+        column_names, data)
+    data.write(**{
+        "CognatesetTable" if cognateset else "ParameterTable":
+        []})
+
+    # TODO: This for loop should be used to provide a language_from_column
+    # method for an ExcelParser subclass. Maybe the following for loop could
+    # even use the init_lan method of that ExcelParser!
+    for col in ws.iter_rows(max_col=left - 1, min_row=top):
+        try:
+            d: t.Dict[str, str] = {}
+            for cell, cell_regex, comment_regex in zip(col, cell_regexes, comment_regexes):
+                if cell.value:
+                    # FIXME: If a property appears twice, currently the later
+                    # appearance overwrites the earlier one. Merge wiser.
+                    d.update(cell_regex.fullmatch(cell.value).groupdict())
+                if cell.comment:
+                    # FIXME: If a property appears twice, currently the later
+                    # appearance overwrites the earlier one. Merge wiser.
+                    d.update(comment_regex.fullmatch(cell.comment.content).groupdict())
+            print(d)
+        except AttributeError:
+            print(f"Failed to parse {cell.coordinate} using the translated version of your supplied pattern ({cell_regex.pattern:}), please check manually.")
+
 
     # For debugging:
     return locals()
