@@ -368,6 +368,10 @@ if __name__ == "__main__":
         default="TG_cognates_online_MASTER.xlsx",
         help="Path to an Excel file containing cogsets and cognatejudgements")
     parser.add_argument(
+        "output", nargs="?",
+        default="from_excel/",
+        help="Directory to create the output CLDF wordlist in")
+    parser.add_argument(
         "--db", nargs="?",
         default="sqlite:///",
         help="Where to store the temp DB")
@@ -375,10 +379,6 @@ if __name__ == "__main__":
         "--metadata", nargs="?",
         default="Wordlist-metadata.json",
         help="Path to the metadata.json")
-    parser.add_argument(
-        "output", nargs="?",
-        default="from_excel/",
-        help="Directory to create the output CLDF wordlist in")
     parser.add_argument(
         "--debug-level", type=int, default=0,
         help="Debug level: Higher numbers are less forgiving")

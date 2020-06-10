@@ -29,6 +29,7 @@ def empty_cldf_wordlist():
     target = dirname / original.name
     shutil.copyfile(original, target)
     dataset = pycldf.Dataset.from_metadata(target)
+    # TODO: Gereon can you leave some comment for the interface of pycldf.Dataset?
     dataset.write(**{str(table.url): []
                      for table in dataset.tables})
     return dataset
