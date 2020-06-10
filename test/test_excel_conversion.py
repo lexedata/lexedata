@@ -36,6 +36,8 @@ def empty_cldf_wordlist():
 
 @pytest.fixture
 def filled_cldf_wordlist(cldf_wordlist):
+    # Copy the dataset to a different temporary location, so that editing the
+    # dataset will
     original = cldf_wordlist
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
@@ -89,6 +91,7 @@ def test_roundtrip(filled_cldf_wordlist):
     filled_cldf_wordlist["CognateTable"].write([])
     # filled_cldf_wordlist["CognatesetTable"].write([])
 
+    # ExcelCognateParser(cldf.Dataset.from_metadata(...))
     parser = ExcelCognateParser(filled_cldf_wordlist)
     parser.left = len(writer.header) + 1
 
