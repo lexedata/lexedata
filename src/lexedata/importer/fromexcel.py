@@ -368,8 +368,8 @@ if __name__ == "__main__":
         default="TG_cognates_online_MASTER.xlsx",
         help="Path to an Excel file containing cogsets and cognatejudgements")
     parser.add_argument(
-        "output", nargs="?",
-        default="from_excel/",
+        "output", nargs="?", # at some point, output parameter is not needed for parser
+        default="from_excel/", # output will be displaced to cognatesetimporter
         help="Directory to create the output CLDF wordlist in")
     parser.add_argument(
         "metadata", nargs="?",
