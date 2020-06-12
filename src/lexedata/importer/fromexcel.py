@@ -372,28 +372,28 @@ if __name__ == "__main__":
         default="from_excel/",
         help="Directory to create the output CLDF wordlist in")
     parser.add_argument(
+        "metadata", nargs="?",
+        default="Wordlist-metadata.json",
+        help="Path to the metadata.json")
+    parser.add_argument(
         "--db", nargs="?",
         default="sqlite:///",
         help="Where to store the temp DB")
-    parser.add_argument(
-        "--metadata", nargs="?",
-        default="Wordlist-metadata.json",
-        help="Path to the metadata.json")
     parser.add_argument(
         "--debug-level", type=int, default=0,
         help="Debug level: Higher numbers are less forgiving")
     args = parser.parse_args()
 
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser = ExcelParser(pycldf.Dataset.from_metadata(args.output))
-
+    excel_parser_lexical = MawetiGuaraniExcelParser(pycldf.Dataset.from_metadata(args.metadata))
+    excel_parser_cognateset = MawetiGuaraniExcelCognateParser(pycldf.Dataset.from_metadata(args.metadata))
     wb = openpyxl.load_workbook(filename=args.lexicon)
-    excel_parser.read(wb.worksheets[0])
+    excel_parser_lexical.read(wb.worksheets[0])
 
     wb = openpyxl.load_workbook(filename=args.cogsets)
     for sheet in wb.sheetnames:
         print("\nParsing sheet '{:s}'".format(sheet))
         ws = wb[sheet]
-        excel_parser.read(ws)
+        excel_parser_cognateset.read(ws)
 
-    excel_parser.cldfdatabase.to_cldf(args.output.parent)
+    excel_parser.cldfdatabase.to_cldf(args.output)
