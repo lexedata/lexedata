@@ -368,15 +368,11 @@ if __name__ == "__main__":
         default="TG_cognates_online_MASTER.xlsx",
         help="Path to an Excel file containing cogsets and cognatejudgements")
     parser.add_argument(
-        "output", nargs="?",
-        default="from_excel/",
-        help="Directory to create the output CLDF wordlist in")
-    parser.add_argument(
         "--db", nargs="?",
         default="sqlite:///",
         help="Where to store the temp DB")
     parser.add_argument(
-        "--metadata", nargs="?",
+        "--metadata", nargs="?", type=Path,
         default="Wordlist-metadata.json",
         help="Path to the metadata.json")
     parser.add_argument(
@@ -385,7 +381,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser = ExcelParser(pycldf.Dataset.from_metadata(args.output))
+    excel_parser = ExcelParser(pycldf.Dataset.from_metadata(args.metadata))
 
     wb = openpyxl.load_workbook(filename=args.lexicon)
     excel_parser.read(wb.worksheets[0])
@@ -396,4 +392,4 @@ if __name__ == "__main__":
         ws = wb[sheet]
         excel_parser.read(ws)
 
-    excel_parser.cldfdatabase.to_cldf(args.output.parent)
+    excel_parser.cldfdatabase.to_cldf(args.metadata.parent)
