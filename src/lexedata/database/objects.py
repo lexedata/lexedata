@@ -78,7 +78,7 @@ class Concept(DatabaseObjectWithUniqueStringID):
     __tablename__ = "ParameterTable"
 
     english = sa.Column(sa.String, name="cldf_name")
-    set = sa.Column(sa.String, name="Set")
+    set = sa.Column(sa.String, name="cldf_set")
     english_strict = sa.Column(sa.String, name="English_Strict")
     spanish = sa.Column(sa.String, name="Spanish")
     french = sa.Column(sa.String, name="French")

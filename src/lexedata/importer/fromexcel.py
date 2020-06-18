@@ -381,15 +381,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser = ExcelParser(pycldf.Dataset.from_metadata(args.metadata))
-
+    excel_parser_lexical = MawetiGuaraniExcelParser(pycldf.Dataset.from_metadata(args.metadata))
+    excel_parser_cognateset = MawetiGuaraniExcelCognateParser(pycldf.Dataset.from_metadata(args.metadata))
     wb = openpyxl.load_workbook(filename=args.lexicon)
-    excel_parser.read(wb.worksheets[0])
+    excel_parser_lexical.read(wb.worksheets[0])
 
     wb = openpyxl.load_workbook(filename=args.cogsets)
     for sheet in wb.sheetnames:
         print("\nParsing sheet '{:s}'".format(sheet))
         ws = wb[sheet]
-        excel_parser.read(ws)
+        excel_parser_cognateset.read(ws)
 
     excel_parser.cldfdatabase.to_cldf(args.metadata.parent)
