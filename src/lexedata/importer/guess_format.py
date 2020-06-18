@@ -318,21 +318,36 @@ def create_parsers(
     return [x for x in cell_parsers[::2]], [x for x in cell_parsers[1::2]]
 
 
-def add_column_with_names(table: str, column_names: t.List[str], data: pycldf.Dataset):
-    data.add_component(table)
+def add_table_with_columns(
+        table: str,
+        column_names: t.Set[str],
+        data: pycldf.Dataset) -> None:
+    """Add a table with the given columns to the dataset.
+
+    If such a table already exists, only add the columns that do not exist
+    yet.
+
+    """
+    delete = True
+    try:
+        data[table]
+        delete = False
+    except KeyError:
+        data.add_component(table)
     columns = data[table].tableSchema.columns
     for c in range(len(columns) - 1, -1, -1):
         column = columns[c]
         expected_name = "cldf_{}".format(
             column.propertyUrl.uri.split("#")[-1].lower())
-        if expected_name not in column_names:
+        if expected_name not in column_names and delete:
             del columns[c]
         else:
             column_names.remove(expected_name)
     for column_name in column_names:
         data.add_columns(
             table,
-            column_name.replace("cldf_", "http://cldf.clld.org/v1.0/terms.rdf#"))
+            column_name.replace(
+                "cldf_", "http://cldf.clld.org/v1.0/terms.rdf#"))
 
 
 def main() -> None:
@@ -406,13 +421,13 @@ def main() -> None:
     readline.parse_and_bind("tab: complete")
     cell_regexes, comment_regexes = create_parsers(top)
 
-    column_names: t.Set[str] = set("cldf_id")
+    lang_column_names: t.Set[str] = {"cldf_id"}
     for r in cell_regexes:
-        column_names.update(r.groupindex)
+        lang_column_names.update(r.groupindex)
     for r in comment_regexes:
-        column_names.update(r.groupindex)
+        lang_column_names.update(r.groupindex)
 
-    add_column_with_names("LanguageTable", column_names, data)
+    add_table_with_columns("LanguageTable", lang_column_names, data)
     data.write(LanguageTable=[])
 
     # TODO: This for loop should be used to provide a language_from_column
@@ -457,7 +472,7 @@ def main() -> None:
     for r in comment_regexes:
         column_names.update(r.groupindex)
 
-    add_column_with_names(
+    add_table_with_columns(
         "CognatesetTable" if cognateset else "ParameterTable",
         column_names, data)
     data.write(**{
