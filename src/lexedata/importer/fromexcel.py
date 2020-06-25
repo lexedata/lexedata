@@ -22,6 +22,16 @@ import lexedata.cldf.db as db
 # counterintuitive, because B1 becomes (1, 2), but it is consistent with
 # openpyxl.utils.cell.coordinate_to_tuple and with matrix indexing.
 
+
+# Adapt warnings
+def formatwarning(msg, *args, **kwargs):
+    # ignore everything except the message
+    return str(msg) + '\n'
+
+
+warnings.formatwarning = formatwarning
+
+
 class ObjectNotFoundWarning(UserWarning):
     pass
 
@@ -42,6 +52,10 @@ class ExcelParser(SQLAlchemyWordlist):
 
     check_for_match = [
         "cldf_id",
+    ]
+
+    check_for_row_match = [
+        "cldf_name"
     ]
 
     def __init__(self, output_dataset: pycldf.Dataset, **kwargs) -> None:
@@ -235,10 +249,10 @@ class ExcelParser(SQLAlchemyWordlist):
                 pass
             else:
                 similar = self.session.query(self.RowObject).filter(
-                    *[getattr(self.Form, key) == value
+                    *[getattr(self.RowObject, key) == value
                       for key, value in properties.items()
                       if type(value) != tuple
-                      if key in self.check_for_match]).all()
+                      if key in self.check_for_row_match]).all()
                 if len(similar) == 0:
                     row_id = new_id(
                         properties.pop("cldf_id",
@@ -268,21 +282,22 @@ class ExcelParser(SQLAlchemyWordlist):
                     form_query = self.session.query(self.Form).filter(
                         self.Form.language == this_lan,
                         *[getattr(self.Form, key) == value
-                            for key, value in form_cell.items()
-                            if type(value) != tuple
-                            if key in self.check_for_match])
+                          for key, value in form_cell.items()
+                          if type(value) != tuple
+                          if key in self.check_for_match])
                     forms = form_query.all()
                     if "sources" in self.check_for_match:
                         for c in range(len(forms) - 1, -1, -1):
                             s = set(reference.source for reference in
                                     self.session.query(self.Reference).filter(
                                         self.Reference.form == forms[c]))
-                            if s != sources:
-                                if len(s) > 1:
-                                    del forms[s]
-                                else:
-                                    warnings.warn(f"Closest matching form {forms[0].cldf_id:} had sources {s:} instead of {sources:}")
-                                    break
+                            sources_only = {src[0] for src in sources}
+                            if not sources_only & s:
+                                warnings.warn("Closest matching form {:} had sources {:} instead of {:}".format(
+                                    forms[0].cldf_id,
+                                    {src.id for src in s},
+                                    {src.id for src in sources_only}))
+                                break
                     if len(forms) == 0:
                         form, references = self.create_form_with_sources(
                             sources=sources,
@@ -299,7 +314,7 @@ class ExcelParser(SQLAlchemyWordlist):
                         for attr, value in form_cell.items():
                             reference_value = getattr(form, attr, None)
                             if reference_value != value:
-                                warnings.warn(f"Reference form property {attr:} was {reference_value:}, not the {value:} specified here.")
+                                warnings.warn(f"Reference form property {attr:} was '{reference_value:}', not the '{value:}' specified here.")
                     self.associate(form, row_object)
             self.session.commit()
 
@@ -342,6 +357,7 @@ class MawetiGuaraniExcelParser(ExcelParser):
     check_for_match = [
         "cldf_form",
         "sources",
+        "cldf_value"
     ]
 
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> t.Dict[str, t.Any]:
@@ -377,9 +393,11 @@ class MawetiGuaraniExcelCognateParser(
 
     def properties_from_row(self, row):
         values = [(cell.value or '').strip() for cell in row[:2]]
-        return {"cldf_id": values[1],
-                "properties": values[0],
-                "cldf_comment": get_cell_comment(row[1])}
+        return {
+            "cldf_id": values[1],
+            "properties": values[0],
+            "cldf_comment": get_cell_comment(row[1])
+        }
 
 
 if __name__ == "__main__":

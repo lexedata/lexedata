@@ -24,11 +24,13 @@ class CognateImporter():
 
     def from_excel_files(self, lexical, cognates) -> None:
         # calls all self.import_......
+        ...
 
     def find_form(self, form: t.Dict[str, t.Any]) -> t.Optional(Form):
-    """
-    find Form described by the dictionary in  the database and return corresponding form object if found
-    """
+        """
+        find Form described by the dictionary in  the database and return corresponding form object if found
+        """
+
 
     # def import_language, def import_concepts, def import_cogsets
 
