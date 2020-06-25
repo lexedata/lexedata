@@ -115,8 +115,11 @@ class Judgement(Association[F, X]):
 class SQLAlchemyWordlist:
     def __init__(self, dataset: pycldf.Dataset, fname=None, **kwargs) -> None:
         self.cldfdatabase = db.Database(dataset, fname=fname, **kwargs)
-        dataset.write(**{str(t.url):[] for t in dataset.tables})
-        self.cldfdatabase.write_from_tg(_force=True)
+        dataset.write(**{str(t.url): [] for t in dataset.tables})
+        try:
+            self.cldfdatabase.write_from_tg()
+        except ValueError:
+            pass
         connection = self.cldfdatabase.connection()
 
         def creator():

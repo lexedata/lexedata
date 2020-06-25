@@ -23,10 +23,14 @@ import lexedata.cldf.db as db
 # openpyxl.utils.cell.coordinate_to_tuple and with matrix indexing.
 
 
-# Adapt warnings
-def formatwarning(msg, *args, **kwargs):
+# Adapt warnings – TODO: Probably the `logging` package would be better for
+# this job than `warnings`.
+def formatwarning(
+        message: str, category: t.Type[Warning], filename: str, lineno: int,
+        line: t.Optional[str] = None
+) -> str:
     # ignore everything except the message
-    return str(msg) + '\n'
+    return str(message) + '\n'
 
 
 warnings.formatwarning = formatwarning
@@ -40,7 +44,9 @@ class MultipleCandidatesWarning(UserWarning):
     pass
 
 
-MissingHandler = t.Callable[["ExcelParser", sqlalchemy.ext.automap.AutomapBase], bool]
+MissingHandler = t.Callable[
+    ["ExcelParser", sqlalchemy.ext.automap.AutomapBase, t.Optional[str]],
+    bool]
 
 
 def get_cell_comment(cell: openpyxl.cell.Cell) -> t.Optional[str]:
@@ -77,7 +83,8 @@ class ExcelParser(SQLAlchemyWordlist):
 
         self.RowObject = self.Concept
 
-    def error(self, db_object: sqlalchemy.ext.automap.AutomapBase) -> bool:
+    def error(self, db_object: sqlalchemy.ext.automap.AutomapBase,
+              cell: t.Optional[str] = None) -> bool:
         try:
             repr = db_object.cldf_name
         except AttributeError:
@@ -88,7 +95,8 @@ class ExcelParser(SQLAlchemyWordlist):
         raise ObjectNotFoundWarning(
             f"Failed to find object {repr:} in the database")
 
-    def warn(self, db_object: sqlalchemy.ext.automap.AutomapBase) -> bool:
+    def warn(self, db_object: sqlalchemy.ext.automap.AutomapBase,
+             cell: t.Optional[str] = None) -> bool:
         try:
             repr = db_object.cldf_name
         except AttributeError:
@@ -102,7 +110,8 @@ class ExcelParser(SQLAlchemyWordlist):
         return False
 
     def warn_and_create(
-            self, db_object: sqlalchemy.ext.automap.AutomapBase) -> bool:
+            self, db_object: sqlalchemy.ext.automap.AutomapBase,
+            cell: t.Optional[str] = None) -> bool:
         try:
             repr = db_object.cldf_name
         except AttributeError:
@@ -116,11 +125,13 @@ class ExcelParser(SQLAlchemyWordlist):
         self.session.add(db_object)
         return True
 
-    def create(self, db_object: sqlalchemy.ext.automap.AutomapBase) -> bool:
+    def create(self, db_object: sqlalchemy.ext.automap.AutomapBase,
+               cell: t.Optional[str] = None) -> bool:
         self.session.add(db_object)
         return True
 
-    def ignore(self, db_object: sqlalchemy.ext.automap.AutomapBase) -> bool:
+    def ignore(self, db_object: sqlalchemy.ext.automap.AutomapBase,
+               cell: t.Optional[str] = None) -> bool:
         return False
 
     on_language_not_found: MissingHandler = create
@@ -413,13 +424,9 @@ if __name__ == "__main__":
         default="TG_cognates_online_MASTER.xlsx",
         help="Path to an Excel file containing cogsets and cognatejudgements")
     parser.add_argument(
-        "--db-wl", nargs="?",
+        "--db", nargs="?",
         default="",
         help="Where to store the temp from reading the word list")
-    parser.add_argument(
-        "--db-cs", nargs="?",
-        default="",
-        help="Where to store the temp DB from reading the cognatesets")
     parser.add_argument(
         "--metadata", nargs="?", type=Path,
         default="Wordlist-metadata.json",
@@ -429,34 +436,26 @@ if __name__ == "__main__":
         help="Debug level: Higher numbers are less forgiving")
     args = parser.parse_args()
 
-    if args.db_wl.startswith("sqlite:///"):
-        args.db_wl = args.db[len("sqlite:///"):]
-    if args.db_wl == ":memory:":
-        args.db_wl = ""
+    if args.db.startswith("sqlite:///"):
+        args.db = args.db[len("sqlite:///"):]
+    if args.db == ":memory:":
+        args.db = ""
     # We have too many difficult database connections in different APIs, we
     # refuse in-memory DBs and use a temporary file instead.
-    if args.db_wl == "":
-        _, args.db_wl = mkstemp(".sqlite", "lexicaldatabase", text=False)
+    if args.db == "":
+        _, args.db = mkstemp(".sqlite", "lexicaldatabase", text=False)
+        Path(args.db).unlink()
 
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     excel_parser_lexical = MawetiGuaraniExcelParser(
-        pycldf.Dataset.from_metadata(args.metadata), fname=args.db_wl)
+        pycldf.Dataset.from_metadata(args.metadata), fname=args.db)
     wb = openpyxl.load_workbook(filename=args.lexicon)
     excel_parser_lexical.read(wb.worksheets[0])
 
     excel_parser_lexical.cldfdatabase.to_cldf(args.metadata.parent)
 
-    if args.db_cs.startswith("sqlite:///"):
-        args.db_cs = args.db[len("sqlite:///"):]
-    if args.db_cs == ":memory:":
-        args.db_cs = ""
-    # We have too many difficult database connections in different APIs, we
-    # refuse in-memory DBs and use a temporary file instead.
-    if args.db_cs == "":
-        _, args.db_cs = mkstemp(".sqlite", "lexicaldatabase", text=False)
-
     excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
-        pycldf.Dataset.from_metadata(args.metadata), fname=args.db_cs)
+        pycldf.Dataset.from_metadata(args.metadata), fname=args.db)
     wb = openpyxl.load_workbook(filename=args.cogsets)
     for sheet in wb.sheetnames:
         print("\nParsing sheet '{:s}'".format(sheet))
