@@ -20,7 +20,25 @@ def equal_separated(option: str) -> t.Tuple[str, str]:
 
 def add_concepticon_references(
         dataset: pycldf.Wordlist,
-        gloss_languages: t.Dict[str, str]) -> None:
+        gloss_languages: t.Mapping[str, str]) -> None:
+    """Guess Concepticon links for a multilingual Concept table.
+
+    Fill the concepticonReference column of the dateset's ParameterTable with
+    best guesses for Concepticon IDs, based on gloss columns in different
+    languages.
+
+    Parameters
+    ==========
+    dataset: A pycldf.Wordlist with a concepticonReference column in its
+        ParameterTable
+    gloss_lang: A mapping from ParameterTable column names to ISO-639-1
+        language codes that Concepticon has concept lists for (eg. en, fr, de,
+        es, zh, pt)
+
+    """
+    # TODO: If this function took only dataset["ParameterTable"] and the name
+    # of the target column in there as arguments, one could construct examples
+    # that just use the Iterable API and therefore look nice as doctests.
     gloss_lists: t.Dict[str, t.List[str]] = {column: [] for column in gloss_languages}
 
     for row in dataset["ParameterTable"]:
@@ -36,9 +54,11 @@ def add_concepticon_references(
             glosses,
             [i[1] for i in targets[gloss_languages[column]]],
             similarity_level=2,
-            language=gloss_languages[column]
-        # What a horrendous API!
-        ), targets[gloss_languages[column]])
+            language=gloss_languages[column]),
+         # What a horrendous API! Why can't it return glosses or IDs instead
+         # of, as it does now, target-indices so I have to schlepp target along
+         # with the results?
+         targets[gloss_languages[column]])
         for column, glosses in gloss_lists.items()
     ]
 
@@ -61,6 +81,7 @@ def add_concepticon_references(
         write_back.append(row)
 
     dataset.write(ParameterTable=write_back)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
