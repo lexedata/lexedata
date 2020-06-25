@@ -18,6 +18,50 @@ def equal_separated(option: str) -> t.Tuple[str, str]:
     column, language = option.split("=")
     return column.strip(), language.strip()
 
+def add_concepticon_references(
+        dataset: pycldf.Wordlist,
+        gloss_languages: t.Dict[str, str]) -> None:
+    gloss_lists: t.Dict[str, t.List[str]] = {column: [] for column in gloss_languages}
+
+    for row in dataset["ParameterTable"]:
+        for column, glosses in gloss_lists.items():
+            glosses.append(row[column] or '?')  # Concepticon abhors empty glosses.
+
+    targets = {language: concepticon.api._get_map_for_language(language, None)
+            for language in gloss_languages.values()}
+
+
+    cmaps: t.List[t.Dict[int, t.Tuple[t.List[int], int]], ] = [
+        (concept_map2(
+            glosses,
+            [i[1] for i in targets[gloss_languages[column]]],
+            similarity_level=2,
+            language=gloss_languages[column]
+        # What a horrendous API!
+        ), targets[gloss_languages[column]])
+        for column, glosses in gloss_lists.items()
+    ]
+
+    write_back = []
+    for i, row in enumerate(dataset["ParameterTable"]):
+        matches = [(m.get(i, ([], 10)), t) for m, t in cmaps]
+        best_sim = min(x[0][1] for x in matches)
+        best_matches = [t[m]
+                        for (ms, s), t in matches
+                        for m in ms
+                        if s <= best_sim]
+        c: t.Counter[str] = t.Counter(id for id, string in best_matches)
+        if len(c) > 1:
+            print(row, best_sim, c.most_common())
+            row[dataset.column_names.parameters.concepticonReference] = c.most_common(1)[0][0]
+        elif len(c) < 1:
+            print(row)
+        else:
+            row[dataset.column_names.parameters.concepticonReference] = c.most_common(1)[0][0]
+        write_back.append(row)
+
+    dataset.write(ParameterTable=write_back)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("wordlist", default="cldf-metadata.json",
@@ -48,45 +92,5 @@ if __name__ == '__main__':
 
     gloss_languages: t.Dict[str, str] = dict(args.language)
 
-    gloss_lists: t.Dict[str, t.List[str]] = {column: [] for column in gloss_languages}
-
-    for row in dataset["ParameterTable"]:
-        for column, glosses in gloss_lists.items():
-            glosses.append(row[column] or '?')  # Concepticon abhors empty glosses.
-
-    targets = {language: concepticon.api._get_map_for_language(language, None)
-            for language in gloss_languages.values()}
-
-
-    cmaps: t.List[t.Dict[int, t.Tuple[t.List[int], int]], ] = [
-        (concept_map2(
-            glosses,
-            [i[1] for i in targets[gloss_languages[column]]],
-            similarity_level=2,
-            language=gloss_languages[column]
-        ), targets[gloss_languages[column]])
-        for column, glosses in gloss_lists.items()
-    ]
-
-
-
-    write_back = []
-    for i, row in enumerate(dataset["ParameterTable"]):
-        matches = [(m.get(i, ([], 10)), t) for m, t in cmaps]
-        best_sim = min(x[0][1] for x in matches)
-        best_matches = [t[m]
-                        for (ms, s), t in matches
-                        for m in ms
-                        if s <= best_sim]
-        c: t.Counter[str] = t.Counter(id for id, string in best_matches)
-        if len(c) > 1:
-            print(row, c.most_common())
-            row[dataset.column_names.parameters.concepticonReference] = c.most_common(1)[0][0]
-        elif len(c) < 1:
-            print(row)
-        else:
-            row[dataset.column_names.parameters.concepticonReference] = c.most_common(1)[0][0]
-        write_back.append(row)
-
-    dataset.write(ParameterTable=write_back)
+    add_concepticon_references(dataset, gloss_languages)
 
