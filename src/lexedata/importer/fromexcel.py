@@ -64,19 +64,40 @@ class ExcelParser(SQLAlchemyWordlist):
         self.RowObject = self.Concept
 
     def error(self, db_object: sqlalchemy.ext.automap.AutomapBase) -> bool:
+        try:
+            repr = db_object.cldf_name
+        except AttributeError:
+            try:
+                repr = db_object.cldf_id
+            except AttributeError:
+                repr = repr(db_object)
         raise ObjectNotFoundWarning(
-            f"Failed to find object {db_object:} in the database")
+            f"Failed to find object {repr:} in the database")
 
     def warn(self, db_object: sqlalchemy.ext.automap.AutomapBase) -> bool:
+        try:
+            repr = db_object.cldf_name
+        except AttributeError:
+            try:
+                repr = db_object.cldf_id
+            except AttributeError:
+                repr = repr(db_object)
         warnings.warn(
-            f"Failed to find object {db_object:} in the database. Skipped.",
+            f"Failed to find object {repr:} in the database. Skipped.",
             ObjectNotFoundWarning)
         return False
 
     def warn_and_create(
             self, db_object: sqlalchemy.ext.automap.AutomapBase) -> bool:
+        try:
+            repr = db_object.cldf_name
+        except AttributeError:
+            try:
+                repr = db_object.cldf_id
+            except AttributeError:
+                repr = repr(db_object)
         warnings.warn(
-            f"Failed to find object {db_object:} in the database. Added.",
+            f"Failed to find object {repr:} in the database. Added.",
             ObjectNotFoundWarning)
         self.session.add(db_object)
         return True
@@ -120,8 +141,10 @@ class ExcelParser(SQLAlchemyWordlist):
             iter_rows, iter_forms, languages_by_column,
             row_not_found, form_not_found)
 
-    def language_from_column(self, column):
-        data = [cell.value or "" for cell in column[:self.top - 1]]
+    def language_from_column(
+            self, column: t.List[openpyxl.cell.Cell]
+    ) -> t.Dict[str, t.Any]:
+        data = [(cell.value or '').strip() for cell in column[:self.top - 1]]
         comment = get_cell_comment(column[0])
         return {
             "cldf_name": data[0],
@@ -131,7 +154,7 @@ class ExcelParser(SQLAlchemyWordlist):
     def properties_from_row(
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Dict[str, t.Any]:
-        data = [cell.value or "" for cell in row[:self.left - 1]]
+        data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
         comment = get_cell_comment(row[0])
         return {
             "cldf_name": data[0],
@@ -147,8 +170,11 @@ class ExcelParser(SQLAlchemyWordlist):
             ] = language_from_column) -> t.Dict[str, Language]:
         lan_dict: t.Dict[str, Language] = {}
 
+        # iterate over language columns
         for lan_col in lan_iter:
-            # iterate over language columns
+            if not any([(cell.value or '').strip() for cell in lan_col]):
+                # Skip empty languages
+                continue
             language_properties = subparser(self, lan_col)
             language = self.session.query(self.Language).filter(
                 self.Language.cldf_name == language_properties["cldf_name"]
@@ -291,7 +317,7 @@ class ExcelCognateParser(ExcelParser):
     def properties_from_row(
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Dict[str, t.Any]:
-        data = [cell.value or "" for cell in row[:self.left - 1]]
+        data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
         comment = get_cell_comment(row[0])
         return {
             "cldf_name": data[0],
@@ -318,8 +344,8 @@ class MawetiGuaraniExcelParser(ExcelParser):
         "sources",
     ]
 
-    def language_from_column(self, column):
-        data = [cell.value or "" for cell in column[:2]]
+    def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> t.Dict[str, t.Any]:
+        data = [(cell.value or '').strip() for cell in column[:2]]
         comment = get_cell_comment(column[0])
         return {
             "cldf_name": data[0],
@@ -327,8 +353,8 @@ class MawetiGuaraniExcelParser(ExcelParser):
             "cldf_comment": comment
         }
 
-    def properties_from_row(self, row):
-        set, english, english_strict, spanish, portuguese, french = [cell.value or "" for cell in row]
+    def properties_from_row(self, row: t.List[openpyxl.cell.Cell]) -> t.Dict[str, t.Any]:
+        set, english, english_strict, spanish, portuguese, french = [(cell.value or '').strip() for cell in row]
         comment = get_cell_comment(row[0])
         return {
             "Set": set,
@@ -350,7 +376,7 @@ class MawetiGuaraniExcelCognateParser(
         self.cell_parser = CellParserCognate()
 
     def properties_from_row(self, row):
-        values = [cell.value or "" for cell in row[:2]]
+        values = [(cell.value or '').strip() for cell in row[:2]]
         return {"cldf_id": values[1],
                 "properties": values[0],
                 "cldf_comment": get_cell_comment(row[1])}
@@ -410,7 +436,6 @@ if __name__ == "__main__":
     # refuse in-memory DBs and use a temporary file instead.
     if args.db_cs == "":
         _, args.db_cs = mkstemp(".sqlite", "lexicaldatabase", text=False)
-
 
     excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
         pycldf.Dataset.from_metadata(args.metadata), fname=args.db_cs)
