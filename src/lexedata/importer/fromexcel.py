@@ -93,7 +93,7 @@ class ExcelParser(SQLAlchemyWordlist):
             except AttributeError:
                 repr = repr(db_object)
         raise ObjectNotFoundWarning(
-            f"Failed to find object {repr:} in the database")
+            f"Failed to find object {repr:} [cell:] in the database")
 
     def warn(self, db_object: sqlalchemy.ext.automap.AutomapBase,
              cell: t.Optional[str] = None) -> bool:
@@ -105,7 +105,7 @@ class ExcelParser(SQLAlchemyWordlist):
             except AttributeError:
                 repr = repr(db_object)
         warnings.warn(
-            f"Failed to find object {repr:} in the database. Skipped.",
+            f"Failed to find object {repr:} [cell:] in the database. Skipped.",
             ObjectNotFoundWarning)
         return False
 
@@ -120,7 +120,7 @@ class ExcelParser(SQLAlchemyWordlist):
             except AttributeError:
                 repr = repr(db_object)
         warnings.warn(
-            f"Failed to find object {repr:} in the database. Added.",
+            f"Failed to find object {repr:} [cell:] in the database. Added.",
             ObjectNotFoundWarning)
         self.session.add(db_object)
         return True
@@ -207,7 +207,7 @@ class ExcelParser(SQLAlchemyWordlist):
             if language is None:
                 id = new_id(language_properties["cldf_name"], self.Language, self.session)
                 language = self.Language(cldf_id=id, **language_properties)
-                if_not_found(self, language)
+                if_not_found(self, language, lan_col[0].coordinate)
             lan_dict[lan_col[0].column] = language
 
         return lan_dict
@@ -270,7 +270,8 @@ class ExcelParser(SQLAlchemyWordlist):
                                        properties.get("cldf_name", "")),
                         self.RowObject, self.session)
                     row_object = self.RowObject(cldf_id=row_id, **properties)
-                    if not on_row_not_found(self, row_object):
+                    if not on_row_not_found(
+                            self, row_object, row_header[0].coordinate):
                         continue
                 else:
                     if len(similar) > 1:
@@ -313,7 +314,8 @@ class ExcelParser(SQLAlchemyWordlist):
                         form, references = self.create_form_with_sources(
                             sources=sources,
                             **form_cell)
-                        if not on_form_not_found(self, form):
+                        if not on_form_not_found(
+                                self, form, f_cell.coordinate):
                             continue
                         self.session.add_all(references)
                     else:
