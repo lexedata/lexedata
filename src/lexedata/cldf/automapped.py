@@ -113,16 +113,21 @@ class Judgement(Association[F, X]):
 
 
 class SQLAlchemyWordlist:
-    def __init__(self, dataset: pycldf.Dataset) -> None:
-        self.cldfdatabase = db.Database(dataset)
-        self.cldfdatabase.write_from_tg()
+    def __init__(self, dataset: pycldf.Dataset, fname=None, **kwargs) -> None:
+        self.cldfdatabase = db.Database(dataset, fname=fname, **kwargs)
+        self.cldfdatabase.write_from_tg(_force=True)
         connection = self.cldfdatabase.connection()
 
         def creator():
             return connection
 
         Base = sqlalchemy.ext.automap.automap_base()
-        engine = sqlalchemy.create_engine("sqlite:///:memory:", creator=creator)
+
+        if fname:
+            engine = sqlalchemy.create_engine(f"sqlite:///{fname:}")
+        else:
+            engine = sqlalchemy.create_engine("sqlite:///:memory:",
+                                              creator=creator)
         Base.prepare(engine, reflect=True,
                      classname_for_table=name_of_object_in_table,
                      name_for_scalar_relationship=name_of_object_in_table_relation,

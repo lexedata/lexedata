@@ -262,19 +262,19 @@ class Database(pycldf.db.Database):
         return fkey, None
 
 
-    def write(self, *, force=False, exists_ok=False, skip_extra=False, **items):
+    def write(self, *, _force=False, _exists_ok=False, skip_extra=False, **items):
         """
         Creates a db file with the core schema.
 
         :param force: If `True` an existing db file will be overwritten.
         """
         if self.fname and self.fname.exists():
-            if force:
+            if _force:
                 self.fname.unlink()
-            elif exists_ok:
+            elif _exists_ok:
                 raise NotImplementedError()
             else:
-                raise ValueError('db file already exists, use force=True to overwrite')
+                raise ValueError('db file already exists, use _force=True to overwrite')
 
         with self.connection() as db:
             for table in self.tables:

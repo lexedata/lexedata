@@ -4,6 +4,7 @@ import csv
 import warnings
 import typing as t
 from pathlib import Path
+from tempfile import mkstemp
 
 import pycldf
 import openpyxl
@@ -43,8 +44,8 @@ class ExcelParser(SQLAlchemyWordlist):
         "cldf_id",
     ]
 
-    def __init__(self, output_dataset: pycldf.Dataset) -> None:
-        super().__init__(output_dataset)
+    def __init__(self, output_dataset: pycldf.Dataset, **kwargs) -> None:
+        super().__init__(output_dataset, **kwargs)
         self.cell_parser: CellParser = CellParserLexical()
 
         class Sources(t.DefaultDict[str, Source]):
@@ -254,7 +255,7 @@ class ExcelParser(SQLAlchemyWordlist):
                                 if len(s) > 1:
                                     del forms[s]
                                 else:
-                                    warnings.warn(f"Closest matching form {forms[0]:} had sources {s:} instead of {sources:}")
+                                    warnings.warn(f"Closest matching form {forms[0].cldf_id:} had sources {s:} instead of {sources:}")
                                     break
                     if len(forms) == 0:
                         form, references = self.create_form_with_sources(
@@ -282,8 +283,8 @@ class ExcelCognateParser(ExcelParser):
         "cldf_id",
     ]
 
-    def __init__(self, output_dataset: pycldf.Dataset) -> None:
-        super().__init__(output_dataset)
+    def __init__(self, output_dataset: pycldf.Dataset, **kwargs) -> None:
+        super().__init__(output_dataset, **kwargs)
         self.cell_parser = CellParserHyperlink()
         self.RowObject = self.CogSet
 
@@ -344,8 +345,8 @@ class MawetiGuaraniExcelCognateParser(
         ExcelCognateParser, MawetiGuaraniExcelParser):
     top, left = (3, 7)
 
-    def __init__(self, output_dataset: pycldf.Dataset) -> None:
-        super().__init__(output_dataset)
+    def __init__(self, output_dataset: pycldf.Dataset, **kwargs) -> None:
+        super().__init__(output_dataset, **kwargs)
         self.cell_parser = CellParserCognate()
 
     def properties_from_row(self, row):
@@ -368,9 +369,13 @@ if __name__ == "__main__":
         default="TG_cognates_online_MASTER.xlsx",
         help="Path to an Excel file containing cogsets and cognatejudgements")
     parser.add_argument(
-        "--db", nargs="?",
-        default="sqlite:///",
-        help="Where to store the temp DB")
+        "--db-wl", nargs="?",
+        default="",
+        help="Where to store the temp from reading the word list")
+    parser.add_argument(
+        "--db-cs", nargs="?",
+        default="",
+        help="Where to store the temp DB from reading the cognatesets")
     parser.add_argument(
         "--metadata", nargs="?", type=Path,
         default="Wordlist-metadata.json",
@@ -380,16 +385,39 @@ if __name__ == "__main__":
         help="Debug level: Higher numbers are less forgiving")
     args = parser.parse_args()
 
+    if args.db_wl.startswith("sqlite:///"):
+        args.db_wl = args.db[len("sqlite:///"):]
+    if args.db_wl == ":memory:":
+        args.db_wl = ""
+    # We have too many difficult database connections in different APIs, we
+    # refuse in-memory DBs and use a temporary file instead.
+    if args.db_wl == "":
+        _, args.db_wl = mkstemp(".sqlite", "lexicaldatabase", text=False)
+
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser_lexical = MawetiGuaraniExcelParser(pycldf.Dataset.from_metadata(args.metadata))
-    excel_parser_cognateset = MawetiGuaraniExcelCognateParser(pycldf.Dataset.from_metadata(args.metadata))
+    excel_parser_lexical = MawetiGuaraniExcelParser(
+        pycldf.Dataset.from_metadata(args.metadata), fname=args.db_wl)
     wb = openpyxl.load_workbook(filename=args.lexicon)
     excel_parser_lexical.read(wb.worksheets[0])
 
+    excel_parser_lexical.cldfdatabase.to_cldf(args.metadata.parent)
+
+    if args.db_cs.startswith("sqlite:///"):
+        args.db_cs = args.db[len("sqlite:///"):]
+    if args.db_cs == ":memory:":
+        args.db_cs = ""
+    # We have too many difficult database connections in different APIs, we
+    # refuse in-memory DBs and use a temporary file instead.
+    if args.db_cs == "":
+        _, args.db_cs = mkstemp(".sqlite", "lexicaldatabase", text=False)
+
+
+    excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
+        pycldf.Dataset.from_metadata(args.metadata), fname=args.db_cs)
     wb = openpyxl.load_workbook(filename=args.cogsets)
     for sheet in wb.sheetnames:
         print("\nParsing sheet '{:s}'".format(sheet))
         ws = wb[sheet]
         excel_parser_cognateset.read(ws)
 
-    excel_parser.cldfdatabase.to_cldf(args.metadata.parent)
+    excel_parser_cognateset.cldfdatabase.to_cldf(args.metadata.parent)
