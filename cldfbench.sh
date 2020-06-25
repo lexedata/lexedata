@@ -1,5 +1,5 @@
 pip install cldfbench
-pip instally pyglottolog pyconcepticon pyclts
+pip install pyglottolog pyconcepticon pyclts
 
 # If you want control over the download size of the catalog repositories, do
 # this. Otherwise, catconfig downloads the whole history of each catalog, which
