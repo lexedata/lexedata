@@ -1,4 +1,4 @@
-import argparse
+mport argparse
 import typing as t
 from pathlib import Path
 
@@ -101,12 +101,8 @@ if __name__ == '__main__':
         dataset.add_columns("ParameterTable", "Concepticon_ID")
         c = dataset["ParameterTable"].tableSchema.columns[-1]
         c.valueUrl = "http://concepticon.clld.org/parameters/{Concepticon_ID}"
-        c.propertyUrl = URITemplate("https://cldf.clld.org/v1.0/terms.rdf#concepticonReference")
-        dataset.column_names.parameters.concepticonReference = "Concepticon_ID"
+        c.propertyUrl = URITemplate("http://cldf.clld.org/v1.0/terms.rdf#concepticonReference")
         dataset.write_metadata()
-
-        # Reload dataset
-        dataset = pycldf.Wordlist.from_metadata(args.wordlist)
 
     if not args.language:
         args.language = [(dataset.column_names.parameters.id, "en")]
