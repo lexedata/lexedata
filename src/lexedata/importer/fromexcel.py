@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import csv
+import re
 import warnings
 import typing as t
 from pathlib import Path
@@ -259,24 +259,23 @@ class ExcelParser(SQLAlchemyWordlist):
                 # Keep the old row_object from the previous line
                 pass
             else:
+
                 similar = self.session.query(self.RowObject).filter(
-                    *[getattr(self.RowObject, key) == value
-                      for key, value in properties.items()
-                      if type(value) != tuple
-                      if key in self.check_for_row_match]).all()
+                    *[key == properties[key] for key in dir(self.RowObject)
+                    if key in self.check_for_row_match]).all()
+
                 if len(similar) == 0:
                     row_id = new_id(
-                        properties.pop("cldf_id",
-                                       properties.get("cldf_name", "")),
+                        properties.pop("cldf_id", properties.get("cldf_name", "")),
                         self.RowObject, self.session)
                     row_object = self.RowObject(cldf_id=row_id, **properties)
                     if not on_row_not_found(self, row_object):
                         continue
-                else:
-                    if len(similar) > 1:
-                        warnings.warn(
-                            f"Found more than one match for {properties:}")
-                    row_object = similar[0]
+
+                elif len(similar) > 1:
+                    print([o.cldf_id for o in similar])
+                    warnings.warn(
+                        f"Found more than one match for {properties:}")
 
             # Parse the row, cell by cell
             for f_cell in row_forms:
@@ -331,9 +330,6 @@ class ExcelParser(SQLAlchemyWordlist):
 
 
 class ExcelCognateParser(ExcelParser):
-    check_for_match = [
-        "cldf_id",
-    ]
 
     def __init__(self, output_dataset: pycldf.Dataset, **kwargs) -> None:
         super().__init__(output_dataset, **kwargs)
@@ -398,14 +394,21 @@ class MawetiGuaraniExcelCognateParser(
         ExcelCognateParser, MawetiGuaraniExcelParser):
     top, left = (3, 7)
 
+    check_for_row_match = [
+        "cldf_id",
+    ]
+
     def __init__(self, output_dataset: pycldf.Dataset, **kwargs) -> None:
         super().__init__(output_dataset, **kwargs)
         self.cell_parser = CellParserCognate()
 
     def properties_from_row(self, row):
         values = [(cell.value or '').strip() for cell in row[:2]]
+        cldf_id = values[1]
+        if cldf_id.isupper():
+            cldf_id = cldf_id.lower()
         return {
-            "cldf_id": values[1],
+            "cldf_id": cldf_id,
             "properties": values[0],
             "cldf_comment": get_cell_comment(row[1])
         }
