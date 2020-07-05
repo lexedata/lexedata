@@ -158,22 +158,18 @@ def new_id(maybe_not_unique: str, cl, session: sa.engine.Connectable):
     return candidate
 
 
+def create_db_session(location=None, echo=False, override=False):
+    if Path(location).exists() and override:
+        Path(location).unlink()
 
-def create_db_session(location='sqlite:///:memory:', echo=False):
-    # FIXME: Give this a parameter to decide whether or not an existing DB should be overwritten
-    try:
-        os.remove("cldf.sqlite")
-    except FileNotFoundError:
-        pass
-    # Todo: if you create the engine here without prefixing sqlite:/// it throws an error
-    #engine = sa.create_engine(location, echo=False) # Create an SQLite database in this directory
-    #engine.execute('pragma foreign_keys=ON')
+    if not location:
+        location = "sqlite:///:memory:"
     # use `echo=True` to see the SQL stamenets echoed
-
     # create db path for sql module, and escape \ for windows
-    if not location.startswith("sqlite:///"):
-        location = f"sqlite:///{location:}"
-    location = location.replace("\\", "\\\\")  # can this cause problems on IOS?
+    else:
+        if not location.startswith("sqlite:///"):
+            location = f"sqlite:///{location:}"
+        location = location.replace("\\", "\\\\")  # can this cause problems on IOS?
     # Create an SQLite database in this directory. Use `echo=True` to see the SQL statements echoed
     engine = sa.create_engine(location, echo=echo)
     # bind to session
