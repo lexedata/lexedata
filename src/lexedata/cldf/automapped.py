@@ -4,6 +4,7 @@ import sqlalchemy
 import sqlalchemy.ext.automap
 
 import lexedata.cldf.db as db
+from lexedata.database.database import create_db_session
 
 
 def name_of_object_in_table(
@@ -113,7 +114,7 @@ class Judgement(Association[F, X]):
 
 
 class SQLAlchemyWordlist:
-    def __init__(self, dataset: pycldf.Dataset, fname=None, **kwargs) -> None:
+    def __init__(self, dataset: pycldf.Dataset, fname=None, echo=False, override=False, **kwargs) -> None:
         self.cldfdatabase = db.Database(dataset, fname=fname, **kwargs)
         dataset.write(**{str(t.url): [] for t in dataset.tables})
         try:
@@ -136,6 +137,8 @@ class SQLAlchemyWordlist:
                      classname_for_table=name_of_object_in_table,
                      name_for_scalar_relationship=name_of_object_in_table_relation,
                      name_for_collection_relationship=name_of_objects_in_table_relation)
+        # TODO: Ask Gereon about creator function
+        #self.session = create_db_session(fname, echo, override)
         self.session = sqlalchemy.orm.Session(engine)
 
         self.Language: t.Type[Language] = Base.classes.Language
