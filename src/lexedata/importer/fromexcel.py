@@ -54,19 +54,18 @@ def get_cell_comment(cell: openpyxl.cell.Cell) -> t.Optional[str]:
 
 
 class ExcelParser(SQLAlchemyWordlist):
-    top, left = (2, 2)
 
-    check_for_match = [
-        "cldf_id",
-    ]
-
-    check_for_row_match = [
-        "cldf_name"
-    ]
-
-    def __init__(self, output_dataset: pycldf.Dataset, **kwargs) -> None:
+    def __init__(self, fname: str, top: int=2, left: int=2,
+                 check_for_match: t.List[str]=["cldf_id"], check_for_row_match: t.List[str]=["cldf_name"]) -> None:
         super().__init__(output_dataset, **kwargs)
         self.cell_parser: CellParser = CellParserLexical()
+        self.top = top
+        self.left = left
+        self.check_for_match = check_for_match
+        self.check_for_row_match = check_for_row_match
+
+        # creates self.sheets containing a list of all excel sheets, that will be parsed
+        self.set_up_sheets(fname)
 
         class Sources(t.DefaultDict[str, Source]):
             def __missing__(inner_self, key: str) -> Source:
@@ -80,8 +79,10 @@ class ExcelParser(SQLAlchemyWordlist):
                 return source
 
         self.sources = Sources()
-
         self.RowObject = self.Concept
+
+    def set_up_sheets(self, fname: str) -> None:
+        self.sheets = [openpyxl.load_workbook(filename=fname).worksheets[0]]
 
     def error(self, db_object: sqlalchemy.ext.automap.AutomapBase,
               cell: t.Optional[str] = None) -> bool:
@@ -188,19 +189,17 @@ class ExcelParser(SQLAlchemyWordlist):
 
     def init_lan(
             self,
-            lan_iter: t.Iterable[t.List[openpyxl.cell.Cell]],
-            if_not_found: MissingHandler,
-            subparser: t.Callable[
-                ["ExcelParser", t.List[openpyxl.cell.Cell]], t.Dict[str, t.Any]
-            ] = language_from_column) -> t.Dict[str, Language]:
+            if_not_found: MissingHandler = on_language_not_found,
+            ) -> None:
         lan_dict: t.Dict[str, Language] = {}
-
+        lan_iter: t.Iterable[t.List[openpyxl.cell.Cell]] = self.sheets[0].iter_cols(
+            min_row=1, max_row=first_row - 1, min_col=first_col)
         # iterate over language columns
         for lan_col in lan_iter:
             if not any([(cell.value or '').strip() for cell in lan_col]):
                 # Skip empty languages
                 continue
-            language_properties = subparser(self, lan_col)
+            language_properties = self.language_from_column(lan_col)
             language = self.session.query(self.Language).filter(
                 self.Language.cldf_name == language_properties["cldf_name"]
             ).one_or_none()
@@ -210,7 +209,7 @@ class ExcelParser(SQLAlchemyWordlist):
                 if_not_found(self, language, lan_col[0].coordinate)
             lan_dict[lan_col[0].column] = language
 
-        return lan_dict
+        self.language_dictionary = lan_dict
 
     def create_form_with_sources(
             self: "ExcelParser",
@@ -245,90 +244,93 @@ class ExcelParser(SQLAlchemyWordlist):
 
     def parse_cells(
             self,
-            row_iter: t.Iterable[t.List[openpyxl.cell.Cell]],
-            form_iter: t.Iterable[t.List[openpyxl.cell.Cell]],
-            languages: t.Dict[str, int],
-            on_row_not_found: MissingHandler = create,
-            on_form_not_found: MissingHandler = create
+            on_row_not_found: MissingHandler = on_row_not_found,
+            on_form_not_found: MissingHandler = on_form_not_found
     ) -> None:
-        for row_header, row_forms in zip(row_iter, form_iter):
-            # Parse the row header, creating or retrieving the associated row
-            # object (i.e. a concept or a cognateset)
-            properties = self.properties_from_row(row_header)
-            if not properties:
-                # Keep the old row_object from the previous line
-                pass
-            else:
+        languages = self.language_dictionary
+        for sheet in self.sheets:
+            form_iter: t.Iterable[t.List[openpyxl.cell.Cell]] = sheet.iter_rows(
+                min_row=first_row, min_col=first_col)
+            row_iter: t.Iterable[t.List[openpyxl.cell.Cell]] = sheet.iter_rows(
+                min_row=first_row, max_col=first_col - 1)
+            for row_header, row_forms in zip(row_iter, form_iter):
+                # Parse the row header, creating or retrieving the associated row
+                # object (i.e. a concept or a cognateset)
+                properties = self.properties_from_row(row_header)
+                if not properties:
+                    # Keep the old row_object from the previous line
+                    pass
+                else:
 
-                similar = self.session.query(self.RowObject).filter(
-                    *[key == properties[key] for key in dir(self.RowObject)
-                    if key in self.check_for_row_match]).all()
+                    similar = self.session.query(self.RowObject).filter(
+                        *[key == properties[key] for key in dir(self.RowObject)
+                        if key in self.check_for_row_match]).all()
 
-                if len(similar) == 0:
-                    row_id = new_id(
-                        properties.pop("cldf_id", properties.get("cldf_name", "")),
-                        self.RowObject, self.session)
-                    row_object = self.RowObject(cldf_id=row_id, **properties)
-                    if not on_row_not_found(
-                            self, row_object, row_header[0].coordinate):
+                    if len(similar) == 0:
+                        row_id = new_id(
+                            properties.pop("cldf_id", properties.get("cldf_name", "")),
+                            self.RowObject, self.session)
+                        row_object = self.RowObject(cldf_id=row_id, **properties)
+                        if not on_row_not_found(
+                                self, row_object, row_header[0].coordinate):
+                            continue
+
+                    elif len(similar) > 1:
+                        print([o.cldf_id for o in similar])
+                        warnings.warn(
+                            f"Found more than one match for {properties:}")
+
+                # Parse the row, cell by cell
+                for f_cell in row_forms:
+                    try:
+                        this_lan = languages[f_cell.column]
+                    except KeyError:
                         continue
 
-                elif len(similar) > 1:
-                    print([o.cldf_id for o in similar])
-                    warnings.warn(
-                        f"Found more than one match for {properties:}")
-
-            # Parse the row, cell by cell
-            for f_cell in row_forms:
-                try:
-                    this_lan = languages[f_cell.column]
-                except KeyError:
-                    continue
-
-                # Parse the cell, which results (potentially) in multiple forms
-                for form_cell in self.cell_parser.parse(
-                        f_cell, language=this_lan):
-                    sources = [(self.sources[k], c or None)
-                               for k, c in form_cell.pop("sources", [])]
-                    form_query = self.session.query(self.Form).filter(
-                        self.Form.language == this_lan,
-                        *[getattr(self.Form, key) == value
-                          for key, value in form_cell.items()
-                          if type(value) != tuple
-                          if key in self.check_for_match])
-                    forms = form_query.all()
-                    if "sources" in self.check_for_match:
-                        for c in range(len(forms) - 1, -1, -1):
-                            s = set(reference.source for reference in
-                                    self.session.query(self.Reference).filter(
-                                        self.Reference.form == forms[c]))
-                            sources_only = {src[0] for src in sources}
-                            if not sources_only & s:
-                                warnings.warn("Closest matching form {:} had sources {:} instead of {:}".format(
-                                    forms[0].cldf_id,
-                                    {src.id for src in s},
-                                    {src.id for src in sources_only}))
-                                break
-                    if len(forms) == 0:
-                        form, references = self.create_form_with_sources(
-                            sources=sources,
-                            **form_cell)
-                        if not on_form_not_found(
-                                self, form, f_cell.coordinate):
-                            continue
-                        self.session.add_all(references)
-                    else:
-                        if len(forms) > 1:
-                            warnings.warn(
-                                f"Found more than one match for {form_cell:}",
-                                MultipleCandidatesWarning)
-                        form = forms[0]
-                        for attr, value in form_cell.items():
-                            reference_value = getattr(form, attr, None)
-                            if reference_value != value:
-                                warnings.warn(f"Reference form property {attr:} was '{reference_value:}', not the '{value:}' specified here.")
-                    self.associate(form, row_object)
-            self.session.commit()
+                    # Parse the cell, which results (potentially) in multiple forms
+                    for form_cell in self.cell_parser.parse(
+                            f_cell, language=this_lan):
+                        sources = [(self.sources[k], c or None)
+                                   for k, c in form_cell.pop("sources", [])]
+                        form_query = self.session.query(self.Form).filter(
+                            self.Form.language == this_lan,
+                            *[getattr(self.Form, key) == value
+                              for key, value in form_cell.items()
+                              if type(value) != tuple
+                              if key in self.check_for_match])
+                        forms = form_query.all()
+                        if "sources" in self.check_for_match:
+                            for c in range(len(forms) - 1, -1, -1):
+                                s = set(reference.source for reference in
+                                        self.session.query(self.Reference).filter(
+                                            self.Reference.form == forms[c]))
+                                sources_only = {src[0] for src in sources}
+                                if not sources_only & s:
+                                    warnings.warn("Closest matching form {:} had sources {:} instead of {:}".format(
+                                        forms[0].cldf_id,
+                                        {src.id for src in s},
+                                        {src.id for src in sources_only}))
+                                    break
+                        if len(forms) == 0:
+                            form, references = self.create_form_with_sources(
+                                sources=sources,
+                                **form_cell)
+                            if not on_form_not_found(
+                                    self, form, f_cell.coordinate):
+                                continue
+                            self.session.add_all(references)
+                        else:
+                            if len(forms) > 1:
+                                warnings.warn(
+                                    f"Found more than one match for {form_cell:}",
+                                    MultipleCandidatesWarning)
+                            form = forms[0]
+                            for attr, value in form_cell.items():
+                                reference_value = getattr(form, attr, None)
+                                if reference_value != value:
+                                    warnings.warn(f"Reference form property {attr:} was '{reference_value:}', not the '{value:}' specified here.")
+                        self.associate(form, row_object)
+                self.session.commit()
 
 
 class ExcelCognateParser(ExcelParser):
