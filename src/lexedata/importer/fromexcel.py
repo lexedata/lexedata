@@ -65,7 +65,7 @@ class ExcelParser(SQLAlchemyWordlist):
             except AttributeError:
                 repr = repr(db_object)
         raise ObjectNotFoundWarning(
-            f"Failed to find object {repr:} [cell:] in the database")
+            f"Failed to find object {repr:} {cell:} in the database")
 
     def warn(self, db_object: sqlalchemy.ext.automap.AutomapBase,
              cell: t.Optional[str] = None) -> bool:
@@ -77,7 +77,7 @@ class ExcelParser(SQLAlchemyWordlist):
             except AttributeError:
                 repr = repr(db_object)
         warnings.warn(
-            f"Failed to find object {repr:} [cell:] in the database. Skipped.",
+            f"Failed to find object {repr:} {cell:} in the database. Skipped.",
             ObjectNotFoundWarning)
         return False
 
@@ -92,7 +92,7 @@ class ExcelParser(SQLAlchemyWordlist):
             except AttributeError:
                 repr = repr(db_object)
         warnings.warn(
-            f"Failed to find object {repr:} [cell:] in the database. Added.",
+            f"Failed to find object {repr:} {cell:} in the database. Added.",
             ObjectNotFoundWarning)
         self.session.add(db_object)
         return True
@@ -176,9 +176,11 @@ class ExcelParser(SQLAlchemyWordlist):
             language = self.session.query(self.Language).filter(
                 self.Language.cldf_name == language_properties["cldf_name"]
             ).one_or_none()
+            print(language_properties)
             if language is None:
                 id = new_id(language_properties["cldf_name"], self.Language, self.session)
                 language = self.Language(cldf_id=id, **language_properties)
+                print(f"id{id}     properties{language_properties}")
                 self.on_language_not_found(self, language, lan_col[0].coordinate)
             lan_dict[lan_col[0].column] = language
 
@@ -240,6 +242,7 @@ class ExcelParser(SQLAlchemyWordlist):
                             properties.pop("cldf_id", properties.get("cldf_name", "")),
                             self.RowObject, self.session)
                         row_object = self.RowObject(cldf_id=row_id, **properties)
+                        print(row_object.cldf_id)
                         if not self.on_row_not_found(
                                 self, row_object, row_header[0].coordinate):
                             continue
@@ -260,13 +263,10 @@ class ExcelParser(SQLAlchemyWordlist):
                             f_cell, language=this_lan):
                         sources = [(self.sources[k], c or None)
                                    for k, c in form_cell.pop("sources", [])]
-                        form_query = self.session.query(self.Form).filter(
+                        forms = self.session.query(self.Form).filter(
                             self.Form.language == this_lan,
-                            *[getattr(self.Form, key) == value
-                              for key, value in form_cell.items()
-                              if type(value) != tuple
-                              if key in self.check_for_match])
-                        forms = form_query.all()
+                            *[key == form_cell[key] for key in form_cell.keys()
+                              if key in self.check_for_match]).all()
                         if "sources" in self.check_for_match:
                             for c in range(len(forms) - 1, -1, -1):
                                 s = set(reference.source for reference in
@@ -288,6 +288,8 @@ class ExcelParser(SQLAlchemyWordlist):
                                 continue
                             self.session.add_all(references)
                         else:
+                            print("hiiiii")
+                            print([e.cldf_id for e in forms])
                             if len(forms) > 1:
                                 warnings.warn(
                                     f"Found more than one match for {form_cell:}",
@@ -296,7 +298,8 @@ class ExcelParser(SQLAlchemyWordlist):
                             for attr, value in form_cell.items():
                                 reference_value = getattr(form, attr, None)
                                 if reference_value != value:
-                                    warnings.warn(f"Reference form property {attr:} was '{reference_value:}', not the '{value:}' specified here.")
+                                    warnings.warn(
+                                        f"Reference form property {attr:} was '{reference_value:}', not the '{value:}' specified here.")
                         self.associate(form, row_object)
                 self.session.commit()
 
@@ -306,7 +309,7 @@ class ExcelCognateParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset, excel_file: str, top: int=2, left: int=2,
                  check_for_match: t.List[str]=["cldf_id"],
                  check_for_row_match: t.List[str]=["cldf_name"],
-                 on_language_not_found: MissingHandler = ExcelParser.error,
+                 on_language_not_found: MissingHandler = ExcelParser.warn,
                  on_row_not_found: MissingHandler = ExcelParser.create,
                  on_form_not_found: MissingHandler = ExcelParser.warn,
                  **kwargs) -> None:
@@ -434,11 +437,11 @@ if __name__ == "__main__":
     excel_parser_lexical = MawetiGuaraniExcelParser(
         pycldf.Dataset.from_metadata(args.metadata), fname=args.db, excel_file=args.lexicon)
     excel_parser_lexical.parse_cells()
-
+    print([e.cldf_name for e in excel_parser_lexical.session.query(excel_parser_lexical.Language).all()])
     excel_parser_lexical.cldfdatabase.to_cldf(args.metadata.parent)
 
     excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
         pycldf.Dataset.from_metadata(args.metadata), fname=args.db, excel_file=args.cogsets)
     excel_parser_cognateset.parse_cells()
-
+    print([e.cldf_name for e in excel_parser_cognateset.session.query(excel_parser_lexical.Language).all()])
     excel_parser_cognateset.cldfdatabase.to_cldf(args.metadata.parent)
