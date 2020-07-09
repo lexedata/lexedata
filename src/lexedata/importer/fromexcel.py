@@ -58,26 +58,26 @@ class ExcelParser(SQLAlchemyWordlist):
     def error(self, db_object: sqlalchemy.ext.automap.AutomapBase,
               cell: t.Optional[str] = None) -> bool:
         try:
-            repr = db_object.cldf_name
+            rep = db_object.cldf_name
         except AttributeError:
             try:
-                repr = db_object.cldf_id
+                rep = db_object.cldf_id
             except AttributeError:
-                repr = repr(db_object)
+                rep = repr(db_object)
         raise ObjectNotFoundWarning(
-            f"Failed to find object {repr:} {cell:} in the database")
+            f"Failed to find object {rep:} {cell:} in the database")
 
     def warn(self, db_object: sqlalchemy.ext.automap.AutomapBase,
              cell: t.Optional[str] = None) -> bool:
         try:
-            repr = db_object.cldf_name
+            rep = db_object.cldf_name
         except AttributeError:
             try:
-                repr = db_object.cldf_id
+                rep = db_object.cldf_id
             except AttributeError:
-                repr = repr(db_object)
+                rep = repr(db_object)
         warnings.warn(
-            f"Failed to find object {repr:} {cell:} in the database. Skipped.",
+            f"Failed to find object {rep:} {cell:} in the database. Skipped.",
             ObjectNotFoundWarning)
         return False
 
@@ -85,14 +85,14 @@ class ExcelParser(SQLAlchemyWordlist):
             self, db_object: sqlalchemy.ext.automap.AutomapBase,
             cell: t.Optional[str] = None) -> bool:
         try:
-            repr = db_object.cldf_name
+            rep = db_object.cldf_name
         except AttributeError:
             try:
-                repr = db_object.cldf_id
+                rep = db_object.cldf_id
             except AttributeError:
-                repr = repr(db_object)
+                rep = repr(db_object)
         warnings.warn(
-            f"Failed to find object {repr:} {cell:} in the database. Added.",
+            f"Failed to find object {rep:} {cell:} in the database. Added.",
             ObjectNotFoundWarning)
         self.session.add(db_object)
         return True
