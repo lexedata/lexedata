@@ -107,12 +107,13 @@ class ExcelParser(SQLAlchemyWordlist):
                cell: t.Optional[str] = None) -> bool:
         return False
 
-    def __init__(self, output_dataset: pycldf.Dataset, excel_file: str, top: int=2, left: int=2,
-                 check_for_match: t.List[str]=["cldf_id"],
-                 check_for_row_match: t.List[str]=["cldf_name"],
-                 on_language_not_found: MissingHandler=create,
-                 on_row_not_found: MissingHandler=create,
-                 on_form_not_found: MissingHandler=create,
+    def __init__(self, output_dataset: pycldf.Dataset, excel_file: str,
+                 top: int = 2, left: int = 2,
+                 check_for_match: t.List[str] = ["cldf_id"],
+                 check_for_row_match: t.List[str] = ["cldf_name"],
+                 on_language_not_found: MissingHandler = create,
+                 on_row_not_found: MissingHandler = create,
+                 on_form_not_found: MissingHandler = create,
                  **kwargs) -> None:
         super().__init__(output_dataset, **kwargs)
         self.cell_parser: CellParser = CellParserLexical()
@@ -233,10 +234,9 @@ class ExcelParser(SQLAlchemyWordlist):
                     # Keep the old row_object from the previous line
                     pass
                 else:
-
                     similar = self.session.query(self.RowObject).filter(
                         *[key == properties[key] for key in dir(self.RowObject)
-                        if key in self.check_for_row_match]).all()
+                          if key in self.check_for_row_match]).all()
 
                     if len(similar) == 0:
                         row_id = new_id(
@@ -289,7 +289,6 @@ class ExcelParser(SQLAlchemyWordlist):
                                 continue
                             self.session.add_all(references)
                         else:
-                            print("hiiiii")
                             print([e.cldf_id for e in forms])
                             if len(forms) > 1:
                                 warnings.warn(
@@ -439,7 +438,10 @@ if __name__ == "__main__":
         pycldf.Dataset.from_metadata(args.metadata), fname=args.db, excel_file=args.lexicon)
     excel_parser_lexical.parse_cells()
     print([e.cldf_name for e in excel_parser_lexical.session.query(excel_parser_lexical.Language).all()])
-    excel_parser_lexical.cldfdatabase.to_cldf(args.metadata.parent)
+    # TODO: find out why this goes wrong *without indication of failure* if
+    # mdname is not specified and cldf-metadata.json not found (eg. because
+    # it's called Wordlist-metadata.json)
+    excel_parser_lexical.cldfdatabase.to_cldf(args.metadata.parent, mdname=args.metadata.name)
 
     excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
         pycldf.Dataset.from_metadata(args.metadata), fname=args.db, excel_file=args.cogsets)
