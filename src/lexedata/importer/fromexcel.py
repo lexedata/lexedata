@@ -14,7 +14,8 @@ import sqlalchemy.ext.automap as automap
 from lexedata.database.database import create_db_session, new_id, string_to_id
 from lexedata.importer.cellparser import CellParser, CellParserLexical, CellParserCognate, CellParserHyperlink
 import lexedata.importer.exceptions as ex
-from lexedata.cldf.automapped import SQLAlchemyWordlist, Language, Source, Form, Concept, CogSet
+from lexedata.cldf.automapped import (
+    SQLAlchemyWordlist, Language, Source, Form, Concept, CogSet, Reference)
 import lexedata.cldf.db as db
 
 # FIXME: Be more systematic in coordinates: Use ColLetterRowNumber where that
@@ -189,7 +190,7 @@ class ExcelParser(SQLAlchemyWordlist):
     def create_form_with_sources(
             self: "ExcelParser",
             sources: t.List[t.Tuple[Source, t.Optional[str]]] = [],
-            **properties: t.Any) -> Form:
+            **properties: t.Any) -> t.Tuple[Form, t.Sequence[Reference]]:
         concept: t.Optional[Concept] = properties.get("parameter") or properties.get("parameters", [None])[0]
         form_id = new_id(
             "{:}_{:}".format(

@@ -112,6 +112,8 @@ class Association(t.Generic[A, B], sqlalchemy.ext.automap.AutomapBase):
 class Judgement(Association[F, X]):
     ...
 
+class Reference(Association[F, S]):
+    ...
 
 class SQLAlchemyWordlist:
     def __init__(self, dataset: pycldf.Dataset, fname=None, echo=False, override=False, **kwargs) -> None:
