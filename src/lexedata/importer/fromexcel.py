@@ -78,7 +78,7 @@ class ExcelParser(SQLAlchemyWordlist):
             except AttributeError:
                 rep = repr(db_object)
         warnings.warn(
-            f"Failed to find object {rep:} {cell:} in the database. Skipped.",
+            f"Failed to find object {rep:} in the database. Skipped. Object of cell: {cell:}.",
             ObjectNotFoundWarning)
         return False
 
@@ -93,7 +93,7 @@ class ExcelParser(SQLAlchemyWordlist):
             except AttributeError:
                 rep = repr(db_object)
         warnings.warn(
-            f"Failed to find object {rep:} {cell:} in the database. Added.",
+            f"Failed to find object {rep:}in the database. Added. Object of cell: {cell:}",
             ObjectNotFoundWarning)
         self.session.add(db_object)
         return True
@@ -190,14 +190,14 @@ class ExcelParser(SQLAlchemyWordlist):
 
     def create_form_with_sources(
             self: "ExcelParser",
+            row_object,
             sources: t.List[t.Tuple[Source, t.Optional[str]]] = [],
             **properties: t.Any) -> t.Tuple[Form, t.Sequence[Reference]]:
-        concept: t.Optional[Concept] = properties.get("parameter") or properties.get("parameters", [None])[0]
+
         form_id = new_id(
-            "{:}_{:}".format(
-                properties["language"].cldf_id,
-                concept and concept.cldf_id),
+            "{:}_{:}".format(properties["language"].cldf_id, row_object.cldf_id),
             self.Form, self.session)
+
         form = self.Form(cldf_id=form_id, **properties)
         references = [
             self.Reference(
@@ -235,15 +235,15 @@ class ExcelParser(SQLAlchemyWordlist):
                     pass
                 else:
                     similar = self.session.query(self.RowObject).filter(
-                        *[key == properties[key] for key in dir(self.RowObject)
-                          if key in self.check_for_row_match]).all()
+                        *[getattr(self.RowObject, key) == properties[key] for key in dir(self.RowObject)
+                          if key in self.check_for_row_match
+                          if type(properties[key]) != list]).all()
 
                     if len(similar) == 0:
                         row_id = new_id(
                             properties.pop("cldf_id", properties.get("cldf_name", "")),
                             self.RowObject, self.session)
                         row_object = self.RowObject(cldf_id=row_id, **properties)
-                        print(row_object.cldf_id)
                         if not self.on_row_not_found(
                                 self, row_object, row_header[0].coordinate):
                             continue
@@ -262,12 +262,13 @@ class ExcelParser(SQLAlchemyWordlist):
                     # Parse the cell, which results (potentially) in multiple forms
                     for form_cell in self.cell_parser.parse(
                             f_cell, language=this_lan):
-                        sources = [(self.sources[k], c or None)
-                                   for k, c in form_cell.pop("sources", [])]
                         forms = self.session.query(self.Form).filter(
                             self.Form.language == this_lan,
-                            *[key == form_cell[key] for key in form_cell.keys()
-                              if key in self.check_for_match]).all()
+                            *[getattr(self.Form, key) == form_cell[key] for key in dir(self.Form)
+                              if key in self.check_for_match
+                              if type(form_cell[key]) != list]).all()
+                        sources = [(self.sources[k], c or None)
+                                   for k, c in form_cell.pop("sources", [])]
                         if "sources" in self.check_for_match:
                             for c in range(len(forms) - 1, -1, -1):
                                 s = set(reference.source for reference in
@@ -282,7 +283,7 @@ class ExcelParser(SQLAlchemyWordlist):
                                     break
                         if len(forms) == 0:
                             form, references = self.create_form_with_sources(
-                                sources=sources,
+                                row_object, sources=sources,
                                 **form_cell)
                             if not self.on_form_not_found(
                                     self, form, f_cell.coordinate):
@@ -290,16 +291,16 @@ class ExcelParser(SQLAlchemyWordlist):
                             self.session.add_all(references)
                         else:
                             print([e.cldf_id for e in forms])
-                            if len(forms) > 1:
+                            if len(forms) >= 1:
                                 warnings.warn(
                                     f"Found more than one match for {form_cell:}",
                                     MultipleCandidatesWarning)
-                            form = forms[0]
-                            for attr, value in form_cell.items():
-                                reference_value = getattr(form, attr, None)
-                                if reference_value != value:
-                                    warnings.warn(
-                                        f"Reference form property {attr:} was '{reference_value:}', not the '{value:}' specified here.")
+                                form = forms[0]
+                                for attr, value in form_cell.items():
+                                    reference_value = getattr(form, attr, None)
+                                    if reference_value != value:
+                                        warnings.warn(
+                                            f"Reference form property {attr:} was '{reference_value:}', not the '{value:}' specified here.")
                         self.associate(form, row_object)
                 self.session.commit()
 
@@ -307,7 +308,7 @@ class ExcelParser(SQLAlchemyWordlist):
 class ExcelCognateParser(ExcelParser):
 
     def __init__(self, output_dataset: pycldf.Dataset, excel_file: str, top: int=2, left: int=2,
-                 check_for_match: t.List[str]=["cldf_id"],
+                 check_for_match: t.List[str]=["cldf_value"],
                  check_for_row_match: t.List[str]=["cldf_name"],
                  on_language_not_found: MissingHandler = ExcelParser.warn,
                  on_row_not_found: MissingHandler = ExcelParser.create,
@@ -316,7 +317,7 @@ class ExcelCognateParser(ExcelParser):
         super().__init__(output_dataset, excel_file, top=top, left=left, check_for_match=check_for_match,
                          check_for_row_match=check_for_row_match,
                          on_language_not_found=on_language_not_found, on_row_not_found=on_row_not_found,
-                         on_form_not_found=on_form_not_found)
+                         on_form_not_found=on_form_not_found, **kwargs)
         self.cell_parser = CellParserHyperlink()
         self.RowObject = self.CogSet
 
@@ -332,10 +333,9 @@ class ExcelCognateParser(ExcelParser):
 
     def associate(self, form: Form, row: t.Union[Concept, CogSet]) -> None:
         id = new_id(
-            f"{form.cldf_id:}__{row.cldf_id:}",
+            f"{form.cldf_id:}_{row.cldf_id:}",
             self.Judgement, self.session)
-        self.session.add(
-            self.Judgement(cldf_id=id, form=form, cognateset=row))
+        self.session.add(self.Judgement(cldf_id=id, form=form, cognateset=row))
 
 
 class MawetiGuaraniExcelParser(ExcelParser):
@@ -441,10 +441,12 @@ if __name__ == "__main__":
     # TODO: find out why this goes wrong *without indication of failure* if
     # mdname is not specified and cldf-metadata.json not found (eg. because
     # it's called Wordlist-metadata.json)
-    excel_parser_lexical.cldfdatabase.to_cldf(args.metadata.parent, mdname=args.metadata.name)
 
+    excel_parser_lexical.cldfdatabase.to_cldf(args.metadata.parent, mdname=args.metadata.name)
     excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
         pycldf.Dataset.from_metadata(args.metadata), fname=args.db, excel_file=args.cogsets)
+    breakpoint()
     excel_parser_cognateset.parse_cells()
+
     print([e.cldf_name for e in excel_parser_cognateset.session.query(excel_parser_lexical.Language).all()])
     excel_parser_cognateset.cldfdatabase.to_cldf(args.metadata.parent)

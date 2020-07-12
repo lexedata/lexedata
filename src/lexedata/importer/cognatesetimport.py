@@ -1,7 +1,6 @@
 from pathlib import Path
 import typing as t
 
-
 D = t.TypeVar("D", bound="CognateImporter")
 
 
@@ -10,6 +9,9 @@ class CognateImporter():
     # CellParser interpret
     # ExcelParser (both Lexical and Cognate)
     # Path to
+    def __init__(self, database_path=None, echo=False, override=False, **kwargs):
+        ...
+
     @classmethod
     def from_metadata(cls: t.Type[D], fname: Path) -> D:
         """
