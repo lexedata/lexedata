@@ -178,11 +178,9 @@ class ExcelParser(SQLAlchemyWordlist):
             language = self.session.query(self.Language).filter(
                 self.Language.cldf_name == language_properties["cldf_name"]
             ).one_or_none()
-            print(language_properties)
             if language is None:
                 id = new_id(language_properties["cldf_name"], self.Language, self.session)
                 language = self.Language(cldf_id=id, **language_properties)
-                print(f"id{id}     properties{language_properties}")
                 self.on_language_not_found(self, language, lan_col[0].coordinate)
             lan_dict[lan_col[0].column] = language
 
@@ -290,10 +288,9 @@ class ExcelParser(SQLAlchemyWordlist):
                                 continue
                             self.session.add_all(references)
                         else:
-                            print([e.cldf_id for e in forms])
                             if len(forms) >= 1:
                                 warnings.warn(
-                                    f"Found more than one match for {form_cell:}",
+                                    f"Found one or more matches for {form_cell:}",
                                     MultipleCandidatesWarning)
                                 form = forms[0]
                                 for attr, value in form_cell.items():
@@ -437,16 +434,10 @@ if __name__ == "__main__":
     excel_parser_lexical = MawetiGuaraniExcelParser(
         pycldf.Dataset.from_metadata(args.metadata), fname=args.db, excel_file=args.lexicon)
     excel_parser_lexical.parse_cells()
-    print([e.cldf_name for e in excel_parser_lexical.session.query(excel_parser_lexical.Language).all()])
-    # TODO: find out why this goes wrong *without indication of failure* if
-    # mdname is not specified and cldf-metadata.json not found (eg. because
-    # it's called Wordlist-metadata.json)
-
     excel_parser_lexical.cldfdatabase.to_cldf(args.metadata.parent, mdname=args.metadata.name)
+
     excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
         pycldf.Dataset.from_metadata(args.metadata), fname=args.db, excel_file=args.cogsets)
     breakpoint()
     excel_parser_cognateset.parse_cells()
-
-    print([e.cldf_name for e in excel_parser_cognateset.session.query(excel_parser_lexical.Language).all()])
-    excel_parser_cognateset.cldfdatabase.to_cldf(args.metadata.parent)
+    excel_parser_cognateset.cldfdatabase.to_cldf(args.metadata.parent, mdname=args.metadata.name)
