@@ -8,7 +8,7 @@ class CognateImporter():
     # Database connection
     # CellParser interpret
     # ExcelParser (both Lexical and Cognate)
-    # Path to
+    # Path to excel files
     def __init__(self, database_path=None, echo=False, override=False, **kwargs):
         ...
 
