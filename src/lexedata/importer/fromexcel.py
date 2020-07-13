@@ -12,7 +12,8 @@ import sqlalchemy
 import sqlalchemy.ext.automap as automap
 
 from lexedata.database.database import create_db_session, new_id, string_to_id
-from lexedata.importer.cellparser import CellParser, CellParserLexical, CellParserCognate, CellParserHyperlink
+from lexedata.importer.cellparser import CellParser, MawetiGuaraniLexicalParser, \
+    MawetiGuaraniCognateParser, CellParserHyperlink
 import lexedata.importer.exceptions as ex
 from lexedata.cldf.automapped import (
     SQLAlchemyWordlist, Language, Source, Form, Concept, CogSet, Reference)
@@ -245,7 +246,7 @@ class ExcelParser(SQLAlchemyWordlist):
                         if not self.on_row_not_found(
                                 self, row_object, row_header[0].coordinate):
                             continue
-
+                    # TODO: change here to >= 1?
                     elif len(similar) > 1:
                         warnings.warn(
                             f"Found more than one match for {properties:}")
@@ -281,10 +282,9 @@ class ExcelParser(SQLAlchemyWordlist):
                                     break
                         if len(forms) == 0:
                             form, references = self.create_form_with_sources(
-                                row_object, sources=sources,
-                                **form_cell)
-                            if not self.on_form_not_found(
-                                    self, form, f_cell.coordinate):
+                                row_object, sources=sources, **form_cell)
+
+                            if not self.on_form_not_found(self, form, f_cell.coordinate):
                                 continue
                             self.session.add_all(references)
                         else:
@@ -343,6 +343,7 @@ class MawetiGuaraniExcelParser(ExcelParser):
                  **kwargs) -> None:
         super().__init__(output_dataset, excel_file, top=top, left=left,
                          check_for_match=check_for_match, check_for_row_match=check_for_row_match, **kwargs)
+        self.cell_parser = MawetiGuaraniLexicalParser()
 
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> t.Dict[str, t.Any]:
         data = [(cell.value or '').strip() for cell in column[:2]]
@@ -377,7 +378,8 @@ class MawetiGuaraniExcelCognateParser(
         super().__init__(output_dataset, excel_file, top=top, left=left,
                          check_for_match=check_for_match, check_for_row_match=check_for_row_match,
                          **kwargs)
-        self.cell_parser = CellParserCognate()
+        #self.cell_parser = CellParserCognate()
+        self.cell_parser = MawetiGuaraniCognateParser()
 
     def set_up_sheets(self, fname: str) -> None:
         wb = openpyxl.load_workbook(filename=fname)
