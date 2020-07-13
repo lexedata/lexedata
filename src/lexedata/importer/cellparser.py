@@ -10,68 +10,16 @@ from lexedata.importer.exceptions import *
 from lexedata.database.database import string_to_id
 from lexedata.cldf.automapped import Form
 
-# functions for bracket checking, becoming obsolete with new cellparser
-comment_bracket = lambda str: str.count("(") == str.count(")")
-
-# TODO: ask Gereon about escaping
-comment_escapes = re.compile(r"&[</\[{].+?(?:\s|.$)")
-
-phonemic_pattern = re.compile(r"""
-(?:^| # start of the line or
-  (.*?(?<=[^&]))) #capture anything before phonemic, phonemic must not follow a &, i.e. & escapes
-  (/[^/]+? #first phonemic element, not greedy,
-           # special for phonemic: use [^/] instead of . to ensure correct escaping
-  (?<=[^&])/  # applies only to phonemic: closer must not follow &, otherwise &/a/ texttext &/b/ will render / texttext &/
-  (?:\s*[~%]\s*/[^/]+?/)*  #non capturing pattern for any repetition of [%~]/..../
-)  #capture whole group
-(.*)$ #capture the rest""", re.VERBOSE)
-phonetic_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(\[.+?](?:\s*[~%]\s*\[.+?])*)(.*)$")
-ortho_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(<.+?>(?:\s*[~%]\s*<.+?>)*)(.*)$")
-
-source_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))({.+?})(.*)$")  # just one source per form, must not be empty
-
-my_form_pattern = {"phonemic": phonemic_pattern,
-                   "phonetic": phonetic_pattern,
-                   "orthographic": ortho_pattern,
-                   "source": source_pattern}
-
 
 class AbstractCellParser():
-    def parse(self, cell: openpyxl.cell.Cell, **known) -> t.Iterable[Form]:
-        raise NotImplementedError
-
-class CellParser(AbstractCellParser):
-    illegal_symbols_description = re.compile(r"[</[{]")
-    illegal_symbols_transcription = re.compile(r"[;]")
-    form_pattern = my_form_pattern
-    description_pattern = re.compile(r"^(.*?)(\(.+\))(.*)$")
-    separator_pattern = re.compile(r"""
-                 (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
-                 \s*               # Any amount of spaces
-                 [,;]              # Some separator
-                 \s*               # Any amount of spaces
-                 (?=[</\[])        # Followed by the beginning of any transcription, but don't consume that bit""",
-                                    re.VERBOSE)
-    ignore_pattern = re.compile(r"^(.+)#.+?#(.*)$")  # anything between # # is replaced by an empty string
 
     def __init__(
             self,
-            illegal_symbols_description: Optional[Pattern] = None,
-            illegal_symbols_transcription: Optional[Pattern] = None,
-            form_pattern: Optional[Dict[str, Pattern]] = None,
-            description_pattern: Optional[Pattern] = None,
             separator_pattern: Optional[Pattern] = None,
             ignore_pattern: Optional[Pattern] = None):
+
         if separator_pattern is not None:
             self.separator_pattern = separator_pattern
-        if illegal_symbols_description is not None:
-            self.illegal_symbols_description = illegal_symbols_description
-        if illegal_symbols_transcription is not None:
-            self.illegal_symbols_transcription = illegal_symbols_transcription
-        if form_pattern is not None:
-            self.form_pattern = form_pattern
-        if description_pattern is not None:
-            self.description_pattern = description_pattern
         if ignore_pattern is not None:
             self.ignore_pattern = ignore_pattern
 
@@ -100,7 +48,7 @@ class CellParser(AbstractCellParser):
                 return False
         return b == 0
 
-    def parse_value(self, values, coordinate):
+    def parse_value(self, values, coordinate, language=None):
         raise NotImplementedError
 
     def source_from_source_string(
@@ -123,43 +71,24 @@ class CellParser(AbstractCellParser):
 
         return source_id, context
 
-    def parse(self, cell: openpyxl.cell.Cell, **known):
-        if not cell.value:
+    def parse(self, values, language=None):
+        if not values.value:
             return None
-        lan = known["language"]
+        coordinate = values.coordinate
+        values = values.value
         # replace ignore pattern with empty string
-        values = cell.value
         while self.ignore_pattern.match(values):
             values = self.ignore_pattern.sub(r"\1\2", values)
 
-        values = self.separate(cell.value)
+        values = self.separate(values)
         for element in values:
             try:
-                element = self.parse_value(element, cell.coordinate)
-                # assert no empty element
-                if all(ele == "" for ele in element):
-                    raise CellParsingError("empty values ''", self.coordinate)
-
-                phonemic, phonetic, ortho, comment, source, variants = element
-
-                # Source number {1} is not always specified
-                if not source or not source.strip():
-                    source = "{1}"
-
-                source, context = self.source_from_source_string(source, lan)
-
-                yield {
-                    "language": lan,
-                    "cldf_form": phonemic or "-",
-                    # "cldf_segments": phonetic or "-",
-                    # "orthographic": ortho,
-                    # "variants": variants,
-                    "cldf_comment": None if comment is None else comment.strip(),
-                    "sources": [(source, context)],
-                    # "procedural_comment": self.get_cell_comment(form_cell).strip(),
-                    "cldf_value": string_to_id(f"{phonemic:}{phonetic:}{ortho:}")
-                }
-
+                parsed_dict = self.parse_value(element, coordinate, language)
+                # replace None
+                for k, v in parsed_dict.items():
+                    if v is None:
+                        parsed_dict[k] = ""
+                yield parsed_dict
 
             # error handling
             except CellParsingError as err:
@@ -183,50 +112,38 @@ class CellParser(AbstractCellParser):
                 continue
 
 
-class CellParserLexical(CellParser):
-    def parse_value(self, ele, coordinates):
-        """
-        :param ele: is a form string; form string referring to a possibly (semicolon or)comma separated string of a form cell
-        :return: list of cellsize containing parsed data of form string
-        """
-        if ele == "...":
-            return [None] * 6
+class CellParser(AbstractCellParser):
 
-        else:
-            mymatch = self.parse_form(ele, coordinates)
+    def __init__(
+            self,
+            form_pattern: Dict[str, Pattern],
+            description_pattern: Optional[Pattern] = None,
+            separator_pattern: Optional[Pattern] = None,
+            ignore_pattern: Optional[Pattern] = None,
+            illegal_symbols_description: Optional[Pattern] = None,
+            illegal_symbols_transcription: Optional[Pattern] = None,
+            comment_escapes: Optional[Pattern] = None
+            ):
 
-        mymatch = [e or '' for e in mymatch]
-        phonemic, phonetic, ortho, description, source = mymatch
+        if illegal_symbols_description is not None:
+            self.illegal_symbols_description = illegal_symbols_description
+        if illegal_symbols_transcription is not None:
+            self.illegal_symbols_transcription = illegal_symbols_transcription
+        if form_pattern is not None:
+            self.form_pattern = form_pattern
+        if description_pattern is not None:
+            self.description_pattern = description_pattern
+        if comment_escapes is not None:
+            self.comment_escapes = comment_escapes
+        super().__init__(separator_pattern=separator_pattern, ignore_pattern=ignore_pattern)
 
-        variants = []
-        if phonemic:
-            phonemic = self.variants_separator(variants, phonemic, coordinates)
-        if phonetic:
-            phonetic = self.variants_separator(variants, phonetic, coordinates)
-        if ortho:
-            ortho = self.variants_separator(variants, ortho, coordinates)
-        variants = ",".join(variants)
-
-        if phonemic == phonetic == ortho == "":
-            ele_dummy = (ele + " ")[:-1]
-            while " " in ele_dummy:
-                ele_dummy = ele.replace(" ", "")
-            if not ele_dummy:
-                raise IgnoreCellError("Empty Excel Cell", coordinates)
-            else:
-                errmessage = """IncompleteParsingError; this excel cell rendered an empty form after parsing\n
-                                {}""".format(ele)
-                raise CellParsingError(errmessage, coordinates)
-
-        if description:
-            if not self.bracket_checker("(", ")", description):
-                raise FormCellError(description, "description", coordinates)
-
-        return [phonemic, phonetic, ortho, description, source, variants]
-
-    def parse_form(self, formele, coordinates):
+    def parse_value(self, values, coordinate, language=None):
         """checks if values of cells not in expected order, extract each value"""
-        ele = (formele + ".")[:-1]  # force python to hard copy string
+        # if values is only whitespaces, raise IgnoreError
+        if set(values) == {" "}:
+            raise IgnoreCellError(values, coordinate)
+
+        ele = (values + ".")[:-1]  # force python to hard copy string
         # parse transcriptions and fill dictionary d
         d = dict()
         for lable, pat in self.form_pattern.items():
@@ -238,50 +155,118 @@ class CellParserLexical(CellParser):
             else:
                 d[lable] = None
 
-        mydescription = ""
-        # get all that is left of the string in () and add it to the comment
-        while self.description_pattern.match(ele):
-            description_candidate = self.description_pattern.match(ele).group(2)
-            # no transcription symbols in comment
-            if not self.illegal_symbols_description.search(description_candidate):
-                mydescription += description_candidate
-                ele = self.description_pattern.sub(r"\1\3", ele)
-            else:  # check if comment is escaped correctly, if not, raise error
+        # check for illegal symbols in transcriptions (i.e. form-pattern)
+        if self.illegal_symbols_transcription:
+            for k, string in d.items():
+                if k != "source" and string is not None and self.illegal_symbols_transcription.search(string):
+                    raise SeparatorCellError(string, coordinate)
+        # if description pattern, add description to output
+        if self.description_pattern:
+            description = self.extract_description(ele, values, coordinate)
+            d["description"] = description
+        return d
 
-                # replace escaped elements and check for illegal content, if all good, add original_form
-                escapes = comment_escapes.findall(description_candidate)
-                original_form = description_candidate
-                for e in escapes:
-                    description_candidate = description_candidate.replace(e, "")
+    def extract_description(self, text, original, coordinate):
+        description = ""
+        # get all that is left of the string according to description pattern
+        while self.description_pattern.match(text):
+            description_candidate = self.description_pattern.match(text).group(2)
+
+            # no illegal symbols in description pattern given, just replace extracted part
+            if self.illegal_symbols_description:
+                # check for illegal symbols in description
                 if not self.illegal_symbols_description.search(description_candidate):
-                    mydescription += original_form
-                    ele = self.description_pattern.sub(r"\1\3", ele)
-                else:  # illegal comment
-                    raise FormCellError(description_candidate, "description", coordinates)
+                    description += description_candidate
+                    text = self.description_pattern.sub(r"\1\3", text)
+                # check if comment is escaped correctly, if not, raise error
+                else:
+                    if self.comment_escapes:
+                        # replace escaped elements and check for illegal content, if all good, add original_form
+                        escapes = comment_escapes.findall(description_candidate)
+                        original_form = description_candidate
+                        for e in escapes:
+                            description_candidate = description_candidate.replace(e, "")
+                        if not self.illegal_symbols_description.search(description_candidate):
+                            description += original_form
+                            text = self.description_pattern.sub(r"\1\3", text)
+                        # incorrect escaping and illegal symbol in description
+                        else:
+                            raise FormCellError(description_candidate, "description (illegal content)", coordinate)
+                    # no escape and illegal symbol in description
+                    else:
+                        raise FormCellError(description_candidate, "description (illegal content)", coordinate)
+
+            else:
+                text = self.description_pattern.sub(r"\1\3", text)
 
         # check that ele was parsed entirely, if not raise parsing error
-        ele = ele.strip(" ")
-        if not ele == "":
+        text = text.strip(" ")
+        if not text == "":
             # if just text left and no comment given, put text in comment
             # more than one token
-            if len(ele) >= 1 and (not self.illegal_symbols_description.search(ele)):
+            if len(text) >= 1 and (not self.illegal_symbols_description.search(text)):
 
-                if not mydescription:
-                    mydescription = ele
+                if not description:
+                    description = text
                 else:
-                    mydescription += ele
+                    description += text
 
             else:
                 errmessage = """IncompleteParsingError; probably illegal content\n
-                after parsing {}  -  {} was left unparsed""".format(formele, ele)
-                raise CellParsingError(errmessage, coordinates)
+                           after parsing {}  -  {} was left unparsed""".format(original, text)
+                raise CellParsingError(errmessage, coordinate)
 
+        # TODO: opening and closing of bracket_checker is hard coded
         # enclose comment if not properly enclosed
-        if not self.bracket_checker("(", ")", mydescription):
-            mydescription = "(" + mydescription + ")"
-        d["description"] = mydescription
-        form_cell = [d["phonemic"], d["phonetic"], d["orthographic"], d["description"], d["source"]]
-        return form_cell
+        if not self.bracket_checker("(", ")", description):
+            description = "(" + description + ")"
+            if not self.bracket_checker("(", ")", description):
+                raise FormCellError(description, "description (closing and opening brackets don't match",
+                                          coordinate)
+
+        return description
+
+
+class CellParserLexical(CellParser):
+
+    def __init__(
+            self,
+            form_pattern: Dict[str, Pattern],
+            description_pattern: Optional[Pattern] = None,
+            separator_pattern: Optional[Pattern] = None,
+            ignore_pattern: Optional[Pattern] = None,
+            illegal_symbols_description: Optional[Pattern] = None,
+            illegal_symbols_transcription: Optional[Pattern] = None,
+            comment_escapes: Optional[Pattern] = None,
+            add_default_source: bool = False,
+            scann_for_variants: bool = False
+    ):
+        self.scann_for_variants = scann_for_variants
+        self.add_default_source = add_default_source
+        super().__init__(form_pattern=form_pattern,
+                         description_pattern=description_pattern,
+                         separator_pattern=separator_pattern,
+                         ignore_pattern=ignore_pattern,
+                         illegal_symbols_description=illegal_symbols_description,
+                         illegal_symbols_transcription=illegal_symbols_transcription,
+                         comment_escapes=comment_escapes)
+
+    def parse_value(self, values, coordinate, language=None):
+        dictionary = super().parse_value(values, coordinate)
+
+        if self.add_default_source and dictionary["source"] is None:
+            dictionary["source"] = self.add_default_source
+
+        if self.scann_for_variants:
+            variants = []
+            for k, v in dictionary.items():
+                if k != "source" and v is not None:
+                    dictionary[k] = self.variants_separator(variants, v)
+
+            variants = ",".join(variants)
+            dictionary["variants"] = variants
+
+        return dictionary
 
     @staticmethod
     def variants_scanner(string, symbol):
@@ -314,9 +299,7 @@ class CellParserLexical(CellParser):
 
         return collector
 
-    def variants_separator(self, variants_list, string, coordinate):
-        if self.illegal_symbols_transcription.search(string):
-            raise SeparatorCellError(string, coordinate)
+    def variants_separator(self, variants_list, string):
         # force python to copy string
         text = (string + "&")[:-1]
         while " " in text:
@@ -345,15 +328,86 @@ class CellParserLexical(CellParser):
             return string
 
 
-class CellParserCognate(CellParserLexical):
-    def parse_value(self, values, coordinate):
+phonemic_pattern = re.compile(r"""
+(?:^| # start of the line or
+  (.*?(?<=[^&]))) #capture anything before phonemic, phonemic must not follow a &, i.e. & escapes
+  (/[^/]+? #first phonemic element, not greedy,
+           # special for phonemic: use [^/] instead of . to ensure correct escaping
+  (?<=[^&])/  # applies only to phonemic: closer must not follow &, otherwise &/a/ texttext &/b/ will render / texttext &/
+  (?:\s*[~%]\s*/[^/]+?/)*  #non capturing pattern for any repetition of [%~]/..../
+)  #capture whole group
+(.*)$ #capture the rest""", re.VERBOSE)
+phonetic_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(\[.+?](?:\s*[~%]\s*\[.+?])*)(.*)$")
+ortho_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(<.+?>(?:\s*[~%]\s*<.+?>)*)(.*)$")
+
+source_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))({.+?})(.*)$")  # just one source per form, must not be empty
+
+my_form_pattern = {"phonemic": phonemic_pattern,
+                   "phonetic": phonetic_pattern,
+                   "orthographic": ortho_pattern,
+                   "source": source_pattern}
+
+
+class MawetiGuaraniLexicalParser(CellParserLexical):
+    def __init__(
+            self,
+            form_pattern=my_form_pattern,
+            description_pattern=re.compile(r"^(.*?)(\(.+\))(.*)$"),
+            separator_pattern=re.compile(r"""
+                 (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
+                 \s*               # Any amount of spaces
+                 [,;]              # Some separator
+                 \s*               # Any amount of spaces
+                 (?=[</\[])        # Followed by the beginning of any transcription, but don't consume that bit""",
+                                    re.VERBOSE),
+            ignore_pattern=re.compile(r"^(.+)#.+?#(.*)$"),  # anything between # # is replaced by an empty string,
+            illegal_symbols_description=re.compile(r"[</[{]"),
+            illegal_symbols_transcription=re.compile(r"[;]"),
+            comment_escapes=re.compile(r"&[</\[{].+?(?:\s|.$)"),
+            add_default_source="{1}",
+            scann_for_variants=True
+    ):
+        super().__init__(form_pattern=form_pattern,
+                         description_pattern=description_pattern,
+                         separator_pattern=separator_pattern,
+                         ignore_pattern=ignore_pattern,
+                         illegal_symbols_description=illegal_symbols_description,
+                         illegal_symbols_transcription=illegal_symbols_transcription,
+                         comment_escapes=comment_escapes,
+                         add_default_source=add_default_source,
+                         scann_for_variants=scann_for_variants)
+
+    def parse_value(self, values, coordinate, language=None):
+        dictionary = super().parse_value(values, coordinate)
+        phonemic = dictionary["phonemic"]
+        phonetic = dictionary["phonetic"]
+        ortho = dictionary["orthographic"]
+        comment = dictionary["description"]
+        source = dictionary["source"]
+        if language:
+            source, context = self.source_from_source_string(source, language)
+        return {
+            "language": language,
+            "cldf_form": phonemic or "-",
+            # "cldf_segments": phonetic or "-",
+            # "orthographic": ortho,
+            # "variants": variants,
+            "cldf_comment": None if comment is None else comment.strip(),
+            "sources": [(source, context)],
+            # "procedural_comment": self.get_cell_comment(form_cell).strip(),
+            "cldf_value": string_to_id(f"{phonemic:}{phonetic:}{ortho:}")
+        }
+
+
+class MawetiGuaraniCognateParser(MawetiGuaraniLexicalParser):
+    def parse_value(self, values, coordinate, language=None):
         if values.isupper():
             raise IgnoreCellError(values, coordinate)
         else:
-            return super().parse_value(values, coordinate)
+            return super().parse_value(values, coordinate, language)
+
 
 class CellParserHyperlink(CellParser):
     def parse(self, cell: openpyxl.cell.Cell, **known) -> t.Iterable[Form]:
-        if cell.hyperlink is not None:
-            url = cell.hyperlink.target
-            yield {"cldf_id": url.split("/")[-1]}
+        url = cell.hyperlink.target
+        yield {"cldf_id": url.split("/")[-1]}
