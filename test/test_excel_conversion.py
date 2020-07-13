@@ -9,6 +9,7 @@ import openpyxl
 from lexedata.importer.fromexcel import ExcelParser, ExcelCognateParser, MawetiGuaraniExcelParser, MawetiGuaraniExcelCognateParser
 from lexedata.exporter.cognate_excel import ExcelWriter
 
+#todo: these test must be adapted to new interface of fromexcel.py
 
 @pytest.fixture
 def excel_wordlist():
