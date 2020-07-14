@@ -19,10 +19,7 @@ from lexedata.cldf.automapped import (
     SQLAlchemyWordlist, Language, Source, Form, Concept, CogSet, Reference)
 import lexedata.cldf.db as db
 
-# FIXME: Be more systematic in coordinates: Use ColLetterRowNumber where that
-# is easy, (1-based row number, 1-based column number) elsewhere. This may be
-# counterintuitive, because B1 becomes (1, 2), but it is consistent with
-# openpyxl.utils.cell.coordinate_to_tuple and with matrix indexing.
+# Remark: excel uses 1-based indices
 
 
 # Adapt warnings – TODO: Probably the `logging` package would be better for
