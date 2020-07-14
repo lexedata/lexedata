@@ -13,7 +13,7 @@ import sqlalchemy.ext.automap as automap
 
 from lexedata.database.database import create_db_session, new_id, string_to_id
 from lexedata.importer.cellparser import CellParser, MawetiGuaraniLexicalParser, \
-    MawetiGuaraniCognateParser, CellParserHyperlink
+    MawetiGuaraniCognateParser, CellParserHyperlink, CellParserLexical
 import lexedata.importer.exceptions as ex
 from lexedata.cldf.automapped import (
     SQLAlchemyWordlist, Language, Source, Form, Concept, CogSet, Reference)
@@ -440,6 +440,5 @@ if __name__ == "__main__":
 
     excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
         pycldf.Dataset.from_metadata(args.metadata), fname=args.db, excel_file=args.cogsets)
-    breakpoint()
     excel_parser_cognateset.parse_cells()
     excel_parser_cognateset.cldfdatabase.to_cldf(args.metadata.parent, mdname=args.metadata.name)
