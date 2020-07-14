@@ -59,17 +59,12 @@ def filled_cldf_wordlist(cldf_wordlist):
 
 
 def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
-    parser = MawetiGuaraniExcelParser(empty_cldf_wordlist)
-    wb = openpyxl.load_workbook(filename=excel_wordlist[0])
-    parser.read(wb.worksheets[0])
-    parser.cldfdatabase.to_cldf(empty_cldf_wordlist.directory)
+    # runs with default database, i.e. temporary file
+    excel_parser_lexical = MawetiGuaraniExcelParser(empty_cldf_wordlist, excel_file=excel_wordlist[0])
+    excel_parser_lexical.parse_cells()
 
-    cparser = MawetiGuaraniExcelCognateParser(empty_cldf_wordlist)
-    wb = openpyxl.load_workbook(filename=excel_wordlist[1])
-    for sheet in wb.sheetnames:
-        ws = wb[sheet]
-        cparser.read(ws)
-    cparser.cldfdatabase.to_cldf(empty_cldf_wordlist.directory)
+    excel_parser_cognateset = MawetiGuaraniExcelCognateParser(empty_cldf_wordlist, excel_file=excel_wordlist[1])
+    excel_parser_cognateset.parse_cells()
 
 
 def test_toexcel_runs(filled_cldf_wordlist):
@@ -94,14 +89,9 @@ def test_roundtrip(filled_cldf_wordlist):
     # filled_cldf_wordlist["CognatesetTable"].write([])
 
     # ExcelCognateParser(cldf.Dataset.from_metadata(...))
-    parser = ExcelCognateParser(filled_cldf_wordlist)
+    parser = ExcelCognateParser(filled_cldf_wordlist, excel_file=out_filename)
     parser.left = len(writer.header) + 1
-
-    wb = openpyxl.load_workbook(filename=out_filename)
-    for sheet in wb.sheetnames:
-        ws = wb[sheet]
-        parser.read(ws)
-
+    parser.parse_cells()
     # Really? Isn't there a shortcut to do this?
     parser.cldfdatabase.to_cldf(filled_cldf_wordlist.tablegroup._fname.parent)
     new_judgements = {
