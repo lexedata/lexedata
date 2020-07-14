@@ -116,7 +116,7 @@ class CellParser(AbstractCellParser):
 
     def __init__(
             self,
-            form_pattern: Dict[str, Pattern],
+            form_pattern: Optional[Dict[str, Pattern]] = None,
             description_pattern: Optional[Pattern] = None,
             separator_pattern: Optional[Pattern] = None,
             ignore_pattern: Optional[Pattern] = None,
@@ -231,7 +231,7 @@ class CellParserLexical(CellParser):
 
     def __init__(
             self,
-            form_pattern: Dict[str, Pattern],
+            form_pattern: Dict[str, Pattern]=None,
             description_pattern: Optional[Pattern] = None,
             separator_pattern: Optional[Pattern] = None,
             ignore_pattern: Optional[Pattern] = None,
