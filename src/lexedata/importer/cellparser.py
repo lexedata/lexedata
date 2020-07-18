@@ -238,7 +238,7 @@ class CellParserLexical(CellParser):
             illegal_symbols_description: Optional[Pattern] = None,
             illegal_symbols_transcription: Optional[Pattern] = None,
             comment_escapes: Optional[Pattern] = None,
-            add_default_source: bool = False,
+            add_default_source: str = "",
             scann_for_variants: bool = False
     ):
         self.scann_for_variants = scann_for_variants
