@@ -26,10 +26,14 @@ class ExcelWriter(SQLAlchemyWordlist):
     """Class logic for cognateset Excel export."""
     header = ["CogSet", "Tags"]
 
-    def __init__(self, dataset: pycldf.Dataset):
-        super().__init__(dataset)
+    def __init__(self, dataset: pycldf.Dataset, database: str, url_base: t.Optional[bool] = None, **kwargs):
+        super().__init__(dataset, **kwargs)
 
         self.URL_BASE = "https://example.org/{:s}"
+        if url_base:
+            self.URL_BASE = url_base
+        engine = sqlalchemy.create_engine(f"sqlite:///{database:}")
+        self.session = sqlalchemy.orm.Session(engine)
 
     def create_excel(
             self,
@@ -58,16 +62,15 @@ class ExcelWriter(SQLAlchemyWordlist):
         self.lan_dict: t.Dict[str, int] = {}
         header = self.header[:]
         for col, lan in enumerate(
-                self.session.query(self.Language), len(header) + 1):
-            # Excel indices are 1-based, not zero-based, so 3 is column C, as
-            # intended.
+                self.session.query(self.Language).all(), len(header) + 1):
+            # len(header) + 1 refers to column 3
             self.lan_dict[lan.cldf_id] = col
             header.append(lan.cldf_name)
 
         ws.append(header)
 
         # Iterate over all cognate sets, and prepare the rows.
-        # Again, row_index 2 is indeed row 2, because indices are 1-based.
+        # Again, row_index 2 is indeed row 2
         row_index = 1 + 1
         for cogset in self.session.query(self.CogSet):
             # Create cell for cogset in column A
@@ -82,13 +85,10 @@ class ExcelWriter(SQLAlchemyWordlist):
             # methods.
 
             # Put the cognateset's tags in column B.
-            # ws.cell(row=row_index, column=2, value=cogset.properties)
+            ws.cell(row=row_index, column=2, value=cogset.properties)
 
             new_row_index = self.create_formcells_for_cogset(
                 cogset, ws, row_index, self.lan_dict)
-            assert new_row_index > row_index, ("""
-            There can, by the data model, be cognate sets with no judgements,
-            but create_formcells_for_cogset did not increase the row index.""")
             row_index = new_row_index
         wb.save(filename=out)
 
@@ -117,7 +117,7 @@ class ExcelWriter(SQLAlchemyWordlist):
             forms[self.lan_dict[form.language.cldf_id]].append(judgement)
 
         if not forms:
-            return row_index
+            return row_index + 1
 
         # maximum of rows to be added
         maximum_cogset = max([len(c) for c in forms.values()])
@@ -175,15 +175,15 @@ class ExcelWriter(SQLAlchemyWordlist):
         return "{:} ‘{:}’{:}".format(
             transcription, ", ".join(translations), suffix)
 
-    def get_best_transcription(self, form):
-        if form.phonemic:
-            return form.phonemic
-        elif form.phonetic:
-            return form.phonetic
-        elif form.orthographic:
-            return form.orthographic
-        else:
-            ValueError(f"Form {form:} has no transcriptions.")
+    #def get_best_transcription(self, form):
+    #    if form.phonemic:
+    #        return form.phonemic
+    #    elif form.phonetic:
+    #        return form.phonetic
+    #    elif form.orthographic:
+    #        return form.orthographic
+    #    else:
+    #        ValueError(f"Form {form:} has no transcriptions.")
 
     def get_best_transcription(self, form):
         return form.cldf_form
@@ -193,8 +193,9 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(
         description="Create an Excel cognate view from a CLDF dataset")
-    parser.add_argument("dataset", help="Dataset input")
+    parser.add_argument("metadata", help="Path to metadata file for dataset input")
+    parser.add_argument("database", help="Path to database")
     parser.add_argument("excel", help="Excel output file path")
     args = parser.parse_args()
-    E = ExcelWriter(pycldf.Dataset.from_metadata(args.dataset))
+    E = ExcelWriter(pycldf.Dataset.from_metadata(args.metadata), args.database)
     E.create_excel(args.excel)
