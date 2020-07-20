@@ -17,8 +17,8 @@ def excel_wordlist():
 
 
 @pytest.fixture(params=[
-        ("data/cldf/minimal/cldf-metadata.json", "data/cldf/minimal/db.sq"),
-        ("data/cldf/smallmawetiguarani/cldf-metadata.json", "data/cldf/smallmawetiguarani/db.sq")])
+        ("data/cldf/minimal/cldf-metadata.json", "data/cldf/minimal/db.sqlite"),
+        ("data/cldf/smallmawetiguarani/cldf-metadata.json", "data/cldf/smallmawetiguarani/db.sqlite")])
 def cldf_wordlist(request):
     return Path(__file__).parent / request.param[0], Path(__file__).parent / request.param[1]
 
@@ -39,10 +39,11 @@ def empty_cldf_wordlist():
 @pytest.fixture
 def filled_cldf_wordlist(cldf_wordlist):
     # Copy the dataset to a different temporary location, so that editing the
-    # dataset will
+    # dataset will not change it.
     original = cldf_wordlist[0]
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
+    databasefile = dirname / cldf_wordlist[1].name
     shutil.copyfile(original, target)
     dataset = pycldf.Dataset.from_metadata(target)
     for table in dataset.tables:
@@ -55,7 +56,8 @@ def filled_cldf_wordlist(cldf_wordlist):
     t = target.parent / link
     shutil.copyfile(o, t)
     dataset.sources = pycldf.dataset.Sources.from_file(dataset.bibpath)
-    return dataset, cldf_wordlist[1]
+    breakpoint()
+    return dataset, databasefile
 
 
 def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
@@ -81,23 +83,20 @@ def test_roundtrip(filled_cldf_wordlist):
         for row in filled_cldf_wordlist[0]["CognateTable"].iterdicts()}
     writer = ExcelWriter(filled_cldf_wordlist[0], filled_cldf_wordlist[1])
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
-    out_filename = r"C:\Users\walter.fuchs\Desktop\outofasia\tupiguarani-data\test\data\excel\dump.xlsx"
     writer.create_excel(out_filename)
 
     # Reset the existing cognatesets and cognate judgements, to avoid
     # interference with the the data in the Excel file
     filled_cldf_wordlist[0]["CognateTable"].write([])
-    # filled_cldf_wordlist["CognatesetTable"].write([])
-
-    # ExcelCognateParser(cldf.Dataset.from_metadata(...))
+    filled_cldf_wordlist[0]["CognatesetTable"].write([])
 
     parser = ExcelCognateParser(filled_cldf_wordlist[0], excel_file=out_filename)
     parser.left = len(writer.header) + 1
     parser.parse_cells()
     # Really? Isn't there a shortcut to do this?
-    parser.cldfdatabase.to_cldf(filled_cldf_wordlist.tablegroup._fname.parent)
+    parser.cldfdatabase.to_cldf(filled_cldf_wordlist[0].tablegroup._fname.parent)
     new_judgements = {
         (row[c_formReference], row[c_cogsetReference])
-        for row in filled_cldf_wordlist["CognateTable"].iterdicts()}
+        for row in filled_cldf_wordlist[0]["CognateTable"].iterdicts()}
 
     assert new_judgements == old_judgements

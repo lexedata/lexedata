@@ -26,8 +26,9 @@ class ExcelWriter(SQLAlchemyWordlist):
     """Class logic for cognateset Excel export."""
     header = ["CogSet", "Tags"]
 
-    def __init__(self, dataset: pycldf.Dataset, database: str, url_base: t.Optional[bool] = None, **kwargs):
-        super().__init__(dataset, **kwargs)
+    def __init__(self, dataset: pycldf.Dataset, database: str,
+                 url_base: t.Optional[str] = None, **kwargs):
+        super().__init__(dataset, fname=database, **kwargs)
 
         self.URL_BASE = "https://example.org/{:s}"
         if url_base:

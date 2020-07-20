@@ -259,6 +259,10 @@ class Database(pycldf.db.Database):
         :return: a pair (foreign key, context)
         """
         # The default implementation takes the column name as context:
+        if '[' in fkey:
+            assert fkey.endswith(']')
+            fkey, _, rem = fkey.partition('[')
+            return fkey, rem[:-1]
         return fkey, None
 
 
@@ -272,7 +276,7 @@ class Database(pycldf.db.Database):
             if _force:
                 self.fname.unlink()
             elif _exists_ok:
-                raise NotImplementedError()
+                pass
             else:
                 raise ValueError('db file already exists, use _force=True to overwrite')
 
@@ -331,12 +335,9 @@ class Database(pycldf.db.Database):
                 insert(db, self.translate, t.name, keys, *rows)
 
             for atkey, rows in refs.items():
-                try:
-                    insert(db, self.translate, atkey[0], atkey[1:],
-                           *[[key1, key2, self._duplicate_relationship_separator.join([v for v in values if v])]
-                             for (key1, key2), values in rows.items()])
-                except:
-                    ...
+                insert(db, self.translate, atkey[0], atkey[1:],
+                       *[[key1, key2, self._duplicate_relationship_separator.join([v for v in values if v])]
+                         for (key1, key2), values in rows.items()])
             db.commit()
 
     def select_many_to_many(
@@ -367,10 +368,11 @@ FROM {2} GROUP BY {0}""".format(
         cu = db.execute(sql)
         if context:
             return {
-                key: [(k, v) for k, v in zip(vals.split(), contexts.split('||'))]
+                key: ["{:}[{:}]".format(k, v) if v else k
+                      for k, v in zip(vals.split(), contexts.split('||'))]
                 for key, vals, contexts in cu.fetchall()}
         else:
             return {
-                key: [(v, None) for v in val.split()]
+                key: [v for v in val.split()]
                 for key, val, _ in cu.fetchall()}
 

@@ -76,7 +76,7 @@ class ExcelParser(SQLAlchemyWordlist):
             except AttributeError:
                 rep = repr(db_object)
         warnings.warn(
-            f"Failed to find object {rep:} in the database. Skipped. Object of cell: {cell:}.",
+            f"Failed to find object {rep:} in the database. Skipped. In cell: {cell:}.",
             ObjectNotFoundWarning)
         return False
 
@@ -282,6 +282,10 @@ class ExcelParser(SQLAlchemyWordlist):
                                 row_object, sources=sources, **form_cell)
 
                             if not self.on_form_not_found(self, form, f_cell.coordinate):
+                                try:
+                                    self.session.delete(form)
+                                except:
+                                    pass
                                 continue
                             self.session.add_all(references)
                         else:
@@ -295,7 +299,7 @@ class ExcelParser(SQLAlchemyWordlist):
                                 if reference_value != value:
                                     warnings.warn(
                                         f"Reference form property {attr:} was '{reference_value:}', not the '{value:}' specified here.")
-                            self.associate(form, row_object)
+                        self.associate(form, row_object)
                 self.session.commit()
 
 
@@ -375,7 +379,6 @@ class MawetiGuaraniExcelCognateParser(
         super().__init__(output_dataset, excel_file, top=top, left=left,
                          check_for_match=check_for_match, check_for_row_match=check_for_row_match,
                          **kwargs)
-        #self.cell_parser = CellParserCognate()
         self.cell_parser = MawetiGuaraniCognateParser()
 
     def set_up_sheets(self, fname: str) -> None:
