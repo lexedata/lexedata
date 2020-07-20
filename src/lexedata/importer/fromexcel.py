@@ -289,13 +289,13 @@ class ExcelParser(SQLAlchemyWordlist):
                                 warnings.warn(
                                     f"Found one or more matches for {form_cell:}",
                                     MultipleCandidatesWarning)
-                                form = forms[0]
-                                for attr, value in form_cell.items():
-                                    reference_value = getattr(form, attr, None)
-                                    if reference_value != value:
-                                        warnings.warn(
-                                            f"Reference form property {attr:} was '{reference_value:}', not the '{value:}' specified here.")
-                        self.associate(form, row_object)
+                            form = forms[0]
+                            for attr, value in form_cell.items():
+                                reference_value = getattr(form, attr, None)
+                                if reference_value != value:
+                                    warnings.warn(
+                                        f"Reference form property {attr:} was '{reference_value:}', not the '{value:}' specified here.")
+                            self.associate(form, row_object)
                 self.session.commit()
 
 
