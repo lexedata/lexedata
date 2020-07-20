@@ -71,7 +71,8 @@ class AbstractCellParser():
 
         return source_id, context
 
-    def parse(self, values, language=None):
+    # def parse(self, cell: openpyxl.cell.Cell, **known) -> t.Iterable[Form]:
+    def parse(self, cell, language=None):
         if not values.value:
             return None
         coordinate = values.coordinate
