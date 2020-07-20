@@ -409,5 +409,8 @@ class MawetiGuaraniCognateParser(MawetiGuaraniLexicalParser):
 
 class CellParserHyperlink(CellParser):
     def parse(self, cell: openpyxl.cell.Cell, **known) -> t.Iterable[Form]:
-        url = cell.hyperlink.target
-        yield {"cldf_id": url.split("/")[-1]}
+        try:
+            url = cell.hyperlink.target
+            yield {"cldf_id": url.split("/")[-1]}
+        except AttributeError:
+            pass

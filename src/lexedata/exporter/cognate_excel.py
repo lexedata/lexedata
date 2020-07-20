@@ -24,7 +24,7 @@ CogSet = t.TypeVar("CogSet", bound=sqlalchemy.ext.automap.AutomapBase)
 
 class ExcelWriter(SQLAlchemyWordlist):
     """Class logic for cognateset Excel export."""
-    header = ["CogSet", "Tags"]
+    header = [("cldf_id", "CogSet")]  # Add columns here for other datasets.
 
     def __init__(self, dataset: pycldf.Dataset, database: str,
                  url_base: t.Optional[str] = None, **kwargs):
@@ -61,32 +61,28 @@ class ExcelWriter(SQLAlchemyWordlist):
 
         # Define the columns
         self.lan_dict: t.Dict[str, int] = {}
-        header = self.header[:]
+        excel_header = [name for cldf, name in self.header]
         for col, lan in enumerate(
-                self.session.query(self.Language).all(), len(header) + 1):
+                self.session.query(self.Language).all(),
+                len(excel_header) + 1):
             # len(header) + 1 refers to column 3
             self.lan_dict[lan.cldf_id] = col
-            header.append(lan.cldf_name)
+            excel_header.append(lan.cldf_name)
 
-        ws.append(header)
+        ws.append(excel_header)
 
         # Iterate over all cognate sets, and prepare the rows.
         # Again, row_index 2 is indeed row 2
         row_index = 1 + 1
         for cogset in self.session.query(self.CogSet):
-            # Create cell for cogset in column A
-            cogset_cell = ws.cell(row=row_index, column=1, value=cogset.cldf_id)
-            # Transfer the cognateset comment to the Excel cell comment.
-            if cogset.cldf_comment:
-                cogset_cell.comment = op.comments.Comment(
-                    cogset.cldf_comment, __package__)
-
-            # FIXME: This does not work for arbitrary datasets. We need to find
-            # a way to make it minimally adaptable by sub-classing or other
-            # methods.
-
             # Put the cognateset's tags in column B.
-            ws.cell(row=row_index, column=2, value=cogset.properties)
+            for col, (db_name, header) in enumerate(self.header, 1):
+                cell = ws.cell(row=row_index, column=col,
+                               value=getattr(cogset, db_name))
+                # Transfer the cognateset comment to the first Excel cell.
+                if col == 1 and cogset.cldf_comment:
+                    cell.comment = op.comments.Comment(
+                        cogset.cldf_comment, __package__)
 
             new_row_index = self.create_formcells_for_cogset(
                 cogset, ws, row_index, self.lan_dict)

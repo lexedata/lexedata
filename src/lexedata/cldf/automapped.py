@@ -118,11 +118,10 @@ class Reference(Association[F, S]):
 class SQLAlchemyWordlist:
     def __init__(self, dataset: pycldf.Dataset, fname=None, echo=False, override=False, **kwargs) -> None:
         self.cldfdatabase = db.Database(dataset, fname=fname, **kwargs)
-        dataset.write(**{str(t.url): [] for t in dataset.tables})
         try:
             self.cldfdatabase.write_from_tg()
-        except ValueError:
-            pass
+        except ValueError as v:
+            dataset.write(**{str(t.url): [] for t in dataset.tables})
         connection = self.cldfdatabase.connection()
 
         def creator():

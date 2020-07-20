@@ -56,7 +56,6 @@ def filled_cldf_wordlist(cldf_wordlist):
     t = target.parent / link
     shutil.copyfile(o, t)
     dataset.sources = pycldf.dataset.Sources.from_file(dataset.bibpath)
-    breakpoint()
     return dataset, databasefile
 
 
@@ -81,8 +80,11 @@ def test_roundtrip(filled_cldf_wordlist):
     old_judgements = {
         (row[c_formReference], row[c_cogsetReference])
         for row in filled_cldf_wordlist[0]["CognateTable"].iterdicts()}
+    print(list(filled_cldf_wordlist[0]["FormTable"]))
     writer = ExcelWriter(filled_cldf_wordlist[0], filled_cldf_wordlist[1])
+    print(list(filled_cldf_wordlist[0]["FormTable"]))
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
+    print(list(filled_cldf_wordlist[0]["FormTable"]))
     writer.create_excel(out_filename)
 
     # Reset the existing cognatesets and cognate judgements, to avoid

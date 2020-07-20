@@ -284,7 +284,7 @@ class ExcelParser(SQLAlchemyWordlist):
                             if not self.on_form_not_found(self, form, f_cell.coordinate):
                                 try:
                                     self.session.delete(form)
-                                except:
+                                except (sqlalchemy.exc.InvalidRequestError, sqlalchemy.orm.exc.UnmappedInstanceError):
                                     pass
                                 continue
                             self.session.add_all(references)
@@ -306,7 +306,7 @@ class ExcelParser(SQLAlchemyWordlist):
 class ExcelCognateParser(ExcelParser):
 
     def __init__(self, output_dataset: pycldf.Dataset, excel_file: str, top: int=2, left: int=2,
-                 check_for_match: t.List[str]=["cldf_value"],
+                 check_for_match: t.List[str]=["cldf_id"],
                  check_for_row_match: t.List[str]=["cldf_name"],
                  on_language_not_found: MissingHandler = ExcelParser.warn,
                  on_row_not_found: MissingHandler = ExcelParser.create,
@@ -325,7 +325,7 @@ class ExcelCognateParser(ExcelParser):
         data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
         comment = get_cell_comment(row[0])
         return {
-            "cldf_name": data[0],
+            "cldf_id": data[0],
             "cldf_comment": comment
         }
 

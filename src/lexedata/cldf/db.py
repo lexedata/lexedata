@@ -336,7 +336,10 @@ class Database(pycldf.db.Database):
 
             for atkey, rows in refs.items():
                 insert(db, self.translate, atkey[0], atkey[1:],
-                       *[[key1, key2, self._duplicate_relationship_separator.join([v for v in values if v])]
+                       *[[key1, key2] + (
+                           [self._duplicate_relationship_separator.join([
+                               v for v in values if v])]
+                           if values else [])
                          for (key1, key2), values in rows.items()])
             db.commit()
 
