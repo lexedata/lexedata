@@ -217,6 +217,7 @@ class ExcelParser(SQLAlchemyWordlist):
 
     def parse_cells(self) -> None:
         languages = self.init_lan()
+        row_object = None
         for sheet in self.sheets:
             form_iter: t.Iterable[t.List[openpyxl.cell.Cell]] = sheet.iter_rows(
                 min_row=self.top, min_col=self.left)
@@ -243,10 +244,11 @@ class ExcelParser(SQLAlchemyWordlist):
                         if not self.on_row_not_found(
                                 self, row_object, row_header[0].coordinate):
                             continue
-                    # TODO: change here to >= 1?
-                    elif len(similar) > 1:
-                        warnings.warn(
-                            f"Found more than one match for {properties:}")
+                    elif len(similar) >= 1:
+                        row_object = similar[0]
+                        if len(similar) > 1:
+                            warnings.warn(
+                                f"Found more than one match for {properties:}")
 
                 # Parse the row, cell by cell
                 for f_cell in row_forms:
@@ -289,9 +291,9 @@ class ExcelParser(SQLAlchemyWordlist):
                                 continue
                             self.session.add_all(references)
                         else:
-                            if len(forms) >= 1:
+                            if len(forms) > 1:
                                 warnings.warn(
-                                    f"Found one or more matches for {form_cell:}",
+                                    f"Found more than one match for {form_cell:}",
                                     MultipleCandidatesWarning)
                             form = forms[0]
                             for attr, value in form_cell.items():
@@ -306,8 +308,8 @@ class ExcelParser(SQLAlchemyWordlist):
 class ExcelCognateParser(ExcelParser):
 
     def __init__(self, output_dataset: pycldf.Dataset, excel_file: str, top: int=2, left: int=2,
-                 check_for_match: t.List[str]=["cldf_id"],
-                 check_for_row_match: t.List[str]=["cldf_name"],
+                 check_for_match: t.List[str] = ["cldf_id"],
+                 check_for_row_match: t.List[str] = ["cldf_id"],
                  on_language_not_found: MissingHandler = ExcelParser.warn,
                  on_row_not_found: MissingHandler = ExcelParser.create,
                  on_form_not_found: MissingHandler = ExcelParser.warn,
