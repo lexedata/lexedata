@@ -6,7 +6,7 @@ from pathlib import Path
 import pycldf
 import openpyxl
 
-from lexedata.importer.fromexcel import ExcelParser, ExcelCognateParser, MawetiGuaraniExcelParser, MawetiGuaraniExcelCognateParser
+from lexedata.importer.fromexcel import ExcelParser, ExcelCognateParser, MawetiGuaraniExcelParser, MawetiGuaraniExcelCognateParser, load_mg_style_dataset
 from lexedata.exporter.cognate_excel import ExcelWriter
 
 #todo: these test must be adapted to new interface of fromexcel.py
@@ -25,14 +25,17 @@ def cldf_wordlist(request):
 
 @pytest.fixture
 def empty_cldf_wordlist():
+    # Copy the dataset metadata file to a temporary directory.
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
     shutil.copyfile(original, target)
+    # Create empty (because of the empty row list passed) csv files for the
+    # dataset, one for each table, with only the appropriate headers in there.
     dataset = pycldf.Dataset.from_metadata(target)
-    # TODO: Gereon can you leave some comment for the interface of pycldf.Dataset?
     dataset.write(**{str(table.url): []
                      for table in dataset.tables})
+    # Return the dataset API handle, which knows the metadata and tables.
     return dataset
 
 
@@ -66,6 +69,24 @@ def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
 
     excel_parser_cognateset = MawetiGuaraniExcelCognateParser(empty_cldf_wordlist, excel_file=excel_wordlist[1])
     excel_parser_cognateset.parse_cells()
+
+
+def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
+    lexicon, cogsets = excel_wordlist
+    dataset = empty_cldf_wordlist
+    original = pycldf.Dataset.from_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json")
+    # TODO: parameterize original, like the other parameters, over possible
+    # test datasets.
+    load_mg_style_dataset(Path(dataset.tablegroup._fname),
+                          str(lexicon),
+                          str(cogsets),
+                          "")
+    form_ids_from_excel = {form["ID"] for form in dataset["FormTable"]}
+    form_ids_original = {form["ID"] for form in original["FormTable"]}
+    assert form_ids_original == form_ids_from_excel, "{:} and {:} don't match.".format(
+        dataset["FormTable"]._parent._fname.parent / str(dataset["FormTable"].url),
+        original["FormTable"]._parent._fname.parent / str(dataset["FormTable"].url))
 
 
 def test_toexcel_runs(filled_cldf_wordlist):
