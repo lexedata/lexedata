@@ -398,6 +398,7 @@ class MawetiGuaraniExcelCognateParser(
 
 
 if __name__ == "__main__":
+    import os
     import argparse
     import pycldf
     parser = argparse.ArgumentParser(description="Load a Maweti-Guarani-style dataset into CLDF")
@@ -429,7 +430,10 @@ if __name__ == "__main__":
     # We have too many difficult database connections in different APIs, we
     # refuse in-memory DBs and use a temporary file instead.
     if args.db == "":
-        _, args.db = mkstemp(".sqlite", "lexicaldatabase", text=False)
+        open_file, args.db = mkstemp(".sqlite", "lexicaldatabase", text=False)
+        # The CLDF database functionality expects the file to not exist, so
+        # delete it again, but keep the filename.
+        os.close(open_file)
         Path(args.db).unlink()
 
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
