@@ -11,6 +11,10 @@ from lexedata.database.database import string_to_id
 from lexedata.cldf.automapped import Form
 
 
+def get_cell_comment(cell: openpyxl.cell.Cell) -> t.Optional[str]:
+    return cell.comment.content.strip() if cell.comment else None
+
+
 class AbstractCellParser():
 
     def __init__(
@@ -138,23 +142,35 @@ class CellParser(AbstractCellParser):
             self.comment_escapes = comment_escapes
         super().__init__(separator_pattern=separator_pattern, ignore_pattern=ignore_pattern)
 
-    def parse_value(self, values, coordinate, language=None):
-        """checks if values of cells not in expected order, extract each value"""
-        # if values is only whitespaces, raise IgnoreError
-        if set(values) == {" "}:
-            raise IgnoreCellError(values, coordinate)
+    def parse_value(
+            self, ele: str, coordinate: str,
+            language: t.Optional[str] = None) -> t.Dict[str, t.Any]:
+        """Create a dictionary of columns from a form description.
 
-        ele = (values + ".")[:-1]  # force python to hard copy string
+        Extract each value (transcriptions, comments, sources etc.) from a
+        string describing a single form.
+
+        >>> c = CellParser()
+        >>> c.parse_value(" \t")
+        Traceback (most recent call last):
+        ...
+        IgnoreCellError: n must be exact integer
+
+        """
+        # if values is only whitespaces, raise IgnoreError
+        if not ele.strip():
+            raise IgnoreCellError(ele, coordinate)
+
         # parse transcriptions and fill dictionary d
-        d = dict()
-        for lable, pat in self.form_pattern.items():
+        d = {}
+        for label, pat in self.form_pattern.items():
             mymatch = pat.match(ele)
             if mymatch:
                 # delete match in cell
-                d[lable] = mymatch.group(2)
+                d[label] = mymatch.group(2)
                 ele = pat.sub(r"\1\3", ele)
             else:
-                d[lable] = None
+                d[label] = None
 
         # check for illegal symbols in transcriptions (i.e. form-pattern)
         if self.illegal_symbols_transcription:
@@ -163,11 +179,11 @@ class CellParser(AbstractCellParser):
                     raise SeparatorCellError(string, coordinate)
         # if description pattern, add description to output
         if self.description_pattern:
-            description = self.extract_description(ele, values, coordinate)
+            description = self.extract_description(ele, coordinate)
             d["description"] = description
         return d
 
-    def extract_description(self, text, original, coordinate):
+    def extract_description(self, text, coordinate):
         description = ""
         # get all that is left of the string according to description pattern
         while self.description_pattern.match(text):
@@ -214,7 +230,7 @@ class CellParser(AbstractCellParser):
 
             else:
                 errmessage = """IncompleteParsingError; probably illegal content\n
-                           after parsing {}  -  {} was left unparsed""".format(original, text)
+                           after parsing {}  -  {} was left unparsed""".format(coordinate, text)
                 raise CellParsingError(errmessage, coordinate)
 
         # TODO: opening and closing of bracket_checker is hard coded
@@ -240,9 +256,9 @@ class CellParserLexical(CellParser):
             illegal_symbols_transcription: Optional[Pattern] = None,
             comment_escapes: Optional[Pattern] = None,
             add_default_source: str = "",
-            scann_for_variants: bool = False
+            scan_for_variants: bool = False
     ):
-        self.scann_for_variants = scann_for_variants
+        self.scan_for_variants = scan_for_variants
         self.add_default_source = add_default_source
         super().__init__(form_pattern=form_pattern,
                          description_pattern=description_pattern,
@@ -258,7 +274,7 @@ class CellParserLexical(CellParser):
         if self.add_default_source and dictionary["source"] is None:
             dictionary["source"] = self.add_default_source
 
-        if self.scann_for_variants:
+        if self.scan_for_variants:
             variants = []
             for k, v in dictionary.items():
                 if k != "source" and v is not None:
@@ -366,7 +382,7 @@ class MawetiGuaraniLexicalParser(CellParserLexical):
             illegal_symbols_transcription=re.compile(r"[;]"),
             comment_escapes=re.compile(r"&[</\[{].+?(?:\s|.$)"),
             add_default_source="{1}",
-            scann_for_variants=True
+            scan_for_variants=True
     ):
         super().__init__(form_pattern=form_pattern,
                          description_pattern=description_pattern,
@@ -376,28 +392,28 @@ class MawetiGuaraniLexicalParser(CellParserLexical):
                          illegal_symbols_transcription=illegal_symbols_transcription,
                          comment_escapes=comment_escapes,
                          add_default_source=add_default_source,
-                         scann_for_variants=scann_for_variants)
+                         scan_for_variants=scan_for_variants)
 
     def parse_value(self, values, coordinate, language=None):
         dictionary = super().parse_value(values, coordinate)
-        phonemic = dictionary["phonemic"]
-        phonetic = dictionary["phonetic"]
-        ortho = dictionary["orthographic"]
-        comment = dictionary["description"]
-        source = dictionary["source"]
+        # Add metadata. TODO: Why not in super??
+        dictionary["language"] = language
+        dictionary["cldf_value"] = values
+
+        # Rename some keys
+        dictionary["cldf_form"] = dictionary.pop("phonemic", None)
+        dictionary["cldf_comment"] = dictionary.pop("description", None)
+
+        # Further transformations
+        dictionary["cldf_segments"] = dictionary.pop("phonetic", None)
+        # TODO: wrap in CLTS to check. Fall back on other transcriptions??
+
+        source = dictionary.pop("source")  # TODO: Rename upstairs to sources
         if language:
             source, context = self.source_from_source_string(source, language)
-        return {
-            "language": language,
-            "cldf_form": phonemic or "-",
-            # "cldf_segments": phonetic or "-",
-            # "orthographic": ortho,
-            # "variants": variants,
-            "cldf_comment": None if comment is None else comment.strip(),
-            "sources": [(source, context)],
-            # "procedural_comment": self.get_cell_comment(form_cell).strip(),
-            "cldf_value": string_to_id(f"{phonemic:}{phonetic:}{ortho:}")
-        }
+            dictionary["sources"] = [(source, context)]
+
+        return dictionary
 
 
 class MawetiGuaraniCognateParser(MawetiGuaraniLexicalParser):

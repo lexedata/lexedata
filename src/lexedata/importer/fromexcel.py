@@ -13,7 +13,7 @@ import sqlalchemy.ext.automap as automap
 
 from lexedata.database.database import create_db_session, new_id, string_to_id
 from lexedata.importer.cellparser import CellParser, MawetiGuaraniLexicalParser, \
-    MawetiGuaraniCognateParser, CellParserHyperlink, CellParserLexical
+    MawetiGuaraniCognateParser, CellParserHyperlink, CellParserLexical, get_cell_comment
 import lexedata.importer.exceptions as ex
 from lexedata.cldf.automapped import (
     SQLAlchemyWordlist, Language, Source, Form, Concept, CogSet, Reference)
@@ -46,10 +46,6 @@ class MultipleCandidatesWarning(UserWarning):
 MissingHandler = t.Callable[
     ["ExcelParser", sqlalchemy.ext.automap.AutomapBase, t.Optional[str]],
     bool]
-
-
-def get_cell_comment(cell: openpyxl.cell.Cell) -> t.Optional[str]:
-    return cell.comment.content if cell.comment else None
 
 
 class ExcelParser(SQLAlchemyWordlist):
@@ -217,7 +213,7 @@ class ExcelParser(SQLAlchemyWordlist):
 
     def parse_cells(self) -> None:
         languages = self.init_lan()
-        row_object = None
+        row_object: t.Optional[t.Union[Concept, CogSet]] = None
         for sheet in self.sheets:
             form_iter: t.Iterable[t.List[openpyxl.cell.Cell]] = sheet.iter_rows(
                 min_row=self.top, min_col=self.left)
@@ -229,10 +225,11 @@ class ExcelParser(SQLAlchemyWordlist):
                 properties = self.properties_from_row(row_header)
                 if not properties:
                     # Keep the old row_object from the previous line
-                    pass
+                    assert row_object
                 else:
                     similar = self.session.query(self.RowObject).filter(
-                        *[getattr(self.RowObject, key) == properties[key] for key in dir(self.RowObject)
+                        *[getattr(self.RowObject, key) == properties[key]
+                          for key in dir(self.RowObject)
                           if key in self.check_for_row_match
                           if type(properties[key]) != list]).all()
 
@@ -245,10 +242,10 @@ class ExcelParser(SQLAlchemyWordlist):
                                 self, row_object, row_header[0].coordinate):
                             continue
                     elif len(similar) >= 1:
-                        row_object = similar[0]
                         if len(similar) > 1:
                             warnings.warn(
                                 f"Found more than one match for {properties:}")
+                        row_object = similar[0]
 
                 # Parse the row, cell by cell
                 for f_cell in row_forms:
@@ -326,6 +323,8 @@ class ExcelCognateParser(ExcelParser):
     ) -> t.Dict[str, t.Any]:
         data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
         comment = get_cell_comment(row[0])
+        if not data[0]:
+            return {}
         return {
             "cldf_id": data[0],
             "cldf_comment": comment
@@ -399,6 +398,19 @@ class MawetiGuaraniExcelCognateParser(
         }
 
 
+def load_mg_style_dataset(metadata: Path, lexicon: str, cogsets: str, db: str):
+    # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
+    excel_parser_lexical = MawetiGuaraniExcelParser(
+        pycldf.Dataset.from_metadata(metadata), fname=db, excel_file=lexicon)
+    excel_parser_lexical.parse_cells()
+    excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
+
+    excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
+        pycldf.Dataset.from_metadata(metadata), fname=db, excel_file=cogsets)
+    excel_parser_cognateset.parse_cells()
+    excel_parser_cognateset.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
+
+
 if __name__ == "__main__":
     import os
     import argparse
@@ -438,13 +450,5 @@ if __name__ == "__main__":
         os.close(open_file)
         Path(args.db).unlink()
 
-    # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser_lexical = MawetiGuaraniExcelParser(
-        pycldf.Dataset.from_metadata(args.metadata), fname=args.db, excel_file=args.lexicon)
-    excel_parser_lexical.parse_cells()
-    excel_parser_lexical.cldfdatabase.to_cldf(args.metadata.parent, mdname=args.metadata.name)
+    load_mg_style_dataset(args.metadata, args.lexicon, args.cogsets, args.db)
 
-    excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
-        pycldf.Dataset.from_metadata(args.metadata), fname=args.db, excel_file=args.cogsets)
-    excel_parser_cognateset.parse_cells()
-    excel_parser_cognateset.cldfdatabase.to_cldf(args.metadata.parent, mdname=args.metadata.name)

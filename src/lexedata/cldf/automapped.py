@@ -1,5 +1,6 @@
 import pycldf
 import typing as t
+from pathlib import Path
 import sqlalchemy
 import sqlalchemy.ext.automap
 
@@ -116,12 +117,21 @@ class Reference(Association[F, S]):
     ...
 
 class SQLAlchemyWordlist:
-    def __init__(self, dataset: pycldf.Dataset, fname=None, echo=False, override=False, **kwargs) -> None:
-        self.cldfdatabase = db.Database(dataset, fname=fname, **kwargs)
-        try:
-            self.cldfdatabase.write_from_tg()
-        except ValueError as v:
+    def __init__(
+            self,
+            dataset: pycldf.Dataset,
+            fname: t.Optional[Path] = None,
+            override: bool = False,
+            echo=False,
+            **kwargs) -> None:
+        if override or not fname or not fname.exists():
+            self.cldfdatabase = db.Database(dataset, fname=fname, **kwargs)
+            self.cldfdatabase.write_from_tg(_force=True)
+        elif list(dataset["FormTable"]):
+            raise ValueError("Database and data set both exist.")
+        else:
             dataset.write(**{str(t.url): [] for t in dataset.tables})
+
         connection = self.cldfdatabase.connection()
 
         def creator():
@@ -139,7 +149,6 @@ class SQLAlchemyWordlist:
                      name_for_scalar_relationship=name_of_object_in_table_relation,
                      name_for_collection_relationship=name_of_objects_in_table_relation)
         # TODO: Ask Gereon about creator function
-        #self.session = create_db_session(fname, echo, override)
         self.session = sqlalchemy.orm.Session(engine)
 
         self.Language: t.Type[Language] = Base.classes.Language

@@ -25,14 +25,17 @@ def cldf_wordlist(request):
 
 @pytest.fixture
 def empty_cldf_wordlist():
+    # Copy the dataset metadata file to a temporary directory.
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
     shutil.copyfile(original, target)
+    # Create empty (because of the empty row list passed) csv files for the
+    # dataset, one for each table, with only the appropriate headers in there.
     dataset = pycldf.Dataset.from_metadata(target)
-    # TODO: Gereon can you leave some comment for the interface of pycldf.Dataset?
     dataset.write(**{str(table.url): []
                      for table in dataset.tables})
+    # Return the dataset API handle, which knows the metadata and tables.
     return dataset
 
 
