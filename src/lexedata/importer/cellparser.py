@@ -73,10 +73,10 @@ class AbstractCellParser():
 
     # def parse(self, cell: openpyxl.cell.Cell, **known) -> t.Iterable[Form]:
     def parse(self, cell, language=None):
-        if not values.value:
+        if not cell.value:
             return None
-        coordinate = values.coordinate
-        values = values.value
+        coordinate = cell.coordinate
+        values = cell.value
         # replace ignore pattern with empty string
         while self.ignore_pattern.match(values):
             values = self.ignore_pattern.sub(r"\1\2", values)
