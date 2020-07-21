@@ -71,6 +71,10 @@ def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
     excel_parser_cognateset.parse_cells()
 
 
+def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
+    load_mg_style_dataset(excel_wordlist.tablegroup._fname)
+
+
 def test_toexcel_runs(filled_cldf_wordlist):
     writer = ExcelWriter(filled_cldf_wordlist[0], filled_cldf_wordlist[1])
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
