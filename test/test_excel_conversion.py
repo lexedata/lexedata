@@ -6,7 +6,7 @@ from pathlib import Path
 import pycldf
 import openpyxl
 
-from lexedata.importer.fromexcel import ExcelParser, ExcelCognateParser, MawetiGuaraniExcelParser, MawetiGuaraniExcelCognateParser
+from lexedata.importer.fromexcel import ExcelParser, ExcelCognateParser, MawetiGuaraniExcelParser, MawetiGuaraniExcelCognateParser, load_mg_style_dataset
 from lexedata.exporter.cognate_excel import ExcelWriter
 
 #todo: these test must be adapted to new interface of fromexcel.py
@@ -72,7 +72,21 @@ def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
 
 
 def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
-    load_mg_style_dataset(excel_wordlist.tablegroup._fname)
+    lexicon, cogsets = excel_wordlist
+    dataset = empty_cldf_wordlist
+    original = pycldf.Dataset.from_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json")
+    # TODO: parameterize original, like the other parameters, over possible
+    # test datasets.
+    load_mg_style_dataset(Path(dataset.tablegroup._fname),
+                          str(lexicon),
+                          str(cogsets),
+                          "")
+    form_ids_from_excel = {form["ID"] for form in dataset["FormTable"]}
+    form_ids_original = {form["ID"] for form in original["FormTable"]}
+    assert form_ids_original == form_ids_from_excel, "{:} and {:} don't match.".format(
+        dataset["FormTable"]._parent._fname.parent / str(dataset["FormTable"].url),
+        original["FormTable"]._parent._fname.parent / str(dataset["FormTable"].url))
 
 
 def test_toexcel_runs(filled_cldf_wordlist):

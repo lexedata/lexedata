@@ -1,3 +1,4 @@
+import os
 import pycldf
 import typing as t
 from pathlib import Path
@@ -121,16 +122,17 @@ class SQLAlchemyWordlist:
             self,
             dataset: pycldf.Dataset,
             fname: t.Optional[Path] = None,
-            override: bool = False,
+            override_database: bool = False,
+            override_dataset: bool = False,
             echo=False,
             **kwargs) -> None:
-        if override or not fname or not fname.exists():
-            self.cldfdatabase = db.Database(dataset, fname=fname, **kwargs)
+        self.cldfdatabase = db.Database(dataset, fname=fname, **kwargs)
+        if override_database or not fname or not os.path.exists(fname):
             self.cldfdatabase.write_from_tg(_force=True)
-        elif list(dataset["FormTable"]):
-            raise ValueError("Database and data set both exist.")
-        else:
+        elif override_dataset or not list(dataset["FormTable"]):
             dataset.write(**{str(t.url): [] for t in dataset.tables})
+        else:
+            raise ValueError("Database and data set both exist.")
 
         connection = self.cldfdatabase.connection()
 

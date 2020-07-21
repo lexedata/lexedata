@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import re
 import warnings
 import typing as t
@@ -17,7 +18,6 @@ from lexedata.importer.cellparser import CellParser, MawetiGuaraniLexicalParser,
 import lexedata.importer.exceptions as ex
 from lexedata.cldf.automapped import (
     SQLAlchemyWordlist, Language, Source, Form, Concept, CogSet, Reference)
-import lexedata.cldf.db as db
 
 # Remark: excel uses 1-based indices
 
@@ -314,7 +314,9 @@ class ExcelCognateParser(ExcelParser):
         super().__init__(output_dataset, excel_file, top=top, left=left, check_for_match=check_for_match,
                          check_for_row_match=check_for_row_match,
                          on_language_not_found=on_language_not_found, on_row_not_found=on_row_not_found,
-                         on_form_not_found=on_form_not_found, **kwargs)
+                         on_form_not_found=on_form_not_found,
+                         override_dataset=True,
+                         **kwargs)
         self.cell_parser = CellParserHyperlink()
         self.RowObject = self.CogSet
 
@@ -380,6 +382,7 @@ class MawetiGuaraniExcelCognateParser(
         super().__init__(output_dataset, excel_file, top=top, left=left,
                          check_for_match=check_for_match, check_for_row_match=check_for_row_match,
                          **kwargs)
+        self.on_form_not_found = ExcelParser.warn
         self.cell_parser = MawetiGuaraniCognateParser()
 
     def set_up_sheets(self, fname: str) -> None:
@@ -398,7 +401,15 @@ class MawetiGuaraniExcelCognateParser(
         }
 
 
-def load_mg_style_dataset(metadata: Path, lexicon: str, cogsets: str, db: str):
+def load_mg_style_dataset(
+        metadata: Path, lexicon: str, cogsets: str, db: str) -> None:
+    if db == "":
+        open_file, db = mkstemp(".sqlite", "lexicaldatabase", text=False)
+        # The CLDF database functionality expects the file to not exist, so
+        # delete it again, but keep the filename.
+        os.close(open_file)
+        Path(db).unlink()
+
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     excel_parser_lexical = MawetiGuaraniExcelParser(
         pycldf.Dataset.from_metadata(metadata), fname=db, excel_file=lexicon)
@@ -412,7 +423,6 @@ def load_mg_style_dataset(metadata: Path, lexicon: str, cogsets: str, db: str):
 
 
 if __name__ == "__main__":
-    import os
     import argparse
     import pycldf
     parser = argparse.ArgumentParser(description="Load a Maweti-Guarani-style dataset into CLDF")
@@ -443,12 +453,6 @@ if __name__ == "__main__":
         args.db = ""
     # We have too many difficult database connections in different APIs, we
     # refuse in-memory DBs and use a temporary file instead.
-    if args.db == "":
-        open_file, args.db = mkstemp(".sqlite", "lexicaldatabase", text=False)
-        # The CLDF database functionality expects the file to not exist, so
-        # delete it again, but keep the filename.
-        os.close(open_file)
-        Path(args.db).unlink()
 
     load_mg_style_dataset(args.metadata, args.lexicon, args.cogsets, args.db)
 
