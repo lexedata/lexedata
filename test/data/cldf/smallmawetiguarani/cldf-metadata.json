@@ -13,7 +13,7 @@
     "tables": [
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
-            "dc:extent": 0,
+            "dc:extent": 26,
             "tableSchema": {
                 "columns": [
                     {
@@ -45,9 +45,13 @@
                     },
                     {
                         "datatype": "string",
-                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#value",
-                        "required": true,
-                        "name": "Value"
+                        "name": "orthographic"
+                    },
+                    {
+                        "datatype": "string",
+                        "required": false,
+                        "separator": ",",
+                        "name": "variants"
                     },
                     {
                         "datatype": "string",
@@ -58,6 +62,12 @@
                         "datatype": "string",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
                         "name": "Comment"
+                    },
+                    {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#value",
+                        "required": true,
+                        "name": "Value"
                     },
                     {
                         "datatype": "string",
@@ -99,7 +109,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#ParameterTable",
-            "dc:extent": 0,
+            "dc:extent": 9,
             "tableSchema": {
                 "columns": [
                     {
@@ -151,7 +161,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#LanguageTable",
-            "dc:extent": 0,
+            "dc:extent": 4,
             "tableSchema": {
                 "columns": [
                     {
@@ -187,7 +197,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognateTable",
-            "dc:extent": 0,
+            "dc:extent": 16,
             "tableSchema": {
                 "columns": [
                     {
@@ -242,7 +252,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognatesetTable",
-            "dc:extent": 0,
+            "dc:extent": 19,
             "tableSchema": {
                 "columns": [
                     {
