@@ -121,15 +121,21 @@ class SQLAlchemyWordlist:
     def __init__(
             self,
             dataset: pycldf.Dataset,
-            fname: t.Optional[Path] = None,
+            fname: str = None,
             override_database: bool = False,
             override_dataset: bool = False,
             echo=False,
             **kwargs) -> None:
         self.cldfdatabase = db.Database(dataset, fname=fname, **kwargs)
-        if override_database or not fname or not os.path.exists(fname):
+        # if fname given and str, turn into Path()
+        if fname and isinstance(fname, str):
+            fname = Path(fname)
+
+        if override_database or not fname or os.path.exists(fname):
             self.cldfdatabase.write_from_tg(_force=True)
-        elif override_dataset or not list(dataset["FormTable"]):
+        # TODO: Ask Gereon about the exact condition here
+        # dataset["FormTable"] throws an error, as dataset does not exist
+        elif override_dataset or not list(fname.parent.glob("*.csv")):
             dataset.write(**{str(t.url): [] for t in dataset.tables})
         else:
             raise ValueError("Database and data set both exist.")
