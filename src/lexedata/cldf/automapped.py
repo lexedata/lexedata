@@ -137,6 +137,7 @@ class SQLAlchemyWordlist:
         # dataset["FormTable"] throws an error, as dataset does not exist
         elif override_dataset or not list(fname.parent.glob("*.csv")):
             dataset.write(**{str(t.url): [] for t in dataset.tables})
+            self.cldfdatabase.write_from_tg(_force=True)
         else:
             raise ValueError("Database and data set both exist.")
 
@@ -158,7 +159,7 @@ class SQLAlchemyWordlist:
                      name_for_collection_relationship=name_of_objects_in_table_relation)
         # TODO: Ask Gereon about creator function
         self.session = sqlalchemy.orm.Session(engine)
-
+        #breakpoint()
         self.Language: t.Type[Language] = Base.classes.Language
         self.Concept: t.Type[Concept] = Base.classes.Parameter
         self.Source: t.Type[Source] = Base.classes.Source
