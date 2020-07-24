@@ -398,7 +398,8 @@ class MawetiGuaraniLexicalParser(CellParserLexical):
         dictionary = super().parse_value(values, coordinate)
         # Add metadata. TODO: Why not in super??
         dictionary["language"] = language
-        dictionary["cldf_value"] = values
+        cldf_value = f"{dictionary['phonemic'] or '-'}_{dictionary['phonetic'] or '-'}_{dictionary['orthographic'] or '-'}"
+        dictionary["cldf_value"] = cldf_value
 
         # Rename some keys
         dictionary["cldf_form"] = dictionary.pop("phonemic", None)
