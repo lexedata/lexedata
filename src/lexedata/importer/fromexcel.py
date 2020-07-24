@@ -257,11 +257,24 @@ class ExcelParser(SQLAlchemyWordlist):
                     # Parse the cell, which results (potentially) in multiple forms
                     for form_cell in self.cell_parser.parse(
                             f_cell, language=this_lan):
-                        forms = self.session.query(self.Form).filter(
-                            self.Form.language == this_lan,
-                            *[getattr(self.Form, key) == form_cell[key] for key in dir(self.Form)
-                              if key in self.check_for_match
-                              if type(form_cell[key]) != list]).all()
+                        candidates_forms = self.session.query(self.Form).filter(
+                            self.Form.language == this_lan)
+                        if "cldf_value" in self.check_for_match:
+                            forms = []
+                            for this_form in candidates_forms:
+                                given_cldf_values = form_cell["cldf_value"].split("_")
+                                candidate_cldf_values = this_form.cldf_value.split("_")
+                                while "-" in given_cldf_values:
+                                    index = given_cldf_values.index("-")
+                                    given_cldf_values.pop(index)
+                                    candidate_cldf_values.pop(index)
+                                if given_cldf_values == candidate_cldf_values:
+                                    forms.append(this_form)
+                        else:
+                            forms = candidates_forms.query(self.Form).filter(
+                                [getattr(self.Form, key) == form_cell[key] for key in dir(self.Form)
+                                 if key in self.check_for_match
+                                 if not isinstance(form_cell[key], list)]).all()
                         sources = [(self.sources[k], c or None)
                                    for k, c in form_cell.pop("sources", [])]
                         if "sources" in self.check_for_match:
@@ -288,7 +301,7 @@ class ExcelParser(SQLAlchemyWordlist):
                                 continue
                             self.session.add_all(references)
                         else:
-                            if len(forms) > 1:
+                            if len(forms) >= 1:
                                 warnings.warn(
                                     f"Found more than one match for {form_cell:}",
                                     MultipleCandidatesWarning)
@@ -342,7 +355,7 @@ class ExcelCognateParser(ExcelParser):
 class MawetiGuaraniExcelParser(ExcelParser):
 
     def __init__(self, output_dataset: pycldf.Dataset, excel_file: str, top: int=3, left: int=7,
-                 check_for_match: t.List[str]=["cldf_form", "sources", "cldf_value"],
+                 check_for_match: t.List[str]=["sources", "cldf_value"],
                  check_for_row_match: t.List[str]=["cldf_name"],
                  **kwargs) -> None:
         super().__init__(output_dataset, excel_file, top=top, left=left,
@@ -382,6 +395,8 @@ class MawetiGuaraniExcelCognateParser(
         super().__init__(output_dataset, excel_file, top=top, left=left,
                          check_for_match=check_for_match, check_for_row_match=check_for_row_match,
                          **kwargs)
+        self.on_language_not_found = ExcelParser.warn
+        self.on_row_not_found = ExcelParser.create
         self.on_form_not_found = ExcelParser.warn
         self.cell_parser = MawetiGuaraniCognateParser()
 
@@ -415,7 +430,6 @@ def load_mg_style_dataset(
         pycldf.Dataset.from_metadata(metadata), fname=db, excel_file=lexicon)
     excel_parser_lexical.parse_cells()
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
-
     excel_parser_cognateset = MawetiGuaraniExcelCognateParser(
         pycldf.Dataset.from_metadata(metadata), fname=db, excel_file=cogsets)
     excel_parser_cognateset.parse_cells()
