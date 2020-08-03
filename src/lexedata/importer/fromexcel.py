@@ -15,8 +15,7 @@ from csvw.db import insert
 
 from lexedata.types import *
 import lexedata.importer.cellparser as cell_parsers
-from lexedata.importer.cellparser import CellParser, \
-    CellParserHyperlink, CellParserLexical, get_cell_comment
+from lexedata.importer.cellparser import CellParser, get_cell_comment
 from lexedata.cldf.db import Database
 import lexedata.error_handling as err
 

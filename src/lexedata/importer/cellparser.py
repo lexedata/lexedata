@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import abc
+import warnings
 import typing as t
 import unicodedata
 from typing import Tuple, Optional, Pattern, List, Dict
@@ -15,43 +16,130 @@ def get_cell_comment(cell: openpyxl.cell.Cell) -> t.Optional[str]:
     return cell.comment.content.strip() if cell.comment else None
 
 
+def check_brackets(string, bracket_pairs):
+    """Check whether all brackets match.
+
+    This function can check the matching of simple bracket pairs, like this:
+
+    >>> b = {"(": ")", "[": "]", "{": "}"}
+    >>> check_brackets("([])", b)
+    True
+    >>> check_brackets("([]])", b)
+    False
+    >>> check_brackets("([[])", b)
+    False
+    >>> check_brackets("This (but [not] this)", b)
+    True
+
+    But it can also deal with multi-character matches
+
+    >>> b = {"(": ")", "begin": "end"}
+    >>> check_brackets("begin (__ (!) xxx) end", b)
+    True
+    >>> check_brackets("begin (__ (!) end) xxx", b)
+    False
+
+    This includes multi-character matches where some pair is a subset of
+    another pair. Here the order of the pairs in the dictionary is important –
+    longer pairs must be defined first.
+
+    >>> b = {":::": ":::", ":": ":"}
+    >>> check_brackets("::: :::", b)
+    True
+    >>> check_brackets("::::::", b)
+    True
+    >>> check_brackets("::::", b)
+    False
+    >>> check_brackets(":: ::", b)
+    True
+
+    In combination, these features allow for natural escape sequences:
+
+    >>> b = {"!(": "", "!)": "", "(": ")", "[": "]"}
+    >>> check_brackets("(text)", b)
+    True
+    >>> check_brackets("(text", b)
+    False
+    >>> check_brackets("text)", b)
+    False
+    >>> check_brackets("(te[xt)]", b)
+    False
+    >>> check_brackets("!(text", b)
+    True
+    >>> check_brackets("text!)", b)
+    True
+    >>> check_brackets("!(te[xt!)]", b)
+    True
+    """
+    waiting_for = []
+    i = 0
+    while i < len(string):
+        if waiting_for and string[i:].startswith(waiting_for[0]):
+            i += len(waiting_for.pop(0))
+        else:
+            for q, p in bracket_pairs.items():
+                if string[i:].startswith(q):
+                    waiting_for.insert(0, p)
+                    i += len(q)
+                    break
+                elif p and string[i:].startswith(p):
+                    return False
+            else:
+                i += 1
+    return not any(waiting_for)
+
+
+def components_in_brackets(form_string, bracket_pairs):
+    """Find all elements delimited by complete pairs of matching brackets.
+
+    >>> b = {"!/": "", "(": ")", "[": "]", "{": "}", "/": "/"}
+    >>> components_in_brackets("/aha/ (exclam. !/ int., also /ah/)", b)
+    ['', '/aha/', ' ', '(exclam. !/ int., also /ah/)', '']
+
+    Recovery from mismatched delimiters early in the string is difficult. This
+    example is still waiting for the first '/' to be closed by the end of the
+    string.
+
+    >>> components_in_brackets("/aha (exclam. !/ int., also /ah/)", b)
+    ['', '/aha (exclam. !/ int., also /ah/)']
+
+    """
+    elements = []
+
+    i = 0
+    remainder = form_string
+    waiting_for = []
+    while i < len(remainder):
+        if waiting_for and remainder[i:].startswith(waiting_for[0]):
+            i += len(waiting_for.pop(0))
+            if not any(waiting_for):
+                elements.append(remainder[:i])
+                remainder = remainder[i:]
+                i = 0
+        else:
+            for q, p in bracket_pairs.items():
+                if remainder[i:].startswith(q):
+                    if not any(waiting_for):
+                        elements.append(remainder[:i])
+                        remainder = remainder[i:]
+                        i = 0
+                    waiting_for.insert(0, p)
+                    i += len(q)
+                    break
+                elif p and remainder[i:].startswith(p):
+                    warnings.warn(f"In form {form_string}: Encountered mismatched closing delimiter {p}")
+            else:
+                i += 1
+    return elements + [remainder]
+
 
 class NaiveCellParser():
-    bracket_pairs = {
-        "(": ")",
-        "[": "]",
-        "{": "}",
-    }
-
     def separate(self, values: str) -> t.Iterable[str]:
         """Separate different form descriptions in one string.
 
         Separate forms separated by comma.
         """
         return values.split(",")
-
-    def check_brackets(self, string):
-        """Check whether all brackets match.
-
-        >>> b = NaiveCellParser()
-        >>> b.check_brackets("([])")
-        True
-        >>> b.check_brackets("([]])")
-        False
-        >>> b.check_brackets("([[])")
-        False
-        >>> b.check_brackets("This (but [not] this)")
-        True
-        """
-        waiting_for = []
-        for i in string:
-            if waiting_for and i == waiting_for[0]:
-                waiting_for.pop(0)
-            elif i in self.bracket_pairs:
-                waiting_for.insert(0, self.bracket_pairs[i])
-            elif i in self.bracket_pairs.values():
-                return False
-        return not bool(waiting_for)
 
     def source_from_source_string(
             self,
@@ -103,9 +191,11 @@ class NaiveCellParser():
 
         for element in self.separate(cell.value):
             try:
-                yield self.parse_form(element)
+                form = self.parse_form(element)
             except CellParsingError as err:
                 continue
+            if form:
+                yield form
 
 
 class CellParser(NaiveCellParser):
@@ -113,8 +203,21 @@ class CellParser(NaiveCellParser):
         "(": ")",
         "[": "]",
         "{": "}",
+        "<": ">",
         "/": "/",
     }
+
+    element_semantics = {
+        "(": "cldf_comment",
+        "[": "phonetic",
+        "{": "cldf_source",
+        "<": "orthographic",
+        "/": "phonemic",
+    }
+
+    def __init__(self):
+        self.scan_for_variants = True
+        self.add_default_source = "{1}"
 
     def separate(self, values: str) -> t.Iterable[str]:
         """Separate different form descriptions in one string.
@@ -140,7 +243,7 @@ class CellParser(NaiveCellParser):
         """
         raw_split = re.split(r"([;,])", values)
         while len(raw_split) > 1:
-            if self.check_brackets(raw_split[0]):
+            if check_brackets(raw_split[0], self.bracket_pairs):
                 form = raw_split.pop(0).strip()
                 if form:
                     yield form
@@ -152,285 +255,105 @@ class CellParser(NaiveCellParser):
             yield form
         assert not raw_split
 
-    def parse_form(self, form_string: str, language_id: str) -> Form:
+    def parse_form(self, form_string: str, language_id: str) -> t.Optional[Form]:
         """Create a dictionary of columns from a form description.
 
         Extract each value (transcriptions, comments, sources etc.) from a
         string describing a single form.
 
         >>> c = CellParser()
-        >>> c.parse_value(" \t")
-        Traceback (most recent call last):
-        ...
-        IgnoreCellError: n must be exact integer
+        >>> c.parse_form(" \t", "abui") == None
+        True
 
         """
-        # if values is only whitespaces, raise IgnoreError
-        if not ele.strip():
-            raise IgnoreCellError(ele, coordinate)
+        # if string is only whitespaces, there is no form.
+        if not form_string.strip():
+            return None
 
-        # parse transcriptions and fill dictionary d
-        d = {}
-        for label, pat in self.form_pattern.items():
-            mymatch = pat.match(ele)
-            if mymatch:
-                # delete match in cell
-                d[label] = mymatch.group(2)
-                ele = pat.sub(r"\1\3", ele)
+        d = {"cldf_languageReference": language_id,
+             "cldf_value": form_string}
+
+        # Iterate over the delimiter-separated elements of the form.
+        expect_variant = False
+        for element in components_in_brackets(form_string, self.bracket_pairs):
+            element = element.strip()
+
+            if not element:
+                continue
+
+            # If the element has mismatched brackets (tends to happen only for
+            # the last element, because a mismatched opening bracket means we
+            # are still waiting for the closing one), warn.
+            if not check_brackets(element, self.bracket_pairs):
+                # TODO: Implement self.warn, which is aware of the cell we are
+                # working on.
+                warnings.warn(f"In form {form_string}: Element {element} had mismatching delimiters")
+
+            # Check what kind of element we have.
+            for start, field in self.element_semantics.items():
+                if element.startswith(start):
+                    break
             else:
-                d[label] = None
-
-        # check for illegal symbols in transcriptions (i.e. form-pattern)
-        if self.illegal_symbols_transcription:
-            for k, string in d.items():
-                if k != "source" and string is not None and self.illegal_symbols_transcription.search(string):
-                    raise SeparatorCellError(string, coordinate)
-        # if description pattern, add description to output
-        if self.description_pattern:
-            description = self.extract_description(ele, coordinate)
-            d["description"] = description
-        return d
-
-    def extract_description(self, text, coordinate):
-        description = ""
-        # get all that is left of the string according to description pattern
-        while self.description_pattern.match(text):
-            description_candidate = self.description_pattern.match(text).group(2)
-
-            # no illegal symbols in description pattern given, just replace extracted part
-            if self.illegal_symbols_description:
-                # check for illegal symbols in description
-                if not self.illegal_symbols_description.search(description_candidate):
-                    description += description_candidate
-                    text = self.description_pattern.sub(r"\1\3", text)
-                # check if comment is escaped correctly, if not, raise error
+                # The only thing we expect outside delimiters is the variant
+                # separators, '~' and '%'.
+                if element == "~" or element == "%":
+                    expect_variant = element
                 else:
-                    if self.comment_escapes:
-                        # replace escaped elements and check for illegal content, if all good, add original_form
-                        escapes = comment_escapes.findall(description_candidate)
-                        original_form = description_candidate
-                        for e in escapes:
-                            description_candidate = description_candidate.replace(e, "")
-                        if not self.illegal_symbols_description.search(description_candidate):
-                            description += original_form
-                            text = self.description_pattern.sub(r"\1\3", text)
-                        # incorrect escaping and illegal symbol in description
-                        else:
-                            raise FormCellError(description_candidate, "description (illegal content)", coordinate)
-                    # no escape and illegal symbol in description
-                    else:
-                        raise FormCellError(description_candidate, "description (illegal content)", coordinate)
+                    warnings.warn(f"In form {form_string}: Element {element} could not be parsed, ignored")
+                continue
 
+            # If we encounter a field for the first time, we add it to the
+            # dictionary. If repeatedly, to the variants, with a decorator that
+            # shows how expected the variant was.
+
+            # TODO: This adds sources and comments to the variants, which is
+            # not intended. That should probably be cleaned up in
+            # post-processing.
+            if field in d:
+                if not expect_variant:
+                    warnings.warn(f"In form {form_string}: Element {element} was an unexpected variant for {field}")
+                d.setdefault("variants", []).append(
+                    (expect_variant or '') +
+                    element)
             else:
-                text = self.description_pattern.sub(r"\1\3", text)
+                if expect_variant:
+                    warnings.warn("In form {form_string}: Element {element} was supposed to be a variant, but there is no earlier {field}")
+                d[field] = element
 
-        # check that ele was parsed entirely, if not raise parsing error
-        text = text.strip(" ")
-        if not text == "":
-            # if just text left and no comment given, put text in comment
-            # more than one token
-            if len(text) >= 1 and (not self.illegal_symbols_description.search(text)):
+            expect_variant = None
 
-                if not description:
-                    description = text
-                else:
-                    description += text
+        self.postprocess_form(d, language_id)
+        return Form(d)
 
-            else:
-                errmessage = """IncompleteParsingError; probably illegal content\n
-                           after parsing {}  -  {} was left unparsed""".format(coordinate, text)
-                raise CellParsingError(errmessage, coordinate)
-
-        # TODO: opening and closing of bracket_checker is hard coded
-        # enclose comment if not properly enclosed
-        if not self.bracket_checker("(", ")", description):
-            description = "(" + description + ")"
-            if not self.bracket_checker("(", ")", description):
-                raise FormCellError(description, "description (closing and opening brackets don't match",
-                                          coordinate)
-
-        return description
-
-
-class CellParserLexical(CellParser):
-
-    def __init__(
+    def postprocess_form(
             self,
-            form_pattern: Dict[str, Pattern]=None,
-            description_pattern: Optional[Pattern] = None,
-            separator_pattern: Optional[Pattern] = None,
-            ignore_pattern: Optional[Pattern] = None,
-            illegal_symbols_description: Optional[Pattern] = None,
-            illegal_symbols_transcription: Optional[Pattern] = None,
-            comment_escapes: Optional[Pattern] = None,
-            add_default_source: str = "",
-            scan_for_variants: bool = False
-    ):
-        self.scan_for_variants = scan_for_variants
-        self.add_default_source = add_default_source
-        super().__init__(form_pattern=form_pattern,
-                         description_pattern=description_pattern,
-                         separator_pattern=separator_pattern,
-                         ignore_pattern=ignore_pattern,
-                         illegal_symbols_description=illegal_symbols_description,
-                         illegal_symbols_transcription=illegal_symbols_transcription,
-                         comment_escapes=comment_escapes)
+            description_dictionary: t.Dict[str, t.Any],
+            language_id: str) -> None:
+        """Modify the form in-place
 
-    def parse_value(self, values, coordinate, language=None):
-        dictionary = super().parse_value(values, coordinate)
+        Fix some properties of the form. This is the place to add default
+        sources, cut of delimiters, split unmarked variants, etc.
 
-        if self.add_default_source and dictionary["source"] is None:
-            dictionary["source"] = self.add_default_source
+        """
+        # TODO: Remove duplicate sources and additional comments from the
+        # variants
 
-        if self.scan_for_variants:
-            variants = []
-            for k, v in dictionary.items():
-                if k != "source" and v is not None:
-                    dictionary[k] = self.variants_separator(variants, v)
+        # TODO: Once everything seems to work fine, remove delimiters from the
+        # raw elements, and adjust the tests to not expect those delimiters
 
-            variants = ",".join(variants)
-            dictionary["variants"] = variants
+        source = description_dictionary.pop("cldf_source", None)
+        if self.add_default_source and source is None:
+            source = self.add_default_source
+        if source:
+            source, context = self.source_from_source_string(source, language_id)
+            description_dictionary["cldf_source"] = {(source, context)}
 
-        return dictionary
-
-    @staticmethod
-    def variants_scanner(string, symbol):
-        """copies string, inserting closing brackets after symbol if necessary"""
-        is_open = False
-        closers = {"<": ">", "[": "]", "/": "/"}
-        collector = ""
-        starter = ""
-
-        for char in string:
-
-            if char in closers and not is_open:
-                collector += char
-                is_open = True
-                starter = char
-
-            elif char == symbol:
-                if is_open:
-                    collector += (closers[starter] + char + starter)
-                else:
-                    collector += char
-
-            elif char in closers.values():
-                collector += char
-                is_open = False
-                starter = ""
-
-            elif is_open:
-                collector += char
-
-        return collector
-
-    def variants_separator(self, variants_list, string):
-        # force python to copy string
-        text = (string + "&")[:-1]
-        while " " in text:
-            text = text.replace(" ", "")
-        if "~" in string:
-            values = self.variants_scanner(text, "~")
-            values = values.split("~")
-            first = values.pop(0)
-
-            # add rest to variants prefixed with ~
-            values = [("~" + e) for e in values]
-            variants_list += values
-            return first
-
-        # inconsistent variants
-        elif "%" in string:
-            values = self.variants_scanner(text, "%")
-            values = values.split("%")
-            first = values.pop(0)
-
-            # add rest to variants prefixed with ~
-            values = [("%" + e) for e in values]
-            variants_list += values
-            return first
-        else:
-            return string
-
-
-phonemic_pattern = re.compile(r"""
-(?:^| # start of the line or
-  (.*?(?<=[^&]))) #capture anything before phonemic, phonemic must not follow a &, i.e. & escapes
-  (/[^/]+? #first phonemic element, not greedy,
-           # special for phonemic: use [^/] instead of . to ensure correct escaping
-  (?<=[^&])/  # applies only to phonemic: closer must not follow &, otherwise &/a/ texttext &/b/ will render / texttext &/
-  (?:\s*[~%]\s*/[^/]+?/)*  #non capturing pattern for any repetition of [%~]/..../
-)  #capture whole group
-(.*)$ #capture the rest""", re.VERBOSE)
-phonetic_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(\[.+?](?:\s*[~%]\s*\[.+?])*)(.*)$")
-ortho_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))(<.+?>(?:\s*[~%]\s*<.+?>)*)(.*)$")
-
-source_pattern = re.compile(r"(?:^|(.*?(?<=[^&])))({.+?})(.*)$")  # just one source per form, must not be empty
-
-my_form_pattern = {"phonemic": phonemic_pattern,
-                   "phonetic": phonetic_pattern,
-                   "orthographic": ortho_pattern,
-                   "source": source_pattern}
-
-
-class MawetiGuaraniLexicalParser(CellParserLexical):
-    def __init__(
-            self,
-            form_pattern=my_form_pattern,
-            description_pattern=re.compile(r"^(.*?)(\(.+\))(.*)$"),
-            separator_pattern=re.compile(r"""
-                 (?<=[}\)>/\]])    # The end of an element of transcription, not consumed
-                 \s*               # Any amount of spaces
-                 [,;]              # Some separator
-                 \s*               # Any amount of spaces
-                 (?=[</\[])        # Followed by the beginning of any transcription, but don't consume that bit""",
-                                    re.VERBOSE),
-            ignore_pattern=re.compile(r"^(.+)#.+?#(.*)$"),  # anything between # # is replaced by an empty string,
-            illegal_symbols_description=re.compile(r"[</[{]"),
-            illegal_symbols_transcription=re.compile(r"[;]"),
-            comment_escapes=re.compile(r"&[</\[{].+?(?:\s|.$)"),
-            add_default_source="{1}",
-            scan_for_variants=True
-    ):
-        super().__init__(form_pattern=form_pattern,
-                         description_pattern=description_pattern,
-                         separator_pattern=separator_pattern,
-                         ignore_pattern=ignore_pattern,
-                         illegal_symbols_description=illegal_symbols_description,
-                         illegal_symbols_transcription=illegal_symbols_transcription,
-                         comment_escapes=comment_escapes,
-                         add_default_source=add_default_source,
-                         scan_for_variants=scan_for_variants)
-
-    def parse_value(self, values, coordinate, language=None):
-        dictionary = super().parse_value(values, coordinate)
-        # Add metadata. TODO: Why not in super??
-        dictionary["cldf_languageReference"] = language
-        cldf_value = f"{dictionary['phonemic'] or '-'}_{dictionary['phonetic'] or '-'}_{dictionary['orthographic'] or '-'}"
-        dictionary["cldf_value"] = cldf_value
-
-        # Rename some keys
-        dictionary["cldf_form"] = dictionary.pop("phonemic", None)
-        dictionary["cldf_comment"] = dictionary.pop("description", None)
-
-        # Further transformations
-        dictionary["cldf_segments"] = dictionary.pop("phonetic", None)
-        # TODO: wrap in CLTS to check. Fall back on other transcriptions??
-
-        source = dictionary.pop("source")  # TODO: Rename upstairs to sources
-        if language:
-            source, context = self.source_from_source_string(source, language)
-            dictionary["sources"] = {(source, context)}
-
-        return dictionary
-
-
-class MawetiGuaraniCognateParser(MawetiGuaraniLexicalParser):
-    def parse_value(self, values, coordinate, language=None):
+class CognateParser(CellParser):
+    def parse_form(self, values, language):
         if values.isupper():
-            raise IgnoreCellError(values, coordinate)
+            return None
         else:
-            return super().parse_value(values, coordinate, language)
+            return super().parse_form(values, language)
 
 
 class CellParserHyperlink(CellParser):
