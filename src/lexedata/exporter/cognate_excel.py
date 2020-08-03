@@ -12,7 +12,6 @@ import sqlalchemy.ext.automap
 from sqlalchemy.ext.automap import automap_base
 
 import lexedata.cldf.db as db
-from lexedata.cldf.automapped import SQLAlchemyWordlist, Judgement
 
 WARNING = "\u26A0"
 
@@ -22,7 +21,7 @@ CogSet = t.TypeVar("CogSet", bound=sqlalchemy.ext.automap.AutomapBase)
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
 
-class ExcelWriter(SQLAlchemyWordlist):
+class ExcelWriter():
     """Class logic for cognateset Excel export."""
     header = [("cldf_id", "CogSet")]  # Add columns here for other datasets.
 
@@ -128,7 +127,7 @@ class ExcelWriter(SQLAlchemyWordlist):
 
     def create_formcell(
             self,
-            judgement: Judgement,
+            judgement,
             ws: op.worksheet.worksheet.Worksheet,
             column: int,
             row: int) -> None:

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from lexedata.importer.cellparser import AbstractCellParser, MawetiGuaraniLexicalParser, MawetiGuaraniCognateParser
-from lexedata.importer.exceptions import *
+from lexedata.importer.cellparser import NaiveCellParser as AbstractCellParser
+from lexedata.error_handling import *
 
 
 def test_cellparser_error():

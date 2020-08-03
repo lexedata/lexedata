@@ -19,6 +19,9 @@ setup(
         "openpyxl",
         "pycldf",
         "sqlalchemy",
+        "segments",
+        "pyclts",
+        "lingpy",
         "unidecode"],
     entry_points={
         'console_scripts': [

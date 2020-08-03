@@ -1,20 +1,21 @@
 ID,Language_ID,Concept_ID,Form,orthographic,variants,Segments,Comment,Value,Source
-ache_one,ache,one,/etakɾã/,,,[e.ta.'kɾã],(uno; solo),/etakɾã/ [e.ta.'kɾã] (uno; solo){4},ache_s_4
-ache_one_1,ache,one,/etakrã/,,,,,/etakrã/,ache_s_1
-paraguayan_guarani_one,paraguayan_guarani,one,,<peteĩ>,,,(uno),<peteĩ>(uno){Guasch1962:670},paraguayan_guarani_s_guasch1962[670]
-kaiwa_one,kaiwa,one,,,,[petẽˈʔĩ],,[petẽˈʔĩ],kaiwa_s_1
-ache_two,ache,two,/bĩɾõ1/,,,[mĩ.'ɾõ1],(dos),/bĩɾõ1/ [mĩ.'ɾõ1] (dos){4},ache_s_4
-ache_two_1,ache,two,/mirõ/,,,,,/mirõ/,ache_s_1
-paraguayan_guarani_two,paraguayan_guarani,two,,<mokõi>,,,(dos),<mokõi>(dos){Guasch1962:616},paraguayan_guarani_s_guasch1962[616]
-kaiwa_two,kaiwa,two,,,,[mõˈkõj̃],,[mõˈkõj̃],kaiwa_s_1
-ache_three,ache,three,/bɾewi pɨʧa/,,,[bɾe.'wi pɨ.'ʧa],(trés),/bɾewi pɨʧa/ [bɾe.'wi pɨ.'ʧa] (trés){4},ache_s_4
-ache_three_1,ache,three,/buǰa1/,,,,,/buǰa1/,ache_s_1
-paraguayan_guarani_three,paraguayan_guarani,three,,<mbohapy>,,,(tres),<mbohapy>(tres){Guasch1962:598},paraguayan_guarani_s_guasch1962[598]
-kaiwa_three,kaiwa,three,,,,[mbohaˈpɨ],,[mbohaˈpɨ],kaiwa_s_1
-ache_four,ache,four,/gwɨɾa pɨʧã/,,,[gwɨ.'ɾa pɨ.'ʧa],(cuatro),/gwɨɾa pɨʧã/ [gwɨ.'ɾa pɨ.'ʧa] (cuatro){4},ache_s_4
-paraguayan_guarani_four,paraguayan_guarani,four,,<irundy>,,,(cuatro),<irundy>(cuatro){Guasch1962:542},paraguayan_guarani_s_guasch1962[542]
-kaiwa_four,kaiwa,four,,,,[iɾũndɨ],,[iɾũndɨ],kaiwa_s_1
-ache_four_1,ache,four_1,/irõdɨ/,,,[i.ɾõ.'ndɨ],(la gente se mi subgrupo),/irõdɨ/ [i.ɾõ.'ndɨ] (la gente se mi subgrupo){4},ache_s_4
-paraguayan_guarani_five,paraguayan_guarani,five,,<po>,,,"(cinco, neol.)","<po>(cinco, neol.){Guasch1962:113}",paraguayan_guarani_s_guasch1962[113]
-kaiwa_five,kaiwa,five,,,,[teʔiowaa],,[teʔiowaa],kaiwa_s_1
-kaiwa_five_1,kaiwa,five,,,,[teɲoˈʔa],,[teɲoˈʔa],kaiwa_s_1
+ache_one,ache,one,/etakɾã/,,,[e.ta.'kɾã],(uno; solo),/etakɾã/_[e.ta.'kɾã]_-,ache_s_4
+ache_one_1,ache,one,/etakrã/,,,,,/etakrã/_-_-,ache_s_1
+paraguayan_guarani_one,paraguayan_guarani,one,,<peteĩ>,,,(uno),-_-_<peteĩ>,paraguayan_guarani_s_guasch1962[670]
+kaiwa_one,kaiwa,one,,,,[petẽˈʔĩ],,-_[petẽˈʔĩ]_-,kaiwa_s_1
+ache_two,ache,two,/bĩɾõ1/,,,[mĩ.'ɾõ1],(dos),/bĩɾõ1/_[mĩ.'ɾõ1]_-,ache_s_4
+ache_two_1,ache,two,/mirõ/,,,,,/mirõ/_-_-,ache_s_1
+paraguayan_guarani_two,paraguayan_guarani,two,,<mokõi>,,,(dos),-_-_<mokõi>,paraguayan_guarani_s_guasch1962[616]
+kaiwa_two,kaiwa,two,,,,[mõˈkõj̃],,-_[mõˈkõj̃]_-,kaiwa_s_1
+ache_three,ache,three,/bɾewi pɨʧa/,,,[bɾe.'wi pɨ.'ʧa],(trés),/bɾewi pɨʧa/_[bɾe.'wi pɨ.'ʧa]_-,ache_s_4
+ache_three_1,ache,three,/buǰa1/,,,,,/buǰa1/_-_-,ache_s_1
+paraguayan_guarani_three,paraguayan_guarani,three,,<mbohapy>,,,(tres),-_-_<mbohapy>,paraguayan_guarani_s_guasch1962[598]
+kaiwa_three,kaiwa,three,,,,[mbohaˈpɨ],,-_[mbohaˈpɨ]_-,kaiwa_s_1
+ache_four ,ache,four,/gwɨɾa pɨʧã/,,,[gwɨ.'ɾa pɨ.'ʧa],(cuatro),/gwɨɾa pɨʧã/_[gwɨ.'ɾa pɨ.'ʧa]_-,ache_s_4
+paraguayan_guarani_four ,paraguayan_guarani,four,,<irundy>,,,(cuatro),-_-_<irundy>,paraguayan_guarani_s_guasch1962[542]
+kaiwa_four ,kaiwa,four,,,,[iɾũndɨ],,-_[iɾũndɨ]_-,kaiwa_s_1
+ache_four@,ache,four@,/irõdɨ/,,,[i.ɾõ.'ndɨ],(la gente se mi subgrupo),/irõdɨ/_[i.ɾõ.'ndɨ]_-,ache_s_4
+ache_five,ache,five,,,,,...,-_-_-,ache_s_1
+paraguayan_guarani_five,paraguayan_guarani,five,,<po>,,,"(cinco, neol.)",-_-_<po>,paraguayan_guarani_s_guasch1962[113]
+kaiwa_five,kaiwa,five,,,,[teʔiowaa],,-_[teʔiowaa]_-,kaiwa_s_1
+kaiwa_five_1,kaiwa,five,,,,[teɲoˈʔa],,-_[teɲoˈʔa]_-,kaiwa_s_1

@@ -1,64 +1,73 @@
 # -*- coding: utf-8 -*-
 import re
+import abc
 import typing as t
 import unicodedata
 from typing import Tuple, Optional, Pattern, List, Dict
 
 import openpyxl
 
-from lexedata.importer.exceptions import *
-from lexedata.database.database import string_to_id
-from lexedata.cldf.automapped import Form
+from lexedata.error_handling import *
+from lexedata.types import Form, string_to_id
 
 
 def get_cell_comment(cell: openpyxl.cell.Cell) -> t.Optional[str]:
     return cell.comment.content.strip() if cell.comment else None
 
 
-class AbstractCellParser():
 
-    def __init__(
-            self,
-            separator_pattern: Optional[Pattern] = None,
-            ignore_pattern: Optional[Pattern] = None):
+class NaiveCellParser():
+    bracket_pairs = {
+        "(": ")",
+        "[": "]",
+        "{": "}",
+    }
 
-        if separator_pattern is not None:
-            self.separator_pattern = separator_pattern
-        if ignore_pattern is not None:
-            self.ignore_pattern = ignore_pattern
+    def separate(self, values: str) -> t.Iterable[str]:
+        """Separate different form descriptions in one string.
 
-    def separate(self, values):
-        values = unicodedata.normalize('NFKC', values)
-        if self.separator_pattern:
-            elements = self.separator_pattern.split(values)
-            # clean elements list
-            elements = [e.strip() for e in elements]  # no tailing white spaces
-            # remove possible line break and ending commas
-            elements[-1] = elements[-1].rstrip("\n").rstrip(",").rstrip(";")
-            return elements
-        else:
-            return values
+        Separate forms separated by comma.
+        """
+        return values.split(",")
 
-    @classmethod
-    def bracket_checker(cls, opening, closing, string):
-        assert len(opening) == len(closing) == 1, "Can only check single-character bracketing"
-        b = 0
-        for c in string:
-            if c == opening:
-                b += 1
-            if c == closing:
-                b -= 1
-            if b < 0:
+    def check_brackets(self, string):
+        """Check whether all brackets match.
+
+        >>> b = NaiveCellParser()
+        >>> b.check_brackets("([])")
+        True
+        >>> b.check_brackets("([]])")
+        False
+        >>> b.check_brackets("([[])")
+        False
+        >>> b.check_brackets("This (but [not] this)")
+        True
+        """
+        waiting_for = []
+        for i in string:
+            if waiting_for and i == waiting_for[0]:
+                waiting_for.pop(0)
+            elif i in self.bracket_pairs:
+                waiting_for.insert(0, self.bracket_pairs[i])
+            elif i in self.bracket_pairs.values():
                 return False
-        return b == 0
-
-    def parse_value(self, values, coordinate, language=None):
-        raise NotImplementedError
+        return not bool(waiting_for)
 
     def source_from_source_string(
             self,
             source_string: str,
-            language):
+            language_id: t.Optional[str]) -> t.Tuple[str, t.Optional[str]]:
+        """Parse a string referencing a language-specific source
+
+        >>> b = NaiveCellParser()
+        >>> b.source_from_source_string("{1}", "abui")
+        ('abui_s1', None)
+        >>> b.source_from_source_string("", "abui")
+        ('abui_s', None)
+        >>> b.source_from_source_string("{Gul2020: p. 4}", "abui")
+        ('abui_sgul2020', 'p. 4')
+
+        """
         context: t.Optional[str]
         if ":" in source_string:
             source_string, context = source_string.split(":", maxsplit=1)
@@ -68,83 +77,82 @@ class AbstractCellParser():
         else:
             context = None
 
-        if language is None:
+        if source_string.startswith("{") and source_string.endswith("}"):
+            source_string = source_string[1:-1]
+        if language_id is None:
             source_id = string_to_id(source_string)
         else:
-            source_id = string_to_id(f"{language.cldf_id:}_s{source_string}")
+            source_id = string_to_id(f"{language_id:}_s{source_string:}")
 
         return source_id, context
 
-    # def parse(self, cell: openpyxl.cell.Cell, **known) -> t.Iterable[Form]:
-    def parse(self, cell, language=None):
+    def parse_form(self, form_string: str, language_id: str) -> Form:
+        return Form({
+            "cldf_value": form_string,
+            "cldf_form": form_string.strip(),
+            "cldf_languageReference": language_id
+        })
+
+    def parse(self, cell: openpyxl.cell.Cell, language_id: t.Optional[str] = None) -> t.Iterable[Form]:
+        """Return form properties for every form in the cell
+
+        """
         if not cell.value:
-            return None
+            return []
         coordinate = cell.coordinate
-        values = cell.value
-        # replace ignore pattern with empty string
-        while self.ignore_pattern.match(values):
-            values = self.ignore_pattern.sub(r"\1\2", values)
 
-        values = self.separate(values)
-        for element in values:
+        for element in self.separate(cell.value):
             try:
-                parsed_dict = self.parse_value(element, coordinate, language)
-                # replace None
-                for k, v in parsed_dict.items():
-                    if v is None:
-                        parsed_dict[k] = ""
-                yield parsed_dict
-
-            # error handling
+                yield self.parse_form(element)
             except CellParsingError as err:
-                print("CellParsingError: " + err.message)
-                # input()
-                continue
-
-            except FormCellError as err:
-                print(err)
-                # input()
-                continue
-
-            except IgnoreCellError as err:
-                print(err)
-                # input()
-                continue
-
-            except SeparatorCellError as err:
-                print(err)
-                # input()
                 continue
 
 
-class CellParser(AbstractCellParser):
+class CellParser(NaiveCellParser):
+    bracket_pairs = {
+        "(": ")",
+        "[": "]",
+        "{": "}",
+        "/": "/",
+    }
 
-    def __init__(
-            self,
-            form_pattern: Optional[Dict[str, Pattern]] = None,
-            description_pattern: Optional[Pattern] = None,
-            separator_pattern: Optional[Pattern] = None,
-            ignore_pattern: Optional[Pattern] = None,
-            illegal_symbols_description: Optional[Pattern] = None,
-            illegal_symbols_transcription: Optional[Pattern] = None,
-            comment_escapes: Optional[Pattern] = None
-            ):
+    def separate(self, values: str) -> t.Iterable[str]:
+        """Separate different form descriptions in one string.
 
-        if illegal_symbols_description is not None:
-            self.illegal_symbols_description = illegal_symbols_description
-        if illegal_symbols_transcription is not None:
-            self.illegal_symbols_transcription = illegal_symbols_transcription
-        if form_pattern is not None:
-            self.form_pattern = form_pattern
-        if description_pattern is not None:
-            self.description_pattern = description_pattern
-        if comment_escapes is not None:
-            self.comment_escapes = comment_escapes
-        super().__init__(separator_pattern=separator_pattern, ignore_pattern=ignore_pattern)
+        Separate forms separated by comma or semicolon, unless the comma or
+        semicolon occurs within a set of matching component delimiters (eg.
+        brackets)
 
-    def parse_value(
-            self, ele: str, coordinate: str,
-            language: t.Optional[str] = None) -> t.Dict[str, t.Any]:
+        If the brackets don't match, the whole remainder string is passed on,
+        so that the form parser can try to recover as much as possible or throw
+        an exception.
+
+        >>> b = CellParser()
+        >>> list(b.separate("hic, haec, hoc"))
+        ['hic', 'haec', 'hoc']
+        >>> list(b.separate("hic (this, also: here); hoc"))
+        ['hic (this, also: here)', 'hoc']
+        >>> list(b.separate("hic (this, also: here"))
+        ['hic (this, also: here']
+        >>> list(b.separate("illic,"))
+        ['illic']
+
+        """
+        raw_split = re.split(r"([;,])", values)
+        while len(raw_split) > 1:
+            if self.check_brackets(raw_split[0]):
+                form = raw_split.pop(0).strip()
+                if form:
+                    yield form
+                raw_split.pop(0)
+            else:
+                raw_split[:2] = [''.join(raw_split[:2])]
+        form = raw_split.pop(0).strip()
+        if form:
+            yield form
+        assert not raw_split
+
+    def parse_form(self, form_string: str, language_id: str) -> Form:
         """Create a dictionary of columns from a form description.
 
         Extract each value (transcriptions, comments, sources etc.) from a
@@ -397,7 +405,7 @@ class MawetiGuaraniLexicalParser(CellParserLexical):
     def parse_value(self, values, coordinate, language=None):
         dictionary = super().parse_value(values, coordinate)
         # Add metadata. TODO: Why not in super??
-        dictionary["language"] = language
+        dictionary["cldf_languageReference"] = language
         cldf_value = f"{dictionary['phonemic'] or '-'}_{dictionary['phonetic'] or '-'}_{dictionary['orthographic'] or '-'}"
         dictionary["cldf_value"] = cldf_value
 
@@ -412,7 +420,7 @@ class MawetiGuaraniLexicalParser(CellParserLexical):
         source = dictionary.pop("source")  # TODO: Rename upstairs to sources
         if language:
             source, context = self.source_from_source_string(source, language)
-            dictionary["sources"] = [(source, context)]
+            dictionary["sources"] = {(source, context)}
 
         return dictionary
 

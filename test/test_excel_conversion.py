@@ -6,7 +6,7 @@ from pathlib import Path
 import pycldf
 import openpyxl
 
-from lexedata.importer.fromexcel import ExcelParser, ExcelCognateParser, MawetiGuaraniExcelParser, MawetiGuaraniExcelCognateParser, load_mg_style_dataset
+from lexedata.importer.fromexcel import ExcelParser, ExcelCognateParser, load_mg_style_dataset
 from lexedata.exporter.cognate_excel import ExcelWriter
 
 #todo: these test must be adapted to new interface of fromexcel.py
@@ -90,7 +90,7 @@ def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
 
 
 def test_toexcel_runs(filled_cldf_wordlist):
-    writer = ExcelWriter(filled_cldf_wordlist[0], filled_cldf_wordlist[1])
+    writer = ExcelWriter(filled_cldf_wordlist[0], filled_cldf_wordlist[1], override_database = True)
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
 
@@ -101,11 +101,8 @@ def test_roundtrip(filled_cldf_wordlist):
     old_judgements = {
         (row[c_formReference], row[c_cogsetReference])
         for row in filled_cldf_wordlist[0]["CognateTable"].iterdicts()}
-    print(list(filled_cldf_wordlist[0]["FormTable"]))
     writer = ExcelWriter(filled_cldf_wordlist[0], filled_cldf_wordlist[1])
-    print(list(filled_cldf_wordlist[0]["FormTable"]))
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
-    print(list(filled_cldf_wordlist[0]["FormTable"]))
     writer.create_excel(out_filename)
 
     # Reset the existing cognatesets and cognate judgements, to avoid

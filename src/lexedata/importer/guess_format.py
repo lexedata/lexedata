@@ -419,38 +419,16 @@ def main() -> None:
 
     readline.set_completer(completer(LANGUAGE_PROPERTIES))
     readline.parse_and_bind("tab: complete")
-    cell_regexes, comment_regexes = create_parsers(top)
+    lang_cell_regexes, lang_comment_regexes = create_parsers(top)
 
     lang_column_names: t.Set[str] = {"cldf_id"}
-    for r in cell_regexes:
+    for r in lang_cell_regexes:
         lang_column_names.update(r.groupindex)
-    for r in comment_regexes:
+    for r in lang_comment_regexes:
         lang_column_names.update(r.groupindex)
 
     add_table_with_columns("LanguageTable", lang_column_names, data)
     data.write(LanguageTable=[])
-
-    # TODO: This for loop should be used to provide a language_from_column
-    # method for an ExcelParser subclass. Maybe the following for loop could
-    # even use the init_lan method of that ExcelParser!
-    for col in ws.iter_cols(min_col=left, max_row=top - 1):
-        try:
-            d: t.Dict[str, str] = {}
-            for cell, cell_regex, comment_regex in zip(col, cell_regexes, comment_regexes):
-                if cell.value:
-                    # FIXME: If a property appears twice, currently the later
-                    # appearance overwrites the earlier one. Merge wiser.
-                    d.update(cell_regex.fullmatch(cell.value).groupdict())
-                if cell.comment:
-                    # FIXME: If a property appears twice, currently the later
-                    # appearance overwrites the earlier one. Merge wiser.
-                    d.update(comment_regex.fullmatch(cell.comment.content).groupdict())
-            print(d)
-        except AttributeError:
-            print(f"Failed to parse {cell.coordinate} using the translated version of your supplied pattern ({cell_regex.pattern:}), please check manually.")
-
-    # TODO: The groups encountered here should become CLDF columns of the
-    # language.
 
     example_row = most_content(ws.iter_rows(max_col=left - 1, min_row=top))
     clear()
@@ -464,12 +442,12 @@ def main() -> None:
                   if cognateset else
                   CONCEPT_PROPERTIES))
     readline.parse_and_bind("tab: complete")
-    cell_regexes, comment_regexes = create_parsers(left)
+    row_cell_regexes, row_comment_regexes = create_parsers(left)
 
     column_names: t.Set[str] = set("cldf_id")
-    for r in cell_regexes:
+    for r in row_cell_regexes:
         column_names.update(r.groupindex)
-    for r in comment_regexes:
+    for r in row_comment_regexes:
         column_names.update(r.groupindex)
 
     add_table_with_columns(
@@ -478,26 +456,6 @@ def main() -> None:
     data.write(**{
         "CognatesetTable" if cognateset else "ParameterTable":
         []})
-
-    # TODO: This for loop should be used to provide a language_from_column
-    # method for an ExcelParser subclass. Maybe the following for loop could
-    # even use the init_lan method of that ExcelParser!
-    for col in ws.iter_rows(max_col=left - 1, min_row=top):
-        try:
-            d: t.Dict[str, str] = {}
-            for cell, cell_regex, comment_regex in zip(col, cell_regexes, comment_regexes):
-                if cell.value:
-                    # FIXME: If a property appears twice, currently the later
-                    # appearance overwrites the earlier one. Merge wiser.
-                    d.update(cell_regex.fullmatch(cell.value).groupdict())
-                if cell.comment:
-                    # FIXME: If a property appears twice, currently the later
-                    # appearance overwrites the earlier one. Merge wiser.
-                    d.update(comment_regex.fullmatch(cell.comment.content).groupdict())
-            print(d)
-        except AttributeError:
-            print(f"Failed to parse {cell.coordinate} using the translated version of your supplied pattern ({cell_regex.pattern:}), please check manually.")
-
 
     # For debugging:
     return locals()

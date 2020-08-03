@@ -7,13 +7,51 @@
     ],
     "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#Wordlist",
     "dc:source": "sources.bib",
+    "special:fromexcel": {
+        "row_cell_regexes": [
+            "(?P<set>.*)",
+            "(?P<cldf_name>.*)",
+            "(?P<English>.*)",
+            "(?P<Spanish>.*)",
+            "(?P<Portuguese>.*)",
+            "(?P<French>.*)"
+        ],
+        "row_comment_regexes": [
+            ".*",
+            ".*",
+            ".*",
+            ".*",
+            ".*",
+            ".*"
+        ],
+        "lang_cell_regexes": [
+            "(?P<cldf_name>.*)",
+            "(?P<Curator>.*)"
+        ],
+        "lang_comment_regexes": [
+            ".*",
+            ".*"
+        ],
+        "cognates": false,
+        "check_for_match": [
+            "orthographic",
+            "cldf_languageReference",
+            "cldf_form",
+            "cldf_segments",
+            "sources"
+        ],
+        "check_for_row_match": [
+            "cldf_name"
+        ],
+        "cell_parser": "MawetiGuaraniLexicalParser"
+    },
     "dialect": {
         "commentPrefix": null
     },
     "tables": [
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
-            "dc:extent": 26,
+            "dc:extent": 20,
             "tableSchema": {
                 "columns": [
                     {
