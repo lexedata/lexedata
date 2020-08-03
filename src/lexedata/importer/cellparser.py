@@ -181,7 +181,7 @@ class NaiveCellParser():
             "cldf_languageReference": language_id
         })
 
-    def parse(self, cell: openpyxl.cell.Cell, language_id: t.Optional[str] = None) -> t.Iterable[Form]:
+    def parse(self, cell: openpyxl.cell.Cell, language_id: str) -> t.Iterable[Form]:
         """Return form properties for every form in the cell
 
         """
@@ -191,7 +191,7 @@ class NaiveCellParser():
 
         for element in self.separate(cell.value):
             try:
-                form = self.parse_form(element)
+                form = self.parse_form(element, language_id)
             except CellParsingError as err:
                 continue
             if form:

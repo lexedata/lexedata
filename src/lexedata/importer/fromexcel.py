@@ -3,10 +3,11 @@
 import os
 import re
 import sqlite3
+import argparse
 import warnings
 import typing as t
 from pathlib import Path
-from tempfile import mkstemp
+from tempfile import mkdtemp
 
 import pycldf
 import openpyxl
@@ -15,7 +16,6 @@ from csvw.db import insert
 
 from lexedata.types import *
 import lexedata.importer.cellparser as cell_parsers
-from lexedata.importer.cellparser import CellParser, get_cell_comment
 from lexedata.cldf.db import Database
 import lexedata.error_handling as err
 
@@ -41,6 +41,7 @@ warnings.formatwarning = formatwarning
 class ExcelParser:
 
     def __init__(self, output_dataset: pycldf.Dataset,
+                 db_fname: str,
                  top: int = 2, left: int = 2,
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"]
@@ -49,13 +50,13 @@ class ExcelParser:
         self.on_row_not_found: err.MissingHandler = err.create
         self.on_form_not_found: err.MissingHandler = err.create
 
-        self.cell_parser: CellParser = CellParserLexical()
+        self.cell_parser: cell_parsers.NaiveCellParser = cell_parsers.NaiveCellParser()
         self.top = top
         self.left = left
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
 
-        self.cldfdatabase = Database(output_dataset, fname="temp.sqlite")
+        self.cldfdatabase = Database(output_dataset, fname=db_fname)
         self.cldfdatabase.write()
 
     def language_from_column(
@@ -74,7 +75,10 @@ class ExcelParser:
         where_clauses = []
         where_parameters = []
         for property in properties:
-            if type(object[property]) == set:
+            if property not in object:
+                where_clauses.append("{0} == NULL".format(
+                    property))
+            elif type(object[property]) == set:
                 where_clauses.append("0==0")
             else:
                 where_clauses.append("{0} == ?".format(
@@ -197,7 +201,7 @@ class ExcelParser:
                     break
                 else:
                     if self.on_row_not_found(properties, row[0]):
-                        properties["cldf_id"] = properties.get("cldf_name", "")
+                        properties["cldf_id"] = string_to_id(properties.get("cldf_name", ""))
                         self.make_id_unique(properties)
                         self.insert_into_db(properties)
                     else:
@@ -216,11 +220,11 @@ class ExcelParser:
 
                 # Parse the cell, which results (potentially) in multiple forms
                 for params in self.cell_parser.parse(
-                            cell_with_forms, language=this_lan):
+                            cell_with_forms, language_id=this_lan):
                     form = Form(params)
                     candidate_forms = self.find_db_candidates(
                         form, self.check_for_match)
-                    sources = form.pop("sources")
+                    sources = form.pop("cldf_source")
                     for form_id in candidate_forms:
                         break
                     else:
@@ -233,12 +237,14 @@ class ExcelParser:
 
 class ExcelCognateParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
+                 db_fname: str,
                  top: int = 2, left: int = 2,
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"]
     ) -> None:
         super().__init__(
             output_dataset = output_dataset,
+            db_fname=db_fname,
             top = top, left = left,
             check_for_match = check_for_match,
             check_for_row_match = check_for_row_match)
@@ -282,9 +288,12 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
     left = len(dialect.row_cell_regexes) + 1
 
     class SpecializedExcelParser(ExcelParser):
-        def __init__(self, output_dataset: pycldf.Dataset) -> None:
+        def __init__(
+                self, output_dataset: pycldf.Dataset, db_fname: str,
+        ) -> None:
             super().__init__(
                 output_dataset=output_dataset,
+                db_fname=db_fname,
                 top=top,
                 left=left,
                 check_for_match=dialect.check_for_match,
@@ -350,11 +359,8 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
 def load_mg_style_dataset(
         metadata: Path, lexicon: str, cogsets: str, db: str) -> None:
     if db == "":
-        open_file, db = mkstemp(".sqlite", "lexicaldatabase", text=False)
-        # The CLDF database functionality expects the file to not exist, so
-        # delete it again, but keep the filename.
-        os.close(open_file)
-        Path(db).unlink()
+        tmpdir = Path(mkdtemp("", "fromexcel"))
+        db = tmpdir / 'db.sqlite'
     lexicon_wb = openpyxl.load_workbook(lexicon)
 
     dataset = pycldf.Dataset.from_metadata(metadata)
@@ -363,7 +369,7 @@ def load_mg_style_dataset(
     except KeyError:
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser_lexical = EP(dataset)
+    excel_parser_lexical = EP(dataset, db)
 
     excel_parser_lexical.parse_cells(lexicon_wb.active)
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)

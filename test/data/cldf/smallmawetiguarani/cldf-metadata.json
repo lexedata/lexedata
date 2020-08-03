@@ -38,12 +38,12 @@
             "cldf_languageReference",
             "cldf_form",
             "cldf_segments",
-            "sources"
+            "cldf_source"
         ],
         "check_for_row_match": [
             "cldf_name"
         ],
-        "cell_parser": "MawetiGuaraniLexicalParser"
+        "cell_parser": "CellParser"
     },
     "dialect": {
         "commentPrefix": null
@@ -84,6 +84,14 @@
                     {
                         "datatype": "string",
                         "name": "orthographic"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "phonemic"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "phonetic"
                     },
                     {
                         "datatype": "string",
