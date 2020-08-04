@@ -20,6 +20,11 @@ CogSet = t.TypeVar("CogSet", bound=sqlalchemy.ext.automap.AutomapBase)
 
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
+# TODO: ExcelWrite still uses SQLAlchemy, which we have nearly completely taken
+# out. Rewrite those bits and get it to work – It's probably worth thinking
+# about doing this without touching the database at all, and just work on the
+# iterators like dataset[FormTable'], because here we don't need the smart
+# lookup capabilities of the database to match similar forms.
 
 class ExcelWriter():
     """Class logic for cognateset Excel export."""
