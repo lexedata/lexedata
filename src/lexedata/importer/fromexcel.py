@@ -150,7 +150,6 @@ class ExcelParser:
 
     def associate(self, form_id: str, row: RowObject) -> bool:
         assert row.__table__ == "ParameterTable", "Expected Concept, but got {:}".format(row.__class__)
-        print((form_id, row["cldf_id"]))
         with self.cldfdatabase.connection() as conn:
             try:
                 insert(conn, self.cldfdatabase.translate,
@@ -164,7 +163,18 @@ class ExcelParser:
         return True
 
     def insert_into_db(self, object: O) -> bool:
-        print(object)
+        for key, value in object.items():
+            if type(value) == list:
+                # TODO: Is there a shortcut? The csvw module has to do
+                # something similar when adding entries to the database, what
+                # do they do?
+                columns = self.cldfdatabase.dataset[object.__table__].tableSchema.columns
+                trans = [self.cldfdatabase.translate(c.name) for c in columns]
+                sep = [c.separator for c in columns if self.cldfdatabase.translate(c.name) == key][0]
+                # Join values using the separator
+                object[key] = sep.join(value)
+            elif type(value) == set:
+                raise ValueError("Sets should be handled by association tables.")
         with self.cldfdatabase.connection() as conn:
             insert(conn, self.cldfdatabase.translate,
                    object.__table__,
@@ -220,7 +230,11 @@ class ExcelParser:
 
                 # Parse the cell, which results (potentially) in multiple forms
                 for params in self.cell_parser.parse(
-                            cell_with_forms, language_id=this_lan):
+                        cell_with_forms, this_lan,
+                        # TODO: Is there a way to get the sheet name from the
+                        # sheet object, so we can have Sheet1.A1, instead of
+                        # just A1, in the warnings?
+                        cell_with_forms.coordinate):
                     form = Form(params)
                     candidate_forms = self.find_db_candidates(
                         form, self.check_for_match)
@@ -266,7 +280,6 @@ class ExcelCognateParser(ExcelParser):
 
     def associate(self, form_id: str, row: RowObject) -> bool:
         assert row.__table__ == "CognatesetTable", "Expected Concept, but got {:}".format(row.__class__)
-        print((form_id, row["cldf_id"]))
         with self.cldfdatabase.connection() as conn:
             try:
                 insert(conn, self.cldfdatabase.translate,
@@ -311,17 +324,17 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
             ValueError: When the cell cannot be parsed with the specified regex.
 
             """
-            # FIXME: If a property appears twice, currently the later
+            # TODO: If a property appears twice, currently the later
             # appearance overwrites the earlier one. Merge wiser.
             d: t.Dict[str, str] = {}
             for cell, cell_regex, comment_regex in zip(column, dialect.lang_cell_regexes, dialect.lang_comment_regexes):
                 if cell.value:
-                    match = re.fullmatch(cell_regex, cell.value)
+                    match = re.fullmatch(cell_regex, cell.value, re.DOTALL)
                     if match is None:
                         raise ValueError(f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}, but found {cell.value}")
                     d.update(match.groupdict())
                 if cell.comment:
-                    match = re.fullmatch(comment_regex, cell.comment.content)
+                    match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(f"In cell {cell.coordinate}: Expected to encounter match for {comment_regex}, but found {cell.comment.content}")
                     d.update(match.groupdict())
@@ -343,12 +356,12 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
             d: t.Dict[str, str] = {}
             for cell, cell_regex, comment_regex in zip(row, dialect.row_cell_regexes, dialect.row_comment_regexes):
                 if cell.value:
-                    match = re.fullmatch(cell_regex, cell.value)
+                    match = re.fullmatch(cell_regex, cell.value, re.DOTALL)
                     if match is None:
                         raise ValueError(f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}, but found {cell.value}")
                     d.update(match.groupdict())
                 if cell.comment:
-                    match = re.fullmatch(comment_regex, cell.comment.content)
+                    match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(f"In cell {cell.coordinate}: Expected to encounter match for {comment_regex}, but found {cell.comment.content}")
                     d.update(match.groupdict())
@@ -373,6 +386,12 @@ def load_mg_style_dataset(
 
     excel_parser_lexical.parse_cells(lexicon_wb.active)
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
+
+
+# TODO: Write a pair of functions like these to import cognate data separately
+# from the comparative lexical data, which should use the Hyperlink structure
+# we output in ExcelWriter if no dialect can be found.
+
 
 if __name__ == "__main__":
     import argparse

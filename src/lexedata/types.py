@@ -22,6 +22,12 @@ class Concept(RowObject):
         return "ParameterTable"
 
 
+class CogSet(RowObject):
+    @property
+    def __table__(self) -> str:
+        return "ParameterTable"
+
+
 class Form(Object):
     @property
     def __table__(self) -> str:

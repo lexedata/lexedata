@@ -35,7 +35,14 @@ def import_language(
         sheet: openpyxl.worksheet.worksheet.Worksheet,
         writer: csv.DictWriter,
         concept_property_columns: t.Iterable[str],
-        running_id: t.Optional[int] = 1) -> None:
+        running_id: t.Optional[int] = 1) -> int:
+    """
+
+    Return
+    ======
+
+    int: the number of forms imported
+    """
     language = sheet.title
     fn: t.Iterable[str]
     empty_cols: t.Set[int] = set()
