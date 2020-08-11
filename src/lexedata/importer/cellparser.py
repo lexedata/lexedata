@@ -356,14 +356,6 @@ class CellParser(NaiveCellParser):
         sources, cut of delimiters, split unmarked variants, etc.
 
         """
-        # TODO: If some transcription contains variants (check for '~'), then
-        # split it, strip it, keep the first as that transcription and put the
-        # the others in the variants column with appropriate decorators and
-        # delimiters
-
-        # TODO: Remove sources and comments from the variants, merge them into
-        # the other columns instead.
-
         # TODO: Once everything seems to work fine, remove delimiters from the
         # raw elements, and adjust the tests to not expect those delimiters
 
@@ -376,6 +368,17 @@ class CellParser(NaiveCellParser):
         if source:
             source, context = self.source_from_source_string(source, language_id)
             description_dictionary["cldf_source"] = {(source, context)}
+
+        # TODO: Remove duplicate sources and additional comments from the
+        # variants, merge them to the appropriate columns instead.
+
+        # TODO: Write a subclass for Maweti-Guarani that also uses what we know
+        # about that dataset:
+        # • TODO Pick out the two- or three-letter editor
+        #   procedural comments.
+        # • TODO: Split forms that contain '%' or '~', drop the variant in
+        #   variants.
+
 
 class CognateParser(CellParser):
     def parse_form(self, values, language,
