@@ -99,9 +99,9 @@ def components_in_brackets(form_string, bracket_pairs):
     >>> components_in_brackets("/aha/ (exclam. !/ int., also /ah/)", b)
     ['', '/aha/', ' ', '(exclam. !/ int., also /ah/)', '']
 
-    Recovery from mismatched delimiters early in the string is difficult. This
-    example is still waiting for the first '/' to be closed by the end of the
-    string.
+    Recovery from mismatched delimiters early in the string is difficult. The
+    following example is still waiting for the first '/' to be closed by the
+    end of the string.
 
     >>> components_in_brackets("/aha (exclam. !/ int., also /ah/)", b)
     ['', '/aha (exclam. !/ int., also /ah/)']
@@ -161,10 +161,10 @@ class NaiveCellParser():
         """
         context: t.Optional[str]
         if ":" in source_string:
-            source_string, context = source_string.split(":", maxsplit=1)
+            source_part, context = source_string.split(":", maxsplit=1)
             if not context.endswith("}"):
                 logger.warning(f"In source {source_string}: Closing bracket '}}' is missing, split into source and page/context may be wrong")
-            source_string += "}"
+            source_string = source_part + "}"
             context = context[:-1].strip()
         else:
             context = None
