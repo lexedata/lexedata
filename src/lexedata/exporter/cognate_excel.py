@@ -8,15 +8,11 @@ import pycldf
 import sqlalchemy
 import openpyxl as op
 import sqlalchemy
-import sqlalchemy.ext.automap
-from sqlalchemy.ext.automap import automap_base
 
+from lexedata import types
 import lexedata.cldf.db as db
 
 WARNING = "\u26A0"
-
-Form = t.TypeVar("Form", bound=sqlalchemy.ext.automap.AutomapBase)
-CogSet = t.TypeVar("CogSet", bound=sqlalchemy.ext.automap.AutomapBase)
 
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
@@ -26,19 +22,25 @@ CogSet = t.TypeVar("CogSet", bound=sqlalchemy.ext.automap.AutomapBase)
 # iterators like dataset[FormTable'], because here we don't need the smart
 # lookup capabilities of the database to match similar forms. (Or do we?)
 
+# TODO: Make comments on Languages, Cognatesets, and Judgements appear as notes
+# in Excel.
+
+# TODO: cProfile – where's the bottleneck that makes this run so slow? It looks
+# like it is the actual saving of the dataset. Check again whether we can use
+# https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode and
+# whether it's nicely faster.
+
 class ExcelWriter():
     """Class logic for cognateset Excel export."""
-    header = [("cldf_id", "CogSet")]  # Add columns here for other datasets.
+    header = [("ID", "CogSet")]  # Add columns here for other datasets.
 
-    def __init__(self, dataset: pycldf.Dataset, database: str,
+    def __init__(self, dataset: pycldf.Dataset,
                  url_base: t.Optional[str] = None, **kwargs):
-        super().__init__(dataset, fname=database, **kwargs)
-
-        self.URL_BASE = "https://example.org/{:s}"
+        self.dataset = dataset
         if url_base:
             self.URL_BASE = url_base
-        engine = sqlalchemy.create_engine(f"sqlite:///{database:}")
-        self.session = sqlalchemy.orm.Session(engine)
+        else:
+            self.URL_BASE = "https://example.org/{:s}"
 
     def create_excel(
             self,
@@ -66,37 +68,56 @@ class ExcelWriter():
         # Define the columns
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
+        c_name = self.dataset["LanguageTable", "name"].name
+        c_id = self.dataset["LanguageTable", "id"].name
         for col, lan in enumerate(
-                self.session.query(self.Language).all(),
+                self.dataset["LanguageTable"],
                 len(excel_header) + 1):
-            # len(header) + 1 refers to column 3
-            self.lan_dict[lan.cldf_id] = col
-            excel_header.append(lan.cldf_name)
+            self.lan_dict[lan[c_id]] = col
+            excel_header.append(lan[c_name])
 
         ws.append(excel_header)
 
+        c_form_id = self.dataset["FormTable", "id"].name
+        all_forms = {f[c_form_id]: f
+                     for f in self.dataset["FormTable"]}
+        all_judgements = {}
+
+        c_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
+        for j in self.dataset["CognateTable"]:
+            all_judgements.setdefault(j[c_cognateset], []).append(j)
+
+        # TODO: If there is no cognateset table, add one – actually, that
+        # should happen in the importer, the export should not modify the
+        # dataset!!
+        try:
+            c_comment = self.dataset["CognatesetTable", "comment"].name
+        except KeyError:
+            c_comment = None
+        c_cogset_id = self.dataset["CognatesetTable", "id"].name
         # Iterate over all cognate sets, and prepare the rows.
         # Again, row_index 2 is indeed row 2
         row_index = 1 + 1
-        for cogset in self.session.query(self.CogSet):
+        for cogset in self.dataset['CognatesetTable']:
             # Put the cognateset's tags in column B.
             for col, (db_name, header) in enumerate(self.header, 1):
                 cell = ws.cell(row=row_index, column=col,
-                               value=getattr(cogset, db_name))
+                               value=cogset[db_name])
                 # Transfer the cognateset comment to the first Excel cell.
-                if col == 1 and cogset.cldf_comment:
+                if c_comment and col == 1 and cogset[c_comment]:
                     cell.comment = op.comments.Comment(
                         cogset.cldf_comment, __package__)
 
             new_row_index = self.create_formcells_for_cogset(
-                cogset, ws, row_index, self.lan_dict)
+                all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index, self.lan_dict)
             row_index = new_row_index
         wb.save(filename=out)
 
     def create_formcells_for_cogset(
             self,
-            cogset: CogSet,
+            cogset: types.CogSet,
             ws: op.worksheet.worksheet.Worksheet,
+            all_forms: t.Dict[str, types.Form],
             row_index: int,
             # FIXME: That's not just a str, it's a language_id, but String()
             # alias Language.id.type is not a Type, according to `typing`.
@@ -111,11 +132,16 @@ class ExcelWriter():
         which can then be filled by the following cognate set.
 
         """
+        c_cogset = self.dataset["CognateTable", "cognatesetReference"].name
+        c_form = self.dataset["CognateTable", "formReference"].name
+        c_language = self.dataset["FormTable", "languageReference"].name
         # Read the forms from the database and group them by language
-        forms = t.DefaultDict[int, t.List[Form]](list)
-        for judgement in cogset.cognates:
-            form: Form = judgement.form
-            forms[self.lan_dict[form.language.cldf_id]].append(judgement)
+        forms = t.DefaultDict[int, t.List[types.Form]](list)
+        for judgement in cogset:
+            form_id = judgement[c_form]
+            form = all_forms[form_id]
+            forms[self.lan_dict[form[c_language]]].append(
+                (form, judgement))
 
         if not forms:
             return row_index + 1
@@ -143,15 +169,16 @@ class ExcelWriter():
         if there is one.
 
         """
-        cell_value = self.form_to_cell_value(judgement.form)
+        # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
+        cell_value = self.form_to_cell_value(judgement[0])
         form_cell = ws.cell(row=row, column=column, value=cell_value)
-        comment = getattr(judgement, "cldf_comment", None)
+        comment = judgement[1].get("Comment", None)
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
-        link = self.URL_BASE.format(urllib.parse.quote(judgement.form.cldf_id))
+        link = self.URL_BASE.format(urllib.parse.quote(judgement[0]['ID']))
         form_cell.hyperlink = link
 
-    def form_to_cell_value(self, form: Form) -> str:
+    def form_to_cell_value(self, form: types.Form) -> str:
         """Build a string describing the form itself
 
         Provide the best transcription and all translations of the form strung
@@ -163,15 +190,14 @@ class ExcelWriter():
         translations = []
 
         suffix = ""
-        if form.cldf_comment:
+        # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
+        if form.get("Comment"):
             suffix = f" {WARNING:}"
 
-        # iterate over corresponding concepts
-        try:
-            for concept in form.parameters:
-                translations.append(concept.cldf_name)
-        except AttributeError:
-            translations.append(form.parameter.cldf_name)
+        # corresponding concepts – TODO: distinguish between list data type
+        # (multiple concepts) and others (single concept)
+        c_concept = self.dataset["FormTable", "parameterReference"].name
+        translations.append(form[c_concept])
 
         return "{:} ‘{:}’{:}".format(
             transcription, ", ".join(translations), suffix)
@@ -187,7 +213,8 @@ class ExcelWriter():
     #        ValueError(f"Form {form:} has no transcriptions.")
 
     def get_best_transcription(self, form):
-        return form.cldf_form
+        # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
+        return form["FUN"]
 
 
 if __name__ == "__main__":
@@ -195,8 +222,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Create an Excel cognate view from a CLDF dataset")
     parser.add_argument("metadata", help="Path to metadata file for dataset input")
-    parser.add_argument("database", help="Path to database")
     parser.add_argument("excel", help="Excel output file path")
     args = parser.parse_args()
-    E = ExcelWriter(pycldf.Dataset.from_metadata(args.metadata), args.database)
+    E = ExcelWriter(pycldf.Dataset.from_metadata(args.metadata))
     E.create_excel(args.excel)

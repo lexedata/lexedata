@@ -1,5 +1,6 @@
 """Similarity code tentative cognates in a word list and align them"""
 
+import csv
 import hashlib
 import logging
 import argparse
@@ -101,6 +102,11 @@ if __name__ == '__main__':
 
     def filter(row: t.Dict[str, t.Any]) -> bool:
         row['tokens'] = [str(x) for x in clean_segments(row[dataset.column_names.forms.segments.lower()])]
+        row['tokens'] = ['+' if x == '_' else x for x in row['tokens']]
+        # TODO: Find the official LingPy way to consider word boundaries to
+        # also be morpheme boundaries – just adding them in
+        # `partial_cluster(sep=...+'_')` did not work, and why isn't it the
+        # default anyway?
         row['doculect'] = row[dataset.column_names.forms.languageReference.lower()]
         row['concept'] = row[dataset.column_names.forms.parameterReference.lower()]
         return row['segments'] and row['concept']
@@ -163,4 +169,36 @@ if __name__ == '__main__':
     alm.align(method='progressive')
     alm.output('tsv', filename=args.output, ignore='all', prettify=False)
 
+    try:
+        dataset.add_component("CognateTable")
+    except ValueError:
+        ...
+    try:
+        dataset.add_component("CognatesetTable")
+    except ValueError:
+        ...
 
+    read_back = csv.DictReader(open(args.output + ".tsv"), delimiter="\t")
+    cognatesets = {}
+    judgements = []
+    i = 1
+    for line in read_back:
+        partial = line["PARTIALCOGNATEIDS"].split()
+        alignment = line["ALIGNMENT"].split(" + ")
+        slice_start = 0
+        for cs, alm in zip(partial, alignment):
+            cognatesets.setdefault(cs, {'ID': cs})
+            length = len(alm.split())
+            judgements.append({
+                "ID": i,
+                "Form_ID": line["ID"],
+                "Cognateset_ID": cs,
+                "Segment_Slice": ["{:d}:{:d}".format(
+                    slice_start, slice_start + length)],
+                "Alignment": alm.split(),
+                "Source": ["LexStat"]
+            })
+            i += 1
+            slice_start += length
+    dataset.write(CognatesetTable = cognatesets.values())
+    dataset.write(CognateTable = judgements)
