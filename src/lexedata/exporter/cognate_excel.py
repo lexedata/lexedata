@@ -25,7 +25,10 @@ WARNING = "\u26A0"
 # TODO: Make comments on Languages, Cognatesets, and Judgements appear as notes
 # in Excel.
 
-# TODO: cProfile – where's the bottleneck that makes this run so slow?
+# TODO: cProfile – where's the bottleneck that makes this run so slow? It looks
+# like it is the actual saving of the dataset. Check again whether we can use
+# https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode and
+# whether it's nicely faster.
 
 class ExcelWriter():
     """Class logic for cognateset Excel export."""
@@ -78,6 +81,12 @@ class ExcelWriter():
         c_form_id = self.dataset["FormTable", "id"].name
         all_forms = {f[c_form_id]: f
                      for f in self.dataset["FormTable"]}
+        all_judgements = {}
+
+        c_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
+        for j in self.dataset["CognateTable"]:
+            all_judgements.setdefault(j[c_cognateset], []).append(j)
+
         # TODO: If there is no cognateset table, add one – actually, that
         # should happen in the importer, the export should not modify the
         # dataset!!
@@ -89,7 +98,7 @@ class ExcelWriter():
         # Iterate over all cognate sets, and prepare the rows.
         # Again, row_index 2 is indeed row 2
         row_index = 1 + 1
-        for cogset in self.dataset['CognateTable']:
+        for cogset in self.dataset['CognatesetTable']:
             # Put the cognateset's tags in column B.
             for col, (db_name, header) in enumerate(self.header, 1):
                 cell = ws.cell(row=row_index, column=col,
@@ -100,7 +109,7 @@ class ExcelWriter():
                         cogset.cldf_comment, __package__)
 
             new_row_index = self.create_formcells_for_cogset(
-                cogset[c_cogset_id], ws, all_forms, row_index, self.lan_dict)
+                all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index, self.lan_dict)
             row_index = new_row_index
         wb.save(filename=out)
 
@@ -128,9 +137,7 @@ class ExcelWriter():
         c_language = self.dataset["FormTable", "languageReference"].name
         # Read the forms from the database and group them by language
         forms = t.DefaultDict[int, t.List[types.Form]](list)
-        for judgement in self.dataset["CognateTable"]:
-            if judgement[c_cogset] != cogset:
-                continue
+        for judgement in cogset:
             form_id = judgement[c_form]
             form = all_forms[form_id]
             forms[self.lan_dict[form[c_language]]].append(
@@ -215,8 +222,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Create an Excel cognate view from a CLDF dataset")
     parser.add_argument("metadata", help="Path to metadata file for dataset input")
-    parser.add_argument("database", help="Path to database")
     parser.add_argument("excel", help="Excel output file path")
     args = parser.parse_args()
-    E = ExcelWriter(pycldf.Dataset.from_metadata(args.metadata), args.database)
+    E = ExcelWriter(pycldf.Dataset.from_metadata(args.metadata))
     E.create_excel(args.excel)
