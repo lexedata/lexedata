@@ -39,7 +39,6 @@ warnings.formatwarning = formatwarning
 
 
 class ExcelParser:
-
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
                  top: int = 2, left: int = 2,
@@ -157,7 +156,6 @@ class ExcelParser:
                        ("FormTable_cldf_id", "ParameterTable_cldf_id"),
                        (form_id, row["cldf_id"])
                 )
-                conn.commit()
             except sqlite3.IntegrityError:
                 return False
         return True
@@ -181,7 +179,6 @@ class ExcelParser:
                    object.keys(),
                    tuple(object.values())
             )
-            conn.commit()
         return True
 
     def make_id_unique(self, object: O) -> str:
@@ -247,6 +244,8 @@ class ExcelParser:
                         self.create_form_with_sources(form, row_object, sources=sources)
                         form_id = form["cldf_id"]
                     self.associate(form_id, row_object)
+        with self.cldfdatabase.connection() as conn:
+            conn.commit()
 
 
 class ExcelCognateParser(ExcelParser):
@@ -287,7 +286,6 @@ class ExcelCognateParser(ExcelParser):
                        ("formReference", "cognatesetReference"),
                        (form_id, row["cldf_id"])
                 )
-                conn.commit()
             except sqlite3.IntegrityError:
                 return False
         return True
