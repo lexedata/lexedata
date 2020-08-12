@@ -195,7 +195,6 @@ class NaiveCellParser():
         """
         if not cell.value:
             return []
-        coordinate = cell.coordinate
 
         for element in self.separate(cell.value):
             try:
@@ -223,9 +222,13 @@ class CellParser(NaiveCellParser):
         "/": "phonemic",
     }
 
-    def __init__(self):
-        self.scan_for_variants = True
-        self.add_default_source = "{1}"
+    def __init__(self,
+                 separation_pattern: str = r"([;,])",
+                 variant_separators: set = {"~", "%"},
+                 add_default_source: str = "{1}"):
+        self.separation_pattern = separation_pattern
+        self.variant_separators = variant_separators
+        self.add_default_source = add_default_source
 
     def separate(self, values: str) -> t.Iterable[str]:
         """Separate different form descriptions in one string.
@@ -249,7 +252,7 @@ class CellParser(NaiveCellParser):
         ['illic']
 
         """
-        raw_split = re.split(r"([;,])", values)
+        raw_split = re.split(self.separation_pattern, values)
         while len(raw_split) > 1:
             if check_brackets(raw_split[0], self.bracket_pairs):
                 form = raw_split.pop(0).strip()
@@ -315,7 +318,7 @@ class CellParser(NaiveCellParser):
             else:
                 # The only thing we expect outside delimiters is the variant
                 # separators, '~' and '%'.
-                if element in {"~", "%"}:
+                if element in self.variants_separators:
                     # TODO: Should this be configurable? Where do we document
                     # the semantics?
                     expect_variant = element
