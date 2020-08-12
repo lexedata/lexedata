@@ -59,7 +59,8 @@ class ExcelParser:
         self.lexicon = lexicon_file
         self.sheets = self.set_sheets(lexicon_file)
         self.cldfdatabase = Database(output_dataset, fname=db_fname)
-        self.cldfdatabase.write()
+        if not Path(db_fname).exists():
+            self.cldfdatabase.write()
 
     def set_sheets(self, lexicon_file):
         return [sheet for sheet in openpyxl.load_workbook(lexicon_file).worksheets]
@@ -126,8 +127,8 @@ class ExcelParser:
                 # Skip empty languages
                 continue
             language = self.language_from_column(lan_col)
-            c = self.find_db_candidates(language, ["cldf_name"])
-            for language_id in c:
+            candidates = self.find_db_candidates(language, ["cldf_name"])
+            for language_id in candidates:
                 break
             else:
                 if not (self.on_language_not_found(language, lan_col[0]) and
@@ -239,9 +240,6 @@ class ExcelParser:
                     # Parse the cell, which results (potentially) in multiple forms
                     for params in self.cell_parser.parse(
                             cell_with_forms, this_lan,
-                            # TODO: Is there a way to get the sheet name from the
-                            # sheet object, so we can have Sheet1.A1, instead of
-                            # just A1, in the warnings?
                             f"{sheet.title}.{cell_with_forms.coordinate}"):
                         form = Form(params)
                         candidate_forms = self.find_db_candidates(
@@ -263,7 +261,7 @@ class ExcelCognateParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
                  lexicon_file: str,
-                 top: int = 2, left: int = 2,
+                 top: int = 2, left: int = 7,
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"]
     ) -> None:
@@ -387,17 +385,17 @@ def load_mg_style_dataset(
         db = tmpdir / 'db.sqlite'
     #lexicon_wb = openpyxl.load_workbook(lexicon)
 
-    dataset = pycldf.Dataset.from_metadata(metadata)
+    #dataset = pycldf.Dataset.from_metadata(metadata)
     #try:
     #    EP = excel_parser_from_dialect(dataset)
     #except KeyError:
     #    EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser_lexical = ExcelParser(dataset, db, lexicon)
+    excel_parser_lexical = ExcelParser(pycldf.Dataset.from_metadata(metadata), db, lexicon)
     excel_parser_lexical.parse_cells()
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
-    excel_parser_cognate = ExcelCognateParser(dataset, db, cogsets)
+    excel_parser_cognate = ExcelCognateParser(pycldf.Dataset.from_metadata(metadata), db, cogsets)
     excel_parser_cognate.parse_cells()
     excel_parser_cognate.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
