@@ -41,6 +41,7 @@ warnings.formatwarning = formatwarning
 class ExcelParser:
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
+                 lexicon_file: str,
                  top: int = 2, left: int = 2,
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"]
@@ -55,14 +56,19 @@ class ExcelParser:
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
 
+        self.lexicon = lexicon_file
+        self.sheets = self.set_sheets(lexicon_file)
         self.cldfdatabase = Database(output_dataset, fname=db_fname)
         self.cldfdatabase.write()
+
+    def set_sheets(self, lexicon_file):
+        return [sheet for sheet in openpyxl.load_workbook(lexicon_file).worksheets]
 
     def language_from_column(
             self, column: t.List[openpyxl.cell.Cell]
     ) -> Language:
         data = [(cell.value or '').strip() for cell in column[:self.top - 1]]
-        comment = get_cell_comment(column[0])
+        comment = column[0].comment.text or ''
         return Language(
             cldf_name = data[0],
             cldf_comment = comment
@@ -98,7 +104,7 @@ class ExcelParser:
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
-        comment = get_cell_comment(row[0])
+        comment = row[0].comment.text or ''
         return Concept(
             cldf_name = data[0],
             cldf_comment = comment
@@ -192,65 +198,69 @@ class ExcelParser:
             object["cldf_id"] = "{:}_{:d}".format(raw_id, i)
         return object["cldf_id"]
 
-    def parse_cells(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
+    def parse_cells(self) -> None:
+        sheet = self.sheets[0]
         languages = self.parse_all_languages(sheet)
-        row_object = None
-        for row in sheet.iter_rows(min_row=self.top):
-            row_header, row_forms = row[:self.left - 1], row[self.left - 1:]
-            # Parse the row header, creating or retrieving the associated row
-            # object (i.e. a concept or a cognateset)
-            properties = self.properties_from_row(row_header)
-            if properties is not None:
-                similar = self.find_db_candidates(
-                    properties, self.check_for_row_match)
-                for row_id in similar:
-                    properties["cldf_id"] = row_id
-                    break
-                else:
-                    if self.on_row_not_found(properties, row[0]):
-                        properties["cldf_id"] = string_to_id(properties.get("cldf_name", ""))
-                        self.make_id_unique(properties)
-                        self.insert_into_db(properties)
-                    else:
-                        continue
-                row_object = properties
-
-            if row_object is None:
-                raise AssertionError("Empty first row: Row had no properties, and there was no previous row to copy")
-
-            # Parse the row, cell by cell
-            for cell_with_forms in row_forms:
-                try:
-                    this_lan = languages[cell_with_forms.column]
-                except KeyError:
-                    continue
-
-                # Parse the cell, which results (potentially) in multiple forms
-                for params in self.cell_parser.parse(
-                        cell_with_forms, this_lan,
-                        # TODO: Is there a way to get the sheet name from the
-                        # sheet object, so we can have Sheet1.A1, instead of
-                        # just A1, in the warnings?
-                        cell_with_forms.coordinate):
-                    form = Form(params)
-                    candidate_forms = self.find_db_candidates(
-                        form, self.check_for_match)
-                    sources = form.pop("cldf_source")
-                    for form_id in candidate_forms:
+        for sheet in self.sheets:
+            sheet = sheet
+            row_object = None
+            for row in sheet.iter_rows(min_row=self.top):
+                row_header, row_forms = row[:self.left - 1], row[self.left - 1:]
+                # Parse the row header, creating or retrieving the associated row
+                # object (i.e. a concept or a cognateset)
+                properties = self.properties_from_row(row_header)
+                if properties is not None:
+                    similar = self.find_db_candidates(
+                        properties, self.check_for_row_match)
+                    for row_id in similar:
+                        properties["cldf_id"] = row_id
                         break
                     else:
-                        if not self.on_form_not_found(form, cell_with_forms):
+                        if self.on_row_not_found(properties, row[0]):
+                            properties["cldf_id"] = string_to_id(properties.get("cldf_name", ""))
+                            self.make_id_unique(properties)
+                            self.insert_into_db(properties)
+                        else:
                             continue
-                        self.create_form_with_sources(form, row_object, sources=sources)
-                        form_id = form["cldf_id"]
-                    self.associate(form_id, row_object)
-        with self.cldfdatabase.connection() as conn:
-            conn.commit()
+                    row_object = properties
+
+                if row_object is None:
+                    raise AssertionError("Empty first row: Row had no properties, and there was no previous row to copy")
+
+                # Parse the row, cell by cell
+                for cell_with_forms in row_forms:
+                    try:
+                        this_lan = languages[cell_with_forms.column]
+                    except KeyError:
+                        continue
+
+                    # Parse the cell, which results (potentially) in multiple forms
+                    for params in self.cell_parser.parse(
+                            cell_with_forms, this_lan,
+                            # TODO: Is there a way to get the sheet name from the
+                            # sheet object, so we can have Sheet1.A1, instead of
+                            # just A1, in the warnings?
+                            f"{sheet.title}.{cell_with_forms.coordinate}"):
+                        form = Form(params)
+                        candidate_forms = self.find_db_candidates(
+                            form, self.check_for_match)
+                        sources = form.pop("cldf_source")
+                        for form_id in candidate_forms:
+                            break
+                        else:
+                            if not self.on_form_not_found(form, cell_with_forms):
+                                continue
+                            self.create_form_with_sources(form, row_object, sources=sources)
+                            form_id = form["cldf_id"]
+                        self.associate(form_id, row_object)
+            with self.cldfdatabase.connection() as conn:
+                conn.commit()
 
 
 class ExcelCognateParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
+                 lexicon_file: str,
                  top: int = 2, left: int = 2,
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"]
@@ -258,6 +268,7 @@ class ExcelCognateParser(ExcelParser):
         super().__init__(
             output_dataset = output_dataset,
             db_fname=db_fname,
+            lexicon_file=lexicon_file,
             top = top, left = left,
             check_for_match = check_for_match,
             check_for_row_match = check_for_row_match)
@@ -271,7 +282,7 @@ class ExcelCognateParser(ExcelParser):
         data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
         if not data[0]:
             return None
-        comment = get_cell_comment(row[0])
+        comment = row[0].comment.text or ''
         return CogSet(
             cldf_name = data[0],
             cldf_comment = comment
@@ -372,19 +383,21 @@ def load_mg_style_dataset(
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / 'db.sqlite'
-    lexicon_wb = openpyxl.load_workbook(lexicon)
+    #lexicon_wb = openpyxl.load_workbook(lexicon)
 
     dataset = pycldf.Dataset.from_metadata(metadata)
-    try:
-        EP = excel_parser_from_dialect(dataset)
-    except KeyError:
-        EP = ExcelParser
+    #try:
+    #    EP = excel_parser_from_dialect(dataset)
+    #except KeyError:
+    #    EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser_lexical = EP(dataset, db)
-
-    excel_parser_lexical.parse_cells(lexicon_wb.active)
+    excel_parser_lexical = ExcelParser(dataset, db, lexicon)
+    excel_parser_lexical.parse_cells()
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
+    excel_parser_cognate = ExcelCognateParser(dataset, db, cogsets)
+    excel_parser_cognate.parse_cells()
+    excel_parser_cognate.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
 # TODO: Write a pair of functions like these to import cognate data separately
 # from the comparative lexical data, which should use the Hyperlink structure
