@@ -1,10 +1,8 @@
-import re
-import abc
 import typing as t
-import unidecode as uni
-
+import abc
 
 class Object(t.Dict[str, t.Any]):
+    """Object"""
     @property
     @abc.abstractmethod
     def __table__(self) -> str:
@@ -17,44 +15,54 @@ class RowObject(Object):
 
 
 class Concept(RowObject):
+    """concept"""
     @property
     def __table__(self) -> str:
         return "ParameterTable"
 
 
 class CogSet(RowObject):
+    """cognate set"""
     @property
     def __table__(self) -> str:
-        return "ParameterTable"
+        return "CognatesetTable"
 
 
 class Form(Object):
+    """form"""
     @property
     def __table__(self) -> str:
         return "FormTable"
 
 
 class Language(Object):
+    """language"""
     @property
     def __table__(self) -> str:
         return "LanguageTable"
 
 
 class Source(Object):
+    """source"""
     @property
     def __table__(self) -> str:
         return "SourceTable"
 
 
 class Reference(Object):
+    """reference"""
     @property
     def __table__(self) -> str:
         return "FormTable_SourceTable__cldf_source"
 
 
+#This function is a bit out of place here.
+import re
+import unidecode as uni
 invalid_id_elements = re.compile(r"\W+")
 
-def string_to_id(string):
+
+def string_to_id(string: str) -> str:
     """Generate a useful id string from the string
 
     >>> string_to_id("trivial")
@@ -74,3 +82,4 @@ def string_to_id(string):
     return invalid_id_elements.sub(
         "_", uni.unidecode(
             invalid_id_elements.sub("_", string)).lower()).strip("_")
+
