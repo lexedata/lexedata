@@ -42,7 +42,7 @@ class ExcelParser:
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
                  lexicon_file: str,
-                 top: int = 2, left: int = 2,
+                 top: int = 2, left: int = 7,
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"]
     ) -> None:
@@ -50,7 +50,7 @@ class ExcelParser:
         self.on_row_not_found: err.MissingHandler = err.create
         self.on_form_not_found: err.MissingHandler = err.create
 
-        self.cell_parser: cell_parsers.NaiveCellParser = cell_parsers.NaiveCellParser()
+        self.cell_parser: cell_parsers.NaiveCellParser = cell_parsers.CellParser()
         self.top = top
         self.left = left
         self.check_for_match = check_for_match
@@ -68,8 +68,10 @@ class ExcelParser:
             self, column: t.List[openpyxl.cell.Cell]
     ) -> Language:
         data = [(cell.value or '').strip() for cell in column[:self.top - 1]]
-        comment = column[0].comment.text or ''
+        comment = column[0].comment.text if column[0].comment else ''
+        #TODO: Gereon: here the function for id creation out of a string got missing....
         return Language(
+            cldf_id = data[0],
             cldf_name = data[0],
             cldf_comment = comment
         )
@@ -104,7 +106,7 @@ class ExcelParser:
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
-        comment = row[0].comment.text or ''
+        comment = row[0].comment.text if row[0].comment else ''
         return Concept(
             cldf_name = data[0],
             cldf_comment = comment
@@ -282,7 +284,7 @@ class ExcelCognateParser(ExcelParser):
         data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
         if not data[0]:
             return None
-        comment = row[0].comment.text or ''
+        comment = row[0].comment.text if row[0].comment else ''
         return CogSet(
             cldf_name = data[0],
             cldf_comment = comment
