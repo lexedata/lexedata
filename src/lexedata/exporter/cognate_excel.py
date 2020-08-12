@@ -44,7 +44,9 @@ class ExcelWriter():
 
     def create_excel(
             self,
-            out: Path) -> None:
+            out: Path,
+            size_sort: bool = False,
+    ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
         The Excel file has columns "CogSet", "Tags", and then one column per
@@ -98,7 +100,14 @@ class ExcelWriter():
         # Iterate over all cognate sets, and prepare the rows.
         # Again, row_index 2 is indeed row 2
         row_index = 1 + 1
-        for cogset in self.dataset['CognatesetTable']:
+
+        if size_sort:
+            cogsets = sorted(self.dataset['CognatesetTable'],
+                             key=lambda x: len(all_judgements[x[c_cogset_id]]),
+                             reverse=True)
+        else:
+            cogsets = self.dataset['CognatesetTable']
+        for cogset in cogsets:
             # Put the cognateset's tags in column B.
             for col, (db_name, header) in enumerate(self.header, 1):
                 cell = ws.cell(row=row_index, column=col,
@@ -225,6 +234,11 @@ if __name__ == "__main__":
         description="Create an Excel cognate view from a CLDF dataset")
     parser.add_argument("metadata", help="Path to metadata file for dataset input")
     parser.add_argument("excel", help="Excel output file path")
+    parser.add_argument(
+        "--size-sort",
+        action="store_true",
+        default=False,
+        help="List the biggest cognatesets first")
     args = parser.parse_args()
     E = ExcelWriter(pycldf.Dataset.from_metadata(args.metadata))
-    E.create_excel(args.excel)
+    E.create_excel(args.excel, size_sort=args.size_sort)
