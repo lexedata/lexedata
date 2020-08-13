@@ -41,7 +41,6 @@ warnings.formatwarning = formatwarning
 class ExcelParser:
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
-                 lexicon_file: str,
                  top: int = 2, left: int = 2,
                  cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
                  check_for_match: t.List[str] = ["cldf_id"],
@@ -60,14 +59,10 @@ class ExcelParser:
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
 
-        self.lexicon = lexicon_file
-        self.sheets = self.set_sheets(lexicon_file)
         self.cldfdatabase = Database(output_dataset, fname=db_fname)
         if not Path(db_fname).exists():
             self.cldfdatabase.write()
 
-    def set_sheets(self, lexicon_file):
-        return [sheet for sheet in openpyxl.load_workbook(lexicon_file).worksheets]
 
     def language_from_column(
             self, column: t.List[openpyxl.cell.Cell]
@@ -205,10 +200,11 @@ class ExcelParser:
             object["cldf_id"] = "{:}_{:d}".format(raw_id, i)
         return object["cldf_id"]
 
-    def parse_cells(self) -> None:
-        sheet = self.sheets[0]
+    def parse_cells(self, lexicon_file) -> None:
+        sheets = [sheet for sheet in openpyxl.load_workbook(lexicon_file).worksheets]
+        sheet = sheets[0]
         languages = self.parse_all_languages(sheet)
-        for sheet in self.sheets:
+        for sheet in sheets:
             sheet = sheet
             row_object = None
             for row in sheet.iter_rows(min_row=self.top):
@@ -264,7 +260,6 @@ class ExcelParser:
 class ExcelCognateParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
-                 lexicon_file: str,
                  top: int = 2, left: int = 7,
                  cellparser: cell_parsers.NaiveCellParser = cell_parsers.CognateParser(),
                  check_for_match: t.List[str] = ["cldf_id"],
@@ -276,7 +271,6 @@ class ExcelCognateParser(ExcelParser):
         super().__init__(
             output_dataset = output_dataset,
             db_fname=db_fname,
-            lexicon_file=lexicon_file,
             top = top, left = left,
             cellparser=cellparser,
             check_for_match = check_for_match,
@@ -315,7 +309,6 @@ class ExcelCognateParser(ExcelParser):
 class MawatiExcelParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
-                 lexicon_file: str,
                  top: int = 3, left: int = 7,
                  cellparser: cell_parsers.NaiveCellParser = cell_parsers.MawatiCellParser(),
                  check_for_match: t.List[str] = ["cldf_id"],
@@ -324,14 +317,13 @@ class MawatiExcelParser(ExcelParser):
                  on_row_not_found: err.MissingHandler = err.create,
                  on_form_not_found: err.MissingHandler = err.create
                  ) -> None:
-        super().__init__(output_dataset=output_dataset, db_fname=db_fname, lexicon_file=lexicon_file,
+        super().__init__(output_dataset=output_dataset, db_fname=db_fname,
                          top=top, left=left,
                          cellparser=cellparser,
                          check_for_match=check_for_match, check_for_row_match=check_for_row_match,
                          on_language_not_found=on_language_not_found,
                          on_row_not_found=on_row_not_found,
                          on_form_not_found=on_form_not_found)
-
 
 
 def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
@@ -350,12 +342,11 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
                 db_fname=db_fname,
                 top=top,
                 left=left,
+                cellparser=getattr(cell_parsers, dialect.cell_parser)(),
                 check_for_match=dialect.check_for_match,
                 check_for_row_match=dialect.check_for_row_match,
                 )
-            self.cell_parser = getattr(
-                cell_parsers,
-                dialect.cell_parser)()
+
 
         def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
             """Parse the row, according to regexes from the metadata.
@@ -423,12 +414,12 @@ def load_mg_style_dataset(
     #except KeyError:
     #    EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser_lexical = MawatiExcelParser(pycldf.Dataset.from_metadata(metadata), db, lexicon)
-    excel_parser_lexical.parse_cells()
+    excel_parser_lexical = MawatiExcelParser(pycldf.Dataset.from_metadata(metadata), db)
+    excel_parser_lexical.parse_cells(lexicon)
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
-    excel_parser_cognate = ExcelCognateParser(pycldf.Dataset.from_metadata(metadata), db, cogsets)
-    excel_parser_cognate.parse_cells()
+    excel_parser_cognate = ExcelCognateParser(pycldf.Dataset.from_metadata(metadata), db)
+    excel_parser_cognate.parse_cells(cogsets)
     excel_parser_cognate.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
 # TODO: Write a pair of functions like these to import cognate data separately
