@@ -329,7 +329,7 @@ class CellParser(NaiveCellParser):
             # TODO: This adds sources and comments to the variants, which is
             # not intended. That should probably be cleaned up in
             # post-processing.
-            if field in properties:
+            if field in properties and field != "cldf_comment" and field != "cldf_source":
                 if not expect_variant:
                     logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}")
                 properties.setdefault("variants", []).append(
@@ -407,12 +407,27 @@ class MawatiCellParser(CellParser):
             description_dictionary: t.Dict[str, t.Any],
             language_id: str):
         super().postprocess_form(description_dictionary, language_id)
+        variants = None
+        for key, value in description_dictionary.items():
+
+            # if any separator in this value, split value. add first as key and rest to variants.
+            if self.variant_separator and key != "cldf_value":
+                for separator in self.variant_separator:
+                    if separator in value:
+                        value = value.split(separator)
+                        description_dictionary[key] = value.pop(0)
+                        if variants:
+                            variants += separator.join(value)
+                        else:
+                            variants = separator.join(value)
+
+        # resize dictionary after iteration
+        # add variants
+        if variants:
+            description_dictionary.setdefault("variants", []).append(variants)
         # TODO: Write a subclass for Maweti-Guarani that also uses what we know
         # about that dataset:
         # • TODO Pick out the two- or three-letter editor
         #   procedural comments.
         # • TODO: Split forms that contain '%' or '~', drop the variant in
         #   variants.
-        if self.variant_separator and self.variant_separator[0] in \
-                " ".join(description_dictionary) or self.variant_separator[1] in " ".join(description_dictionary):
-            print(description_dictionary)
