@@ -42,15 +42,19 @@ class ExcelParser:
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
                  lexicon_file: str,
-                 top: int = 2, left: int = 7,
+                 top: int = 2, left: int = 2,
+                 cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
                  check_for_match: t.List[str] = ["cldf_id"],
-                 check_for_row_match: t.List[str] = ["cldf_name"]
+                 check_for_row_match: t.List[str] = ["cldf_name"],
+                 on_language_not_found: err.MissingHandler = err.create,
+                 on_row_not_found: err.MissingHandler = err.create,
+                 on_form_not_found: err.MissingHandler = err.create
     ) -> None:
-        self.on_language_not_found: err.MissingHandler = err.create
-        self.on_row_not_found: err.MissingHandler = err.create
-        self.on_form_not_found: err.MissingHandler = err.create
+        self.on_language_not_found = on_language_not_found
+        self.on_row_not_found = on_row_not_found
+        self.on_form_not_found = on_form_not_found
 
-        self.cell_parser: cell_parsers.NaiveCellParser = cell_parsers.CellParser()
+        self.cell_parser: cell_parsers.NaiveCellParser = cellparser
         self.top = top
         self.left = left
         self.check_for_match = check_for_match
