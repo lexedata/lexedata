@@ -179,7 +179,7 @@ class NaiveCellParser():
         return source_id, context
 
     def parse_form(self, form_string: str, language_id: str,
-            cell_coordinate: str = ''
+            cell_identifier: str = ''
     ) -> t.Optional[Form]:
         return Form({
             "cldf_value": form_string,
@@ -188,7 +188,7 @@ class NaiveCellParser():
         })
 
     def parse(self, cell: openpyxl.cell.Cell, language_id: str,
-            cell_coordinate: str = ''
+            cell_identifier: str = ''
     ) -> t.Iterable[Form]:
         """Return form properties for every form in the cell
 
@@ -198,7 +198,7 @@ class NaiveCellParser():
 
         for element in self.separate(cell.value):
             try:
-                form = self.parse_form(element, language_id, cell_coordinate)
+                form = self.parse_form(element, language_id, cell_identifier)
             except CellParsingError as err:
                 continue
             if form:
@@ -224,10 +224,10 @@ class CellParser(NaiveCellParser):
 
     def __init__(self,
                  separation_pattern: str = r"([;,])",
-                 variant_separators: set = {"~", "%"},
+                 variant_separator: t.Optional[set] = None,
                  add_default_source: str = "{1}"):
         self.separation_pattern = separation_pattern
-        self.variant_separators = variant_separators
+        self.variant_separator = variant_separator
         self.add_default_source = add_default_source
 
     def separate(self, values: str) -> t.Iterable[str]:
@@ -268,7 +268,7 @@ class CellParser(NaiveCellParser):
 
     def parse_form(
             self, form_string: str, language_id: str,
-            cell_coordinate: str = '',
+            cell_identifier: str = '',
     ) -> t.Optional[Form]:
         """Create a dictionary of columns from a form description.
 
@@ -283,10 +283,10 @@ class CellParser(NaiveCellParser):
         # if string is only whitespaces, there is no form.
         if not form_string.strip():
             return None
+        # cell_identifier format: sheet.cell_coordinate
+        cell_identifier = '{}: '.format(cell_identifier) if cell_identifier else ''
 
-        c = '{}: '.format(cell_coordinate) if cell_coordinate else ''
-
-        d: t.Dict[str, t.Any] = {
+        properties: t.Dict[str, t.Any] = {
             "cldf_languageReference": language_id,
             "cldf_value": form_string}
 
@@ -305,11 +305,7 @@ class CellParser(NaiveCellParser):
             # the last element, because a mismatched opening bracket means we
             # are still waiting for the closing one), warn.
             if not check_brackets(element, self.bracket_pairs):
-                # TODO: Make warnings aware of the cell we are working on. What
-                # is the best way to do it? Passing the coordinate just for the
-                # purpose of logging feels weird and misses functions called
-                # without it, is there some better way?
-                logger.warning(f"{c}In form {form_string}: Element {element} had mismatching delimiters")
+                logger.warning(f"{cell_identifier}In form {form_string}: Element {element} had mismatching delimiters")
 
             # Check what kind of element we have.
             for start, field in self.element_semantics.items():
@@ -318,12 +314,12 @@ class CellParser(NaiveCellParser):
             else:
                 # The only thing we expect outside delimiters is the variant
                 # separators, '~' and '%'.
-                if element in self.variants_separators:
+                if self.variant_separator and element in self.variant_separator:
                     # TODO: Should this be configurable? Where do we document
                     # the semantics?
                     expect_variant = element
                 else:
-                    logger.warning(f"{c}In form {form_string}: Element {element} could not be parsed, ignored")
+                    logger.warning(f"{cell_identifier}In form {form_string}: Element {element} could not be parsed, ignored")
                 continue
 
             # If we encounter a field for the first time, we add it to the
@@ -333,21 +329,21 @@ class CellParser(NaiveCellParser):
             # TODO: This adds sources and comments to the variants, which is
             # not intended. That should probably be cleaned up in
             # post-processing.
-            if field in d:
+            if field in properties:
                 if not expect_variant:
-                    logger.warning(f"{c}In form {form_string}: Element {element} was an unexpected variant for {field}")
-                d.setdefault("variants", []).append(
+                    logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}")
+                properties.setdefault("variants", []).append(
                     (expect_variant or '') +
                     element)
             else:
                 if expect_variant:
-                    logger.warning(f"{c}In form {form_string}: Element {element} was supposed to be a variant, but there is no earlier {field}")
-                d[field] = element
+                    logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was supposed to be a variant, but there is no earlier {field}")
+                properties[field] = element
 
             expect_variant = None
 
-        self.postprocess_form(d, language_id)
-        return Form(d)
+        self.postprocess_form(properties, language_id)
+        return Form(properties)
 
     def postprocess_form(
             self,
@@ -381,24 +377,37 @@ class CellParser(NaiveCellParser):
         #   procedural comments.
         # • TODO: Split forms that contain '%' or '~', drop the variant in
         #   variants.
+        if self.variant_separator:
+            print(description_dictionary)
 
 
 class CognateParser(CellParser):
     def parse_form(self, values, language,
-            cell_coordinate: str = ''
+            cell_identifier: str = ''
     ):
         if values.isupper():
             return None
         else:
-            return super().parse_form(values, language, cell_coordinate)
+            return super().parse_form(values, language, cell_identifier)
 
 
 class CellParserHyperlink(CellParser):
     def parse(
-            self, cell: openpyxl.cell.Cell, language_id: str, cell_coordinate: str = ''
+            self, cell: openpyxl.cell.Cell, language_id: str, cell_identifier: str = ''
     ) -> t.Iterable[Form]:
         try:
             url = cell.hyperlink.target
             yield Form({"cldf_id": url.split("/")[-1]})
         except AttributeError:
             pass
+
+
+class MawatiCellParser(CellParser):
+    def __init__(self,
+                 separation_pattern: str = r"([;,])",
+                 variant_separator: set = {"~", "%"},
+                 add_default_source: str = "{1}"):
+        super(MawatiCellParser, self).__init__(separation_pattern=separation_pattern,
+                                               variant_separator=variant_separator,
+                                               add_default_source=add_default_source)
+
