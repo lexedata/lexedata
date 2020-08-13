@@ -224,7 +224,7 @@ class CellParser(NaiveCellParser):
 
     def __init__(self,
                  separation_pattern: str = r"([;,])",
-                 variant_separator: t.Optional[set] = None,
+                 variant_separator: t.Optional[list] = None,
                  add_default_source: str = "{1}"):
         self.separation_pattern = separation_pattern
         self.variant_separator = variant_separator
@@ -371,15 +371,6 @@ class CellParser(NaiveCellParser):
         # TODO: Remove duplicate sources and additional comments from the
         # variants, merge them to the appropriate columns instead.
 
-        # TODO: Write a subclass for Maweti-Guarani that also uses what we know
-        # about that dataset:
-        # • TODO Pick out the two- or three-letter editor
-        #   procedural comments.
-        # • TODO: Split forms that contain '%' or '~', drop the variant in
-        #   variants.
-        if self.variant_separator:
-            print(description_dictionary)
-
 
 class CognateParser(CellParser):
     def parse_form(self, values, language,
@@ -405,9 +396,23 @@ class CellParserHyperlink(CellParser):
 class MawatiCellParser(CellParser):
     def __init__(self,
                  separation_pattern: str = r"([;,])",
-                 variant_separator: set = {"~", "%"},
+                 variant_separator: list = ["~", "%"],
                  add_default_source: str = "{1}"):
         super(MawatiCellParser, self).__init__(separation_pattern=separation_pattern,
                                                variant_separator=variant_separator,
                                                add_default_source=add_default_source)
 
+    def postprocess_form(
+            self,
+            description_dictionary: t.Dict[str, t.Any],
+            language_id: str):
+        super().postprocess_form(description_dictionary, language_id)
+        # TODO: Write a subclass for Maweti-Guarani that also uses what we know
+        # about that dataset:
+        # • TODO Pick out the two- or three-letter editor
+        #   procedural comments.
+        # • TODO: Split forms that contain '%' or '~', drop the variant in
+        #   variants.
+        if self.variant_separator and self.variant_separator[0] in \
+                " ".join(description_dictionary) or self.variant_separator[1] in " ".join(description_dictionary):
+            print(description_dictionary)
