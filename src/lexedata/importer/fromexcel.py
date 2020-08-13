@@ -63,7 +63,8 @@ class ExcelParser:
         self.lexicon = lexicon_file
         self.sheets = self.set_sheets(lexicon_file)
         self.cldfdatabase = Database(output_dataset, fname=db_fname)
-        self.cldfdatabase.write()
+        if not Path(db_fname).exists():
+            self.cldfdatabase.write()
 
     def set_sheets(self, lexicon_file):
         return [sheet for sheet in openpyxl.load_workbook(lexicon_file).worksheets]
@@ -315,7 +316,7 @@ class MawatiExcelParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
                  lexicon_file: str,
-                 top: int = 2, left: int = 7,
+                 top: int = 3, left: int = 7,
                  cellparser: cell_parsers.NaiveCellParser = cell_parsers.MawatiCellParser(),
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
@@ -426,9 +427,9 @@ def load_mg_style_dataset(
     excel_parser_lexical.parse_cells()
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
-    #excel_parser_cognate = ExcelCognateParser(pycldf.Dataset.from_metadata(metadata), db, cogsets)
-    #excel_parser_cognate.parse_cells()
-    #excel_parser_cognate.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
+    excel_parser_cognate = ExcelCognateParser(pycldf.Dataset.from_metadata(metadata), db, cogsets)
+    excel_parser_cognate.parse_cells()
+    excel_parser_cognate.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
 # TODO: Write a pair of functions like these to import cognate data separately
 # from the comparative lexical data, which should use the Hyperlink structure
