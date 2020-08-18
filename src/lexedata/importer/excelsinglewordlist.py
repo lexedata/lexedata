@@ -1,12 +1,14 @@
 import csv
 import logging
+import unicodedata
 import typing as t
 
 import openpyxl
 
 
 def normalize_header(row: t.Iterable[openpyxl.cell.Cell], running_id: bool = False) -> t.Iterable[str]:
-    header = [n.value or f'c{c:}'
+    header = [unicodedata.normalize('NFKD', (n.value or '').strip()) or
+              f'c{c:}'
               for c, n in enumerate(row)]
     header = [h.replace(" ", "_") for h in header]
     header = [h.replace("(", "") for h in header]
@@ -19,7 +21,7 @@ def normalize_header(row: t.Iterable[openpyxl.cell.Cell], running_id: bool = Fal
 def cell_value(cell):
     if cell.value is None:
         return ''
-    v = cell.value
+    v = unicodedata.normalize('NFKD', (cell.value or '').strip())
     if type(v) == float:
         if v == int(v):
             return int(v)
@@ -47,7 +49,7 @@ def import_language(
     fn: t.Iterable[str]
     empty_cols: t.Set[int] = set()
     for i, col in enumerate(sheet.iter_cols()):
-        column = [str(c.value).strip() if c.value is not None else None for c in col]
+        column = [str(unicodedata.normalize('NFKD', (c.value or '').strip())).strip() or None for c in col]
         if not any(column[1:]):
             empty_cols.add(i)
 
@@ -66,11 +68,10 @@ def import_language(
                     diff2)
         data = {
             k: cell_value(cell)
-
             for k, (c, cell) in zip(header, enumerate(row))
-
             if c not in empty_cols
-            if k in writer.fieldnames}
+            if k in writer.fieldnames
+        }
         if "Language" in writer.fieldnames:
             data["Language"] = language
         if running_id is not None:
@@ -116,7 +117,9 @@ if __name__ == '__main__':
     first_sheet = args.excel[args.sheet[0]]
     empty_cols: t.Set[int] = set()
     for i, col in enumerate(first_sheet.iter_cols()):
-        column = [str(c.value).strip() if c.value is not None else None for c in col]
+        column = [
+            unicodedata.normalize('NFKD', (c.value or '').strip())
+            for c in col]
         if not any(column[1:]):
             empty_cols.add(i)
 
