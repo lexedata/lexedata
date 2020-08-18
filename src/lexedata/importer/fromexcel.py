@@ -65,6 +65,11 @@ class ExcelParser:
         self.check_for_row_match = check_for_row_match
 
         self.cldfdatabase = Database(output_dataset, fname=db_fname)
+
+    # TODO: Run `write` for an ExcelParser after __init__, but not for an
+    # ExcelCognateParser, when constructing these objects from the command line
+    # input
+    def write():
         # Die when the database file already exists – either it's empty, then
         # the user can delete it themself (so they should get a very explicit
         # warning!), or it is not empty, then I don't want it. It could contain
@@ -77,7 +82,7 @@ class ExcelParser:
         # we have checked that .write does not mind them. TODO: Well, actually,
         # this is necessary so that the cognate parser can start working after
         # the lexical parser. What is the way forward??
-        if Path(db_fname).exists():
+        if Path(self.cldfdatabase.fname).exists():
             raise FileExistsError(
                 "The database file {:} exists, but ExcelParser expects "
                 "to start from a clean slate.")
