@@ -439,11 +439,11 @@ def load_mg_style_dataset(
     except KeyError:
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser_lexical = MawetiExcelParser(pycldf.Dataset.from_metadata(metadata), db)
+    excel_parser_lexical = MawetiExcelParser(dataset, db)
     excel_parser_lexical.parse_cells(lexicon)
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
-    excel_parser_cognate = ExcelCognateParser(pycldf.Dataset.from_metadata(metadata), db)
+    excel_parser_cognate = ExcelCognateParser(dataset, db)
     excel_parser_cognate.parse_cells(cogsets)
     excel_parser_cognate.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
