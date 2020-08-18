@@ -217,6 +217,8 @@ class ExcelWriter():
         return form["FUN"]
 
 
+# TODO: Somehow, this script tends to run very slowly. Find the bottleneck, and
+# see whether we can get it to speed up to seconds, not minutes!
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(
