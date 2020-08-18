@@ -15,7 +15,7 @@ setup(
     package_dir={'': 'src'},
     platforms='any',
     install_requires=[
-        "attr",
+        "attrs",
         "openpyxl",
         "pycldf",
         "sqlalchemy",
