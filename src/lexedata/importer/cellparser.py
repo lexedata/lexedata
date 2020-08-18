@@ -326,9 +326,11 @@ class CellParser(NaiveCellParser):
             # dictionary. If repeatedly, to the variants, with a decorator that
             # shows how expected the variant was.
 
-            # TODO: This adds sources and comments to the variants, which is
-            # not intended. That should probably be cleaned up in
-            # post-processing.
+            # TODO: This drops duplicate sources and comments, which is not
+            # intended. If we drop the first variant of each of those two
+            # fields, we cannot clean that up in post-processing. Maybe the
+            # intention was to assume that for comments and soucres, we always
+            # `expect_variant`s, so it should be an `or` for the inner if?
             if field in properties and field != "cldf_comment" and field != "cldf_source":
                 if not expect_variant:
                     logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}")
@@ -393,41 +395,55 @@ class CellParserHyperlink(CellParser):
             pass
 
 
-class MawatiCellParser(CellParser):
+class MawetiCellParser(CellParser):
     def __init__(self,
                  separation_pattern: str = r"([;,])",
                  variant_separator: list = ["~", "%"],
                  add_default_source: str = "{1}"):
-        super(MawatiCellParser, self).__init__(separation_pattern=separation_pattern,
+        super(MawetiCellParser, self).__init__(separation_pattern=separation_pattern,
                                                variant_separator=variant_separator,
                                                add_default_source=add_default_source)
 
     def postprocess_form(
             self,
             description_dictionary: t.Dict[str, t.Any],
-            language_id: str):
+            language_id: str) -> None:
+        """
+        >>> m = MawetiCellParser()
+        >>> form = {
+        ...  "orthographic": "<lexedata % lexidata>",
+        ...  "phonemic": "/lεksedata ~ lεksidata/"
+        ...  "variants": ["(from lexicon + edit + data)", "(another comment)"]
+        ...  "cldf_comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)"
+        ... }
+        >>> m.postprocess_form(form)
+        >>> form == {"orthographic": "lexedata",
+        ...  "phonemic": "lεksedata",
+        ...  "variants": ["~ <lexidata>", "~ /lεksidata/"],
+        ...  "cldf_comment": "from lexicon + edit + data\\tanother comment",
+        ...  "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first"}
+        True
+        """
         super().postprocess_form(description_dictionary, language_id)
-        variants = None
+        variants = description_dictionary.setdefault("variants", [])
+        # Split forms that contain '%' or '~', drop the variant in
+        # variants.
+        # TODO Don't do this for all fields, just for transcriptions – what is
+        # the best way to track whether a field is a transcription or not?
+        # Actually, knowing that would also be helpful elsewhere, where we want
+        # to treat variant transcriptions using the `variants` field, but
+        # variant comments, concepts, sources etc. using their dedicated
+        # list-valued fields.
         for key, value in description_dictionary.items():
-
-            # if any separator in this value, split value. add first as key and rest to variants.
+            # if any separator is in this value, split value. add first as key and rest to variants.
             if self.variant_separator and key != "cldf_value":
                 for separator in self.variant_separator:
                     if separator in value:
                         value = value.split(separator)
                         description_dictionary[key] = value.pop(0)
-                        if variants:
-                            variants += separator.join(value)
-                        else:
-                            variants = separator.join(value)
+                        variants.append(separator.join(value))
 
-        # resize dictionary after iteration
-        # add variants
-        if variants:
-            description_dictionary.setdefault("variants", []).append(variants)
         # TODO: Write a subclass for Maweti-Guarani that also uses what we know
         # about that dataset:
         # • TODO Pick out the two- or three-letter editor
         #   procedural comments.
-        # • TODO: Split forms that contain '%' or '~', drop the variant in
-        #   variants.
