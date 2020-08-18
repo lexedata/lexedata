@@ -2,13 +2,20 @@ import functools
 import typing as t
 from collections import OrderedDict, defaultdict
 
+import attr
 import csvw.db
 import pycldf.db
 
 from csvw.db import ColSpec, quoted, insert
-from pycldf.db import BIBTEX_FIELDS, TableTranslation, TERMS, PRIMARY_KEY_NAMES, clean_bibtex_key
+from pycldf.db import BIBTEX_FIELDS, TERMS, PRIMARY_KEY_NAMES, clean_bibtex_key
 
 T = t.TypeVar('T', bound="TableSpec")
+
+
+@attr.s
+class TableTranslation(object):
+    name: t.Optional[str] = attr.ib(default=None)
+    columns: t.Dict[str, str] = attr.ib(factory=dict)
 
 
 class TableSpec(csvw.db.TableSpec):
@@ -238,8 +245,6 @@ class Database(pycldf.db.Database):
                                 )})
                     break
 
-        # FIXME: There is something wrong with translations
-        # print(translations)
         # Make sure `base` directory can be resolved:
         tg._fname = dataset.tablegroup._fname
         csvw.db.Database.__init__(
