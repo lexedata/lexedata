@@ -15,15 +15,20 @@ import sqlalchemy
 from csvw.db import insert
 
 from lexedata.types import *
+from lexedata.types import string_to_id
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.cldf.db import Database
 import lexedata.error_handling as err
 
 O = t.TypeVar('O', bound=Object)
 
-# Remark: excel uses 1-based indices
+
+# NOTE: Excel uses 1-based indices, this shows up in a few places in this file.
+
+
 def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
     return not any([(cell.value or '').strip() for cell in cells])
+
 
 # Adapt warnings – TODO: Probably the `logging` package would be better for
 # this job than `warnings`.
@@ -53,15 +58,30 @@ class ExcelParser:
         self.on_row_not_found = on_row_not_found
         self.on_form_not_found = on_form_not_found
 
-        self.cell_parser = cellparser
+        self.cell_parser: cell_parsers.NaiveCellParser = cellparser
         self.top = top
         self.left = left
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
 
         self.cldfdatabase = Database(output_dataset, fname=db_fname)
-        if not Path(db_fname).exists():
-            self.cldfdatabase.write()
+        # Die when the database file already exists – either it's empty, then
+        # the user can delete it themself (so they should get a very explicit
+        # warning!), or it is not empty, then I don't want it. It could contain
+        # valuable data, the wrong table schema, or any other undesirable
+        # content, so we are better of dying and letting the user decide. TODO:
+        # If for quick testing, we sometimes want to ignore an existing file,
+        # that should be handled using eg. a `force` parameter to __init__
+        # which can be set from calling tests or the command line. Maybe we can
+        # accept existing empty files, eg. tempfiles, without complaint after
+        # we have checked that .write does not mind them. TODO: Well, actually,
+        # this is necessary so that the cognate parser can start working after
+        # the lexical parser. What is the way forward??
+        if Path(db_fname).exists():
+            raise FileExistsError(
+                "The database file {:} exists, but ExcelParser expects "
+                "to start from a clean slate.")
+        self.cldfdatabase.write()
 
 
     def language_from_column(
@@ -69,9 +89,10 @@ class ExcelParser:
     ) -> Language:
         data = [(cell.value or '').strip() for cell in column[:self.top - 1]]
         comment = column[0].comment.text if column[0].comment else ''
-        #TODO: Gereon: here the function for id creation out of a string got missing....
         return Language(
-            cldf_id = data[0],
+            # Do not set the ID. Without knowing the database, we cannot know
+            # what it needs to be, in particular whether there needs to be any
+            # disambiguating number suffix.
             cldf_name = data[0],
             cldf_comment = comment
         )
@@ -200,61 +221,57 @@ class ExcelParser:
             object["cldf_id"] = "{:}_{:d}".format(raw_id, i)
         return object["cldf_id"]
 
-    def parse_cells(self, lexicon_file) -> None:
-        sheets = [sheet for sheet in openpyxl.load_workbook(lexicon_file).worksheets]
-        sheet = sheets[0]
+    def parse_cells(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
         languages = self.parse_all_languages(sheet)
-        for sheet in sheets:
-            sheet = sheet
-            row_object = None
-            for row in sheet.iter_rows(min_row=self.top):
-                row_header, row_forms = row[:self.left - 1], row[self.left - 1:]
-                # Parse the row header, creating or retrieving the associated row
-                # object (i.e. a concept or a cognateset)
-                properties = self.properties_from_row(row_header)
-                if properties is not None:
-                    similar = self.find_db_candidates(
-                        properties, self.check_for_row_match)
-                    for row_id in similar:
-                        properties["cldf_id"] = row_id
+        row_object = None
+        for row in sheet.iter_rows(min_row=self.top):
+            row_header, row_forms = row[:self.left - 1], row[self.left - 1:]
+            # Parse the row header, creating or retrieving the associated row
+            # object (i.e. a concept or a cognateset)
+            properties = self.properties_from_row(row_header)
+            if properties is not None:
+                similar = self.find_db_candidates(
+                    properties, self.check_for_row_match)
+                for row_id in similar:
+                    properties["cldf_id"] = row_id
+                    break
+                else:
+                    if self.on_row_not_found(properties, row[0]):
+                        properties["cldf_id"] = string_to_id(properties.get("cldf_name", ""))
+                        self.make_id_unique(properties)
+                        self.insert_into_db(properties)
+                    else:
+                        continue
+                row_object = properties
+
+            if row_object is None:
+                raise AssertionError("Empty first row: Row had no properties, and there was no previous row to copy")
+
+            # Parse the row, cell by cell
+            for cell_with_forms in row_forms:
+                try:
+                    this_lan = languages[cell_with_forms.column]
+                except KeyError:
+                    continue
+
+                # Parse the cell, which results (potentially) in multiple forms
+                for params in self.cell_parser.parse(
+                        cell_with_forms, this_lan,
+                        f"{sheet.title}.{cell_with_forms.coordinate}"):
+                    form = Form(params)
+                    candidate_forms = self.find_db_candidates(
+                        form, self.check_for_match)
+                    sources = form.pop("cldf_source")
+                    for form_id in candidate_forms:
                         break
                     else:
-                        if self.on_row_not_found(properties, row[0]):
-                            properties["cldf_id"] = string_to_id(properties.get("cldf_name", ""))
-                            self.make_id_unique(properties)
-                            self.insert_into_db(properties)
-                        else:
+                        if not self.on_form_not_found(form, cell_with_forms):
                             continue
-                    row_object = properties
-
-                if row_object is None:
-                    raise AssertionError("Empty first row: Row had no properties, and there was no previous row to copy")
-
-                # Parse the row, cell by cell
-                for cell_with_forms in row_forms:
-                    try:
-                        this_lan = languages[cell_with_forms.column]
-                    except KeyError:
-                        continue
-
-                    # Parse the cell, which results (potentially) in multiple forms
-                    for params in self.cell_parser.parse(
-                            cell_with_forms, this_lan,
-                            f"{sheet.title}.{cell_with_forms.coordinate}"):
-                        form = Form(params)
-                        candidate_forms = self.find_db_candidates(
-                            form, self.check_for_match)
-                        sources = form.pop("cldf_source")
-                        for form_id in candidate_forms:
-                            break
-                        else:
-                            if not self.on_form_not_found(form, cell_with_forms):
-                                continue
-                            self.create_form_with_sources(form, row_object, sources=sources)
-                            form_id = form["cldf_id"]
-                        self.associate(form_id, row_object)
-            with self.cldfdatabase.connection() as conn:
-                conn.commit()
+                        self.create_form_with_sources(form, row_object, sources=sources)
+                        form_id = form["cldf_id"]
+                    self.associate(form_id, row_object)
+        with self.cldfdatabase.connection() as conn:
+            conn.commit()
 
 
 class ExcelCognateParser(ExcelParser):
@@ -286,6 +303,15 @@ class ExcelCognateParser(ExcelParser):
         data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
         if not data[0]:
             return None
+        # TODO I don't know what ate `get_cell_coment`, we can probably put it
+        # back. It's not as critical with comments, which we don't expect to
+        # ever be used for exact matching, but it would probably be nice to use
+        # the same postprocess, namely strip() and unicode normalization, as
+        # elsewhere.
+        # TODO: Actually, where is that strip + unicode normalization here? I
+        # may have added it only to excelsinglewordlist.py – we should probably
+        # also throw it on all strings we get from the database in this module
+        # here.
         comment = row[0].comment.text if row[0].comment else ''
         return CogSet(
             cldf_name = data[0],
@@ -306,11 +332,11 @@ class ExcelCognateParser(ExcelParser):
         return True
 
 
-class MawatiExcelParser(ExcelParser):
+class MawetiExcelParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
                  top: int = 3, left: int = 7,
-                 cellparser: cell_parsers.NaiveCellParser = cell_parsers.MawatiCellParser(),
+                 cellparser: cell_parsers.NaiveCellParser = cell_parsers.MawetiCellParser(),
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
                  on_language_not_found: err.MissingHandler = err.create,
@@ -346,7 +372,6 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
                 check_for_match=dialect.check_for_match,
                 check_for_row_match=dialect.check_for_row_match,
                 )
-
 
         def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
             """Parse the row, according to regexes from the metadata.
@@ -406,15 +431,15 @@ def load_mg_style_dataset(
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / 'db.sqlite'
-    #lexicon_wb = openpyxl.load_workbook(lexicon)
+    lexicon_wb = openpyxl.load_workbook(lexicon)
 
-    #dataset = pycldf.Dataset.from_metadata(metadata)
-    #try:
-    #    EP = excel_parser_from_dialect(dataset)
-    #except KeyError:
-    #    EP = ExcelParser
+    dataset = pycldf.Dataset.from_metadata(metadata)
+    try:
+        EP = excel_parser_from_dialect(dataset)
+    except KeyError:
+        EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser_lexical = MawatiExcelParser(pycldf.Dataset.from_metadata(metadata), db)
+    excel_parser_lexical = MawetiExcelParser(pycldf.Dataset.from_metadata(metadata), db)
     excel_parser_lexical.parse_cells(lexicon)
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
