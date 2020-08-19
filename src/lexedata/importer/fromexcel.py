@@ -68,7 +68,7 @@ class ExcelParser:
 
     # TODO: Run `write` for an ExcelParser after __init__, but not for an
     # ExcelCognateParser, when constructing these objects from the command line
-    # input
+    # input in load_mg_style_dataset
     def write():
         # Die when the database file already exists – either it's empty, then
         # the user can delete it themself (so they should get a very explicit

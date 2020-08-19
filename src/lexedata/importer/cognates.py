@@ -39,6 +39,7 @@ if __name__ == "__main__":
 
     excel_parser_cognate = ExcelCognateParser(
         dataset, db, 2, 3, cell_parsers.CellParserHyperlink)
+    excel_parser_cognate.cldfdatabase.write_from_tg()
     excel_parser_cognate.parse_cells(ws)
     excel_parser_cognate.cldfdatabase.to_cldf(args.metadata.parent, mdname=args.metadata.name)
 
