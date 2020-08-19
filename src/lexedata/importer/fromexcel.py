@@ -520,4 +520,3 @@ if __name__ == "__main__":
 
     load_mg_style_dataset(args.metadata, args.lexicon, args.db)
     load_mg_style_cognateset(args.metadata, args.cogsets, args.db)
-
