@@ -481,16 +481,10 @@ def load_mg_style_cognateset(
     #    EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     excel_parser_cognate = ExcelCognateParser(pycldf.Dataset.from_metadata(metadata), db)
-   #excel_parser_cognate = ExcelCognateParser(dataset, db)
     cogsets_wb = openpyxl.load_workbook(cogsets)
     for sheet in cogsets_wb.worksheets:
         excel_parser_cognate.parse_cells(sheet)
     excel_parser_cognate.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
-
-# TODO: Write a pair of functions like these to import cognate data separately
-# from the comparative lexical data, which should use the Hyperlink structure
-# we output in ExcelWriter if no dialect can be found.
-
 
 if __name__ == "__main__":
     import argparse

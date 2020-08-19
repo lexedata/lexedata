@@ -406,7 +406,12 @@ class CellParserHyperlink(CellParser):
 
 
 class MawetiCellParser(CellParser):
-
+        # TODO: Write a subclass for Maweti-Guarani that also uses what we know
+        # about that dataset:
+        # • TODO Pick out the two- or three-letter editor
+        #   procedural comments.
+        # • TODO: Split forms that contain '%' or '~', drop the variant in
+        #   variants.
     def __init__(self,
                  separation_pattern: str = r"([;,])",
                  variant_separator: list = ["~", "%"],
