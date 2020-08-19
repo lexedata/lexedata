@@ -69,7 +69,7 @@ class ExcelParser:
     # TODO: Run `write` for an ExcelParser after __init__, but not for an
     # ExcelCognateParser, when constructing these objects from the command line
     # input in load_mg_style_dataset
-    def write():
+    def write(self):
         # Die when the database file already exists – either it's empty, then
         # the user can delete it themself (so they should get a very explicit
         # warning!), or it is not empty, then I don't want it. It could contain
@@ -435,7 +435,7 @@ def load_mg_style_dataset(
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / 'db.sqlite'
-    lexicon_wb = openpyxl.load_workbook(lexicon)
+    lexicon_wb = openpyxl.load_workbook(lexicon).active
 
     dataset = pycldf.Dataset.from_metadata(metadata)
     try:
@@ -444,7 +444,8 @@ def load_mg_style_dataset(
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     excel_parser_lexical = MawetiExcelParser(dataset, db)
-    excel_parser_lexical.parse_cells(lexicon)
+    excel_parser_lexical.write()
+    excel_parser_lexical.parse_cells(lexicon_wb)
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
 def load_mg_style_cognateset(
@@ -496,5 +497,5 @@ if __name__ == "__main__":
     # We have too many difficult database connections in different APIs, we
     # refuse in-memory DBs and use a temporary file instead.
 
-    load_mg_style_dataset(args.metadata, args.lexicon, args.cogsets, args.db)
+    load_mg_style_dataset(args.metadata, args.lexicon, args.db)
 
