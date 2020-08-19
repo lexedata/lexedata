@@ -326,6 +326,7 @@ class CellParser(NaiveCellParser):
             # dictionary. If repeatedly, to the variants, with a decorator that
             # shows how expected the variant was.
 
+            # done
             # TODO: This adds sources and comments to the variants, which is
             # not intended. That should probably be cleaned up in
             # post-processing.
@@ -393,6 +394,13 @@ class CellParserHyperlink(CellParser):
             pass
 
 
+# TODO: Write a subclass for Maweti-Guarani that also uses what we know
+        # about that dataset:
+        # • TODO Pick out the two- or three-letter editor
+        #   procedural comments.
+        # • TODO: Split forms that contain '%' or '~', drop the variant in
+        #   variants.
+
 class MawatiCellParser(CellParser):
     def __init__(self,
                  separation_pattern: str = r"([;,])",
@@ -410,7 +418,7 @@ class MawatiCellParser(CellParser):
         variants = None
         for key, value in description_dictionary.items():
 
-            # if any separator in this value, split value. add first as key and rest to variants.
+            # if any separator in this value, split value. add first value as key and rest to variants.
             if self.variant_separator and key != "cldf_value":
                 for separator in self.variant_separator:
                     if separator in value:
@@ -425,9 +433,5 @@ class MawatiCellParser(CellParser):
         # add variants
         if variants:
             description_dictionary.setdefault("variants", []).append(variants)
-        # TODO: Write a subclass for Maweti-Guarani that also uses what we know
-        # about that dataset:
-        # • TODO Pick out the two- or three-letter editor
-        #   procedural comments.
-        # • TODO: Split forms that contain '%' or '~', drop the variant in
-        #   variants.
+
+
