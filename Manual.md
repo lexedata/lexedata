@@ -34,3 +34,19 @@ Lexedata offers the possibility to edit and annotate cognate set (or root-meanin
 In order to use this functionality, fist you need to export your cognate judgements in a Cognate Table (in xlsx format) and then re-import the modified Cognate Table back into your lexedata lexical dataset. 
 This process will overwrite previously existing cognate sets and cognate judgements, as well as any associated comments (cognate comments and cognate judgement comments).
 IMPORTANT: you cannot edit the raw data (forms, translation, form comments etc) through this process. Instead see XXX how to edit form data in lexedata.
+
+#### 1. Validate your dataset using the cldf validate command
+It is always a good idea to validate your dataset before and after any edits to make sure that everything is linked as it should in the cldf format.
+To perform this test, navigate to your lexical dataset repository and type `cldf validate Wordlist-metadata.json`. Assuming that there are not any errors or warnings you need to take care of, you can proceed to the next step.
+
+#### 2. Export the Cognate Table
+Type `python -m lexedata.exporter.cognates [filename].xlsx`. The .xlsx file (Cognate Table) will be created in your dataset repository. 
+
+#### 3. Open and edit the Cognate Table in a spreadsheet editor
+
+#### 4. Re-import the Cognate Table in lexedata
+Once you have edited and/or annotated the Cognate Table, you can update your dataset by re-importing it. Type `python -m lexedata.importer.cognates [filename].xlsx`. 
+
+#### 5. Run cldf validate once more on your dataset (see step 1)
+
+#### 6. Commit and Push (publish) your new version on your dataset repository
