@@ -326,11 +326,6 @@ class CellParser(NaiveCellParser):
             # dictionary. If repeatedly, to the variants, with a decorator that
             # shows how expected the variant was.
 
-            # TODO: This drops duplicate sources and comments, which is not
-            # intended. If we drop the first variant of each of those two
-            # fields, we cannot clean that up in post-processing. Maybe the
-            # intention was to assume that for comments and soucres, we always
-            # `expect_variant`s, so it should be an `or` for the inner if?
             if field in properties and field != "cldf_comment" and field != "cldf_source":
                 if not expect_variant:
                     logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}")
@@ -396,6 +391,12 @@ class CellParserHyperlink(CellParser):
 
 
 class MawetiCellParser(CellParser):
+        # TODO: Write a subclass for Maweti-Guarani that also uses what we know
+        # about that dataset:
+        # • TODO Pick out the two- or three-letter editor
+        #   procedural comments.
+        # • TODO: Split forms that contain '%' or '~', drop the variant in
+        #   variants.
     def __init__(self,
                  separation_pattern: str = r"([;,])",
                  variant_separator: list = ["~", "%"],

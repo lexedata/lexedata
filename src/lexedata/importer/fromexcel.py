@@ -431,7 +431,7 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
 
 
 def load_mg_style_dataset(
-        metadata: Path, lexicon: str, cogsets: str, db: str) -> None:
+        metadata: Path, lexicon: str, db: str) -> None:
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / 'db.sqlite'
@@ -447,14 +447,22 @@ def load_mg_style_dataset(
     excel_parser_lexical.parse_cells(lexicon)
     excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
-    excel_parser_cognate = ExcelCognateParser(dataset, db)
+def load_mg_style_cognateset(
+        metadata: Path, cogsets: str, db: str) -> None:
+    if db == "":
+        tmpdir = Path(mkdtemp("", "fromexcel"))
+        db = tmpdir / 'db.sqlite'
+    # lexicon_wb = openpyxl.load_workbook(lexicon)
+
+    # dataset = pycldf.Dataset.from_metadata(metadata)
+    # try:
+    #    EP = excel_parser_from_dialect(dataset)
+    # except KeyError:
+    #    EP = ExcelParser
+    # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
+    excel_parser_cognate = ExcelCognateParser(pycldf.Dataset.from_metadata(metadata), db)
     excel_parser_cognate.parse_cells(cogsets)
     excel_parser_cognate.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
-
-# TODO: Write a pair of functions like these to import cognate data separately
-# from the comparative lexical data, which should use the Hyperlink structure
-# we output in ExcelWriter if no dialect can be found.
-
 
 if __name__ == "__main__":
     import argparse
