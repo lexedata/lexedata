@@ -56,7 +56,15 @@ class Reference(Object):
         return "FormTable_SourceTable__cldf_source"
 
 
-#This function is a bit out of place here.
+class Judgement(RowObject):
+    """cognate judgement"""
+    @property
+    def __table__(self) -> str:
+        return "CognateTable"
+
+
+# TODO: This function is a bit out of place here. Move it somewhere more
+# sensible.
 import re
 import unidecode as uni
 invalid_id_elements = re.compile(r"\W+")
