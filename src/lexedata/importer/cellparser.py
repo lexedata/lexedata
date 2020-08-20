@@ -376,7 +376,8 @@ class CellParser(NaiveCellParser):
             source, context = self.source_from_source_string(source, language_id)
             description_dictionary["cldf_source"] = {(source, context)}
 
-        # TODO: Remove duplicate sources and additional comments from the -> I blocked adding sources or comments to variants
+        # TODO: Remove duplicate sources and additional comments from the
+        # -> I blocked adding sources or comments to variants
         # -> and add them directly to the corresponding field
         # variants, merge them to the appropriate columns instead.
 
@@ -435,19 +436,27 @@ class MawetiCellParser(CellParser):
         """
         super().postprocess_form(description_dictionary, language_id)
         variants = description_dictionary.setdefault("variants", [])
-        transcriptions = description_dictionary.keys()
         # Split forms that contain '%' or '~', drop the variant in
         # variants.
         # TODO Don't do this for all fields, just for transcriptions – what is
-        # -> As we try to be generic, the only way would be to remove from element_semantics the non transcription elements
+        # -> As we try to be generic, the only way would be to remove from element_semantics
+        # -> the non transcription elements
+        # -> this again leads to some hard coded fields, that we expect every cellparser to have
         # the best way to track whether a field is a transcription or not?
         # Actually, knowing that would also be helpful elsewhere, where we want
         # to treat variant transcriptions using the `variants` field, but
         # variant comments, concepts, sources etc. using their dedicated
         # list-valued fields.
-        for key, value in description_dictionary.items():
+        transcriptions = list(description_dictionary.keys())
+        for k in ["cldf_value", "cldf_comment", "cldf_source", "cldf_id"]:
+            try:
+                transcriptions.remove(k)
+            except ValueError:
+                continue
+        for key in transcriptions:
+            value = description_dictionary[key]
             # if any separator is in this value, split value. add first as key and rest to variants.
-            if self.variant_separator and key != "cldf_value":
+            if self.variant_separator:
                 for separator in self.variant_separator:
                     if separator in value:
                         # split string with variants
