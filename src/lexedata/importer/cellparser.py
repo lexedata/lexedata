@@ -326,6 +326,12 @@ class CellParser(NaiveCellParser):
             # dictionary. If repeatedly, to the variants, with a decorator that
             # shows how expected the variant was.
 
+            # TODO: This drops duplicate sources and comments, which is not
+            # -> just block cldf_comment and cldf_source?
+            # intended. If we drop the first variant of each of those two
+            # fields, we cannot clean that up in post-processing. Maybe the
+            # intention was to assume that for comments and soucres, we always
+            # `expect_variant`s, so it should be an `or` for the inner if?
             if field in properties and field != "cldf_comment" and field != "cldf_source":
                 if not expect_variant:
                     logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}")
@@ -335,11 +341,17 @@ class CellParser(NaiveCellParser):
             else:
                 if expect_variant:
                     logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was supposed to be a variant, but there is no earlier {field}")
-                properties[field] = element
+                # if field already in properties, add to value
+                try:
+                    properties[field] += element
+                except KeyError:
+                    properties[field] = element
 
             expect_variant = None
 
+        print(f"properties before postporcessing{properties}")
         self.postprocess_form(properties, language_id)
+        print(f"properties after postporcessing{properties}")
         return Form(properties)
 
     def postprocess_form(
@@ -365,7 +377,8 @@ class CellParser(NaiveCellParser):
             source, context = self.source_from_source_string(source, language_id)
             description_dictionary["cldf_source"] = {(source, context)}
 
-        # TODO: Remove duplicate sources and additional comments from the
+        # TODO: Remove duplicate sources and additional comments from the -> I blocked adding sources or comments to variants
+        # -> and add them directly to the corresponding field
         # variants, merge them to the appropriate columns instead.
 
 
@@ -409,6 +422,7 @@ class MawetiCellParser(CellParser):
             self,
             description_dictionary: t.Dict[str, t.Any],
             language_id: str) -> None:
+        # TODO: cellparser has no access to procedural_comment ...
         """
         >>> m = MawetiCellParser()
         >>> form = {
@@ -427,9 +441,11 @@ class MawetiCellParser(CellParser):
         """
         super().postprocess_form(description_dictionary, language_id)
         variants = description_dictionary.setdefault("variants", [])
+        transcriptions = description_dictionary.keys()
         # Split forms that contain '%' or '~', drop the variant in
         # variants.
         # TODO Don't do this for all fields, just for transcriptions – what is
+        # -> As we try to be generic, the only way would be to remove from element_semantics the non transcription elements
         # the best way to track whether a field is a transcription or not?
         # Actually, knowing that would also be helpful elsewhere, where we want
         # to treat variant transcriptions using the `variants` field, but
@@ -440,11 +456,11 @@ class MawetiCellParser(CellParser):
             if self.variant_separator and key != "cldf_value":
                 for separator in self.variant_separator:
                     if separator in value:
+                        # split string with variants
+                        # add first transcription as transcription, rest to variants
+                        # TODO: ensure correct opening and closing of brackets? Left out for now, as brackets will
+                        # removed in the end
                         value = value.split(separator)
                         description_dictionary[key] = value.pop(0)
-                        variants.append(separator.join(value))
-
-        # TODO: Write a subclass for Maweti-Guarani that also uses what we know
-        # about that dataset:
-        # • TODO Pick out the two- or three-letter editor
-        #   procedural comments.
+                        for v in value:
+                            variants.append((separator + v))
