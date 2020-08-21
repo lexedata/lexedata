@@ -342,7 +342,8 @@ class CellParser(NaiveCellParser):
                     logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was supposed to be a variant, but there is no earlier {field}")
                 # if field already in properties, add to value
                 try:
-                    properties[field] += element
+                    if not element == properties[field]:
+                        properties[field] += element
                 except KeyError:
                     properties[field] = element
 
