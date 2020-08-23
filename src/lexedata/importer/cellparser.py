@@ -9,7 +9,8 @@ from typing import Tuple, Optional, Pattern, List, Dict
 import openpyxl
 
 from lexedata.error_handling import *
-from lexedata.types import Form, string_to_id
+from lexedata.util import string_to_id
+from lexedata.types import Form
 
 
 logger = logging.getLogger(__name__)
@@ -367,6 +368,8 @@ class CellParser(NaiveCellParser):
         """
         # TODO: Once everything seems to work fine, remove delimiters from the
         # raw elements, and adjust the tests to not expect those delimiters
+        # -> I'm not sure about including this in the general cellparser, it might affect postprocessing we'd like
+        # -> to perform in the MawatiCellParser
 
         # TODO: Currently "..." lands in the forms, with empty other entries
         # (and non-empty source). This is not too bad for now, how should it
