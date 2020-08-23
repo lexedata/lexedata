@@ -15,7 +15,7 @@ import sqlalchemy
 from csvw.db import insert
 
 from lexedata.types import *
-from lexedata.types import string_to_id
+from lexedata.util import string_to_id
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.cldf.db import Database
 import lexedata.error_handling as err
@@ -88,16 +88,17 @@ class ExcelParser:
                 "to start from a clean slate.")
         self.cldfdatabase.write()
 
-
     def language_from_column(
             self, column: t.List[openpyxl.cell.Cell]
     ) -> Language:
         data = [(cell.value or '').strip() for cell in column[:self.top - 1]]
         comment = column[0].comment.text if column[0].comment else ''
+        id = string_to_id(data[0])
         return Language(
             # Do not set the ID. Without knowing the database, we cannot know
             # what it needs to be, in particular whether there needs to be any
             # disambiguating number suffix.
+            cldf_id = id,
             cldf_name = data[0],
             cldf_comment = comment
         )
@@ -464,8 +465,10 @@ def load_mg_style_cognateset(
     #    EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     excel_parser_cognate = ExcelCognateParser(pycldf.Dataset.from_metadata(metadata), db)
-    excel_parser_cognate = ExcelCognateParser(dataset, db)
-    excel_parser_cognate.parse_cells(cogsets)
+   #excel_parser_cognate = ExcelCognateParser(dataset, db)
+    cogsets_wb = openpyxl.load_workbook(cogsets)
+    for sheet in cogsets_wb.worksheets:
+        excel_parser_cognate.parse_cells(sheet)
     excel_parser_cognate.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
 # TODO: Write a pair of functions like these to import cognate data separately
@@ -506,4 +509,5 @@ if __name__ == "__main__":
     # refuse in-memory DBs and use a temporary file instead.
 
     load_mg_style_dataset(args.metadata, args.lexicon, args.db)
+    load_mg_style_cognateset(args.metadata, args.cogsets, args.db)
 
