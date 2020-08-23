@@ -350,9 +350,7 @@ class CellParser(NaiveCellParser):
 
             expect_variant = None
 
-        print(f"properties before postporcessing{properties}")
         self.postprocess_form(properties, language_id)
-        print(f"properties after postporcessing{properties}")
         return Form(properties)
 
     def postprocess_form(
