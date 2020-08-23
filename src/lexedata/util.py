@@ -3,6 +3,7 @@
 #This function is a bit out of place here.
 import re
 import unidecode as uni
+import openpyxl as op
 invalid_id_elements = re.compile(r"\W+")
 
 
@@ -28,7 +29,7 @@ def string_to_id(string: str) -> str:
             invalid_id_elements.sub("_", string)).lower()).strip("_")
 
 
-def clean_cell_value(cell):
+def clean_cell_value(cell: op.cell.cell.Cell):
     if cell.value is None:
         return ''
     #v = unicodedata.normalize('NFKD', (cell.value or '').strip())

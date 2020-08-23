@@ -27,7 +27,7 @@ O = t.TypeVar('O', bound=Object)
 
 
 def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
-    return not any([clean_cell_value(cell.value) for cell in cells])
+    return not any([clean_cell_value(cell) for cell in cells])
 
 
 # Adapt warnings – TODO: Probably the `logging` package would be better for
@@ -91,7 +91,7 @@ class ExcelParser:
     def language_from_column(
             self, column: t.List[openpyxl.cell.Cell]
     ) -> Language:
-        data = [clean_cell_value(cell.value) for cell in column[:self.top - 1]]
+        data = [clean_cell_value(cell) for cell in column[:self.top - 1]]
         comment = column[0].comment.text if column[0].comment else ''
         id = string_to_id(data[0])
         return Language(
@@ -132,7 +132,7 @@ class ExcelParser:
     def properties_from_row(
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
-        data = [clean_cell_value(cell.value) for cell in row[:self.left - 1]]
+        data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
         comment = row[0].comment.text if row[0].comment else ''
         return Concept(
             cldf_name = data[0],
@@ -307,7 +307,7 @@ class ExcelCognateParser(ExcelParser):
     def properties_from_row(
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
-        data = [clean_cell_value(cell.value) for cell in row[:self.left - 1]]
+        data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
         if not data[0]:
             return None
         # TODO I don't know what ate `get_cell_coment`, we can probably put it
