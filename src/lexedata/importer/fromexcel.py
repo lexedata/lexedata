@@ -185,12 +185,15 @@ class ExcelParser:
     def associate(self, form_id: str, row: RowObject) -> bool:
         assert row.__table__ == "ParameterTable", "Expected Concept, but got {:}".format(row.__class__)
         with self.cldfdatabase.connection() as conn:
-            insert(conn, self.cldfdatabase.translate,
-                    "FormTable_ParameterTable__cldf_parameterReference",
-                    ("FormTable_cldf_id", "ParameterTable_cldf_id"),
-                    (form_id, row["cldf_id"])
-            )
-            conn.commit()
+            try:
+                insert(conn, self.cldfdatabase.translate,
+                       "FormTable_ParameterTable__cldf_parameterReference",
+                       ("FormTable_cldf_id", "ParameterTable_cldf_id"),
+                       (form_id, row["cldf_id"])
+                )
+                conn.commit()
+            except sqlite3.IntegrityError:
+                return False
         return True
 
     def insert_into_db(self, object: O) -> bool:
@@ -210,7 +213,7 @@ class ExcelParser:
                    object.__table__,
                    object.keys(),
                    tuple(object.values())
-            )
+                   )
             conn.commit()
         return True
 
