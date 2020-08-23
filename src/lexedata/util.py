@@ -26,3 +26,21 @@ def string_to_id(string: str) -> str:
     return invalid_id_elements.sub(
         "_", uni.unidecode(
             invalid_id_elements.sub("_", string)).lower()).strip("_")
+
+
+def clean_cell_value(cell):
+    if cell.value is None:
+        return ''
+    #v = unicodedata.normalize('NFKD', (cell.value or '').strip())
+    v = (cell.value or '').strip()
+    if type(v) == float:
+        if v == int(v):
+            return int(v)
+        return v
+    if type(v) == int:
+        return v
+    try:
+        return v.replace("\n", ";\t")
+    except TypeError:
+        return str(v)
+
