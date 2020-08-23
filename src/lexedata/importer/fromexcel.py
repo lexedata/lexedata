@@ -359,6 +359,16 @@ class MawetiExcelParser(ExcelParser):
                          on_row_not_found=on_row_not_found,
                          on_form_not_found=on_form_not_found)
 
+    def properties_from_row(
+            self, row: t.List[openpyxl.cell.Cell]
+    ) -> t.Optional[RowObject]:
+        data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
+        comment = row[0].comment.text if row[0].comment else ''
+        return Concept(
+            cldf_name=data[1],
+            cldf_comment=comment
+        )
+
 
 def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
     dialect = argparse.Namespace(
