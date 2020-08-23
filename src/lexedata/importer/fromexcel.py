@@ -191,6 +191,7 @@ class ExcelParser:
                        ("FormTable_cldf_id", "ParameterTable_cldf_id"),
                        (form_id, row["cldf_id"])
                 )
+                conn.commit()
             except sqlite3.IntegrityError:
                 return False
         return True
@@ -212,7 +213,7 @@ class ExcelParser:
                    object.__table__,
                    object.keys(),
                    tuple(object.values())
-            )
+                   )
             conn.commit()
         return True
 
@@ -332,7 +333,8 @@ class ExcelCognateParser(ExcelParser):
                        "CognateTable",
                        ("formReference", "cognatesetReference"),
                        (form_id, row["cldf_id"])
-                )
+                       )
+                conn.commit()
             except sqlite3.IntegrityError:
                 return False
         return True
