@@ -15,7 +15,7 @@ import sqlalchemy
 from csvw.db import insert
 
 from lexedata.types import *
-from lexedata.util import string_to_id
+from lexedata.util import string_to_id, clean_cell_value
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.cldf.db import Database
 import lexedata.error_handling as err
@@ -27,7 +27,7 @@ O = t.TypeVar('O', bound=Object)
 
 
 def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
-    return not any([(cell.value or '').strip() for cell in cells])
+    return not any([clean_cell_value(cell.value) for cell in cells])
 
 
 # Adapt warnings – TODO: Probably the `logging` package would be better for
@@ -91,7 +91,7 @@ class ExcelParser:
     def language_from_column(
             self, column: t.List[openpyxl.cell.Cell]
     ) -> Language:
-        data = [(cell.value or '').strip() for cell in column[:self.top - 1]]
+        data = [clean_cell_value(cell.value) for cell in column[:self.top - 1]]
         comment = column[0].comment.text if column[0].comment else ''
         id = string_to_id(data[0])
         return Language(
@@ -132,7 +132,7 @@ class ExcelParser:
     def properties_from_row(
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
-        data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
+        data = [clean_cell_value(cell.value) for cell in row[:self.left - 1]]
         comment = row[0].comment.text if row[0].comment else ''
         return Concept(
             cldf_name = data[0],
@@ -159,6 +159,7 @@ class ExcelParser:
             else:
                 if not (self.on_language_not_found(language, lan_col[0]) and
                         self.insert_into_db(language)):
+                    print("hiii")
                     continue
                 language_id = language["cldf_id"]
             languages_by_column[lan_col[0].column] = language_id
@@ -305,7 +306,7 @@ class ExcelCognateParser(ExcelParser):
     def properties_from_row(
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
-        data = [(cell.value or '').strip() for cell in row[:self.left - 1]]
+        data = [clean_cell_value(cell.value) for cell in row[:self.left - 1]]
         if not data[0]:
             return None
         # TODO I don't know what ate `get_cell_coment`, we can probably put it
@@ -444,6 +445,10 @@ def load_mg_style_dataset(
     except KeyError:
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
+    #EP(dataset, db)
+    #EP.write()
+    #EP.parse_cells(lexicon_wb)
+    #EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
     excel_parser_lexical = MawetiExcelParser(dataset, db)
     excel_parser_lexical.write()
     excel_parser_lexical.parse_cells(lexicon_wb)
