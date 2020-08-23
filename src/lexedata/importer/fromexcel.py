@@ -159,7 +159,6 @@ class ExcelParser:
             else:
                 if not (self.on_language_not_found(language, lan_col[0]) and
                         self.insert_into_db(language)):
-                    print("hiii")
                     continue
                 language_id = language["cldf_id"]
             languages_by_column[lan_col[0].column] = language_id
@@ -203,7 +202,6 @@ class ExcelParser:
                 # something similar when adding entries to the database, what
                 # do they do?
                 columns = self.cldfdatabase.dataset[object.__table__].tableSchema.columns
-                trans = [self.cldfdatabase.translate(c.name) for c in columns]
                 sep = [c.separator for c in columns if self.cldfdatabase.translate(c.name) == key][0]
                 # Join values using the separator
                 object[key] = sep.join(value)
@@ -215,6 +213,7 @@ class ExcelParser:
                    object.keys(),
                    tuple(object.values())
             )
+            conn.commit()
         return True
 
     def make_id_unique(self, object: O) -> str:
@@ -284,7 +283,7 @@ class ExcelParser:
 class ExcelCognateParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
-                 top: int = 2, left: int = 7,
+                 top: int = 3, left: int = 7,
                  cellparser: cell_parsers.NaiveCellParser = cell_parsers.CognateParser(),
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
@@ -446,7 +445,7 @@ def load_mg_style_dataset(
     except KeyError:
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    #EP(dataset, db)
+    #EP = EP(dataset, db)
     #EP.write()
     #EP.parse_cells(lexicon_wb)
     #EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
