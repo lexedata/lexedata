@@ -477,3 +477,17 @@ class MawetiCellParser(CellParser):
                         description_dictionary[key] = value.pop(0)
                         for v in value:
                             variants.append((separator + v))
+        # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
+        try:
+            search = re.search(r"\([A-Z]{3}:.+?\)", description_dictionary["cldf_comment"])
+            while search:
+                procedural_comment = search.group(0)
+                description_dictionary["cldf_comment"] = description_dictionary["cldf_comment"][:search.start()] + \
+                    description_dictionary["cldf_comment"][search.end():]
+                search = re.search(r"\([A-Z]{3}:.+?\)", description_dictionary["cldf_comment"])
+                try:
+                    description_dictionary["procedural_comment"] += procedural_comment
+                except KeyError:
+                    description_dictionary["procedural_comment"] = procedural_comment
+        except KeyError:
+            pass
