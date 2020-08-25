@@ -1,5 +1,5 @@
-from lexedata.import.fromexcel import *
-import lexedata.import.cellparser as cell_parsers
+from lexedata.importer.fromexcel import *
+import lexedata.importer.cellparser as cell_parsers
 
 if __name__ == "__main__":
     import argparse
