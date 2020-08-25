@@ -32,7 +32,9 @@ Now you should be ready to use lexedata!
 
 ## How to edit data in lexedata
 
-There are two ways to edit data in lexedata: through the web interface (under construction) and through editing the .csv files in your corresponding GitHub repository.
+There are two ways to edit data in lexedata: through the web interface (under
+construction) and through editing the .csv files in your corresponding GitHub
+repository.
 
 ## Cognate Table export-import loop
 
@@ -65,6 +67,9 @@ python -m lexedata.exporter.cognates
 The Cognate Table will be written to the excel file `Cognates.xlsx`.
 
 #### 3. Open and edit the Cognate Table in a spreadsheet editor
+(You are, of course, able to upload the cognate excel into Google Sheets, and
+download your changes as Excel file, which you then use for the following
+re-import step.)
 
 #### 4. Re-import the Cognate Table in lexedata
 Once you have edited and/or annotated the Cognate Table, you can update your dataset by re-importing it. Type
