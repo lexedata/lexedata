@@ -185,15 +185,12 @@ class ExcelParser:
     def associate(self, form_id: str, row: RowObject) -> bool:
         assert row.__table__ == "ParameterTable", "Expected Concept, but got {:}".format(row.__class__)
         with self.cldfdatabase.connection() as conn:
-            try:
-                insert(conn, self.cldfdatabase.translate,
-                       "FormTable_ParameterTable__cldf_parameterReference",
-                       ("FormTable_cldf_id", "ParameterTable_cldf_id"),
-                       (form_id, row["cldf_id"])
-                )
-                conn.commit()
-            except sqlite3.IntegrityError:
-                return False
+            insert(conn, self.cldfdatabase.translate,
+                    "FormTable_ParameterTable__cldf_parameterReference",
+                    ("FormTable_cldf_id", "ParameterTable_cldf_id"),
+                    (form_id, row["cldf_id"])
+            )
+            conn.commit()
         return True
 
     def insert_into_db(self, object: O) -> bool:
@@ -213,7 +210,7 @@ class ExcelParser:
                    object.__table__,
                    object.keys(),
                    tuple(object.values())
-                   )
+            )
             conn.commit()
         return True
 
@@ -272,7 +269,7 @@ class ExcelParser:
                     form = Form(params)
                     candidate_forms = self.find_db_candidates(
                         form, self.check_for_match)
-                    sources = form.pop("cldf_source")
+                    sources = form.pop("cldf_source", [])
                     for form_id in candidate_forms:
                         break
                     else:
@@ -330,18 +327,17 @@ class ExcelCognateParser(ExcelParser):
         )
 
     def associate(self, form_id: str, row: RowObject) -> bool:
-        assert row.__table__ == "CognatesetTable", "Expected Concept, but got {:}".format(row.__class__)
-        with self.cldfdatabase.connection() as conn:
-            try:
-                insert(conn, self.cldfdatabase.translate,
-                       "CognateTable",
-                       ("formReference", "cognatesetReference"),
-                       (form_id, row["cldf_id"])
-                       )
-                conn.commit()
-            except sqlite3.IntegrityError:
-                return False
-        return True
+        assert row.__table__ == "CognatesetTable", \
+            "Expected Concept, but got {:}".format(row.__class__)
+        print(form_id, row)
+        row_id = row["cldf_id"]
+        judgement = Judgement(
+            cldf_id = f"{form_id}-{row_id}",
+            cldf_formReference = form_id,
+            cldf_cognatesetReference = row_id
+        )
+        self.make_id_unique(judgement)
+        return self.insert_into_db(judgement)
 
 
 class MawetiExcelParser(ExcelParser):
