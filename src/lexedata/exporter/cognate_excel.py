@@ -46,6 +46,7 @@ class ExcelWriter():
             self,
             out: Path,
             size_sort: bool = False,
+            language_order="cldf_name"
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -70,6 +71,13 @@ class ExcelWriter():
         # Define the columns
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
+        # TODO: Sort languages by the language_order column – and clarify in
+        # the docstring of this function whether we accept SQLite column names
+        # (`cldf_name`), CLDF column names (`Name` or `Language`) or CLDF
+        # property terms (`name` or
+        # ``https://cldf.clld.org/v1.0/terms.rdf#name`). We can probably take
+        # CLDF names and terms, because we can get them from the table as
+        # c_sort = self.dataset[…]
         c_name = self.dataset["LanguageTable", "name"].name
         c_id = self.dataset["LanguageTable", "id"].name
         for col, lan in enumerate(
@@ -77,6 +85,7 @@ class ExcelWriter():
                 len(excel_header) + 1):
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
+        # TODO: Test the sorting.
 
         ws.append(excel_header)
 
@@ -239,6 +248,8 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="List the biggest cognatesets first")
+    parser.add_argument("--language-sort-column", help="A column name to sort languages by")
+    # TODO: Pass args.language_sort_column to create_excel.
     args = parser.parse_args()
     E = ExcelWriter(pycldf.Dataset.from_metadata(args.metadata))
     E.create_excel(args.excel, size_sort=args.size_sort)
