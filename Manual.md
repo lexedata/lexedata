@@ -40,12 +40,12 @@ It is always a good idea to validate your dataset before and after any edits to 
 To perform this test, navigate to your lexical dataset repository and type `cldf validate Wordlist-metadata.json`. Assuming that there are not any errors or warnings you need to take care of, you can proceed to the next step.
 
 #### 2. Export the Cognate Table
-Type `python -m lexedata.exporter.cognates [filename].xlsx`. The .xlsx file (Cognate Table) will be created in your dataset repository. 
+Type `python -m lexedata.exporter.cognates`. The .xlsx file (Cognate Table) will be created in your dataset repository. 
 
 #### 3. Open and edit the Cognate Table in a spreadsheet editor
 
 #### 4. Re-import the Cognate Table in lexedata
-Once you have edited and/or annotated the Cognate Table, you can update your dataset by re-importing it. Type `python -m lexedata.importer.cognates [filename].xlsx`. 
+Once you have edited and/or annotated the Cognate Table, you can update your dataset by re-importing it. Type `python -m lexedata.importer.cognates`. 
 
 #### 5. Run cldf validate once more on your dataset (see step 1)
 
