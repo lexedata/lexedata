@@ -10,21 +10,28 @@ If you are unsure if this is the case, open a terminal window and type `python
 --version`. If Python 3 is installed you will see the version. If you don't have
 any version of Python or it is a version of Python 2, then you need to download
 and install Python 3. There are different distributions of Python and most of
-them should work. A popular one that we have tested is [Anaconda](https://www.anaconda.com/products/individual). Once you have
+them should work. A popular one that we have tested is
+[Anaconda](https://www.anaconda.com/products/individual). Once you have
 downloaded and installed Anaconda close and open the terminal again and type
-`python --version` again. You should see the current version of Python 3 you just downloaded.
+`python --version` again. You should see the current version of Python 3 you
+just downloaded.
 
-If you are ever stuck with the python prompt, which starts with 
+If you are ever stuck with the python prompt, which starts with `>>>`, in
 order to exit Python type `quit()`.
 
 #### 2. The next step is to clone the Lexedata repository from GitHub on your computer.
-You can do this through the command line or through the GitHub desktop application (follow the instructions/tutorial within the GitHub desktop applications).
-If using the command line, in the terminal window, navigate to the folder where you would like to put the Lexedata folder. Then type `git clone https://github.com/Anaphory/lexedata`.
-This should create a folder called lexedata in the selected location.
+You can do this through the command line or through the GitHub desktop
+application (follow the instructions/tutorial within the GitHub desktop
+applications). If using the command line, in the terminal window, navigate to
+the folder where you would like to put the Lexedata folder. Then type `git clone
+https://github.com/Anaphory/lexedata`. This should create a folder called
+lexedata in the selected location.
 
 #### 3. Install the lexedata package.
-In your terminal window type `pip install --user -e ./lexedata`. This will install lexedata and all its dependencies on your computer and make it automatically updatable every time you pull a new version of the Lexedata repository from GitHub.
-Now you should be ready to use lexedata!
+In your terminal window type `pip install --user -e ./lexedata`. This will
+install lexedata and all its dependencies on your computer and make it
+automatically updatable every time you pull a new version of the Lexedata
+repository from GitHub. Now you should be ready to use lexedata!
 
 ## Importing a lexical dataset to lexedata
 
