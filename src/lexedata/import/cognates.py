@@ -7,7 +7,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load a Maweti-Guarani-style dataset into CLDF")
     parser.add_argument(
         "cogsets", nargs="?",
-        default="TG_cognates_online_MASTER.xlsx",
+        default="Cognates.xlsx",
         help="Path to an Excel file containing cogsets and cognatejudgements")
     parser.add_argument(
         "--db", nargs="?",
