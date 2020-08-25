@@ -327,7 +327,8 @@ class CellParser(NaiveCellParser):
             # dictionary. If repeatedly, to the variants, with a decorator that
             # shows how expected the variant was.
 
-            # TODO: This drops duplicate sources and comments, which is not -> just block cldf_comment and cldf_source?
+            # TODO: This drops duplicate sources and comments, which is not
+            # -> just block cldf_comment and cldf_source?
             # intended. If we drop the first variant of each of those two
             # fields, we cannot clean that up in post-processing. Maybe the
             # intention was to assume that for comments and soucres, we always
@@ -350,7 +351,9 @@ class CellParser(NaiveCellParser):
 
             expect_variant = None
 
+        print(f"properties before postporcessing{properties}")
         self.postprocess_form(properties, language_id)
+        print(f"properties after postporcessing{properties}")
         return Form(properties)
 
     def postprocess_form(
@@ -377,11 +380,6 @@ class CellParser(NaiveCellParser):
         if source:
             source, context = self.source_from_source_string(source, language_id)
             description_dictionary["cldf_source"] = {(source, context)}
-
-        # TODO: Remove duplicate sources and additional comments from the
-        # -> I blocked adding sources or comments to variants
-        # -> and add them directly to the corresponding field
-        # variants, merge them to the appropriate columns instead.
 
 
 class CognateParser(CellParser):
@@ -443,17 +441,19 @@ class MawetiCellParser(CellParser):
         """
         super().postprocess_form(description_dictionary, language_id)
         variants = description_dictionary.setdefault("variants", [])
+        transcriptions = description_dictionary.keys()
         # Split forms that contain '%' or '~', drop the variant in
         # variants.
         # TODO Don't do this for all fields, just for transcriptions – what is
-        # -> As we try to be generic, the only way would be to remove from element_semantics
-        # -> the non transcription elements
-        # -> this again leads to some hard coded fields, that we expect every cellparser to have
         # the best way to track whether a field is a transcription or not?
         # Actually, knowing that would also be helpful elsewhere, where we want
         # to treat variant transcriptions using the `variants` field, but
         # variant comments, concepts, sources etc. using their dedicated
         # list-valued fields.
+
+        # -> As we try to be generic, the only way would be to remove from element_semantics
+        # -> the non transcription elements
+        # -> this again leads to some hard coded fields, that we expect every cellparser to have
         transcriptions = list(description_dictionary.keys())
         for k in ["cldf_value", "cldf_comment", "cldf_source", "cldf_id"]:
             try:
