@@ -77,6 +77,13 @@ Once you have edited and/or annotated the Cognate Table, you can update your dat
 python -m lexedata.importer.cognates
 ```
 
-#### 5. Run cldf validate once more on your dataset (see step 1)
+#### 5. Validate your dataset, to make sure that the import went smoothly
+Run
+```
+cldf validate Wordlist-metadata.json`
+```
+as described in step 1. Hopefully, if you did not see any issues in step 1, you will see none now.
 
 #### 6. Commit and Push (publish) your new version on your dataset repository
+You now have an updated version of the repository. If you want to do more
+editing of cognate steps, start again at step 1.
