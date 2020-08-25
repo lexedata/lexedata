@@ -241,8 +241,10 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(
         description="Create an Excel cognate view from a CLDF dataset")
-    parser.add_argument("metadata", help="Path to metadata file for dataset input")
-    parser.add_argument("excel", help="Excel output file path")
+    parser.add_argument("--metadata", help="Path to metadata file for dataset input",
+                        default="Wordlist-metadata.json")
+    parser.add_argument("--excel", help="Excel output file path",
+                        default="Cognates.xlsx")
     parser.add_argument(
         "--size-sort",
         action="store_true",
