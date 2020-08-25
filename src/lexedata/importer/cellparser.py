@@ -445,6 +445,9 @@ class MawetiCellParser(CellParser):
         # Split forms that contain '%' or '~', drop the variant in
         # variants.
         # TODO Don't do this for all fields, just for transcriptions – what is
+        # -> As we try to be generic, the only way would be to remove from element_semantics
+        # -> the non transcription elements
+        # -> this again leads to some hard coded fields, that we expect every cellparser to have
         # the best way to track whether a field is a transcription or not?
         # Actually, knowing that would also be helpful elsewhere, where we want
         # to treat variant transcriptions using the `variants` field, but
