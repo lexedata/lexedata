@@ -249,7 +249,11 @@ if __name__ == "__main__":
         default=False,
         help="List the biggest cognatesets first")
     parser.add_argument("--language-sort-column", help="A column name to sort languages by")
-    # TODO: Pass args.language_sort_column to create_excel.
+    parser.add_argument("--url-template", help="A template string for URLs pointing to individual forms. For example, to point to lexibank, you would use https://lexibank.clld.org/values/{:}. (default: https://example.org/lexicon/{:})")
+    # TODO: Derive URL template from the "special:domain" property of the
+    # wordlist, where it exists? So something like
+    # 'https://{special:domain}/values/{{:}}'? It would work for Lexibank and
+    # for LexiRumah, is it robust enough?
     args = parser.parse_args()
     E = ExcelWriter(pycldf.Dataset.from_metadata(args.metadata))
     E.create_excel(args.excel, size_sort=args.size_sort)
