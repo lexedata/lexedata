@@ -24,6 +24,7 @@ def string_to_id(string: str) -> str:
     """
     # We nee to run this through valid_id_elements twice, because some word
     # characters (eg. Chinese) are unidecoded to contain non-word characters.
+    # the japanese ist actually decoded incorrectly
     return invalid_id_elements.sub(
         "_", uni.unidecode(
             invalid_id_elements.sub("_", string)).lower()).strip("_")
@@ -32,8 +33,7 @@ def string_to_id(string: str) -> str:
 def clean_cell_value(cell: op.cell.cell.Cell):
     if cell.value is None:
         return ''
-    #v = unicodedata.normalize('NFKD', (cell.value or '').strip())
-    v = (cell.value or '').strip()
+    v = unicodedata.normalize('NFKD', (cell.value or '').strip())
     if type(v) == float:
         if v == int(v):
             return int(v)
