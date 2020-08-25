@@ -250,6 +250,10 @@ class ExcelParser:
                     else:
                         continue
                 row_object = properties
+            # if a ExcelPraser is setup to ignore certain lines, properties_from_row returns None,
+            # skip entire line in that case
+            else:
+                continue
 
             if row_object is None:
                 raise AssertionError("Empty first row: Row had no properties, and there was no previous row to copy")
@@ -308,7 +312,7 @@ class ExcelCognateParser(ExcelParser):
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
-        if not data[0]:
+        if not data[1].isupper():
             return None
         # TODO I don't know what ate `get_cell_coment`, we can probably put it
         # back. It's not as critical with comments, which we don't expect to
@@ -321,7 +325,7 @@ class ExcelCognateParser(ExcelParser):
         # here.
         comment = row[0].comment.text if row[0].comment else ''
         return CogSet(
-            cldf_name = data[0],
+            cldf_name = data[1],
             cldf_comment = comment
         )
 
