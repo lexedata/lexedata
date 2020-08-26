@@ -1,5 +1,10 @@
-from lexedata.importer.fromexcel import *
+from pathlib import Path
+from tempfile import mkdtemp
+
+import openpyxl
 import lexedata.importer.cellparser as cell_parsers
+from lexedata.importer.fromexcel import ExcelCognateParser
+
 
 if __name__ == "__main__":
     import argparse
@@ -43,14 +48,24 @@ if __name__ == "__main__":
     # import of cognate sets in fromexcel. Can we write a single function for
     # both use cases?
 
-    # TODO: We need to communicate, using either the Excel (dangerous!) or the
-    # Metadata file (nonstandard and slightly cumbersome!) which of the first
-    # few columns map to which properties (name, description, comment, …) of a
-    # cognateset. All columns need to be exported and re-imported, because
-    # otherwise, a round-trip will lose data.
+    try:
+        c_comment = dataset["CognatesetTable", "comment"].name
+        comment_column = True
+    except KeyError:
+        c_comment = None
+        comment_column = False
+
     excel_parser_cognate = ExcelCognateParser(
-        dataset, db, 2, 2, cell_parsers.CellParserHyperlink(),
-        check_for_row_match = ["cldf_name"])
+        dataset, db, 2,
+        len(dataset["CognatesetTable"].tableSchema.columns) + (
+            1 if not comment_column else 0),
+        # When the dataset has cognateset comments, that column is not a header
+        # column, so this value is one higher than the actual number of header
+        # columns, so actually correct for the 1-based indices. When there is
+        # no comment column, we need to compensate for the 1-based Excel
+        # indices.
+        cell_parsers.CellParserHyperlink(),
+        check_for_row_match=["cldf_name"])
     # TODO: This often doesn't work if the dataset is not perfect before this
     # program is called. In particular, it doesn't work if there are errors in
     # the cognate sets or judgements, which will be reset in just a moment. How

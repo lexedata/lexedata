@@ -3,6 +3,7 @@
 #This function is a bit out of place here.
 import re
 import unidecode as uni
+import unicodedata
 import openpyxl as op
 invalid_id_elements = re.compile(r"\W+")
 

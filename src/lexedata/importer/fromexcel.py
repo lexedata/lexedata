@@ -312,18 +312,21 @@ class ExcelCognateParser(ExcelParser):
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
-        if not data[1].isupper():
-            return None
         # TODO I don't know what ate `get_cell_coment`, we can probably put it
         # back. It's not as critical with comments, which we don't expect to
         # ever be used for exact matching, but it would probably be nice to use
         # the same postprocess, namely strip() and unicode normalization, as
         # elsewhere.
-        # TODO: Actually, where is that strip + unicode normalization here? I
-        # may have added it only to excelsinglewordlist.py – we should probably
-        # also throw it on all strings we get from the database in this module
-        # here.
+
         comment = row[0].comment.text if row[0].comment else ''
+
+        # TODO: When coming out of lexedata.exporter.cognates, the data may be
+        # quite rich, it might even contain list-valued entries, separated by
+        # the same separator used in the CLDF, or sources with context. We need
+        # to parse this wisely, WHILE ALSO assume that some human touched the
+        # data and made it messy. The same flexibility would actually be nice
+        # for MG-style datasets, so I suggest to not split this functionality
+        # out in a subclass.
         return CogSet(
             cldf_name = data[1],
             cldf_comment = comment
