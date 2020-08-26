@@ -5,9 +5,7 @@ from pathlib import Path
 from collections import OrderedDict, defaultdict
 
 import pycldf
-import sqlalchemy
 import openpyxl as op
-import sqlalchemy
 
 from lexedata import types
 import lexedata.cldf.db as db
@@ -42,6 +40,21 @@ class ExcelWriter():
         else:
             self.URL_BASE = "https://example.org/{:s}"
 
+    def set_header(self):
+        c_id = self.dataset["CognatesetTable", "id"].name
+        try:
+            c_comment = self.dataset["CognatesetTable", "comment"].name
+        except KeyError:
+            c_comment = None
+        self.header = []
+        for column in self.dataset["CognatesetTable"].tableSchema.columns:
+            if column.name == c_id:
+                self.header.insert(0, (c_id, "CogSet"))
+            elif column.name == c_comment:
+                continue
+            else:
+                self.header.append((column.name, column.name))
+
     def create_excel(
             self,
             out: Path,
@@ -50,8 +63,8 @@ class ExcelWriter():
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
-        The Excel file has columns "CogSet", "Tags", and then one column per
-        language.
+        The Excel file has columns "CogSet", one column each mirroring the
+        other cognateset metadata, and then one column per language.
 
         The rows contain cognate data. If a language has multiple reflexes in
         the same cognateset, these appear in different cells, one below the
@@ -119,8 +132,13 @@ class ExcelWriter():
         for cogset in cogsets:
             # Put the cognateset's tags in column B.
             for col, (db_name, header) in enumerate(self.header, 1):
+                column = self.dataset["CognatesetTable", db_name]
+                if column.separator is None:
+                    value = cogset[db_name]
+                else:
+                    value = column.separator.join([str(v) for v in cogset[db_name]])
                 cell = ws.cell(row=row_index, column=col,
-                               value=cogset[db_name])
+                               value=value)
                 # Transfer the cognateset comment to the first Excel cell.
                 if c_comment and col == 1 and cogset[c_comment]:
                     cell.comment = op.comments.Comment(
@@ -257,5 +275,6 @@ if __name__ == "__main__":
     # 'https://{special:domain}/values/{{:}}'? It would work for Lexibank and
     # for LexiRumah, is it robust enough?
     args = parser.parse_args()
-    E = ExcelWriter(pycldf.Dataset.from_metadata(args.metadata))
+    E = ExcelWriter(pycldf.Wordlist.from_metadata(args.metadata))
+    E.set_header()
     E.create_excel(args.excel, size_sort=args.size_sort)
