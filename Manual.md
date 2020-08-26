@@ -35,6 +35,16 @@ repository from GitHub. Now you should be ready to use lexedata!
 
 ## Importing a lexical dataset to lexedata
 
+### Getting raw data from excel into cldf
+Variant one, example from our Arawak dataset
+̀̀̀
+python -m lexedata.importer.excelsinglewordlist --exclude-sheet Fields --exclude-sheet Sources --exclude-sheet Languages --add-running-id --concept-property TUS --concept-property TUP Comparative\ Arawakan\ Lexical\ Dataset\ \(active\).xlsx  TUE forms.csv
+̀̀̀
+### Adding enriched data
+Adding segments, adding links to concepticon
+
+### Automatic cognate coding
+
 ## Adding a new language/new data to an existing lexical dataset in lexedata
 
 ## How to edit data in lexedata
