@@ -2,9 +2,13 @@
 
 #This function is a bit out of place here.
 import re
-import unidecode as uni
+from pathlib import Path
+
 import unicodedata
+import unidecode as uni
+
 import openpyxl as op
+
 invalid_id_elements = re.compile(r"\W+")
 
 
@@ -45,4 +49,14 @@ def clean_cell_value(cell: op.cell.cell.Cell):
         return v.replace("\n", ";\t")
     except TypeError:
         return str(v)
+
+if __name__ == '__main__':
+    import argparse
+    parser=argparse.ArgumentParser()
+    parser.add_argument("file", nargs="+", type=Path)
+    args = parser.parse_args()
+    for file in args.file:
+        content = file.open().read()
+        file.open("w").write(
+            unicodedata.normalize('NFKD', content))
 
