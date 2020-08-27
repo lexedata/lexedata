@@ -28,6 +28,22 @@
             "(?P<cldf_name>.*)",
             "(?P<Curator>.*)"
         ],
+        "cognateset_cell_regexes": [
+            "(?P<tag>.*)",
+            "(?P<cldf_id>.*)",
+            ".*",
+            ".*",
+            ".*",
+            ".*"
+        ],
+        "cognateset_comment_regexes": [
+            ".*",
+            ".*",
+            ".*",
+            ".*",
+            ".*",
+            ".*"
+        ],
         "lang_comment_regexes": [
             ".*",
             ".*"
@@ -43,7 +59,14 @@
         "check_for_row_match": [
             "cldf_name"
         ],
-        "cell_parser": "CellParser"
+        "cell_parser": "MawetiCellParser",
+        "cell_parser_semantics": {
+        "(": ["cldf_comment", false],
+        "[": ["phonetic", true],
+        "{": ["cldf_source", false],
+        "<": ["orthographic", true],
+        "/": ["phonemic", true]
+        }
     },
     "dialect": {
         "commentPrefix": null
