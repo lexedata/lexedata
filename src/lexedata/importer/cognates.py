@@ -78,6 +78,10 @@ if __name__ == "__main__":
         conn.execute("DELETE FROM CognateTable")
         conn.commit()
     excel_parser_cognate.parse_cells(ws)
-    excel_parser_cognate.cldfdatabase.to_cldf(
-        args.metadata.parent, mdname=args.metadata.name)
-
+    data = excel_parser_cognate.cldfdatabase.read()
+    for table_type in ["CognateTable", "CognatesetTable"]:
+        items = data[table_type]
+        table = excel_parser_cognate.cldfdatabase.dataset[table_type]
+        table.common_props['dc:extent'] = table.write(
+            [excel_parser_cognate.cldfdatabase.retranslate(table, item)
+             for item in items])
