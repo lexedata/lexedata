@@ -441,7 +441,6 @@ class MawetiCellParser(CellParser):
         """
         super().postprocess_form(description_dictionary, language_id)
         variants = description_dictionary.setdefault("variants", [])
-        transcriptions = description_dictionary.keys()
         # Split forms that contain '%' or '~', drop the variant in
         # variants.
         # TODO Don't do this for all fields, just for transcriptions – what is
