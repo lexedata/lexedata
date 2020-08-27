@@ -216,11 +216,11 @@ class CellParser(NaiveCellParser):
     }
 
     element_semantics = {
-        "(": "cldf_comment",
-        "[": "phonetic",
-        "{": "cldf_source",
-        "<": "orthographic",
-        "/": "phonemic",
+        "(": ("cldf_comment", False),
+        "[": ("phonetic", True),
+        "{": ("cldf_source", False),
+        "<": ("orthographic", True),
+        "/": ("phonemic", True)
     }
 
     def __init__(self,
@@ -333,8 +333,8 @@ class CellParser(NaiveCellParser):
             # fields, we cannot clean that up in post-processing. Maybe the
             # intention was to assume that for comments and soucres, we always
             # `expect_variant`s, so it should be an `or` for the inner if?
-            if field in properties and field != "cldf_comment" and field != "cldf_source":
-                if not expect_variant:
+            if field in properties:
+                if not expect_variant and field != "cldf_comment" and field != "cldf_source":
                     logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}")
                 properties.setdefault("variants", []).append(
                     (expect_variant or '') +
@@ -441,7 +441,6 @@ class MawetiCellParser(CellParser):
         """
         super().postprocess_form(description_dictionary, language_id)
         variants = description_dictionary.setdefault("variants", [])
-        transcriptions = description_dictionary.keys()
         # Split forms that contain '%' or '~', drop the variant in
         # variants.
         # TODO Don't do this for all fields, just for transcriptions – what is

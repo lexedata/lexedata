@@ -250,14 +250,12 @@ class ExcelParser:
                     else:
                         continue
                 row_object = properties
-            # if a ExcelPraser is setup to ignore certain lines, properties_from_row returns None,
-            # skip entire line in that case
-            else:
-                continue
 
             if row_object is None:
-                raise AssertionError("Empty first row: Row had no properties, and there was no previous row to copy")
-
+                if any(c.value for c in row_forms):
+                    raise AssertionError("Empty first row: Row had no properties, and there was no previous row to copy")
+                else:
+                    continue
             # Parse the row, cell by cell
             for cell_with_forms in row_forms:
                 try:
@@ -319,7 +317,8 @@ class ExcelCognateParser(ExcelParser):
         # elsewhere.
 
         comment = row[0].comment.text if row[0].comment else ''
-
+        # TODO: move row_header to __init__
+        self.row_header = ["cldf_id", "cldf_name", None]
         # TODO: When coming out of lexedata.exporter.cognates, the data may be
         # quite rich, it might even contain list-valued entries, separated by
         # the same separator used in the CLDF, or sources with context. We need
@@ -327,10 +326,10 @@ class ExcelCognateParser(ExcelParser):
         # data and made it messy. The same flexibility would actually be nice
         # for MG-style datasets, so I suggest to not split this functionality
         # out in a subclass.
-        return CogSet(
-            cldf_name = data[1],
-            cldf_comment = comment
-        )
+        properties = dict(zip(self.row_header, data))
+        del properties[None]
+        properties["cldf_comment"] = comment
+        return CogSet(properties)
 
     def associate(self, form_id: str, row: RowObject) -> bool:
         assert row.__table__ == "CognatesetTable", \
@@ -382,6 +381,7 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
     Row = CogSet if dialect.cognates else Concept
     top = len(dialect.lang_cell_regexes) + 1
     left = len(dialect.row_cell_regexes) + 1
+    # TODO add dialect.cell_parser_semantics to arguments for cellparser
 
     class SpecializedExcelParser(ExcelParser):
         def __init__(
