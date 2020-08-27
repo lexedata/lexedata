@@ -1,9 +1,7 @@
 import os
 import re
 import sys
-import tty
 import shutil
-import termios
 import argparse
 import readline
 import typing as t
@@ -285,7 +283,7 @@ def completer(properties: t.Iterable[str] = CLDF):
     return complete
 
 
-
+# TODO: write cell_parser_semantics to metadata.json
 def create_parsers(
         i: int,
         mapping: t.Mapping[str, str] = CLDF,
