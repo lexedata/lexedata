@@ -16,6 +16,7 @@ setup(
     platforms='any',
     install_requires=[
         "attrs",
+        "python-igraph",
         "openpyxl",
         "pycldf",
         "sqlalchemy",
