@@ -381,6 +381,7 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
     Row = CogSet if dialect.cognates else Concept
     top = len(dialect.lang_cell_regexes) + 1
     left = len(dialect.row_cell_regexes) + 1
+    # TODO add dialect.cell_parser_semantics to arguments for cellparser
 
     class SpecializedExcelParser(ExcelParser):
         def __init__(
