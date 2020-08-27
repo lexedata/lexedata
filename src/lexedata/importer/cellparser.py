@@ -316,8 +316,6 @@ class CellParser(NaiveCellParser):
                 # The only thing we expect outside delimiters is the variant
                 # separators, '~' and '%'.
                 if self.variant_separator and element in self.variant_separator:
-                    # TODO: Should this be configurable? Where do we document
-                    # the semantics?
                     expect_variant = element
                 else:
                     logger.warning(f"{cell_identifier}In form {form_string}: Element {element} could not be parsed, ignored")
