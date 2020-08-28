@@ -72,7 +72,7 @@ through this process. Instead see XXX how to edit form data in lexedata.
 It is always a good idea to validate your dataset before and after any edits to make sure that everything is linked as it should in the cldf format.
 To perform this test, navigate to your lexical dataset repository and type
 ```
-cldf validate Wordlist-metadata.json`
+cldf validate Wordlist-metadata.json
 ```
 Assuming that there are not any errors or warnings you need to take care of, you can proceed to the next step.
 
