@@ -28,7 +28,7 @@ https://github.com/Anaphory/lexedata`. This should create a folder called
 lexedata in the selected location.
 
 #### 3. Install the lexedata package.
-In your terminal window type `pip install --user -e ./lexedata`. This will
+In your terminal window type `pip install -e ./lexedata`. This will
 install lexedata and all its dependencies on your computer and make it
 automatically updatable every time you pull a new version of the Lexedata
 repository from GitHub. Now you should be ready to use lexedata!
