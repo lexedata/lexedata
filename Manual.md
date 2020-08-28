@@ -72,14 +72,14 @@ through this process. Instead see XXX how to edit form data in lexedata.
 It is always a good idea to validate your dataset before and after any edits to make sure that everything is linked as it should in the cldf format.
 To perform this test, navigate to your lexical dataset repository and type
 ```
-python3 -m pycldf validate Wordlist-metadata.json
+cldf validate Wordlist-metadata.json
 ```
 Assuming that there are not any errors or warnings you need to take care of, you can proceed to the next step.
 
 #### 2. Export the Cognate Table
 Type 
 ```
-python3 -m lexedata.exporter.cognates
+python -m lexedata.exporter.cognates
 ```
 The Cognate Table will be written to the excel file `Cognates.xlsx`.
 
@@ -91,13 +91,13 @@ re-import step.)
 #### 4. Re-import the Cognate Table in lexedata
 Once you have edited and/or annotated the Cognate Table, you can update your dataset by re-importing it. Type
 ```
-python3 -m lexedata.importer.cognates
+python -m lexedata.importer.cognates
 ```
 
 #### 5. Validate your dataset, to make sure that the import went smoothly
 Run
 ```
-python3 -m pycldf validate Wordlist-metadata.json`
+cldf validate Wordlist-metadata.json`
 ```
 as described in step 1. Hopefully, if you did not see any issues in step 1, you will see none now.
 
