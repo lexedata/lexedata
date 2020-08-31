@@ -1,6 +1,21 @@
 # `lexedata` Manual
 
-## Lexedata installation instructions
+## 1. Introduction
+
+Lexedata is a set of tools for managing, editing, and annotated large lexical datasets. In order to use lexedata you need to be somewhat familiar with command line and git. 
+
+### 1.1 Navigation using the command line
+On a MacOS computer your can navigate to a specific folder using the command line on your terminal as follows: 
+You can see the directory (folder) you are in at the moment (current directory) within the prompt. In order to go to a directory below (contained in the current directory), type `cd [relative directory path]`, e.g. `cd Documents/arawak/data`. `cd` stands for change directory. Note that directory names are case sensitive and that they can be automatically filled in (if they are unique) by pressing the tab key. 
+In order to go to a directory above (the directory containing the current directory), type `cd ..`. Note that you can type any path combining up and down steps. So, if I am in the data directory given as an example above, in order to go to the directory maweti-guarani which is within Documents, I can type `cd ../../maweti-guarani`.
+At any point you can see the contents of your current directory by typing `ls`. 
+
+### 1.2 Basic git commands (HELP GEREON!)
+You can use the following git commands in your terminal or you can use the GitHub Desktop application. TODO: how do you set up git for the command line in the first place???
+In order to get the latest version of a repository, navigate to the corresponding folder and type `git pull`. If the version on GitHub is different from the one on your computer, it will be updated to match the version on GitHub. If you have made changes on your local version that are not yet pushed (published) on GitHub you will get a warning and you will have a chance to do it. (@Gereon, is this true???)
+In order to push your local version to GitHub, so it is updated, you need to first commit and then push your changes. Type `git commit` while in the repository you have modified and you will be prompted to add a commit message describing your latest changes. Then type `git push` and your local version will become the current version on GitHub (assuming that there are no conflicts to resolve). For lexical data repositories we recommend running `cldf validate Wordlist-metadata.json` before commiting and pushing, so that any cldf errors are caught and corrected.
+
+## 2. Lexedata installation instructions
 
 The following instructions are for MacOS computers. Instructions for other operating systems will follow.
 
@@ -33,27 +48,46 @@ install lexedata and all its dependencies on your computer and make it
 automatically updatable every time you pull a new version of the Lexedata
 repository from GitHub. Now you should be ready to use lexedata!
 
-## Importing a lexical dataset to lexedata
+## 3. Importing a lexical dataset to lexedata
 
-### Getting raw data from excel into cldf
+### 3.1 Getting raw data from excel into cldf
 Variant one, example from our Arawak dataset
 ```
 python -m lexedata.importer.excelsinglewordlist --exclude-sheet Fields --exclude-sheet Sources --exclude-sheet Languages --add-running-id --concept-property TUS --concept-property TUP Comparative\ Arawakan\ Lexical\ Dataset\ \(active\).xlsx  TUE forms.csv
 ```
-### Adding enriched data
+### 3.2 Adding enriched data
 Adding segments, adding links to concepticon
 
-### Automatic cognate coding
+### 3.3 Automatic cognate detection
 
-## Adding a new language/new data to an existing lexical dataset in lexedata
+## 4. Adding a new language/new data to an existing lexical dataset in lexedata
 
-## How to edit data in lexedata
+## 5. How to edit data in lexedata
 
 There are two ways to edit data in lexedata: through the web interface (under
 construction) and through editing the .csv files in your corresponding GitHub
 repository.
 
-## Cognate Table export-import loop
+### 5.1 Editing raw data through GitHub
+This section describes how to edit raw data through GitHub. By raw data we mean any part of the data that are not cognate set assignments and annotations. While it is possible to edit cognate set assignments and annotations this way as well, we recommend that you use the cognate table for this purpose (see section XXX). 
+Raw data are contained in three .csv files in the cldf format: concepts.csv, forms.csv, and languages.csv. Note that for small .csv files, instead of following the steps below, you can edit them directly through GitHub's web interface. 
+
+#### 1. pull the dataset repository from GitHub
+While in the dataset repository, type `git pull`. 
+
+#### 2. edit the .csv files in a spreadsheet editor
+Depending on what you want to edit, you can open any of the .csv files (concepts, forms, and languages) in a spreadsheet editor, edit the corresponding cells and save. 
+
+#### 3. validate your cldf database
+Then we recommend to run from the command line, while in the dataset directory:
+```cldf validate Wordlist-metadata.json```
+This command will perform tests to ensure that your cldf database has no errors. 
+
+#### 4. commit and push your dataset to GitHub
+While in the dataset repository, type `git commit` and add a commit message describing your latest changes. Then type  `git push` to publish the latest version to GitHub.
+
+
+## 6. Cognate Table export-import loop
 
 Lexedata offers the possibility to edit and annotate cognate set (or
 root-meaning set) judgements in a spreadsheet format using the spreadsheet
