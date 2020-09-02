@@ -134,6 +134,11 @@
                     },
                     {
                         "datatype": "string",
+                        "required": false,
+                        "name": "procedural_comment"
+                    },
+                    {
+                        "datatype": "string",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#value",
                         "required": true,
                         "name": "Value"
