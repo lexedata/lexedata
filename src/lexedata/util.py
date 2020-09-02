@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-#This function is a bit out of place here.
 import re
 from pathlib import Path
 
@@ -49,6 +47,11 @@ def clean_cell_value(cell: op.cell.cell.Cell):
         return v.replace("\n", ";\t")
     except TypeError:
         return str(v)
+
+
+def get_cell_comment(cell: openpyxl.cell.Cell) -> t.Optional[str]:
+    return cell.comment.text.strip() if cell.comment else ""
+
 
 if __name__ == '__main__':
     import argparse
