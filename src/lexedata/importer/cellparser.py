@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
-import abc
 import logging
 import typing as t
-import unicodedata
-from typing import Tuple, Optional, Pattern, List, Dict
-
 import openpyxl
 
 from lexedata.error_handling import *
@@ -15,9 +11,6 @@ from lexedata.types import Form
 
 logger = logging.getLogger(__name__)
 
-
-def get_cell_comment(cell: openpyxl.cell.Cell) -> t.Optional[str]:
-    return cell.comment.content.strip() if cell.comment else None
 
 
 def check_brackets(string, bracket_pairs):
@@ -325,13 +318,9 @@ class CellParser(NaiveCellParser):
             # If we encounter a field for the first time, we add it to the
             # dictionary. If repeatedly, to the variants, with a decorator that
             # shows how expected the variant was.
+            # This drops sources and comments in variants, if more than one source or comment is provided
+            # clean this up in self.postprocessing
 
-            # TODO: This drops duplicate sources and comments, which is not
-            # -> just block cldf_comment and cldf_source?
-            # intended. If we drop the first variant of each of those two
-            # fields, we cannot clean that up in post-processing. Maybe the
-            # intention was to assume that for comments and soucres, we always
-            # `expect_variant`s, so it should be an `or` for the inner if?
             if field in properties:
                 if not expect_variant and field != "cldf_comment" and field != "cldf_source":
                     logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}")
@@ -341,12 +330,7 @@ class CellParser(NaiveCellParser):
             else:
                 if expect_variant:
                     logger.warning(f"{cell_identifier}In form {form_string}: Element {element} was supposed to be a variant, but there is no earlier {field}")
-                # if field already in properties, add to value
-                try:
-                    if not element == properties[field]:
-                        properties[field] += element
-                except KeyError:
-                    properties[field] = element
+                properties[field] = element
 
             expect_variant = None
 
