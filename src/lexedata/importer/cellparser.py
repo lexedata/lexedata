@@ -441,14 +441,13 @@ class MawetiCellParser(CellParser):
         # -> this again leads to some hard coded fields, that we expect every cellparser to have
 
         # TODO: Melvin: first postprocess possible comments in variants
-        transcriptions = list(description_dictionary.keys())
-        for k in ["cldf_value", "cldf_comment", "cldf_source", "cldf_id"]:
-            try:
-                transcriptions.remove(k)
-            except ValueError:
-                continue
+
+        transcriptions = [semantics[0] for semantics in self.element_semantics.values() if semantics[1]]
         for key in transcriptions:
-            value = description_dictionary[key]
+            try:
+                value = description_dictionary[key]
+            except KeyError:
+                continue
             # if any separator is in this value, split value. add first as key and rest to variants.
             if self.variant_separator:
                 for separator in self.variant_separator:
