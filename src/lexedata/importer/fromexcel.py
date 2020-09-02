@@ -44,10 +44,12 @@ warnings.formatwarning = formatwarning
 
 
 class ExcelParser:
+    # TODO: Gereon I think this class variable row_header should be initialized by the metadataset
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
                  top: int = 2, left: int = 2,
                  cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
+                 row_header: t.List[str] = ["set", "cldf_name", None],
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
                  on_language_not_found: err.MissingHandler = err.create,
@@ -57,6 +59,7 @@ class ExcelParser:
         self.on_language_not_found = on_language_not_found
         self.on_row_not_found = on_row_not_found
         self.on_form_not_found = on_form_not_found
+        self.row_header = row_header
 
         self.cell_parser: cell_parsers.NaiveCellParser = cellparser
         self.top = top
@@ -66,7 +69,7 @@ class ExcelParser:
 
         self.cldfdatabase = Database(output_dataset, fname=db_fname)
 
-    # TODO: Run `write` for an ExcelParser after __init__, but not for an
+    # Run `write` for an ExcelParser after __init__, but not for an
     # ExcelCognateParser, when constructing these objects from the command line
     # input in load_mg_style_dataset
     def write(self):
@@ -131,11 +134,19 @@ class ExcelParser:
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
-        comment = row[0].comment.text if row[0].comment else ''
-        return Concept(
-            cldf_name = data[0],
-            cldf_comment = comment
-        )
+        properties = dict(zip(self.row_header, data))
+        # delete all possible None entries coming from row_header
+        while None in properties.keys():
+            del properties[None]
+
+        # fetch cell comment
+        comment = get_cell_comment(row[0])
+        properties["cldf_comment"] = comment
+
+        # cldf_name serves as cldf_id candidate
+        properties["cldf_id"] = properties["cldf_name"]
+
+        return Concept(properties)
 
     def parse_all_languages(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> t.Dict[str, str]:
         """Parse all language descriptions in the focal sheet.
@@ -286,6 +297,7 @@ class ExcelCognateParser(ExcelParser):
                  db_fname: str,
                  top: int = 3, left: int = 7,
                  cellparser: cell_parsers.NaiveCellParser = cell_parsers.CognateParser(),
+                 row_header = ["set", "cldf_name", None],
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
                  on_language_not_found: err.MissingHandler = err.error,
@@ -298,6 +310,7 @@ class ExcelCognateParser(ExcelParser):
             top = top, left = left,
             cellparser=cellparser,
             check_for_match = check_for_match,
+            row_header=row_header,
             check_for_row_match = check_for_row_match,
             on_language_not_found=on_language_not_found,
             on_row_not_found=on_row_not_found,
@@ -307,11 +320,7 @@ class ExcelCognateParser(ExcelParser):
     def properties_from_row(
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
-        data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
         # TODO: Ask Gereon: get_cell_comment with unicode normalization or not?
-        comment = get_cell_comment(row[0])
-        # TODO: move row_header to __init__
-        self.row_header = ["cldf_id", "cldf_name", None]
         # TODO: When coming out of lexedata.exporter.cognates, the data may be
         # quite rich, it might even contain list-valued entries, separated by
         # the same separator used in the CLDF, or sources with context. We need
@@ -319,9 +328,19 @@ class ExcelCognateParser(ExcelParser):
         # data and made it messy. The same flexibility would actually be nice
         # for MG-style datasets, so I suggest to not split this functionality
         # out in a subclass.
+        data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
         properties = dict(zip(self.row_header, data))
-        del properties[None]
+        # delete all possible None entries coming from row_header
+        while None in properties.keys():
+            del properties[None]
+
+        # fetch cell comment
+        comment = get_cell_comment(row[0])
         properties["cldf_comment"] = comment
+
+        # cldf_name serves as cldf_id candidate
+        properties["cldf_id"] = properties["cldf_name"]
+        print(f"cogset_properties{properties}")
         return CogSet(properties)
 
     def associate(self, form_id: str, row: RowObject) -> bool:
@@ -343,6 +362,7 @@ class MawetiExcelParser(ExcelParser):
                  db_fname: str,
                  top: int = 3, left: int = 7,
                  cellparser: cell_parsers.NaiveCellParser = cell_parsers.MawetiCellParser(),
+                 row_header: t.List[str] = ["Set", "cldf_name", None, "Spanish", "Portuguese", "French"],
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
                  on_language_not_found: err.MissingHandler = err.create,
@@ -353,6 +373,7 @@ class MawetiExcelParser(ExcelParser):
                          top=top, left=left,
                          cellparser=cellparser,
                          check_for_match=check_for_match, check_for_row_match=check_for_row_match,
+                         row_header=row_header,
                          on_language_not_found=on_language_not_found,
                          on_row_not_found=on_row_not_found,
                          on_form_not_found=on_form_not_found)
@@ -361,11 +382,21 @@ class MawetiExcelParser(ExcelParser):
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
-        comment = row[0].comment.text if row[0].comment else ''
-        return Concept(
-            cldf_name=data[1],
-            cldf_comment=comment
-        )
+        properties = dict(zip(self.row_header, data))
+        # delete all possible None entries coming from row_header
+        while None in properties.keys():
+            del properties[None]
+
+        # fetch cell comment
+        comment = get_cell_comment(row[0])
+        properties["cldf_comment"] = comment
+
+        # cldf_name serves as cldf_id candidate
+        properties["cldf_id"] = properties["cldf_name"]
+        properties["English"] = properties["cldf_name"]
+        c = Concept(properties)
+        print(c)
+        return c
 
 
 def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
