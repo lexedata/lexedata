@@ -15,7 +15,7 @@ import sqlalchemy
 from csvw.db import insert
 
 from lexedata.types import *
-from lexedata.util import string_to_id, clean_cell_value
+from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.cldf.db import Database
 import lexedata.error_handling as err
