@@ -341,7 +341,7 @@ class CellParser(NaiveCellParser):
 
     def postprocess_form(
             self,
-            description_dictionary: t.Dict[str, t.Any],
+            properties: t.Dict[str, t.Any],
             language_id: str) -> None:
         """Modify the form in-place
 
@@ -357,12 +357,12 @@ class CellParser(NaiveCellParser):
         # TODO: Currently "..." lands in the forms, with empty other entries
         # (and non-empty source). This is not too bad for now, how should it
         # be?
-        source = description_dictionary.pop("cldf_source", None)
+        source = properties.pop("cldf_source", None)
         if self.add_default_source and source is None:
             source = self.add_default_source
         if source:
             source, context = self.source_from_source_string(source, language_id)
-            description_dictionary["cldf_source"] = {(source, context)}
+            properties["cldf_source"] = {(source, context)}
 
 
 class CognateParser(CellParser):
@@ -403,9 +403,8 @@ class MawetiCellParser(CellParser):
 
     def postprocess_form(
             self,
-            description_dictionary: t.Dict[str, t.Any],
+            properties: t.Dict[str, t.Any],
             language_id: str) -> None:
-        # TODO: cellparser has no access to procedural_comment ...
         """
         >>> m = MawetiCellParser()
         >>> form = {
@@ -422,30 +421,48 @@ class MawetiCellParser(CellParser):
         ...  "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first"}
         True
         """
-        super().postprocess_form(description_dictionary, language_id)
-        variants = description_dictionary.setdefault("variants", [])
-        # Split forms that contain '%' or '~', drop the variant in
-        # variants.
-        # TODO Don't do this for all fields, just for transcriptions – what is
-        # -> As we try to be generic, the only way would be to remove from element_semantics
-        # -> the non transcription elements
-        # -> this again leads to some hard coded fields, that we expect every cellparser to have
-        # the best way to track whether a field is a transcription or not?
-        # Actually, knowing that would also be helpful elsewhere, where we want
-        # to treat variant transcriptions using the `variants` field, but
-        # variant comments, concepts, sources etc. using their dedicated
-        # list-valued fields.
+        super().postprocess_form(properties, language_id)
+        # Todo: check for procedural comments that could be contained in cldf_comment
 
-        # -> As we try to be generic, the only way would be to remove from element_semantics
-        # -> the non transcription elements
-        # -> this again leads to some hard coded fields, that we expect every cellparser to have
+        # if variants already exists, it may contain a actual variant, additional comments or sources
+        start_of_comment = ""
+        start_of_source = ""
+        for k, v in self.element_semantics.items():
+            if v == "cldf_comment":
+                start_of_comment = k
+            if v == "cldf_source":
+                start_of_source = k
+        try:
+            actual_variants = []
+            for variant in properties["variants"]:
+                start = variant[0]
+                # check for actual variants
+                if start in self.variant_separator:
+                    actual_variants.append(variant)
+                # check for misplaced comments
+                if start == start_of_comment:
+                    try:
+                        properties["cldf_comment"] += variant
+                    except KeyError:
+                        properties["cldf_comment"] = variant
+                # check for misplaced sources
+                if start == start_of_source:
+                    try:
+                        properties["cldf_source"] += variant
+                    except KeyError:
+                        properties["cldf_source"] = variant
 
-        # TODO: Melvin: first postprocess possible comments in variants
+            properties["variants"] = actual_variants
+        except KeyError:
+            pass
 
+        # Split transcriptions of form that contain '%' or '~', drop the variant in
         transcriptions = [semantics[0] for semantics in self.element_semantics.values() if semantics[1]]
+        # if variants not in properties, add default list
+        variants = properties.setdefault("variants", [])
         for key in transcriptions:
             try:
-                value = description_dictionary[key]
+                value = properties[key]
             except KeyError:
                 continue
             # if any separator is in this value, split value. add first as key and rest to variants.
@@ -457,20 +474,20 @@ class MawetiCellParser(CellParser):
                         # TODO: ensure correct opening and closing of brackets? Left out for now, as brackets will
                         # removed in the end
                         value = value.split(separator)
-                        description_dictionary[key] = value.pop(0)
+                        properties[key] = value.pop(0)
                         for v in value:
                             variants.append((separator + v))
         # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
         try:
-            search = re.search(r"\([A-Z]{3}:.+?\)", description_dictionary["cldf_comment"])
+            search = re.search(r"\([A-Z]{3}:.+?\)", properties["cldf_comment"])
             while search:
                 procedural_comment = search.group(0)
-                description_dictionary["cldf_comment"] = description_dictionary["cldf_comment"][:search.start()] + \
-                    description_dictionary["cldf_comment"][search.end():]
-                search = re.search(r"\([A-Z]{3}:.+?\)", description_dictionary["cldf_comment"])
+                properties["cldf_comment"] = properties["cldf_comment"][:search.start()] + \
+                    properties["cldf_comment"][search.end():]
+                search = re.search(r"\([A-Z]{3}:.+?\)", properties["cldf_comment"])
                 try:
-                    description_dictionary["procedural_comment"] += procedural_comment
+                    properties["procedural_comment"] += procedural_comment
                 except KeyError:
-                    description_dictionary["procedural_comment"] = procedural_comment
+                    properties["procedural_comment"] = procedural_comment
         except KeyError:
             pass
