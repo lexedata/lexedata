@@ -49,7 +49,7 @@ def clean_cell_value(cell: op.cell.cell.Cell):
         return str(v)
 
 
-def get_cell_comment(cell: openpyxl.cell.Cell) -> t.Optional[str]:
+def get_cell_comment(cell: op.cell.Cell) -> t.Optional[str]:
     return cell.comment.text.strip() if cell.comment else ""
 
 
