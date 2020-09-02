@@ -340,13 +340,11 @@ class ExcelCognateParser(ExcelParser):
 
         # cldf_name serves as cldf_id candidate
         properties["cldf_id"] = properties["cldf_name"]
-        print(f"cogset_properties{properties}")
         return CogSet(properties)
 
     def associate(self, form_id: str, row: RowObject) -> bool:
         assert row.__table__ == "CognatesetTable", \
             "Expected Concept, but got {:}".format(row.__class__)
-        print(form_id, row)
         row_id = row["cldf_id"]
         judgement = Judgement(
             cldf_id = f"{form_id}-{row_id}",
@@ -394,9 +392,7 @@ class MawetiExcelParser(ExcelParser):
         # cldf_name serves as cldf_id candidate
         properties["cldf_id"] = properties["cldf_name"]
         properties["English"] = properties["cldf_name"]
-        c = Concept(properties)
-        print(c)
-        return c
+        return Concept(properties)
 
 
 def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
