@@ -92,12 +92,10 @@ class ExcelParser:
             self, column: t.List[openpyxl.cell.Cell]
     ) -> Language:
         data = [clean_cell_value(cell) for cell in column[:self.top - 1]]
-        comment = column[0].comment.text if column[0].comment else ''
+        comment = get_cell_comment(column[0])
         id = string_to_id(data[0])
         return Language(
-            # Do not set the ID. Without knowing the database, we cannot know
-            # what it needs to be, in particular whether there needs to be any
-            # disambiguating number suffix.
+            # an id candidate must be provided, which is transformed into a unique id
             cldf_id = id,
             cldf_name = data[0],
             cldf_comment = comment
@@ -310,13 +308,8 @@ class ExcelCognateParser(ExcelParser):
             self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
-        # TODO I don't know what ate `get_cell_coment`, we can probably put it
-        # back. It's not as critical with comments, which we don't expect to
-        # ever be used for exact matching, but it would probably be nice to use
-        # the same postprocess, namely strip() and unicode normalization, as
-        # elsewhere.
-
-        comment = row[0].comment.text if row[0].comment else ''
+        # TODO: Ask Gereon: get_cell_comment with unicode normalization or not?
+        comment = get_cell_comment(row[0])
         # TODO: move row_header to __init__
         self.row_header = ["cldf_id", "cldf_name", None]
         # TODO: When coming out of lexedata.exporter.cognates, the data may be
