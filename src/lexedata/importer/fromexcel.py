@@ -45,6 +45,8 @@ warnings.formatwarning = formatwarning
 
 class ExcelParser:
     # TODO: Gereon I think this class variable row_header should be initialized by the metadataset
+    # TODO: Gereon an additional parameter row.object would be nice, too. To make it more generic.
+    # for now, .properties_from_row cannot be more generic because of the return Concept(....) etc.
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
                  top: int = 2, left: int = 2,
