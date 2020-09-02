@@ -310,6 +310,7 @@ class CellParser(NaiveCellParser):
 
             # Check what kind of element we have.
             for start, field in self.element_semantics.items():
+                field = field[0]
                 if element.startswith(start):
                     break
             else:
@@ -454,6 +455,8 @@ class MawetiCellParser(CellParser):
         # -> As we try to be generic, the only way would be to remove from element_semantics
         # -> the non transcription elements
         # -> this again leads to some hard coded fields, that we expect every cellparser to have
+
+        # TODO: Melvin: first postprocess possible comments in variants
         transcriptions = list(description_dictionary.keys())
         for k in ["cldf_value", "cldf_comment", "cldf_source", "cldf_id"]:
             try:
