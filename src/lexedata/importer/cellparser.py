@@ -334,9 +334,7 @@ class CellParser(NaiveCellParser):
 
             expect_variant = None
 
-        print(f"properties before postporcessing{properties}")
         self.postprocess_form(properties, language_id)
-        print(f"properties after postporcessing{properties}")
         return Form(properties)
 
     def postprocess_form(
@@ -421,16 +419,25 @@ class MawetiCellParser(CellParser):
         ...  "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first"}
         True
         """
-        super().postprocess_form(properties, language_id)
-        # Todo: check for procedural comments that could be contained in cldf_comment
+        # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
+        # but a procedural comment could land in variants, thus this case needs to be checked as well
+        try:
+            comment = properties["cldf_comment"]
+            beginning = comment[1:5]
+            if beginning[:3].isupper() and beginning[-1] == ":":
+                properties["procedural_comment"] = comment
+                del properties["cldf_comment"]
+        except KeyError:
+            pass
 
+        # TODO: Ask Gereon: What kind of separator between comments and sources?
         # if variants already exists, it may contain a actual variant, additional comments or sources
         start_of_comment = ""
         start_of_source = ""
         for k, v in self.element_semantics.items():
-            if v == "cldf_comment":
+            if v[0] == "cldf_comment":
                 start_of_comment = k
-            if v == "cldf_source":
+            if v[0] == "cldf_source":
                 start_of_source = k
         try:
             actual_variants = []
@@ -439,14 +446,23 @@ class MawetiCellParser(CellParser):
                 # check for actual variants
                 if start in self.variant_separator:
                     actual_variants.append(variant)
+
                 # check for misplaced comments
-                if start == start_of_comment:
-                    try:
-                        properties["cldf_comment"] += variant
-                    except KeyError:
-                        properties["cldf_comment"] = variant
+                elif start == start_of_comment:
+                    # check if it s a procedural comment
+                    if variant[1:4].isupper() and variant[4] == ":":
+                        try:
+                            properties["procedural_comment"] += variant
+                        except KeyError:
+                            properties["procedural_comment"] = variant
+                    else:
+                        try:
+                            properties["cldf_comment"] += variant
+                        except KeyError:
+                            properties["cldf_comment"] = variant
+
                 # check for misplaced sources
-                if start == start_of_source:
+                elif start == start_of_source:
                     try:
                         properties["cldf_source"] += variant
                     except KeyError:
@@ -477,17 +493,6 @@ class MawetiCellParser(CellParser):
                         properties[key] = value.pop(0)
                         for v in value:
                             variants.append((separator + v))
-        # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
-        try:
-            search = re.search(r"\([A-Z]{3}:.+?\)", properties["cldf_comment"])
-            while search:
-                procedural_comment = search.group(0)
-                properties["cldf_comment"] = properties["cldf_comment"][:search.start()] + \
-                    properties["cldf_comment"][search.end():]
-                search = re.search(r"\([A-Z]{3}:.+?\)", properties["cldf_comment"])
-                try:
-                    properties["procedural_comment"] += procedural_comment
-                except KeyError:
-                    properties["procedural_comment"] = procedural_comment
-        except KeyError:
-            pass
+
+        # post processing of base class
+        super().postprocess_form(properties, language_id)
