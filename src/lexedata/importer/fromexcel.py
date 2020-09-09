@@ -107,11 +107,11 @@ class ExcelParser:
         )
 
     def find_db_candidates(
-            self, object: O, properties: t.Iterable[str]
+            self, object: O, properties_for_match: t.Iterable[str]
     ) -> t.Iterable[str]:
         where_clauses = []
         where_parameters = []
-        for property in properties:
+        for property in properties_for_match:
             if property not in object:
                 where_clauses.append("{0} == NULL".format(
                     property))
@@ -125,6 +125,8 @@ class ExcelParser:
             where = "WHERE {}".format(" AND ".join(where_clauses))
         else:
             where = ""
+        query = "SELECT cldf_id, * FROM {0} {1}".format(
+                object.__table__, where)
         candidates = self.cldfdatabase.query(
             "SELECT cldf_id, * FROM {0} {1}".format(
                 object.__table__, where),
@@ -279,6 +281,8 @@ class ExcelParser:
                         cell_with_forms, this_lan,
                         f"{sheet.title}.{cell_with_forms.coordinate}"):
                     form = Form(params)
+                    # TODO: Form has no cldf_id at this point. Therefore, it must be added.
+                    form["cldf_id"] = "{:}_{:}".format(form["cldf_languageReference"], row_object["cldf_id"])
                     candidate_forms = self.find_db_candidates(
                         form, self.check_for_match)
                     sources = form.pop("cldf_source", [])
