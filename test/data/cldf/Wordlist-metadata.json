@@ -30,7 +30,7 @@
         ],
         "cognateset_cell_regexes": [
             "(?P<tag>.*)",
-            "(?P<cldf_id>.*)",
+            "(?P<cldf_name>.*)", 
             ".*",
             ".*",
             ".*",
