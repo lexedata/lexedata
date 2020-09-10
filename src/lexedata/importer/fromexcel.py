@@ -401,13 +401,17 @@ class MawetiExcelParser(ExcelParser):
         return Concept(properties)
 
 
-def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
+def excel_parser_from_dialect(dataset: pycldf.Dataset, cognate=False) -> t.Type[ExcelParser]:
     dialect = argparse.Namespace(
         **dataset.tablegroup.common_props["special:fromexcel"])
-    Row = CogSet if dialect.cognates else Concept
+    if dialect.cognates or cognate:
+        Row = CogSet
+        row_regex, row_comment_regex = dialect.cognateset_cell_regexes, dialect.cognateset_comment_regexes
+    else:
+        Row = Concept
+        row_regex, row_comment_regex = dialect.row_cell_regexes, dialect.row_comment_regexes
     top = len(dialect.lang_cell_regexes) + 1
     left = len(dialect.row_cell_regexes) + 1
-    # TODO add dialect.cell_parser_semantics to arguments for cellparser
 
     class SpecializedExcelParser(ExcelParser):
         def __init__(
@@ -439,18 +443,26 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
                     match = re.fullmatch(cell_regex, cell.value, re.DOTALL)
                     if match is None:
                         raise ValueError(f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}, but found {cell.value}")
-                    d.update(match.groupdict())
+                    for k, v in match.groupdict().items():
+                        if k in d:
+                            d[k] = d[k] + v
+                        else:
+                            d[k] = v
                 if cell.comment:
                     match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(f"In cell {cell.coordinate}: Expected to encounter match for {comment_regex}, but found {cell.comment.content}")
-                    d.update(match.groupdict())
+                    for k, v in match.groupdict().items():
+                        if k in d:
+                            d[k] = d[k] + v
+                        else:
+                            d[k] = v
 
             if "cldf_id" not in d:
                 d["cldf_id"] = string_to_id(d["cldf_name"])
             return Language(d)
 
-        def properties_from_row(self, row: t.List[openpyxl.cell.Cell]) -> Concept:
+        def properties_from_row(self, row: t.List[openpyxl.cell.Cell]) -> Row:
             """Parse the row, according to regexes from the metadata.
 
             Raises
@@ -461,18 +473,27 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset) -> t.Type[ExcelParser]:
             # FIXME: If a property appears twice, currently the later
             # appearance overwrites the earlier one. Merge wiser.
             d: t.Dict[str, str] = {}
-            for cell, cell_regex, comment_regex in zip(row, dialect.row_cell_regexes, dialect.row_comment_regexes):
+            for cell, cell_regex, comment_regex in zip(row, row_regex, row_comment_regex):
                 if cell.value:
                     match = re.fullmatch(cell_regex, cell.value, re.DOTALL)
                     if match is None:
                         raise ValueError(f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}, but found {cell.value}")
-                    d.update(match.groupdict())
+                    for k, v in match.groupdict().items():
+                        if k in d:
+                            d[k] = d[k] + v
+                        else:
+                            d[k] = v
                 if cell.comment:
                     match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(f"In cell {cell.coordinate}: Expected to encounter match for {comment_regex}, but found {cell.comment.content}")
-                    d.update(match.groupdict())
-            return Concept(d)
+                    for k, v in match.groupdict().items():
+                        if k in d:
+                            d[k] = d[k] + v
+                        else:
+                            d[k] = v
+
+            return Row(d)
     return SpecializedExcelParser
 
 
@@ -489,34 +510,32 @@ def load_mg_style_dataset(
     except KeyError:
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    #EP = EP(dataset, db)
-    #EP.write()
-    #EP.parse_cells(lexicon_wb)
-    #EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
-    excel_parser_lexical = MawetiExcelParser(dataset, db)
-    excel_parser_lexical.write()
-    excel_parser_lexical.parse_cells(lexicon_wb)
-    excel_parser_lexical.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
+    EP = EP(dataset, db_fname=db)
+    EP.write()
+    EP.parse_cells(lexicon_wb)
+    EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
+
 
 
 def load_mg_style_cognateset(
         metadata: Path, cogsets: str, db: str) -> None:
+    # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / 'db.sqlite'
-    # lexicon_wb = openpyxl.load_workbook(lexicon)
+    lexicon_wb = openpyxl.load_workbook(cogsets)
 
-    # dataset = pycldf.Dataset.from_metadata(metadata)
-    # try:
-    #    EP = excel_parser_from_dialect(dataset)
-    # except KeyError:
-    #    EP = ExcelParser
-    # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    excel_parser_cognate = ExcelCognateParser(pycldf.Dataset.from_metadata(metadata), db)
-    cogsets_wb = openpyxl.load_workbook(cogsets)
-    for sheet in cogsets_wb.worksheets:
-        excel_parser_cognate.parse_cells(sheet)
-    excel_parser_cognate.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
+    dataset = pycldf.Dataset.from_metadata(metadata)
+    try:
+        EP = excel_parser_from_dialect(dataset, cognate=True)
+    except KeyError:
+        EP = ExcelParser(dataset, db_fname=db)
+    EP = EP(dataset, db)
+    for sheet in lexicon_wb.worksheets:
+        EP.parse_cells(sheet)
+
+    EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
+
 
 if __name__ == "__main__":
     import argparse
