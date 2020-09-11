@@ -200,26 +200,24 @@ class NaiveCellParser():
 
 
 class CellParser(NaiveCellParser):
-    bracket_pairs = {
-        "(": ")",
-        "[": "]",
-        "{": "}",
-        "<": ">",
-        "/": "/",
-    }
-
-    element_semantics = {
-        "(": ("cldf_comment", False),
-        "[": ("phonetic", True),
-        "{": ("cldf_source", False),
-        "<": ("orthographic", True),
-        "/": ("phonemic", True)
-    }
-
     def __init__(self,
+                 bracket_pairs: t.Dict[str, str] = {
+                    "(": ")",
+                    "[": "]",
+                    "{": "}",
+                    "<": ">",
+                    "/": "/"},
+                 element_semantics: t.Dict[str, str] = {
+                    "(": ("cldf_comment", False),
+                    "[": ("phonetic", True),
+                    "{": ("cldf_source", False),
+                    "<": ("orthographic", True),
+                    "/": ("phonemic", True)},
                  separation_pattern: str = r"([;,])",
                  variant_separator: t.Optional[list] = None,
                  add_default_source: str = "{1}"):
+        self.bracket_pairs = bracket_pairs
+        self.element_semantics = element_semantics
         self.separation_pattern = separation_pattern
         self.variant_separator = variant_separator
         self.add_default_source = add_default_source
