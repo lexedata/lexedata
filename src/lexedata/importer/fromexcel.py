@@ -309,7 +309,7 @@ class ExcelCognateParser(ExcelParser):
                  on_language_not_found: err.MissingHandler = err.error,
                  on_row_not_found: err.MissingHandler = err.create,
                  on_form_not_found: err.MissingHandler = err.warn
-    ) -> None:
+                 ) -> None:
         super().__init__(
             output_dataset = output_dataset,
             db_fname=db_fname,
@@ -407,13 +407,15 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset, cognate=False) -> t.Type[
     if dialect.cognates or cognate:
         Row = CogSet
         row_regex, row_comment_regex = dialect.cognateset_cell_regexes, dialect.cognateset_comment_regexes
+        Parser = ExcelCognateParser
     else:
         Row = Concept
         row_regex, row_comment_regex = dialect.row_cell_regexes, dialect.row_comment_regexes
+        Parser = ExcelParser
     top = len(dialect.lang_cell_regexes) + 1
     left = len(dialect.row_cell_regexes) + 1
 
-    class SpecializedExcelParser(ExcelParser):
+    class SpecializedExcelParser(Parser):
         def __init__(
                 self, output_dataset: pycldf.Dataset, db_fname: str,
         ) -> None:
@@ -422,7 +424,7 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset, cognate=False) -> t.Type[
                 db_fname=db_fname,
                 top=top,
                 left=left,
-                cellparser=getattr(cell_parsers, dialect.cell_parser)(),
+                cellparser=getattr(cell_parsers, dialect.cell_parser)(element_semantics=dialect.cell_parser_semantics),
                 check_for_match=dialect.check_for_match,
                 check_for_row_match=dialect.check_for_row_match,
                 )
@@ -516,7 +518,6 @@ def load_mg_style_dataset(
     EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
 
-
 def load_mg_style_cognateset(
         metadata: Path, cogsets: str, db: str) -> None:
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
@@ -529,7 +530,7 @@ def load_mg_style_cognateset(
     try:
         EP = excel_parser_from_dialect(dataset, cognate=True)
     except KeyError:
-        EP = ExcelParser(dataset, db_fname=db)
+        EP = ExcelCognateParser(dataset, db_fname=db)
     EP = EP(dataset, db)
     for sheet in lexicon_wb.worksheets:
         EP.parse_cells(sheet)
