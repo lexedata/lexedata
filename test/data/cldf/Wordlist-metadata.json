@@ -29,7 +29,7 @@
             "(?P<Curator>.*)"
         ],
         "cognateset_cell_regexes": [
-            "(?P<tag>.*)",
+            "(?P<Set>.*)",
             "(?P<cldf_name>.*)", 
             ".*",
             ".*",
