@@ -110,7 +110,6 @@ class ExcelWriter():
         c_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
         for j in self.dataset["CognateTable"]:
             all_judgements.setdefault(j[c_cognateset], []).append(j)
-        print(all_judgements)
         # TODO: If there is no cognateset table, add one – actually, that
         # should happen in the importer, the export should not modify the
         # dataset!!
@@ -235,12 +234,14 @@ class ExcelWriter():
         if form[c_comment]:
             suffix = f" {WARNING:}"
 
-        # corresponding concepts – TODO: distinguish between list data type
+        # corresponding concepts
         # (multiple concepts) and others (single concept)
         c_concept = self.dataset["FormTable", "parameterReference"].name
-        # form[c_concept] returns a list
-        translations.append(form[c_concept][0])
-
+        if isinstance(form[c_concept], list):
+            for f in form[c_concept]:
+                translations.append(f)
+        else:
+            translations.append(form[c_concept])
         return "{:} ‘{:}’{:}".format(
             transcription, ", ".join(translations), suffix)
 
