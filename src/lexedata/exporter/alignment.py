@@ -224,13 +224,15 @@ if __name__ == "__main__":
     elif args.coding == "rootmeaning":
         alignment = root_meaning_code(ds)
     elif args.coding == "multistate":
+        raise NotImplementedError(
+            "There are some conceptual problems, for the case of more than 9 different values for a slot, that have made us not implement multistate codes yet.")
         alignment = multistate_code(ds)
     else:
         raise ValueError("Coding schema {:} unknown.".format(args.coding))
 
     alignment = {
-        language: alignment
-        for language, alignment in alignment.items()
+        language: sequence
+        for language, sequence in alignment.items()
         if language not in ["p-alor1249", "p-east2519", "p-timo1261", "indo1316-lexi", "tetu1246", "tetu1245-suai"]
     }
 
@@ -248,14 +250,21 @@ Begin Data;
   Format Datatype=Standard, Missing=?;
   Matrix
     [The first column is constant zero, for programs who need that kind of thing for ascertainment correction]
-    {alignments:s}
+    {sequences:s}
   ;
 End;
-""".format(
-    len_taxa = len(alignment),
-    taxa = " ".join([str(language) for language in alignment]),
-    len_alignment = len(next(iter(alignment.values()))),
-    alignments = "\n    ".join(raw_alignment(alignment))))
+        """.format(
+            len_taxa = len(alignment),
+            taxa = " ".join([str(language) for language in alignment]),
+            len_alignment = len(next(iter(alignment.values()))),
+            sequences = "\n    ".join(raw_alignment(alignment))))
+    elif args.format == "beast":
+        print('<data id="data_vocabulary" name="data_vocabulary" dataType="integer">')
+        for language, sequence in alignment.items():
+            sequence = "".join(sequence)
+            print(f'<sequence id="language_data_vocabulary:{language:}" taxon="{language:}" value="{sequence}" />')
+        print('</data>')
+
 
 
 
