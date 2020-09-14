@@ -113,10 +113,10 @@ class ExcelParser:
         where_parameters = []
         for property in properties_for_match:
             if property not in object:
-                where_clauses.append("{0} == NULL".format(
-                    property))
-            elif type(object[property]) == set:
-                where_clauses.append("0==0")
+                continue
+            elif type(object[property]) == list:
+                # FIXME: what should actually happen?
+                continue
             else:
                 where_clauses.append("{0} == ?".format(
                     property))
@@ -125,8 +125,6 @@ class ExcelParser:
             where = "WHERE {}".format(" AND ".join(where_clauses))
         else:
             where = ""
-        query = "SELECT cldf_id, * FROM {0} {1}".format(
-                object.__table__, where)
         candidates = self.cldfdatabase.query(
             "SELECT cldf_id, * FROM {0} {1}".format(
                 object.__table__, where),
