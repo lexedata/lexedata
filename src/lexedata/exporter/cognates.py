@@ -143,6 +143,7 @@ class ExcelWriter():
                 if c_comment and col == 1 and cogset[c_comment]:
                     cell.comment = op.comments.Comment(
                         cogset.cldf_comment, __package__)
+            # possible a cogset can appear without any judgmente, if so continue
             if cogset[c_cogset_id] not in all_judgements:
                 continue
             new_row_index = self.create_formcells_for_cogset(
