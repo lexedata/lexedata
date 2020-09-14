@@ -462,7 +462,7 @@ class MawetiCellParser(CellParser):
                 # check for misplaced comments
                 elif start == start_of_comment:
                     # check if it s a procedural comment
-                    if variant[1:4].isupper() and variant[4] == ":":
+                    if re.search(r"^[A-Z]{2,}:", variant[1:]):
                         try:
                             properties["procedural_comment"] += variant
                         except KeyError:
@@ -475,10 +475,7 @@ class MawetiCellParser(CellParser):
 
                 # check for misplaced sources
                 elif start == start_of_source:
-                    try:
-                        properties["cldf_source"] += variant
-                    except KeyError:
-                        properties["cldf_source"] = variant
+                    properties.setdefault("cldf_source", []).append(variant)
 
             properties["variants"] = actual_variants
         except KeyError:
