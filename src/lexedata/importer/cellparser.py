@@ -200,26 +200,24 @@ class NaiveCellParser():
 
 
 class CellParser(NaiveCellParser):
-    bracket_pairs = {
-        "(": ")",
-        "[": "]",
-        "{": "}",
-        "<": ">",
-        "/": "/",
-    }
-
-    element_semantics = {
-        "(": ("cldf_comment", False),
-        "[": ("phonetic", True),
-        "{": ("cldf_source", False),
-        "<": ("orthographic", True),
-        "/": ("phonemic", True)
-    }
-
     def __init__(self,
+                 bracket_pairs: t.Dict[str, str] = {
+                    "(": ")",
+                    "[": "]",
+                    "{": "}",
+                    "<": ">",
+                    "/": "/"},
+                 element_semantics: t.Dict[str, str] = {
+                    "(": ("cldf_comment", False),
+                    "[": ("phonetic", True),
+                    "{": ("cldf_source", False),
+                    "<": ("orthographic", True),
+                    "/": ("phonemic", True)},
                  separation_pattern: str = r"([;,])",
                  variant_separator: t.Optional[list] = None,
                  add_default_source: str = "{1}"):
+        self.bracket_pairs = bracket_pairs
+        self.element_semantics = element_semantics
         self.separation_pattern = separation_pattern
         self.variant_separator = variant_separator
         self.add_default_source = add_default_source
@@ -392,10 +390,24 @@ class MawetiCellParser(CellParser):
         # • TODO: Split forms that contain '%' or '~', drop the variant in
         #   variants.
     def __init__(self,
+                 bracket_pairs: t.Dict[str, str] = {
+                     "(": ")",
+                     "[": "]",
+                     "{": "}",
+                     "<": ">",
+                     "/": "/"},
+                 element_semantics: t.Dict[str, str] = {
+                     "(": ("cldf_comment", False),
+                     "[": ("phonetic", True),
+                     "{": ("cldf_source", False),
+                     "<": ("orthographic", True),
+                     "/": ("phonemic", True)},
                  separation_pattern: str = r"([;,])",
                  variant_separator: list = ["~", "%"],
                  add_default_source: str = "{1}"):
-        super(MawetiCellParser, self).__init__(separation_pattern=separation_pattern,
+        super(MawetiCellParser, self).__init__(bracket_pairs=bracket_pairs,
+                                               element_semantics=element_semantics,
+                                               separation_pattern=separation_pattern,
                                                variant_separator=variant_separator,
                                                add_default_source=add_default_source)
 
@@ -450,7 +462,7 @@ class MawetiCellParser(CellParser):
                 # check for misplaced comments
                 elif start == start_of_comment:
                     # check if it s a procedural comment
-                    if variant[1:4].isupper() and variant[4] == ":":
+                    if re.search(r"^[A-Z]{2,}:", variant[1:]):
                         try:
                             properties["procedural_comment"] += variant
                         except KeyError:
@@ -463,10 +475,7 @@ class MawetiCellParser(CellParser):
 
                 # check for misplaced sources
                 elif start == start_of_source:
-                    try:
-                        properties["cldf_source"] += variant
-                    except KeyError:
-                        properties["cldf_source"] = variant
+                    properties.setdefault("cldf_source", []).append(variant)
 
             properties["variants"] = actual_variants
         except KeyError:

@@ -110,7 +110,6 @@ class ExcelWriter():
         c_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
         for j in self.dataset["CognateTable"]:
             all_judgements.setdefault(j[c_cognateset], []).append(j)
-
         # TODO: If there is no cognateset table, add one – actually, that
         # should happen in the importer, the export should not modify the
         # dataset!!
@@ -129,6 +128,7 @@ class ExcelWriter():
                              reverse=True)
         else:
             cogsets = self.dataset['CognatesetTable']
+
         for cogset in cogsets:
             # Put the cognateset's tags in column B.
             for col, (db_name, header) in enumerate(self.header, 1):
@@ -143,7 +143,9 @@ class ExcelWriter():
                 if c_comment and col == 1 and cogset[c_comment]:
                     cell.comment = op.comments.Comment(
                         cogset.cldf_comment, __package__)
-
+            # possible a cogset can appear without any judgmente, if so continue
+            if cogset[c_cogset_id] not in all_judgements:
+                continue
             new_row_index = self.create_formcells_for_cogset(
                 all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index, self.lan_dict)
             row_index = new_row_index
@@ -205,13 +207,15 @@ class ExcelWriter():
         if there is one.
 
         """
-        # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
         cell_value = self.form_to_cell_value(judgement[0])
         form_cell = ws.cell(row=row, column=column, value=cell_value)
-        comment = judgement[1].get("Comment", None)
+        c_id = self.dataset["FormTable", "id"].name
+        #TODO: comment of Cognate is meant here, but Cognate has no property comment
+        #c_comment = self.dataset["CognateTable", "comment"].name
+        comment = judgement[1].get("comment", None)
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
-        link = self.URL_BASE.format(urllib.parse.quote(judgement[0]['ID']))
+        link = self.URL_BASE.format(urllib.parse.quote(judgement[0][c_id]))
         form_cell.hyperlink = link
 
     def form_to_cell_value(self, form: types.Form) -> str:
@@ -226,31 +230,38 @@ class ExcelWriter():
         translations = []
 
         suffix = ""
-        # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
-        if form.get("Comment"):
+
+        c_comment = self.dataset["FormTable", "comment"].name
+        if form[c_comment]:
             suffix = f" {WARNING:}"
 
-        # corresponding concepts – TODO: distinguish between list data type
+        # corresponding concepts
         # (multiple concepts) and others (single concept)
         c_concept = self.dataset["FormTable", "parameterReference"].name
-        translations.append(form[c_concept])
-
+        if isinstance(form[c_concept], list):
+            for f in form[c_concept]:
+                translations.append(f)
+        else:
+            translations.append(form[c_concept])
         return "{:} ‘{:}’{:}".format(
             transcription, ", ".join(translations), suffix)
 
-    #def get_best_transcription(self, form):
-    #    if form.phonemic:
-    #        return form.phonemic
-    #    elif form.phonetic:
-    #        return form.phonetic
-    #    elif form.orthographic:
-    #        return form.orthographic
-    #    else:
-    #        ValueError(f"Form {form:} has no transcriptions.")
-
     def get_best_transcription(self, form):
-        # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
-        return form["FUN"]
+        phonemic = self.dataset["FormTable", "phonemic"].name
+        phonetic = self.dataset["FormTable", "phonetic"].name
+        orthographic = self.dataset["FormTable", "orthographic"].name
+        if form[phonemic]:
+            return form[phonemic]
+        elif form[phonetic]:
+            return form[phonetic]
+        elif form[orthographic]:
+            return form[orthographic]
+        else:
+            ValueError(f"Form {form:} has no transcriptions.")
+
+    #def get_best_transcription(self, form):
+    #    # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
+    #   return form["FUN"]
 
 
 # TODO: Somehow, this script tends to run very slowly. Find the bottleneck, and
