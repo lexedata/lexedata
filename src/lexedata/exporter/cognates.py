@@ -59,7 +59,7 @@ class ExcelWriter():
             self,
             out: Path,
             size_sort: bool = False,
-            language_order="cldf_name"
+            language_order="name"
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -73,6 +73,8 @@ class ExcelWriter():
         Parameters
         ==========
         out: The path of the Excel file to be written.
+        size_sort: If true, cognatesets are ordered by the number of cognates corresponding to the cognateset
+        language_order: column name, languages appear ordered by given column name from LanguageTable
 
         """
         # TODO: Check whether openpyxl.worksheet._write_only.WriteOnlyWorksheet
@@ -84,17 +86,16 @@ class ExcelWriter():
         # Define the columns
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
-        # TODO: Sort languages by the language_order column – and clarify in
-        # the docstring of this function whether we accept SQLite column names
-        # (`cldf_name`), CLDF column names (`Name` or `Language`) or CLDF
-        # property terms (`name` or
-        # ``https://cldf.clld.org/v1.0/terms.rdf#name`). We can probably take
-        # CLDF names and terms, because we can get them from the table as
-        # c_sort = self.dataset[…]
+
         c_name = self.dataset["LanguageTable", "name"].name
         c_id = self.dataset["LanguageTable", "id"].name
+        if language_order:
+            c_sort = self.dataset["LanguageTable", f"{language_order}"].name
+            languages = sorted(self.dataset["LanguageTable"], key=lambda x: x[c_sort], reverse=False)
+        else:
+            languages = self.dataset["LanguageTable"]
         for col, lan in enumerate(
-                self.dataset["LanguageTable"],
+                languages,
                 len(excel_header) + 1):
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
