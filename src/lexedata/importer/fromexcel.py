@@ -300,7 +300,7 @@ class ExcelCognateParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
                  top: int = 3, left: int = 7,
-                 cellparser: cell_parsers.NaiveCellParser = cell_parsers.CognateParser(),
+                 cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
                  row_header = ["set", "cldf_name", None],
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
