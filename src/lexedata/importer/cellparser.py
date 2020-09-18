@@ -361,15 +361,6 @@ class CellParser(NaiveCellParser):
             properties["cldf_source"] = {(source, context)}
 
 
-class CognateParser(CellParser):
-    def parse_form(self, values, language,
-            cell_identifier: str = ''
-    ):
-        if values.isupper():
-            return None
-        else:
-            return super().parse_form(values, language, cell_identifier)
-
 
 class CellParserHyperlink(CellParser):
     def parse(
@@ -494,3 +485,12 @@ class MawetiCellParser(CellParser):
 
         # post processing of base class
         super().postprocess_form(properties, language_id)
+
+
+class MawatiCognateCellParser(MawetiCellParser):
+    def parse_form(self, values, language, cell_identifier: str = ''):
+        if values.isupper():
+            return None
+        else:
+            return super().parse_form(values, language, cell_identifier)
+
