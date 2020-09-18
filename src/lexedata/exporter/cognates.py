@@ -99,7 +99,6 @@ class ExcelWriter():
                 len(excel_header) + 1):
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
-        # TODO: Test the sorting.
 
         ws.append(excel_header)
 
@@ -144,11 +143,12 @@ class ExcelWriter():
                 if c_comment and col == 1 and cogset[c_comment]:
                     cell.comment = op.comments.Comment(
                         cogset.cldf_comment, __package__)
-            # possible a cogset can appear without any judgmente, if so continue
+            # possible a cogset can appear without any judgmente, if so raise row index and continue
             if cogset[c_cogset_id] not in all_judgements:
+                row_index += 1
                 continue
             new_row_index = self.create_formcells_for_cogset(
-                all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index, self.lan_dict)
+                all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index)
             row_index = new_row_index
         wb.save(filename=out)
 
@@ -160,7 +160,7 @@ class ExcelWriter():
             row_index: int,
             # FIXME: That's not just a str, it's a language_id, but String()
             # alias Language.id.type is not a Type, according to `typing`.
-            lan_dict: t.Dict[str, int]) -> int:
+            ) -> int:
         """Writes all forms for given cognate set to Excel.
 
         Take all forms for a given cognate set as given by the database, create
@@ -211,8 +211,6 @@ class ExcelWriter():
         cell_value = self.form_to_cell_value(judgement[0])
         form_cell = ws.cell(row=row, column=column, value=cell_value)
         c_id = self.dataset["FormTable", "id"].name
-        #TODO: comment of Cognate is meant here, but Cognate has no property comment
-        #c_comment = self.dataset["CognateTable", "comment"].name
         comment = judgement[1].get("comment", None)
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
