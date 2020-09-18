@@ -112,7 +112,7 @@
                 "cldf_name"
             ],
             "cell_parser": {
-                "name": "MawetiCellParser",
+                "name": "MawetiCognateCellParser",
                 "form_separator": [
                     ";",
                     ","
