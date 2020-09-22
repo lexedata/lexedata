@@ -230,6 +230,7 @@ class ExcelParser:
                 )
                 conn.commit()
             except sqlite3.IntegrityError:
+                # TODO: Don't drop the user in a PDB!!!!
                 breakpoint()
         return True
 
@@ -538,7 +539,6 @@ def load_dataset(metadata: Path, lexicon: str, db: str, cognate_lexicon: t.Optio
     dataset = pycldf.Dataset.from_metadata(metadata)
     dialect = argparse.Namespace(
         **dataset.tablegroup.common_props["special:fromexcel"])
-    breakpoint()
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / 'db.sqlite'
