@@ -358,7 +358,7 @@ class CellParser(NaiveCellParser):
             source = self.add_default_source
         if source:
             source, context = self.source_from_source_string(source, language_id)
-            properties["cldf_source"] = {(source, context)}
+            properties["cldf_source"] = [(source, context)]
 
 
 
@@ -411,6 +411,8 @@ class MawetiCellParser(CellParser):
         ...  "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first"}
         True
         """
+        # post processing of base class
+        super().postprocess_form(properties, language_id)
         # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
         # but a procedural comment could land in variants, thus this case needs to be checked as well
         try:
@@ -482,9 +484,6 @@ class MawetiCellParser(CellParser):
                         properties[key] = value.pop(0)
                         for v in value:
                             variants.append((separator + v))
-
-        # post processing of base class
-        super().postprocess_form(properties, language_id)
 
 
 class MawatiCognateCellParser(MawetiCellParser):
