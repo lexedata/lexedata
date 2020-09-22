@@ -487,7 +487,7 @@ class MawetiCellParser(CellParser):
         super().postprocess_form(properties, language_id)
 
 
-class MawatiCognateCellParser(MawetiCellParser):
+class MawetiCognateCellParser(MawetiCellParser):
     def parse_form(self, values, language, cell_identifier: str = ''):
         if values.isupper():
             return None
