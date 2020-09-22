@@ -55,33 +55,45 @@ if __name__ == "__main__":
         c_comment = None
         comment_column = False
 
+    row_header = []
+    for header, in ws.iter_cols(
+            min_row=1, max_row=1,
+            max_col=len(dataset["CognatesetTable"].tableSchema.columns)):
+        column_name = header.value
+        if column_name is None:
+            column_name = "cldf_id"
+        elif column_name == "CogSet":
+            column_name = "cldf_id"
+        else:
+            try:
+                if dataset["CognatesetTable", column_name].propertyUrl:
+                    column_name = "cldf_" + dataset["CognatesetTable", column_name].propertyUrl.uri.rsplit("#", 1)[1]
+            except KeyError:
+                # Column must be the first language
+                break
+        row_header.append(column_name)
+    breakpoint()
+
     excel_parser_cognate = ExcelCognateParser(
-        dataset, db, 2,
-        len(dataset["CognatesetTable"].tableSchema.columns) + (
-            1 if not comment_column else 0),
+        dataset, db,
+        top = 2,
         # When the dataset has cognateset comments, that column is not a header
         # column, so this value is one higher than the actual number of header
         # columns, so actually correct for the 1-based indices. When there is
         # no comment column, we need to compensate for the 1-based Excel
         # indices.
-        cell_parsers.CellParserHyperlink(),
-        check_for_row_match=["cldf_name"])
+        cellparser = cell_parsers.CellParserHyperlink(),
+        row_header = row_header,
+        check_for_row_match = ["cldf_id"])
+
+
     # TODO: This often doesn't work if the dataset is not perfect before this
     # program is called. In particular, it doesn't work if there are errors in
     # the cognate sets or judgements, which will be reset in just a moment. How
     # else should we solve this?
-    excel_parser_cognate.cldfdatabase.write_from_tg(_force=True)
-    with excel_parser_cognate.cldfdatabase.connection() as conn:
-        # TODO: Is there a way around throwing away the entire cognateset
-        # table?
-        conn.execute("DELETE FROM CognatesetTable")
-        conn.execute("DELETE FROM CognateTable")
-        conn.commit()
+    excel_parser_cognate.cache_dataset()
+    excel_parser_cognate.drop_from_cache("CognatesetTable")
+    excel_parser_cognate.drop_from_cache("CognateTable")
     excel_parser_cognate.parse_cells(ws)
-    data = excel_parser_cognate.cldfdatabase.read()
     for table_type in ["CognateTable", "CognatesetTable"]:
-        items = data[table_type]
-        table = excel_parser_cognate.cldfdatabase.dataset[table_type]
-        table.common_props['dc:extent'] = table.write(
-            [excel_parser_cognate.cldfdatabase.retranslate(table, item)
-             for item in items])
+        table.common_props['dc:extent'] = table.write(excel_parser_cognate.retrieve(table_type))

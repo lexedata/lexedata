@@ -68,8 +68,25 @@ class ExcelParser:
         self.left = left
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
+        self.init_db()
 
+    def init_db(self):
         self.cldfdatabase = Database(output_dataset, fname=db_fname)
+
+    def cache_dataset(self):
+        excel_parser_cognate.cldfdatabase.write_from_tg(_force=True)
+
+    def drop_from_cache(self, table: str):
+        assert "`" not in table
+        with excel_parser_cognate.cldfdatabase.connection() as conn:
+            conn.execute("DELETE FROM `{:s}`".format(table))
+            conn.commit()
+
+    def retrieve(self, table_type: str):
+        data = excel_parser_cognate.cldfdatabase.read()
+        items = data[table_type]
+        table = excel_parser_cognate.cldfdatabase.dataset[table_type]
+        return [excel_parser_cognate.cldfdatabase.retranslate(table, item) for item in items]
 
     # Run `write` for an ExcelParser after __init__, but not for an
     # ExcelCognateParser, when constructing these objects from the command line
@@ -279,8 +296,6 @@ class ExcelParser:
                         cell_with_forms, this_lan,
                         f"{sheet.title}.{cell_with_forms.coordinate}"):
                     form = Form(params)
-                    # TODO: Form has no cldf_id at this point. Therefore, it must be added.
-                    form["cldf_id"] = "{:}_{:}".format(form["cldf_languageReference"], row_object["cldf_id"])
                     candidate_forms = self.find_db_candidates(
                         form, self.check_for_match)
                     sources = form.pop("cldf_source", [])
@@ -289,9 +304,13 @@ class ExcelParser:
                     else:
                         if not self.on_form_not_found(form, cell_with_forms):
                             continue
+                        form["cldf_id"] = "{:}_{:}".format(form["cldf_languageReference"], row_object["cldf_id"])
                         self.create_form_with_sources(form, row_object, sources=sources)
                         form_id = form["cldf_id"]
                     self.associate(form_id, row_object)
+        self.commit()
+
+    def commit(self):
         with self.cldfdatabase.connection() as conn:
             conn.commit()
 
@@ -299,7 +318,7 @@ class ExcelParser:
 class ExcelCognateParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
-                 top: int = 3, left: int = 7,
+                 top: int = 3,
                  cellparser: cell_parsers.NaiveCellParser = cell_parsers.CognateParser(),
                  row_header = ["set", "cldf_name", None],
                  check_for_match: t.List[str] = ["cldf_id"],
@@ -311,7 +330,7 @@ class ExcelCognateParser(ExcelParser):
         super().__init__(
             output_dataset = output_dataset,
             db_fname=db_fname,
-            top = top, left = left,
+            top = top, left = len(row_header) + 1,
             cellparser=cellparser,
             check_for_match = check_for_match,
             row_header=row_header,
@@ -343,7 +362,7 @@ class ExcelCognateParser(ExcelParser):
         properties["cldf_comment"] = comment
 
         # cldf_name serves as cldf_id candidate
-        properties["cldf_id"] = properties["cldf_name"]
+        properties["cldf_id"] = properties["cldf_id"] or properties["cldf_name"]
         return CogSet(properties)
 
     def associate(self, form_id: str, row: RowObject) -> bool:
@@ -357,8 +376,6 @@ class ExcelCognateParser(ExcelParser):
         )
         self.make_id_unique(judgement)
         return self.insert_into_db(judgement)
-
-
 class MawetiExcelParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
@@ -534,6 +551,84 @@ def load_mg_style_cognateset(
         EP.parse_cells(sheet)
 
     EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
+
+
+class ExcelParserDictionaryDB(ExcelParser):
+    def init_db(self):
+        self.__cache = {}
+        self.__dataset = output_dataset
+
+    def cache_dataset(self):
+        for table in self.__dataset.tables:
+            table_type = table.common_props["dc:conformsTo"].rsplit("#", 1)[1]
+            id, = table.tableSchema.primaryKey
+            self.__cache[table_type] = {
+                row[id]: row for row in table
+            }
+
+    def drop_from_cache(self, table: str):
+        self.__cache[table] = {}
+
+    def retrieve(self, table_type: str):
+        return self.__cache[table_type].values()
+
+    def write(self):
+        self.__cache = {}
+
+    def associate(self, form_id: str, row: RowObject) -> bool:
+        form = self.__cache["FormTable"][form_id]
+        if row.__table__ == "CognatesetTable":
+            try:
+                judgements = self.__cache["CognateTable"]
+                judgements[len(judgements)] = {
+                    self.__dataset["CognateTable", "formReference"].name: form_id,
+                    self.__dataset["CognateTable", "cognatesetReference"].name:
+                    row[self.__dataset["CognatesetTable", "id"].name],
+                }
+                return True
+            except KeyError:
+                column = self.__dataset["FormTable", "cognatesetReference"]
+                id = self.__dataset["CognatesetTable", "id"].name
+        elif row.__table__ == "ParameterTable":
+            column = self.__dataset["FormTable", "parameterReference"]
+            id = self.__dataset["ParameterTable", "id"].name
+
+        if column.separator is None:
+            form_id[column_name] = row[id]
+        else:
+            form_id.setdefault(column_name).append(row[id])
+        return True
+
+    def insert_into_db(self, object: O) -> bool:
+        id = self.__dataset[object.__table__, "id"].name
+        assert object[id] not in self.__cache[object.__table__]
+        self.__cache[object.__table__][id] = object
+
+    def make_id_unique(self, object: O) -> str:
+        id = self.__dataset[object.__table__, "id"].name
+        raw_id = object["cldf_id"]
+        i = 0
+        while object[id] in self.__cache[object.__table__, id]:
+            i += 1
+            object["cldf_id"] = "{:}_{:d}".format(raw_id, i)
+        return object["cldf_id"]
+
+    def find_db_candidates(
+            self, object: O, properties_for_match: t.Iterable[str]
+    ) -> t.Iterable[str]:
+        return [
+            candidate
+            for candidate, properties in self.__cache[object.__table__].items()
+            if all(
+                    properties[p] == object[p]
+                    for p in properties_for_match
+            )
+        ]
+
+    def commit(self):
+        pass
+
+
 
 
 if __name__ == "__main__":

@@ -178,20 +178,20 @@ def build_lang_ids(dataset, col_map):
 
 
 def root_meaning_code(dataset: t.Dict[t.Hashable, t.Dict[t.Hashable, t.Set[t.Hashable]]]):
-    roots: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
+    roots: t.Dict[t.Hashable, t.set[t.Hashable]] = {}
     for language, lexicon in dataset.items():
         for concept, cognatesets in lexicon.items():
             roots.setdefault(concept, set()).update(cognatesets)
     alignment: t.Dict[t.Hashable, t.List[t.Literal["0", "1", "?"]]] = {}
     for language, lexicon in dataset.items():
         alignment[language] = ['0']
-        for concept, possible_roots in roots.items():
+        for concept, possible_roots in sorted(roots.items()):
             entries = lexicon.get(concept)
             if entries is None:
-                alignment[language].extend(["?" for _ in possible_roots])
+                alignment[language].extend(["?" for _ in sorted(possible_roots)])
             else:
                 alignment[language].extend(["1" if k in entries else "0"
-                                            for k in possible_roots])
+                                            for k in sorted(possible_roots)])
     return alignment
 
 def raw_alignment(alignment):
@@ -205,20 +205,52 @@ def raw_alignment(alignment):
 
 if __name__ == "__main__":
     import argparse
+    import xml.etree.ElementTree as ET
+
     parser = argparse.ArgumentParser(description="Export a CLDF dataset (or similar) to bioinformatics alignments")
     parser.add_argument("--format", choices=("csv", "raw", "beast", "nexus"),
                         default="raw",
                         help="Target format: `raw` for one language name per row, followed by spaces and the alignment vector; `nexus` for a complete Nexus file; `beast` for the <data> tag to copy to a BEAST file, and `csv` for a CSV with languages in rows and features in columns.")
     parser.add_argument("--metadata", help="Path to metadata file for dataset input",
                         default="forms.csv")
+    parser.add_argument("--output-file", type=Path,
+                        help="File to write output to. (If format=xml and output file exists, replace the first `data` tag in there.) Default: Write to stdout")
     parser.add_argument("--code-column",
                         help="Name of the code column for metadata-free wordlists")
+    parser.add_argument("--exclude-concept", "-x",
+                        action="append", default=[],
+                        help="Exclude this concept (can be used multiple times)")
     parser.add_argument("--coding", choices=("rootmeaning", "rootpresence", "multistate"),
                         default="rootmeaning",
                         help="Binarization method: In the `rootmeaning` coding system, every character describes the presence or absence of a particular root morpheme or cognate class in the word(s) for a given meaning; In the `rootpresence`, every character describes (up to the limitations of the data, which might not contain marginal forms) the presence or absence of a root (morpheme) in the language, independet of which meaning that root is attested in; And in the `multistate` coding, each character describes, possibly including uniform ambiguities, the cognate class of a meaning.")
     args = parser.parse_args()
 
+    if args.format == "beast":
+        if args.output_file is None:
+            root = ET.fromstring("<beast><data /></beast>")
+        elif args.output_file.exists():
+            et = ET.parse(args.output_file)
+            root = et.getroot()
+        else:
+            root = ET.fromstring("<beast><data /></beast>")
+        datas = list(root.iter("data"))
+        data_object = datas[0]
+
+    if args.output_file is None:
+        args.output_file = sys.stdout
+    else:
+        args.output_file = args.output_file.open("w")
+
     ds, language_map = read_cldf_dataset(args.metadata, code_column=args.code_column, expect_multiple=True)
+    ds = {
+        language: {
+            k: v
+            for k, v in sequence.items()
+            if k not in args.exclude_concept}
+        for language, sequence in ds.items()
+        if language not in ["p-alor1249", "p-east2519", "p-timo1261", "indo1316-lexi", "tetu1246", "tetu1245-suai"]
+    }
+
     if args.coding == "rootpresence":
         alignment = root_presence_code(ds)
     elif args.coding == "rootmeaning":
@@ -230,14 +262,9 @@ if __name__ == "__main__":
     else:
         raise ValueError("Coding schema {:} unknown.".format(args.coding))
 
-    alignment = {
-        language: sequence
-        for language, sequence in alignment.items()
-        if language not in ["p-alor1249", "p-east2519", "p-timo1261", "indo1316-lexi", "tetu1246", "tetu1245-suai"]
-    }
-
     if args.format == "raw":
-        print("\n".join(raw_alignment(alignment)))
+        print("\n".join(raw_alignment(alignment)),
+              file=args.output_file)
     elif args.format == "nexus":
         print("""#NEXUS
 Begin Taxa;
@@ -257,13 +284,24 @@ End;
             len_taxa = len(alignment),
             taxa = " ".join([str(language) for language in alignment]),
             len_alignment = len(next(iter(alignment.values()))),
-            sequences = "\n    ".join(raw_alignment(alignment))))
+            sequences = "\n    ".join(raw_alignment(alignment))),
+              file=args.output_file)
     elif args.format == "beast":
-        print('<data id="data_vocabulary" name="data_vocabulary" dataType="integer">')
+        data_object.clear()
+        data_object.attrib = {
+            "id": "vocabulary",
+            "dataType": "integer",
+            "spec": "Alignment"}
+        data_object.text = "\n"
         for language, sequence in alignment.items():
             sequence = "".join(sequence)
-            print(f'<sequence id="language_data_vocabulary:{language:}" taxon="{language:}" value="{sequence}" />')
-        print('</data>')
+            ET.SubElement(
+                data_object,
+                "sequence",
+                id=f"language_data_vocabulary:{language:}",
+                taxon=f"{language:}",
+                value=f"{sequence:}").tail="\n"
+        et.write(args.output_file, encoding="unicode")
 
 
 
