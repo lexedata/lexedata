@@ -361,15 +361,6 @@ class CellParser(NaiveCellParser):
             properties["cldf_source"] = {(source, context)}
 
 
-class CognateParser(CellParser):
-    def parse_form(self, values, language,
-            cell_identifier: str = ''
-    ):
-        if values.isupper():
-            return None
-        else:
-            return super().parse_form(values, language, cell_identifier)
-
 
 class CellParserHyperlink(CellParser):
     def parse(
@@ -390,21 +381,10 @@ class MawetiCellParser(CellParser):
         # • TODO: Split forms that contain '%' or '~', drop the variant in
         #   variants.
     def __init__(self,
-                 bracket_pairs: t.Dict[str, str] = {
-                     "(": ")",
-                     "[": "]",
-                     "{": "}",
-                     "<": ">",
-                     "/": "/"},
-                 element_semantics: t.Dict[str, str] = {
-                     "(": ("cldf_comment", False),
-                     "[": ("phonetic", True),
-                     "{": ("cldf_source", False),
-                     "<": ("orthographic", True),
-                     "/": ("phonemic", True)},
-                 separation_pattern: str = r"([;,])",
-                 variant_separator: list = ["~", "%"],
-                 add_default_source: str = "{1}"):
+                 bracket_pairs: t.Dict[str, str],
+                 element_semantics: t.Dict[str, str],
+                 separation_pattern: str,
+                 variant_separator: list,                 add_default_source: str):
         super(MawetiCellParser, self).__init__(bracket_pairs=bracket_pairs,
                                                element_semantics=element_semantics,
                                                separation_pattern=separation_pattern,
@@ -505,3 +485,12 @@ class MawetiCellParser(CellParser):
 
         # post processing of base class
         super().postprocess_form(properties, language_id)
+
+
+class MawatiCognateCellParser(MawetiCellParser):
+    def parse_form(self, values, language, cell_identifier: str = ''):
+        if values.isupper():
+            return None
+        else:
+            return super().parse_form(values, language, cell_identifier)
+

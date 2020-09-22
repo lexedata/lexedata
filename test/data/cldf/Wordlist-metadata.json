@@ -1,5 +1,4 @@
-{
-    "@context": [
+{"@context": [
         "http://www.w3.org/ns/csvw",
         {
             "@language": "en"
@@ -28,44 +27,129 @@
             "(?P<cldf_name>.*)",
             "(?P<Curator>.*)"
         ],
-        "cognateset_cell_regexes": [
-            "(?P<Set>.*)",
-            "(?P<cldf_name>.*)", 
-            ".*",
-            ".*",
-            ".*",
-            ".*"
-        ],
-        "cognateset_comment_regexes": [
-            ".*",
-            ".*",
-            ".*",
-            ".*",
-            ".*",
-            ".*"
-        ],
         "lang_comment_regexes": [
             ".*",
             ".*"
         ],
-        "cognates": false,
         "check_for_match": [
-            "orthographic",
-            "cldf_languageReference",
-            "cldf_form",
-            "cldf_segments",
-            "cldf_source"
+            "cldf_id"
         ],
         "check_for_row_match": [
             "cldf_name"
         ],
-        "cell_parser": "MawetiCellParser",
-        "cell_parser_semantics": {
-        "(": ["cldf_comment", false],
-        "[": ["phonetic", true],
-        "{": ["cldf_source", false],
-        "<": ["orthographic", true],
-        "/": ["phonemic", true]
+        "cell_parser": {
+            "name": "MawetiCellParser",
+            "form_separator": [
+                ";",
+                ","
+            ],
+            "variant_separator": [
+                "~",
+                "%"
+            ],
+            "add_default_source": "{1}",
+            "cell_parser_semantics": {
+                "cldf_comment": [
+                    "(",
+                    ")",
+                    false
+                ],
+                "cldf_source": [
+                    "{",
+                    "}",
+                    false
+                ],
+                "phonetic": [
+                    "[",
+                    "]",
+                    true
+                ],
+                "phonemic": [
+                    "/",
+                    "/",
+                    true
+                ],
+                "orthographic": [
+                    "<",
+                    ">",
+                    true
+                ]
+            }
+        },
+        "cognates": {
+            "row_cell_regexes": [
+                "(?P<Set>.*)",
+                "(?P<cldf_name>.*)",
+                ".*",
+                ".*",
+                ".*",
+                ".*"
+            ],
+            "row_comment_regexes": [
+                ".*",
+                ".*",
+                ".*",
+                ".*",
+                ".*",
+                ".*"
+            ],
+            "lang_cell_regexes": [
+                "(?P<cldf_name>.*)",
+                "(?P<Curator>.*)"
+            ],
+            "lang_comment_regexes": [
+                ".*",
+                ".*"
+            ],
+            "check_for_match": [
+                "orthographic",
+                "cldf_languageReference",
+                "phonemic",
+                "phonetic",
+                "source"
+            ],
+            "check_for_row_match": [
+                "cldf_name"
+            ],
+            "cell_parser": {
+                "name": "MawetiCognateCellParser",
+                "form_separator": [
+                    ";",
+                    ","
+                ],
+                "variant_separator": [
+                    "~",
+                    "%"
+                ],
+                "add_default_source": "{1}",
+                "cell_parser_semantics": {
+                    "cldf_comment": [
+                        "(",
+                        ")",
+                        false
+                    ],
+                    "cldf_source": [
+                        "{",
+                        "}",
+                        false
+                    ],
+                    "phonetic": [
+                        "[",
+                        "]",
+                        true
+                    ],
+                    "phonemic": [
+                        "/",
+                        "/",
+                        true
+                    ],
+                    "orthographic": [
+                        "<",
+                        ">",
+                        true
+                    ]
+                }
+            }
         }
     },
     "dialect": {
@@ -74,7 +158,7 @@
     "tables": [
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
-            "dc:extent": 33676,
+            "dc:extent": 17,
             "tableSchema": {
                 "columns": [
                     {
@@ -183,7 +267,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#ParameterTable",
-            "dc:extent": 1154,
+            "dc:extent": 9,
             "tableSchema": {
                 "columns": [
                     {
@@ -235,7 +319,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#LanguageTable",
-            "dc:extent": 38,
+            "dc:extent": 4,
             "tableSchema": {
                 "columns": [
                     {
@@ -271,7 +355,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognateTable",
-            "dc:extent": 16,
+            "dc:extent": 15,
             "tableSchema": {
                 "columns": [
                     {
@@ -340,7 +424,8 @@
                     },
                     {
                         "datatype": "string",
-                        "name": "properties"
+                        "required": false,
+                        "name": "Set"
                     },
                     {
                         "datatype": "string",

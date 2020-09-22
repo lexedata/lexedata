@@ -380,7 +380,7 @@ class MawetiExcelParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
                  top: int = 3, left: int = 7,
-                 cellparser: cell_parsers.NaiveCellParser = cell_parsers.MawetiCellParser(),
+                 cellparser: cell_parsers.CellParser = cell_parsers.CellParser(),
                  row_header: t.List[str] = ["Set", "cldf_name", None, "Spanish", "Portuguese", "French"],
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
@@ -416,19 +416,29 @@ class MawetiExcelParser(ExcelParser):
         return Concept(properties)
 
 
-def excel_parser_from_dialect(dataset: pycldf.Dataset, cognate=False) -> t.Type[ExcelParser]:
-    dialect = argparse.Namespace(
-        **dataset.tablegroup.common_props["special:fromexcel"])
-    if dialect.cognates or cognate:
+def excel_parser_from_dialect(dialect: argparse.Namespace, cognate: bool) -> t.Type[ExcelParser]:
+    if cognate:
         Row = CogSet
-        row_regex, row_comment_regex = dialect.cognateset_cell_regexes, dialect.cognateset_comment_regexes
         Parser = ExcelCognateParser
     else:
         Row = Concept
-        row_regex, row_comment_regex = dialect.row_cell_regexes, dialect.row_comment_regexes
         Parser = ExcelParser
     top = len(dialect.lang_cell_regexes) + 1
     left = len(dialect.row_cell_regexes) + 1
+    # prepare cellparser
+    element_semantics = dict()
+    bracket_pairs = dict()
+    for key, value in dialect.cell_parser["cell_parser_semantics"].items():
+        opening, closing, my_bool = value
+        bracket_pairs[opening] = closing
+        element_semantics[opening] = (key, my_bool)
+    initialized_cell_parser = getattr(cell_parsers, dialect.cell_parser["name"])\
+        (bracket_pairs=bracket_pairs,
+         element_semantics=element_semantics,
+         separation_pattern=fr"([{''.join(dialect.cell_parser['form_separator'])}])",
+         variant_separator=dialect.cell_parser["variant_separator"],
+         add_default_source=dialect.cell_parser["add_default_source"]
+         )
 
     class SpecializedExcelParser(Parser):
         def __init__(
@@ -439,7 +449,7 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset, cognate=False) -> t.Type[
                 db_fname=db_fname,
                 top=top,
                 left=left,
-                cellparser=getattr(cell_parsers, dialect.cell_parser)(element_semantics=dialect.cell_parser_semantics),
+                cellparser=initialized_cell_parser,
                 check_for_match=dialect.check_for_match,
                 check_for_row_match=dialect.check_for_row_match,
                 )
@@ -490,7 +500,7 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset, cognate=False) -> t.Type[
             # FIXME: If a property appears twice, currently the later
             # appearance overwrites the earlier one. Merge wiser.
             d: t.Dict[str, str] = {}
-            for cell, cell_regex, comment_regex in zip(row, row_regex, row_comment_regex):
+            for cell, cell_regex, comment_regex in zip(row, dialect.row_cell_regexes, dialect.row_comment_regexes):
                 if cell.value:
                     match = re.fullmatch(cell_regex, cell.value, re.DOTALL)
                     if match is None:
@@ -514,16 +524,17 @@ def excel_parser_from_dialect(dataset: pycldf.Dataset, cognate=False) -> t.Type[
     return SpecializedExcelParser
 
 
-def load_mg_style_dataset(
-        metadata: Path, lexicon: str, db: str) -> None:
+def load_dataset(metadata: Path, lexicon: str, db: str, cognate_lexicon: t.Optional[str]):
+    dataset = pycldf.Dataset.from_metadata(metadata)
+    dialect = argparse.Namespace(
+        **dataset.tablegroup.common_props["special:fromexcel"])
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / 'db.sqlite'
     lexicon_wb = openpyxl.load_workbook(lexicon).active
-
-    dataset = pycldf.Dataset.from_metadata(metadata)
+    # load lexical data set
     try:
-        EP = excel_parser_from_dialect(dataset)
+        EP = excel_parser_from_dialect(dialect, cognate=False)
     except KeyError:
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
@@ -531,26 +542,17 @@ def load_mg_style_dataset(
     EP.write()
     EP.parse_cells(lexicon_wb)
     EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
-
-
-def load_mg_style_cognateset(
-        metadata: Path, cogsets: str, db: str) -> None:
-    # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    if db == "":
-        tmpdir = Path(mkdtemp("", "fromexcel"))
-        db = tmpdir / 'db.sqlite'
-    lexicon_wb = openpyxl.load_workbook(cogsets)
-
-    dataset = pycldf.Dataset.from_metadata(metadata)
-    try:
-        EP = excel_parser_from_dialect(dataset, cognate=True)
-    except KeyError:
-        EP = ExcelCognateParser(dataset, db_fname=db)
-    EP = EP(dataset, db)
-    for sheet in lexicon_wb.worksheets:
-        EP.parse_cells(sheet)
-
-    EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
+    # load cognate data set if provided by metadata
+    cognate = True if cognate_lexicon and dialect.cognates else False
+    if cognate:
+        try:
+            EP = excel_parser_from_dialect(argparse.Namespace(**dialect.cognates), cognate=cognate)
+        except KeyError:
+            EP = ExcelCognateParser(dataset, db_fname=db)
+        EP = EP(dataset, db)
+        for sheet in  openpyxl.load_workbook(cognate_lexicon).worksheets:
+            EP.parse_cells(sheet)
+        EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
 
 class ExcelParserDictionaryDB(ExcelParser):
@@ -640,8 +642,8 @@ if __name__ == "__main__":
         default="TG_comparative_lexical_online_MASTER.xlsx",
         help="Path to an Excel file containing the dataset")
     parser.add_argument(
-        "cogsets", nargs="?",
-        default="TG_cognates_online_MASTER.xlsx",
+        "--cogsets", nargs="?",
+        default="",
         help="Path to an Excel file containing cogsets and cognatejudgements")
     parser.add_argument(
         "--db", nargs="?",
@@ -662,6 +664,5 @@ if __name__ == "__main__":
         args.db = ""
     # We have too many difficult database connections in different APIs, we
     # refuse in-memory DBs and use a temporary file instead.
+    load_dataset(args.metadata, args.lexicon, args.db, args.cogsets)
 
-    load_mg_style_dataset(args.metadata, args.lexicon, args.db)
-    load_mg_style_cognateset(args.metadata, args.cogsets, args.db)

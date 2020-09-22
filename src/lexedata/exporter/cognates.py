@@ -53,7 +53,7 @@ class ExcelWriter():
             self,
             out: Path,
             size_sort: bool = False,
-            language_order="cldf_name"
+            language_order="name"
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -67,6 +67,8 @@ class ExcelWriter():
         Parameters
         ==========
         out: The path of the Excel file to be written.
+        size_sort: If true, cognatesets are ordered by the number of cognates corresponding to the cognateset
+        language_order: column name, languages appear ordered by given column name from LanguageTable
 
         """
         # TODO: Check whether openpyxl.worksheet._write_only.WriteOnlyWorksheet
@@ -78,21 +80,19 @@ class ExcelWriter():
         # Define the columns
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
-        # TODO: Sort languages by the language_order column – and clarify in
-        # the docstring of this function whether we accept SQLite column names
-        # (`cldf_name`), CLDF column names (`Name` or `Language`) or CLDF
-        # property terms (`name` or
-        # ``https://cldf.clld.org/v1.0/terms.rdf#name`). We can probably take
-        # CLDF names and terms, because we can get them from the table as
-        # c_sort = self.dataset[…]
+
         c_name = self.dataset["LanguageTable", "name"].name
         c_id = self.dataset["LanguageTable", "id"].name
+        if language_order:
+            c_sort = self.dataset["LanguageTable", f"{language_order}"].name
+            languages = sorted(self.dataset["LanguageTable"], key=lambda x: x[c_sort], reverse=False)
+        else:
+            languages = self.dataset["LanguageTable"]
         for col, lan in enumerate(
-                self.dataset["LanguageTable"],
+                languages,
                 len(excel_header) + 1):
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
-        # TODO: Test the sorting.
 
         ws.append(excel_header)
 
@@ -124,6 +124,9 @@ class ExcelWriter():
             cogsets = self.dataset['CognatesetTable']
 
         for cogset in cogsets:
+            # possible a cogset can appear without any judgment, if so ignore it
+            if cogset[c_cogset_id] not in all_judgements:
+                continue
             # In a write-only workbook, rows can only be added with append().
             # It is not possible to write (or read) cells at arbitrary
             # locations with cell() or iter_rows(). -> We want to use the speed
@@ -146,7 +149,6 @@ class ExcelWriter():
                     if c_comment and col == 1 and cogset[c_comment]:
                         cell.comment = op.comments.Comment(
                             cogset.cldf_comment, __package__)
-
             row_index = new_row_index
         wb.save(filename=out)
 
@@ -158,7 +160,7 @@ class ExcelWriter():
             row_index: int,
             # FIXME: That's not just a str, it's a language_id, but String()
             # alias Language.id.type is not a Type, according to `typing`.
-            lan_dict: t.Dict[str, int]) -> int:
+            ) -> int:
         """Writes all forms for given cognate set to Excel.
 
         Take all forms for a given cognate set as given by the database, create
@@ -210,8 +212,6 @@ class ExcelWriter():
         cell_value = self.form_to_cell_value(judgement[0], judgement[1])
         form_cell = ws.cell(row=row, column=column, value=cell_value)
         c_id = self.dataset["FormTable", "id"].name
-        #TODO: comment of Cognate is meant here, but Cognate has no property comment
-        #c_comment = self.dataset["CognateTable", "comment"].name
         comment = judgement[1].get("comment", None)
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
