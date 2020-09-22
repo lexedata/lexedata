@@ -136,6 +136,9 @@ class ExcelParser:
                 # Sources are handled specially.
                 where_clauses.append("FormTable_SourceTable__cldf_source.FormTable_cldf_id == ?")
                 where_parameters.append(list(object[property])[0][0])
+                # TODO: Should we instead match an OR or an AND of all sources?
+                # This checks whether the first source matches, which is
+                # correct for MG, I think.
                 join = "JOIN FormTable_SourceTable__cldf_source ON FormTable_cldf_id == cldf_id"
             elif type(object[property]) not in {float, int, str}:
                 raise ValueError("Cannot find a DB candidate for column {:}: Data type {:} not supported.".format(
