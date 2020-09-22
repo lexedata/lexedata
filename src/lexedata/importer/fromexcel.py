@@ -68,10 +68,10 @@ class ExcelParser:
         self.left = left
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
-        self.init_db()
+        self.init_db(output_dataset, fname=db_fname)
 
-    def init_db(self):
-        self.cldfdatabase = Database(output_dataset, fname=db_fname)
+    def init_db(self, output_dataset, fname=None):
+        self.cldfdatabase = Database(output_dataset, fname=fname)
 
     def cache_dataset(self):
         excel_parser_cognate.cldfdatabase.write_from_tg(_force=True)
@@ -128,12 +128,18 @@ class ExcelParser:
     ) -> t.Iterable[str]:
         where_clauses = []
         where_parameters = []
+        join = ""
         for property in properties_for_match:
             if property not in object:
                 continue
-            elif type(object[property]) == list:
-                # FIXME: what should actually happen?
-                continue
+            elif property == "cldf_source":
+                # Sources are handled specially.
+                where_clauses.append("FormTable_SourceTable__cldf_source.FormTable_cldf_id == ?")
+                where_parameters.append(list(object[property])[0][0])
+                join = "JOIN FormTable_SourceTable__cldf_source ON FormTable_cldf_id == cldf_id"
+            elif type(object[property]) not in {float, int, str}:
+                raise ValueError("Cannot find a DB candidate for column {:}: Data type {:} not supported.".format(
+                    property, type(object[property])))
             else:
                 where_clauses.append("{0} == ?".format(
                     property))
@@ -143,8 +149,8 @@ class ExcelParser:
         else:
             where = ""
         candidates = self.cldfdatabase.query(
-            "SELECT cldf_id, * FROM {0} {1}".format(
-                object.__table__, where),
+            "SELECT cldf_id, * FROM {0} {2} {1} ".format(
+                object.__table__, where, join),
             where_parameters
         )
         return [c[0] for c in candidates]
@@ -221,7 +227,7 @@ class ExcelParser:
                 )
                 conn.commit()
             except sqlite3.IntegrityError:
-                return False
+                breakpoint()
         return True
 
     def insert_into_db(self, object: O) -> bool:
@@ -318,8 +324,8 @@ class ExcelParser:
 class ExcelCognateParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
-                 top: int = 3,
-                 cellparser: cell_parsers.NaiveCellParser = cell_parsers.CognateParser(),
+                 top: int = 3, left = None, # TODO: Always derive this from the row header
+                 cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
                  row_header = ["set", "cldf_name", None],
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
@@ -330,7 +336,7 @@ class ExcelCognateParser(ExcelParser):
         super().__init__(
             output_dataset = output_dataset,
             db_fname=db_fname,
-            top = top, left = len(row_header) + 1,
+            top = top, left = left or len(row_header) + 1,
             cellparser=cellparser,
             check_for_match = check_for_match,
             row_header=row_header,
@@ -376,6 +382,7 @@ class ExcelCognateParser(ExcelParser):
         )
         self.make_id_unique(judgement)
         return self.insert_into_db(judgement)
+
 class MawetiExcelParser(ExcelParser):
     def __init__(self, output_dataset: pycldf.Dataset,
                  db_fname: str,
@@ -528,6 +535,7 @@ def load_dataset(metadata: Path, lexicon: str, db: str, cognate_lexicon: t.Optio
     dataset = pycldf.Dataset.from_metadata(metadata)
     dialect = argparse.Namespace(
         **dataset.tablegroup.common_props["special:fromexcel"])
+    breakpoint()
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / 'db.sqlite'
