@@ -14,12 +14,6 @@ WARNING = "\u26A0"
 
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
-# TODO: ExcelWrite still uses SQLAlchemy, which we have nearly completely taken
-# out. Rewrite those bits and get it to work – It's probably worth thinking
-# about doing this without touching the database at all, and just work on the
-# iterators like dataset[FormTable'], because here we don't need the smart
-# lookup capabilities of the database to match similar forms. (Or do we?)
-
 # TODO: Make comments on Languages, Cognatesets, and Judgements appear as notes
 # in Excel.
 
@@ -240,6 +234,8 @@ class ExcelWriter():
         segments = self.get_segments(form)
         transcription = ''
         old_end = 0
+        if not meta["Segment_Slice"]:
+            meta["Segment_Slice"] = ["0:{:d}".format(len(segments))]
         for startend in meta["Segment_Slice"]:
             start, end = startend.split(":")
             start = int(start)
@@ -253,14 +249,20 @@ class ExcelWriter():
             old_end = end
         transcription += ''.join(segments[old_end:len(segments)+1])
         transcription = transcription.strip()
+        if transcription.startswith("- "):
+            transcription = transcription[2:]
+        if transcription.endswith(" -"):
+            transcription = transcription[:-2]
         # print(transcription)
         translations = []
 
         suffix = ""
-
-        c_comment = self.dataset["FormTable", "comment"].name
-        if form[c_comment]:
-            suffix = f" {WARNING:}"
+        try:
+            c_comment = self.dataset["FormTable", "comment"].name
+            if form.get(c_comment):
+                suffix = f" {WARNING:}"
+        except        KeyError:
+            pass
 
         # corresponding concepts
         # (multiple concepts) and others (single concept)

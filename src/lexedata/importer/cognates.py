@@ -1,9 +1,12 @@
 from pathlib import Path
 from tempfile import mkdtemp
+import typing as t
+from lexedata.types import *
 
 import openpyxl
 import lexedata.importer.cellparser as cell_parsers
-from lexedata.importer.fromexcel import ExcelCognateParser
+from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
+from lexedata.importer.fromexcel import ExcelCognateParser, ExcelParserDictionaryDB
 
 
 if __name__ == "__main__":
@@ -61,20 +64,46 @@ if __name__ == "__main__":
             max_col=len(dataset["CognatesetTable"].tableSchema.columns)):
         column_name = header.value
         if column_name is None:
-            column_name = "cldf_id"
+            column_name = dataset["CognatesetTable", "id"].name
         elif column_name == "CogSet":
-            column_name = "cldf_id"
-        else:
-            try:
-                if dataset["CognatesetTable", column_name].propertyUrl:
-                    column_name = "cldf_" + dataset["CognatesetTable", column_name].propertyUrl.uri.rsplit("#", 1)[1]
-            except KeyError:
-                # Column must be the first language
-                break
+            column_name = dataset["CognatesetTable", "id"].name
+        try:
+            column_name = dataset["CognatesetTable", column_name].name
+        except KeyError:
+            break
         row_header.append(column_name)
-    breakpoint()
 
-    excel_parser_cognate = ExcelCognateParser(
+    class Parser(ExcelParserDictionaryDB, ExcelCognateParser):
+        def language_from_column(
+            self, column: t.List[openpyxl.cell.Cell]
+        ) -> Language:
+            data = [clean_cell_value(cell) for cell in column[:self.top - 1]]
+            comment = get_cell_comment(column[0])
+            id = string_to_id(data[0])
+            return Language({
+                # an id candidate must be provided, which is transformed into a unique id
+                dataset["LanguageTable", "name"].name: data[0],
+            })
+
+        def properties_from_row(
+                self, row: t.List[openpyxl.cell.Cell]
+        ) -> t.Optional[RowObject]:
+            data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
+            properties = dict(zip(self.row_header, data))
+            if not any(properties.values()):
+                return None
+            # delete all possible None entries coming from row_header
+            while None in properties.keys():
+                del properties[None]
+
+            comment = get_cell_comment(row[0])
+            # TODO: add comment
+            return CogSet(properties)
+
+
+
+
+    excel_parser_cognate = Parser(
         dataset, db,
         top = 2,
         # When the dataset has cognateset comments, that column is not a header
@@ -84,7 +113,9 @@ if __name__ == "__main__":
         # indices.
         cellparser = cell_parsers.CellParserHyperlink(),
         row_header = row_header,
-        check_for_row_match = ["cldf_id"])
+        check_for_language_match = ["name"],
+        check_for_match = ["id"],
+        check_for_row_match = ["id"])
 
 
     # TODO: This often doesn't work if the dataset is not perfect before this
@@ -96,4 +127,5 @@ if __name__ == "__main__":
     excel_parser_cognate.drop_from_cache("CognateTable")
     excel_parser_cognate.parse_cells(ws)
     for table_type in ["CognateTable", "CognatesetTable"]:
-        table.common_props['dc:extent'] = table.write(excel_parser_cognate.retrieve(table_type))
+        excel_parser_cognate._ExcelParserDictionaryDB__dataset[table_type].common_props['dc:extent'] = excel_parser_cognate._ExcelParserDictionaryDB__dataset[table_type].write(
+            excel_parser_cognate.retrieve(table_type))

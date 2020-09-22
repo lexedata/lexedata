@@ -377,7 +377,7 @@ class CellParserHyperlink(CellParser):
     ) -> t.Iterable[Form]:
         try:
             url = cell.hyperlink.target
-            yield Form({"cldf_id": url.split("/")[-1]})
+            yield Form({"ID": url.split("/")[-1]})
         except AttributeError:
             pass
 

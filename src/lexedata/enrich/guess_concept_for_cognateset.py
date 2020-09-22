@@ -110,7 +110,7 @@ if __name__ == '__main__':
     for cognateset, concepts in tqdm(concepts_by_cogset.items()):
         centrality = networkx.algorithms.centrality.betweenness_centrality(
             clics.subgraph([c for c in concepts if c]))
-        r[cognateset] = max(centrality or concepts, key=centrality.get)
+        r[cognateset] = max(centrality or concepts, key=lambda k: centrality.get(k, -1))
 
     write_back = []
     c_core_concept = dataset["CognatesetTable", "parameterReference"].name
