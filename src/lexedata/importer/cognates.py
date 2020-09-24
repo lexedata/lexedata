@@ -1,9 +1,12 @@
 from pathlib import Path
 from tempfile import mkdtemp
+import typing as t
+from lexedata.types import *
 
 import openpyxl
 import lexedata.importer.cellparser as cell_parsers
-from lexedata.importer.fromexcel import ExcelCognateParser
+from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
+from lexedata.importer.fromexcel import ExcelCognateParser, ExcelParserDictionaryDB
 
 
 if __name__ == "__main__":
@@ -55,33 +58,74 @@ if __name__ == "__main__":
         c_comment = None
         comment_column = False
 
-    excel_parser_cognate = ExcelCognateParser(
-        dataset, db, 2,
-        len(dataset["CognatesetTable"].tableSchema.columns) + (
-            1 if not comment_column else 0),
+    row_header = []
+    for header, in ws.iter_cols(
+            min_row=1, max_row=1,
+            max_col=len(dataset["CognatesetTable"].tableSchema.columns)):
+        column_name = header.value
+        if column_name is None:
+            column_name = dataset["CognatesetTable", "id"].name
+        elif column_name == "CogSet":
+            column_name = dataset["CognatesetTable", "id"].name
+        try:
+            column_name = dataset["CognatesetTable", column_name].name
+        except KeyError:
+            break
+        row_header.append(column_name)
+
+    class Parser(ExcelParserDictionaryDB, ExcelCognateParser):
+        def language_from_column(
+            self, column: t.List[openpyxl.cell.Cell]
+        ) -> Language:
+            data = [clean_cell_value(cell) for cell in column[:self.top - 1]]
+            comment = get_cell_comment(column[0])
+            id = string_to_id(data[0])
+            return Language({
+                # an id candidate must be provided, which is transformed into a unique id
+                dataset["LanguageTable", "name"].name: data[0],
+            })
+
+        def properties_from_row(
+                self, row: t.List[openpyxl.cell.Cell]
+        ) -> t.Optional[RowObject]:
+            data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
+            properties = dict(zip(self.row_header, data))
+            if not any(properties.values()):
+                return None
+            # delete all possible None entries coming from row_header
+            while None in properties.keys():
+                del properties[None]
+
+            comment = get_cell_comment(row[0])
+            # TODO: add comment
+            return CogSet(properties)
+
+
+
+
+    excel_parser_cognate = Parser(
+        dataset, db,
+        top = 2,
         # When the dataset has cognateset comments, that column is not a header
         # column, so this value is one higher than the actual number of header
         # columns, so actually correct for the 1-based indices. When there is
         # no comment column, we need to compensate for the 1-based Excel
         # indices.
-        cell_parsers.CellParserHyperlink(),
-        check_for_row_match=["cldf_name"])
+        cellparser = cell_parsers.CellParserHyperlink(),
+        row_header = row_header,
+        check_for_language_match = ["name"],
+        check_for_match = ["id"],
+        check_for_row_match = ["id"])
+
+
     # TODO: This often doesn't work if the dataset is not perfect before this
     # program is called. In particular, it doesn't work if there are errors in
     # the cognate sets or judgements, which will be reset in just a moment. How
     # else should we solve this?
-    excel_parser_cognate.cldfdatabase.write_from_tg(_force=True)
-    with excel_parser_cognate.cldfdatabase.connection() as conn:
-        # TODO: Is there a way around throwing away the entire cognateset
-        # table?
-        conn.execute("DELETE FROM CognatesetTable")
-        conn.execute("DELETE FROM CognateTable")
-        conn.commit()
+    excel_parser_cognate.cache_dataset()
+    excel_parser_cognate.drop_from_cache("CognatesetTable")
+    excel_parser_cognate.drop_from_cache("CognateTable")
     excel_parser_cognate.parse_cells(ws)
-    data = excel_parser_cognate.cldfdatabase.read()
     for table_type in ["CognateTable", "CognatesetTable"]:
-        items = data[table_type]
-        table = excel_parser_cognate.cldfdatabase.dataset[table_type]
-        table.common_props['dc:extent'] = table.write(
-            [excel_parser_cognate.cldfdatabase.retranslate(table, item)
-             for item in items])
+        excel_parser_cognate._ExcelParserDictionaryDB__dataset[table_type].common_props['dc:extent'] = excel_parser_cognate._ExcelParserDictionaryDB__dataset[table_type].write(
+            excel_parser_cognate.retrieve(table_type))

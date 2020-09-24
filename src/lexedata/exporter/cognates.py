@@ -14,12 +14,6 @@ WARNING = "\u26A0"
 
 # ----------- Remark: Indices in excel are always 1-based. -----------
 
-# TODO: ExcelWrite still uses SQLAlchemy, which we have nearly completely taken
-# out. Rewrite those bits and get it to work – It's probably worth thinking
-# about doing this without touching the database at all, and just work on the
-# iterators like dataset[FormTable'], because here we don't need the smart
-# lookup capabilities of the database to match similar forms. (Or do we?)
-
 # TODO: Make comments on Languages, Cognatesets, and Judgements appear as notes
 # in Excel.
 
@@ -130,25 +124,31 @@ class ExcelWriter():
             cogsets = self.dataset['CognatesetTable']
 
         for cogset in cogsets:
-            # Put the cognateset's tags in column B.
-            for col, (db_name, header) in enumerate(self.header, 1):
-                column = self.dataset["CognatesetTable", db_name]
-                if column.separator is None:
-                    value = cogset[db_name]
-                else:
-                    value = column.separator.join([str(v) for v in cogset[db_name]])
-                cell = ws.cell(row=row_index, column=col,
-                               value=value)
-                # Transfer the cognateset comment to the first Excel cell.
-                if c_comment and col == 1 and cogset[c_comment]:
-                    cell.comment = op.comments.Comment(
-                        cogset.cldf_comment, __package__)
-            # possible a cogset can appear without any judgmente, if so raise row index and continue
+            # possible a cogset can appear without any judgment, if so ignore it
             if cogset[c_cogset_id] not in all_judgements:
-                row_index += 1
                 continue
+            # In a write-only workbook, rows can only be added with append().
+            # It is not possible to write (or read) cells at arbitrary
+            # locations with cell() or iter_rows(). -> We want to use the speed
+            # of a writeonly workbook, so we should build the sheet row-by-row.
+
+            # Put the cognateset's tags in column B.
             new_row_index = self.create_formcells_for_cogset(
-                all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index)
+                all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index, self.lan_dict)
+
+            for row in range(row_index, new_row_index):
+                for col, (db_name, header) in enumerate(self.header, 1):
+                    column = self.dataset["CognatesetTable", db_name]
+                    if column.separator is None:
+                        value = cogset[db_name]
+                    else:
+                        value = column.separator.join([str(v) for v in cogset[db_name]])
+                    cell = ws.cell(row=row, column=col,
+                                value=value)
+                    # Transfer the cognateset comment to the first Excel cell.
+                    if c_comment and col == 1 and cogset[c_comment]:
+                        cell.comment = op.comments.Comment(
+                            cogset.cldf_comment, __package__)
             row_index = new_row_index
         wb.save(filename=out)
 
@@ -208,7 +208,8 @@ class ExcelWriter():
         if there is one.
 
         """
-        cell_value = self.form_to_cell_value(judgement[0])
+        # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
+        cell_value = self.form_to_cell_value(judgement[0], judgement[1])
         form_cell = ws.cell(row=row, column=column, value=cell_value)
         c_id = self.dataset["FormTable", "id"].name
         comment = judgement[1].get("comment", None)
@@ -217,22 +218,51 @@ class ExcelWriter():
         link = self.URL_BASE.format(urllib.parse.quote(judgement[0][c_id]))
         form_cell.hyperlink = link
 
-    def form_to_cell_value(self, form: types.Form) -> str:
+    def form_to_cell_value(self, form: types.Form, meta: types.Judgement) -> str:
         """Build a string describing the form itself
 
         Provide the best transcription and all translations of the form strung
         together.
 
+        k a w e n a t j a k a
+        d i +dúpe
+        +iíté+ k h ú
+        tákeː+toː
+        h o n _tiem_litimuleni
+        hont i e m _litimuleni
         """
-
-        transcription = self.get_best_transcription(form)
+        segments = self.get_segments(form)
+        transcription = ''
+        old_end = 0
+        if not meta["Segment_Slice"]:
+            meta["Segment_Slice"] = ["0:{:d}".format(len(segments))]
+        for startend in meta["Segment_Slice"]:
+            start, end = startend.split(":")
+            start = int(start)
+            end = int(end)
+            transcription += ''.join(segments[old_end:start])
+            transcription += '- '
+            transcription += ' '.join(segments[start:end])
+            # TODO: Fix segment slices and then work with alignments
+            #transcription += ' '.join(meta["Alignment"])
+            transcription += ' -'
+            old_end = end
+        transcription += ''.join(segments[old_end:len(segments)+1])
+        transcription = transcription.strip()
+        if transcription.startswith("- "):
+            transcription = transcription[2:]
+        if transcription.endswith(" -"):
+            transcription = transcription[:-2]
+        # print(transcription)
         translations = []
 
         suffix = ""
-
-        c_comment = self.dataset["FormTable", "comment"].name
-        if form[c_comment]:
-            suffix = f" {WARNING:}"
+        try:
+            c_comment = self.dataset["FormTable", "comment"].name
+            if form.get(c_comment):
+                suffix = f" {WARNING:}"
+        except        KeyError:
+            pass
 
         # corresponding concepts
         # (multiple concepts) and others (single concept)
@@ -245,22 +275,9 @@ class ExcelWriter():
         return "{:} ‘{:}’{:}".format(
             transcription, ", ".join(translations), suffix)
 
-    def get_best_transcription(self, form):
-        phonemic = self.dataset["FormTable", "phonemic"].name
-        phonetic = self.dataset["FormTable", "phonetic"].name
-        orthographic = self.dataset["FormTable", "orthographic"].name
-        if form[phonemic]:
-            return form[phonemic]
-        elif form[phonetic]:
-            return form[phonetic]
-        elif form[orthographic]:
-            return form[orthographic]
-        else:
-            ValueError(f"Form {form:} has no transcriptions.")
-
-    #def get_best_transcription(self, form):
-    #    # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
-    #   return form["FUN"]
+    def get_segments(self, form):
+        # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
+        return form["Segments"]
 
 
 # TODO: Somehow, this script tends to run very slowly. Find the bottleneck, and

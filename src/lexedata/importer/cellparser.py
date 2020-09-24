@@ -192,6 +192,7 @@ class NaiveCellParser():
 
         for element in self.separate(cell.value):
             try:
+                breakpoint()
                 form = self.parse_form(element, language_id, cell_identifier)
             except CellParsingError as err:
                 continue
@@ -368,7 +369,7 @@ class CellParserHyperlink(CellParser):
     ) -> t.Iterable[Form]:
         try:
             url = cell.hyperlink.target
-            yield Form({"cldf_id": url.split("/")[-1]})
+            yield Form({"ID": url.split("/")[-1]})
         except AttributeError:
             pass
 
@@ -403,11 +404,12 @@ class MawetiCellParser(CellParser):
         ...  "variants": ["(from lexicon + edit + data)", "(another comment)"]
         ...  "cldf_comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)"
         ... }
-        >>> m.postprocess_form(form)
+        >>> m.postprocess_form(form, "abui1241")
         >>> form == {"orthographic": "lexedata",
         ...  "phonemic": "lεksedata",
         ...  "variants": ["~ <lexidata>", "~ /lεksidata/"],
         ...  "cldf_comment": "from lexicon + edit + data\\tanother comment",
+        ...  "cldf_source": {("abui1241_s1", None)}
         ...  "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first"}
         True
         """
@@ -457,7 +459,9 @@ class MawetiCellParser(CellParser):
 
                 # check for misplaced sources
                 elif start == start_of_source:
-                    properties.setdefault("cldf_source", []).append(variant)
+                    properties.setdefault(
+                        "cldf_source", set()).add(
+                            self.source_from_source_string(variant))
 
             properties["variants"] = actual_variants
         except KeyError:
@@ -486,7 +490,7 @@ class MawetiCellParser(CellParser):
                             variants.append((separator + v))
 
 
-class MawatiCognateCellParser(MawetiCellParser):
+class MawetiCognateCellParser(MawetiCellParser):
     def parse_form(self, values, language, cell_identifier: str = ''):
         if values.isupper():
             return None
