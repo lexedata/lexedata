@@ -81,7 +81,7 @@ def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
     feature_ids = {}
     if col_map.parameters:
         for row in dataset["ParameterTable"]:
-            feature_ids[row[col_map.parameters.id]] = sanitise_name(row[col_map.parameters.name])
+            feature_ids[row[col_map.parameters.id]] = sanitise_name(row[col_map.parameters.id])
 
     # Build actual data dictionary, based on dataset type
     if dataset.module == "Wordlist":
@@ -98,7 +98,7 @@ def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
                     form_reference = col_map.cognates.formReference
                     cognatesets = collections.defaultdict(list)
                     for row in dataset["CognateTable"]:
-                        cognatesets[row[form_reference]].add(row[code_column])
+                        cognatesets[row[form_reference]].append(row[code_column])
                 else:
                     raise ValueError(
                         "Dataset {:} has no cognatesetReference column in its "
@@ -159,7 +159,7 @@ def build_lang_ids(dataset, col_map):
     unique_names = len(set(names)) == len(names)
     unique_gcs = len(set(gcs)) == len(gcs) == len(names)
 
-    log.info('{0} are used as language identifiers'.format(
+    print('{0} are used as language identifiers'.format(
         'Names' if unique_names else ('Glottocodes' if unique_gcs else 'dataset-local IDs')))
 
     for row in langs:
