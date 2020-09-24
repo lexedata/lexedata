@@ -261,7 +261,7 @@ class ExcelWriter():
             c_comment = self.dataset["FormTable", "comment"].name
             if form.get(c_comment):
                 suffix = f" {WARNING:}"
-        except        KeyError:
+        except KeyError:
             pass
 
         # corresponding concepts
@@ -276,8 +276,8 @@ class ExcelWriter():
             transcription, ", ".join(translations), suffix)
 
     def get_segments(self, form):
-        # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
-        return form["Segments"]
+        c_segments = self.dataset["CognateTable", "Segments"].name
+        return form[c_segments]
 
 
 # TODO: Somehow, this script tends to run very slowly. Find the bottleneck, and
