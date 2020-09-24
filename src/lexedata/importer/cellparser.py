@@ -192,6 +192,7 @@ class NaiveCellParser():
 
         for element in self.separate(cell.value):
             try:
+                breakpoint()
                 form = self.parse_form(element, language_id, cell_identifier)
             except CellParsingError as err:
                 continue
@@ -403,14 +404,16 @@ class MawetiCellParser(CellParser):
         ...  "variants": ["(from lexicon + edit + data)", "(another comment)"]
         ...  "cldf_comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)"
         ... }
-        >>> m.postprocess_form(form)
+        >>> m.postprocess_form(form, "abui1241")
         >>> form == {"orthographic": "lexedata",
         ...  "phonemic": "lεksedata",
         ...  "variants": ["~ <lexidata>", "~ /lεksidata/"],
         ...  "cldf_comment": "from lexicon + edit + data\\tanother comment",
+        ...  "cldf_source": {("abui1241_s1", None)}
         ...  "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first"}
         True
         """
+        super().postprocess_form(properties, language_id)
         # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
         # but a procedural comment could land in variants, thus this case needs to be checked as well
         try:
@@ -455,7 +458,9 @@ class MawetiCellParser(CellParser):
 
                 # check for misplaced sources
                 elif start == start_of_source:
-                    properties.setdefault("cldf_source", []).append(variant)
+                    properties.setdefault(
+                        "cldf_source", set()).add(
+                            self.source_from_source_string(variant))
 
             properties["variants"] = actual_variants
         except KeyError:
