@@ -347,9 +347,14 @@ class CellParser(NaiveCellParser):
 
         """
         # TODO: Once everything seems to work fine, remove delimiters from the
-        # raw elements, and adjust the tests to not expect those delimiters
-        # -> I'm not sure about including this in the general cellparser, it might affect postprocessing we'd like
-        # -> to perform in the MawatiCellParser
+        transcriptions = [semantics[0] for semantics in self.element_semantics.values() if semantics[1]]
+        for key in transcriptions:
+            try:
+                value = properties[key]
+                if value[0] in self.bracket_pairs and value[-1] == self.bracket_pairs[value[0]]:
+                    properties[key] = value[1:-1]
+            except KeyError:
+                continue
 
         # TODO: Currently "..." lands in the forms, with empty other entries
         # (and non-empty source). This is not too bad for now, how should it
@@ -397,7 +402,22 @@ class MawetiCellParser(CellParser):
             properties: t.Dict[str, t.Any],
             language_id: str) -> None:
         """
-        >>> m = MawetiCellParser(dict(), dict(), "", [], "{1}")
+        >>> m = MawetiCellParser(
+        ... {
+        ...     "(": ")",
+        ...     "[": "]",
+        ...     "{": "}",
+        ...     "<": ">",
+        ...     "/": "/"},
+        ... {
+        ...     "(": ("cldf_comment", False),
+        ...     "[": ("phonetic", True),
+        ...     "{": ("cldf_source", False),
+        ...     "<": ("orthographic", True),
+        ...     "/": ("phonemic", True)},
+        ... r"([;,])",
+        ... ["%", "~"],
+        ... "{1}")
         >>> form = {
         ...  "orthographic": "<lexedata % lexidata>",
         ...  "phonemic": "/lεksedata ~ lεksidata/",
@@ -405,9 +425,10 @@ class MawetiCellParser(CellParser):
         ...  "cldf_comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)"
         ... }
         >>> m.postprocess_form(form, "abui1241")
+        >>> form
         >>> form == {"orthographic": "lexedata",
         ...  "phonemic": "lεksedata",
-        ...  "variants": ["~ <lexidata>", "~ /lεksidata/"],
+        ...  "variants": ["~<lexidata>", "~/lεksidata/"],
         ...  "cldf_comment": "from lexicon + edit + data\\tanother comment",
         ...  "cldf_source": {("abui1241_s1", None)},
         ...  "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first"}
@@ -471,21 +492,33 @@ class MawetiCellParser(CellParser):
         variants = properties.setdefault("variants", [])
         for key in transcriptions:
             try:
-                value = properties[key]
+                property_value = properties[key]
             except KeyError:
                 continue
             # if any separator is in this value, split value. add first as key and rest to variants.
             if self.variant_separator:
                 for separator in self.variant_separator:
-                    if separator in value:
+                    if separator in property_value:
                         # split string with variants
                         # add first transcription as transcription, rest to variants
-                        # TODO: ensure correct opening and closing of brackets? Left out for now, as brackets will
-                        # removed in the end
-                        value = value.split(separator)
-                        properties[key] = value.pop(0)
-                        for v in value:
-                            variants.append((separator + v))
+                        # ensure correct opening and closing for transcription and variants
+                        values = property_value.split(separator)
+                        first_value = values.pop(0)
+                        opening = first_value[0]
+                        closing = self.bracket_pairs[opening]
+                        while " " in first_value:
+                            first_value = first_value.strip(" ")
+                        if not first_value[-1] == closing:
+                            first_value += closing
+                        properties[key] = first_value
+                        for value in values:
+                            while " " in value:
+                                value = value.strip(" ")
+                            if not value[0] == opening:
+                                value = opening + value
+                            if not value[-1] == closing:
+                                value = value + closing
+                            variants.append(separator + value)
 
         # post processing of base class
         super().postprocess_form(properties, language_id)
