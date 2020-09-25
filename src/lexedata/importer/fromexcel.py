@@ -9,6 +9,8 @@ import typing as t
 from pathlib import Path
 from tempfile import mkdtemp
 
+from tqdm import tqdm
+
 import pycldf
 import openpyxl
 import sqlalchemy
@@ -185,7 +187,7 @@ class ExcelParser:
         """
         languages_by_column: t.Dict[str, str] = {}
         # iterate over language columns
-        for lan_col in sheet.iter_cols(min_row=1, max_row=self.top - 1, min_col=self.left):
+        for lan_col in tqdm(sheet.iter_cols(min_row=1, max_row=self.top - 1, min_col=self.left)):
             if cells_are_empty(lan_col):
                 # Skip empty languages
                 continue
@@ -269,7 +271,7 @@ class ExcelParser:
     def parse_cells(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
         languages = self.parse_all_languages(sheet)
         row_object = None
-        for row in sheet.iter_rows(min_row=self.top):
+        for row in tqdm(sheet.iter_rows(min_row=self.top)):
             row_header, row_forms = row[:self.left - 1], row[self.left - 1:]
             # Parse the row header, creating or retrieving the associated row
             # object (i.e. a concept or a cognateset)
