@@ -192,7 +192,6 @@ class NaiveCellParser():
 
         for element in self.separate(cell.value):
             try:
-                breakpoint()
                 form = self.parse_form(element, language_id, cell_identifier)
             except CellParsingError as err:
                 continue
