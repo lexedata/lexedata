@@ -492,7 +492,7 @@ class MawetiCellParser(CellParser):
                 elif start == start_of_source:
                     properties.setdefault(
                         "cldf_source", set()).add(
-                            self.source_from_source_string(variant))
+                            self.source_from_source_string(variant, language_id))
 
             properties["variants"] = actual_variants
         except KeyError:

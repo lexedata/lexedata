@@ -480,7 +480,7 @@ def excel_parser_from_dialect(dialect: argparse.Namespace, cognate: bool) -> t.T
             d: t.Dict[str, str] = {}
             for cell, cell_regex, comment_regex in zip(column, dialect.lang_cell_regexes, dialect.lang_comment_regexes):
                 if cell.value:
-                    match = re.fullmatch(cell_regex, cell.value, re.DOTALL)
+                    match = re.fullmatch(cell_regex, cell.value.strip(), re.DOTALL)
                     if match is None:
                         raise ValueError(f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}, but found {cell.value}")
                     for k, v in match.groupdict().items():
@@ -515,7 +515,7 @@ def excel_parser_from_dialect(dialect: argparse.Namespace, cognate: bool) -> t.T
             d: t.Dict[str, str] = {}
             for cell, cell_regex, comment_regex in zip(row, dialect.row_cell_regexes, dialect.row_comment_regexes):
                 if cell.value:
-                    match = re.fullmatch(cell_regex, cell.value, re.DOTALL)
+                    match = re.fullmatch(cell_regex, cell.value.strip(), re.DOTALL)
                     if match is None:
                         raise ValueError(f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}, but found {cell.value}")
                     for k, v in match.groupdict().items():
