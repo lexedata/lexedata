@@ -346,7 +346,7 @@ class CellParser(NaiveCellParser):
         sources, cut of delimiters, split unmarked variants, etc.
 
         """
-        # TODO: Once everything seems to work fine, remove delimiters from the
+        # remove delimiters from transcriptions
         transcriptions = [semantics[0] for semantics in self.element_semantics.values() if semantics[1]]
         for key in transcriptions:
             try:
@@ -365,7 +365,6 @@ class CellParser(NaiveCellParser):
         if source:
             source, context = self.source_from_source_string(source, language_id)
             properties["cldf_source"] = {(source, context)}
-
 
 
 class CellParserHyperlink(CellParser):
@@ -425,13 +424,12 @@ class MawetiCellParser(CellParser):
         ...  "cldf_comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)"
         ... }
         >>> m.postprocess_form(form, "abui1241")
-        >>> form
         >>> form == {"orthographic": "lexedata",
         ...  "phonemic": "lεksedata",
-        ...  "variants": ["~<lexidata>", "~/lεksidata/"],
-        ...  "cldf_comment": "from lexicon + edit + data\\tanother comment",
-        ...  "cldf_source": {("abui1241_s1", None)},
-        ...  "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first"}
+        ...  "variants": ["%<lexidata>", "~/lεksidata/"],
+        ...  "cldf_comment": "(from lexicon + edit + data)(another comment)",
+        ...  "procedural_comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)",
+        ...  "cldf_source": {("abui1241_s1", None)}}
         True
         """
         # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
