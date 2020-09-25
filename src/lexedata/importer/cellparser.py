@@ -193,7 +193,7 @@ class NaiveCellParser():
         for element in self.separate(cell.value):
             try:
                 form = self.parse_form(element, language_id, cell_identifier)
-            except CellParsingError as err:
+            except KeyError:
                 continue
             if form:
                 yield form
@@ -503,14 +503,16 @@ class MawetiCellParser(CellParser):
                         first_value = values.pop(0)
                         opening = first_value[0]
                         closing = self.bracket_pairs[opening]
-                        while " " in first_value:
-                            first_value = first_value.strip(" ")
+                        if first_value.endswith(" "):
+                            first_value = first_value.rstrip(" ")
                         if not first_value[-1] == closing:
                             first_value += closing
                         properties[key] = first_value
                         for value in values:
-                            while " " in value:
-                                value = value.strip(" ")
+                            while value.startswith(" "):
+                                value = value.lstrip(" ")
+                            while value.endswith(" "):
+                                value = value.rstrip(" ")
                             if not value[0] == opening:
                                 value = opening + value
                             if not value[-1] == closing:
