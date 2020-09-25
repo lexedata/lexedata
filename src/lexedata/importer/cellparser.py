@@ -440,8 +440,8 @@ class MawetiCellParser(CellParser):
         >>> form == {"orthographic": "lexedata",
         ...  "phonemic": "lεksedata",
         ...  "variants": ["%<lexidata>", "~/lεksidata/"],
-        ...  "cldf_comment": "(from lexicon + edit + data)(another comment)",
-        ...  "procedural_comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)",
+        ...  "cldf_comment": "from lexicon + edit + data\\tanother comment",
+        ...  "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first",
         ...  "cldf_source": {("abui1241_s1", None)}}
         True
         """
