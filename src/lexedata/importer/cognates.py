@@ -100,9 +100,6 @@ if __name__ == "__main__":
             # TODO: add comment
             return CogSet(properties)
 
-
-
-
     excel_parser_cognate = Parser(
         dataset, db,
         top = 2,
