@@ -359,7 +359,7 @@ class CellParser(NaiveCellParser):
             source = self.add_default_source
         if source:
             source, context = self.source_from_source_string(source, language_id)
-            properties["cldf_source"] = [(source, context)]
+            properties["cldf_source"] = {(source, context)}
 
 
 
