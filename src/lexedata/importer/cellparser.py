@@ -338,7 +338,8 @@ class CellParser(NaiveCellParser):
     def postprocess_form(
             self,
             properties: t.Dict[str, t.Any],
-            language_id: str) -> None:
+            language_id: str,
+            comment_separator: str = "\t") -> None:
         """Modify the form in-place
 
         Fix some properties of the form. This is the place to add default
@@ -354,7 +355,18 @@ class CellParser(NaiveCellParser):
                     properties[key] = value[1:-1]
             except KeyError:
                 continue
-
+        # remove delimiters from comment
+        try:
+            comment = properties["cldf_comment"]
+            comment = comment.split(comment_separator)
+            clean_comment = ""
+            for c in comment:
+                if c[0] in self.bracket_pairs and c.endswith(self.bracket_pairs[c[0]]):
+                    clean_comment += (c[1:-1] + comment_separator)
+            clean_comment = clean_comment.rstrip(comment_separator)
+            properties["cldf_comment"] = clean_comment
+        except KeyError:
+            pass
         # TODO: Currently "..." lands in the forms, with empty other entries
         # (and non-empty source). This is not too bad for now, how should it
         # be?
@@ -388,7 +400,8 @@ class MawetiCellParser(CellParser):
                  bracket_pairs: t.Dict[str, str],
                  element_semantics: t.Dict[str, str],
                  separation_pattern: str,
-                 variant_separator: list,                 add_default_source: str):
+                 variant_separator: list,
+                 add_default_source: str):
         super(MawetiCellParser, self).__init__(bracket_pairs=bracket_pairs,
                                                element_semantics=element_semantics,
                                                separation_pattern=separation_pattern,
@@ -398,7 +411,8 @@ class MawetiCellParser(CellParser):
     def postprocess_form(
             self,
             properties: t.Dict[str, t.Any],
-            language_id: str) -> None:
+            language_id: str,
+            comment_separator: str="\t") -> None:
         """
         >>> m = MawetiCellParser(
         ... {
@@ -433,11 +447,11 @@ class MawetiCellParser(CellParser):
         """
         # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
         # but a procedural comment could land in variants, thus this case needs to be checked as well
+        # procedural_comments are stripped of dilimiters in this function as they are specific for the Mawati Dataset
         try:
             comment = properties["cldf_comment"]
-            beginning = comment[1:5]
-            if beginning[:3].isupper() and beginning[-1] == ":":
-                properties["procedural_comment"] = comment
+            if re.search(r"^[A-Z]{2,}:", comment[1:]):
+                properties["procedural_comment"] = comment[1:-1] # strip delimiters
                 del properties["cldf_comment"]
         except KeyError:
             pass
@@ -464,12 +478,12 @@ class MawetiCellParser(CellParser):
                     # check if it s a procedural comment
                     if re.search(r"^[A-Z]{2,}:", variant[1:]):
                         try:
-                            properties["procedural_comment"] += variant
+                            properties["procedural_comment"] += (comment_separator + variant[1:-1])
                         except KeyError:
-                            properties["procedural_comment"] = variant
+                            properties["procedural_comment"] = variant[1:-1]
                     else:
                         try:
-                            properties["cldf_comment"] += variant
+                            properties["cldf_comment"] += (comment_separator + variant)
                         except KeyError:
                             properties["cldf_comment"] = variant
 
