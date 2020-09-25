@@ -448,6 +448,7 @@ class MawetiCellParser(CellParser):
         # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
         # but a procedural comment could land in variants, thus this case needs to be checked as well
         # procedural_comments are stripped of dilimiters in this function as they are specific for the Mawati Dataset
+        super().postprocess_form(properties, language_id)
         try:
             comment = properties["cldf_comment"]
             if re.search(r"^[A-Z]{2,}:", comment[1:]):
@@ -532,9 +533,6 @@ class MawetiCellParser(CellParser):
                             if not value[-1] == closing:
                                 value = value + closing
                             variants.append(separator + value)
-
-        # post processing of base class
-        super().postprocess_form(properties, language_id)
 
 
 class MawetiCognateCellParser(MawetiCellParser):
