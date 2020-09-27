@@ -96,7 +96,9 @@ if __name__ == "__main__":
             while None in properties.keys():
                 del properties[None]
 
-            comment = get_cell_comment(row[0])
+            comment = "\t".join([
+                get_cell_comment(cell)
+                for cell in row]).strip()
             # TODO: add comment
             return CogSet(properties)
 
