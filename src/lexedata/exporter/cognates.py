@@ -134,7 +134,7 @@ class ExcelWriter():
 
             # Put the cognateset's tags in column B.
             new_row_index = self.create_formcells_for_cogset(
-                all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index, self.lan_dict)
+                all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index)
 
             for row in range(row_index, new_row_index):
                 for col, (db_name, header) in enumerate(self.header, 1):
@@ -242,19 +242,14 @@ class ExcelWriter():
             start = int(start)
             end = int(end)
             transcription += ''.join(segments[old_end:start])
-            transcription += '- '
+            transcription += '{ '
             transcription += ' '.join(segments[start:end])
             # TODO: Fix segment slices and then work with alignments
             #transcription += ' '.join(meta["Alignment"])
-            transcription += ' -'
+            transcription += ' }'
             old_end = end
         transcription += ''.join(segments[old_end:len(segments)+1])
         transcription = transcription.strip()
-        if transcription.startswith("- "):
-            transcription = transcription[2:]
-        if transcription.endswith(" -"):
-            transcription = transcription[:-2]
-        # print(transcription)
         translations = []
 
         suffix = ""
@@ -277,7 +272,7 @@ class ExcelWriter():
             transcription, ", ".join(translations), suffix)
 
     def get_segments(self, form):
-        c_segments = self.dataset["CognateTable", "Segments"].name
+        c_segments = self.dataset["FormTable", "Segments"].name
         return form[c_segments]
 
 

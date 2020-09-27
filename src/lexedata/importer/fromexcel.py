@@ -56,6 +56,7 @@ class ExcelParser:
                  row_header: t.List[str] = ["set", "cldf_name", None],
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
+                 check_for_language_match: t.List[str] = ["cldf_name"],
                  on_language_not_found: err.MissingHandler = err.create,
                  on_row_not_found: err.MissingHandler = err.create,
                  on_form_not_found: err.MissingHandler = err.create
@@ -70,6 +71,7 @@ class ExcelParser:
         self.left = left
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
+        self.check_for_language_match = check_for_language_match
         self.init_db(output_dataset, fname=db_fname)
 
     def init_db(self, output_dataset, fname=None):
@@ -192,7 +194,7 @@ class ExcelParser:
                 # Skip empty languages
                 continue
             language = self.language_from_column(lan_col)
-            candidates = self.find_db_candidates(language, ["cldf_name"])
+            candidates = self.find_db_candidates(language, self.check_for_language_match)
             for language_id in candidates:
                 break
             else:
@@ -335,6 +337,7 @@ class ExcelCognateParser(ExcelParser):
                  row_header = ["set", "cldf_name", None],
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
+                 check_for_language_match: t.List[str] = ["cldf_name"],
                  on_language_not_found: err.MissingHandler = err.error,
                  on_row_not_found: err.MissingHandler = err.create,
                  on_form_not_found: err.MissingHandler = err.warn
@@ -347,6 +350,7 @@ class ExcelCognateParser(ExcelParser):
             check_for_match = check_for_match,
             row_header=row_header,
             check_for_row_match = check_for_row_match,
+            check_for_language_match = check_for_language_match,
             on_language_not_found=on_language_not_found,
             on_row_not_found=on_row_not_found,
             on_form_not_found=on_form_not_found
@@ -397,6 +401,7 @@ class MawetiExcelParser(ExcelParser):
                  row_header: t.List[str] = ["Set", "cldf_name", None, "Spanish", "Portuguese", "French"],
                  check_for_match: t.List[str] = ["cldf_id"],
                  check_for_row_match: t.List[str] = ["cldf_name"],
+                 check_for_language_match: t.List[str] = ["cldf_name"],
                  on_language_not_found: err.MissingHandler = err.create,
                  on_row_not_found: err.MissingHandler = err.create,
                  on_form_not_found: err.MissingHandler = err.create
@@ -465,6 +470,7 @@ def excel_parser_from_dialect(dialect: argparse.Namespace, cognate: bool) -> t.T
                 cellparser=initialized_cell_parser,
                 check_for_match=dialect.check_for_match,
                 check_for_row_match=dialect.check_for_row_match,
+                check_for_language_match=dialect.check_for_language_match,
                 )
 
         def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
@@ -569,7 +575,9 @@ def load_dataset(metadata: Path, lexicon: str, db: str, cognate_lexicon: t.Optio
 
 
 class ExcelParserDictionaryDB(ExcelParser):
-    def init_db(self):
+    def init_db(self, output_dataset, fname=None):
+        if fname is not None:
+            print("Warning: dbase fname set, but ignored")
         self.__cache = {}
         self.__dataset = output_dataset
 
@@ -593,17 +601,20 @@ class ExcelParserDictionaryDB(ExcelParser):
     def associate(self, form_id: str, row: RowObject) -> bool:
         form = self.__cache["FormTable"][form_id]
         if row.__table__ == "CognatesetTable":
+            id = self.__dataset["CognatesetTable", "id"].name
             try:
-                judgements = self.__cache["CognateTable"]
-                judgements[len(judgements)] = {
-                    self.__dataset["CognateTable", "formReference"].name: form_id,
-                    self.__dataset["CognateTable", "cognatesetReference"].name:
-                    row[self.__dataset["CognatesetTable", "id"].name],
-                }
-                return True
-            except KeyError:
                 column = self.__dataset["FormTable", "cognatesetReference"]
-                id = self.__dataset["CognatesetTable", "id"].name
+            except KeyError:
+                judgements = self.__cache["CognateTable"]
+                cognateset = row[self.__dataset["CognatesetTable", "id"].name]
+                judgement = Judgement({
+                    self.__dataset["CognateTable", "id"].name: '{:}-{:}'.format(form_id, cognateset),
+                    self.__dataset["CognateTable", "formReference"].name: form_id,
+                    self.__dataset["CognateTable", "cognatesetReference"].name: cognateset
+                })
+                self.make_id_unique(judgement)
+                judgements[judgement[id]] = judgement
+                return True
         elif row.__table__ == "ParameterTable":
             column = self.__dataset["FormTable", "parameterReference"]
             id = self.__dataset["ParameterTable", "id"].name
@@ -617,16 +628,16 @@ class ExcelParserDictionaryDB(ExcelParser):
     def insert_into_db(self, object: O) -> bool:
         id = self.__dataset[object.__table__, "id"].name
         assert object[id] not in self.__cache[object.__table__]
-        self.__cache[object.__table__][id] = object
+        self.__cache[object.__table__][object[id]] = object
 
     def make_id_unique(self, object: O) -> str:
         id = self.__dataset[object.__table__, "id"].name
-        raw_id = object["cldf_id"]
+        raw_id = object[id]
         i = 0
-        while object[id] in self.__cache[object.__table__, id]:
+        while object[id] in self.__cache[object.__table__]:
             i += 1
-            object["cldf_id"] = "{:}_{:d}".format(raw_id, i)
-        return object["cldf_id"]
+            object[id] = "{:}_{:d}".format(raw_id, i)
+        return object[id]
 
     def find_db_candidates(
             self, object: O, properties_for_match: t.Iterable[str]

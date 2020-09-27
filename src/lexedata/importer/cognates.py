@@ -110,9 +110,9 @@ if __name__ == "__main__":
         # indices.
         cellparser = cell_parsers.CellParserHyperlink(),
         row_header = row_header,
-        check_for_language_match = ["name"],
-        check_for_match = ["id"],
-        check_for_row_match = ["id"])
+        check_for_language_match = [dataset["LanguageTable", "name"].name],
+        check_for_match = [dataset["FormTable", "id"].name],
+        check_for_row_match = [dataset["CognatesetTable", "id"].name])
 
 
     # TODO: This often doesn't work if the dataset is not perfect before this

@@ -36,6 +36,10 @@ def string_to_id(string: str) -> str:
 def clean_cell_value(cell: op.cell.cell.Cell):
     if cell.value is None:
         return ''
+    if type(cell.value) == float:
+        if cell.value == int(cell.value):
+            return int(cell.value)
+        return cell.value
     v = unicodedata.normalize('NFKD', (cell.value or '').strip())
     if type(v) == float:
         if v == int(v):
