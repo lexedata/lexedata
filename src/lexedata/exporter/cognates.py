@@ -300,4 +300,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     E = ExcelWriter(pycldf.Wordlist.from_metadata(args.metadata))
     E.set_header()
-    E.create_excel(args.excel, size_sort=args.size_sort)
+    E.create_excel(args.excel, size_sort=args.size_sort, language_order=args.language_sort_column)
