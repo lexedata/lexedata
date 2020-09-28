@@ -393,46 +393,6 @@ class ExcelCognateParser(ExcelParser):
         self.make_id_unique(judgement)
         return self.insert_into_db(judgement)
 
-class MawetiExcelParser(ExcelParser):
-    def __init__(self, output_dataset: pycldf.Dataset,
-                 db_fname: str,
-                 top: int = 3, left: int = 7,
-                 cellparser: cell_parsers.CellParser = cell_parsers.CellParser(),
-                 row_header: t.List[str] = ["Set", "cldf_name", None, "Spanish", "Portuguese", "French"],
-                 check_for_match: t.List[str] = ["cldf_id"],
-                 check_for_row_match: t.List[str] = ["cldf_name"],
-                 check_for_language_match: t.List[str] = ["cldf_name"],
-                 on_language_not_found: err.MissingHandler = err.create,
-                 on_row_not_found: err.MissingHandler = err.create,
-                 on_form_not_found: err.MissingHandler = err.create
-                 ) -> None:
-        super().__init__(output_dataset=output_dataset, db_fname=db_fname,
-                         top=top, left=left,
-                         cellparser=cellparser,
-                         check_for_match=check_for_match, check_for_row_match=check_for_row_match,
-                         row_header=row_header,
-                         on_language_not_found=on_language_not_found,
-                         on_row_not_found=on_row_not_found,
-                         on_form_not_found=on_form_not_found)
-
-    def properties_from_row(
-            self, row: t.List[openpyxl.cell.Cell]
-    ) -> t.Optional[RowObject]:
-        data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
-        properties = dict(zip(self.row_header, data))
-        # delete all possible None entries coming from row_header
-        while None in properties.keys():
-            del properties[None]
-
-        # fetch cell comment
-        comment = get_cell_comment(row[0])
-        properties["cldf_comment"] = comment
-
-        # cldf_name serves as cldf_id candidate
-        properties["cldf_id"] = properties["cldf_name"]
-        properties["English"] = properties["cldf_name"]
-        return Concept(properties)
-
 
 def excel_parser_from_dialect(dialect: argparse.Namespace, cognate: bool) -> t.Type[ExcelParser]:
     if cognate:
