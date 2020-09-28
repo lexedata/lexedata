@@ -98,8 +98,8 @@ if __name__ == "__main__":
 
             comment = "\t".join([
                 get_cell_comment(cell)
-                for cell in row]).strip()
-            # TODO: add comment
+                for cell in row[:self.left - 1]]).strip()
+            properties[self._ExcelParserDictionaryDB__dataset["CognatesetTable", "comment"].name] = comment
             return CogSet(properties)
 
     excel_parser_cognate = Parser(

@@ -5,7 +5,7 @@ import typing as t
 import openpyxl
 
 from lexedata.error_handling import *
-from lexedata.util import string_to_id, clean_cell_value
+from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 from lexedata.types import Form
 
 
@@ -411,6 +411,7 @@ class CellParserHyperlink(CellParser):
         try:
             url = cell.hyperlink.target
             text = clean_cell_value(cell)
+            comment = get_cell_comment(cell)
             if not '{' in text:
                 yield Form({"ID": url.split("/")[-1]})
             else:
@@ -418,7 +419,8 @@ class CellParserHyperlink(CellParser):
                 yield Form({"ID": url.split("/")[-1],
                             "Segment_Slice": ','.join("{:}:{:}".format(i, j)
                                                       for i, j in slice),
-                            "Alignment": alignment})
+                            "Alignment": alignment,
+                            "Cell_Comment": comment})
         except AttributeError:
             pass
 

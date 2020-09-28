@@ -78,19 +78,19 @@ class ExcelParser:
         self.cldfdatabase = Database(output_dataset, fname=fname)
 
     def cache_dataset(self):
-        excel_parser_cognate.cldfdatabase.write_from_tg(_force=True)
+        self.cldfdatabase.write_from_tg(_force=True)
 
     def drop_from_cache(self, table: str):
         assert "`" not in table
-        with excel_parser_cognate.cldfdatabase.connection() as conn:
+        with self.cldfdatabase.connection() as conn:
             conn.execute("DELETE FROM `{:s}`".format(table))
             conn.commit()
 
     def retrieve(self, table_type: str):
-        data = excel_parser_cognate.cldfdatabase.read()
+        data = self.cldfdatabase.read()
         items = data[table_type]
-        table = excel_parser_cognate.cldfdatabase.dataset[table_type]
-        return [excel_parser_cognate.cldfdatabase.retranslate(table, item) for item in items]
+        table = self.cldfdatabase.dataset[table_type]
+        return [self.cldfdatabase.retranslate(table, item) for item in items]
 
     # Run `write` for an ExcelParser after __init__, but not for an
     # ExcelCognateParser, when constructing these objects from the command line
@@ -223,14 +223,14 @@ class ExcelParser:
                     SourceTable_id=source,
                     context=context))
 
-    def associate(self, form_id: str, row: RowObject) -> bool:
+    def associate(self, form_id: str, row: RowObject, comment: t.Optional[str] = None) -> bool:
         assert row.__table__ == "ParameterTable", "Expected Concept, but got {:}".format(row.__class__)
         with self.cldfdatabase.connection() as conn:
             try:
                 insert(conn, self.cldfdatabase.translate,
                        "FormTable_ParameterTable__cldf_parameterReference",
-                       ("FormTable_cldf_id", "ParameterTable_cldf_id"),
-                       (form_id, row["cldf_id"])
+                       ("FormTable_cldf_id", "ParameterTable_cldf_id", "context"),
+                       (form_id, row["cldf_id"], comment)
                 )
                 conn.commit()
             except sqlite3.IntegrityError:
@@ -309,6 +309,8 @@ class ExcelParser:
                 for params in self.cell_parser.parse(
                         cell_with_forms, this_lan,
                         f"{sheet.title}.{cell_with_forms.coordinate}"):
+                    # TODO: Can we avoid that magic string '"Cell_Comment"'?
+                    maybe_comment: t.Optional[str] = params.pop("Cell_Comment", None)
                     form = Form(params)
                     candidate_forms = self.find_db_candidates(
                         form, self.check_for_match)
@@ -321,7 +323,7 @@ class ExcelParser:
                         form["cldf_id"] = "{:}_{:}".format(form["cldf_languageReference"], row_object["cldf_id"])
                         self.create_form_with_sources(form, row_object, sources=sources)
                         form_id = form["cldf_id"]
-                    self.associate(form_id, row_object)
+                    self.associate(form_id, row_object, comment=maybe_comment)
         self.commit()
 
     def commit(self):
@@ -381,14 +383,15 @@ class ExcelCognateParser(ExcelParser):
         properties["cldf_id"] = properties["cldf_id"] or properties["cldf_name"]
         return CogSet(properties)
 
-    def associate(self, form_id: str, row: RowObject) -> bool:
+    def associate(self, form_id: str, row: RowObject, comment: t.Optional[str] = None) -> bool:
         assert row.__table__ == "CognatesetTable", \
             "Expected Concept, but got {:}".format(row.__class__)
         row_id = row["cldf_id"]
         judgement = Judgement(
             cldf_id = f"{form_id}-{row_id}",
             cldf_formReference = form_id,
-            cldf_cognatesetReference = row_id
+            cldf_cognatesetReference = row_id,
+            cldf_comment = comment or ''
         )
         self.make_id_unique(judgement)
         return self.insert_into_db(judgement)
@@ -558,7 +561,7 @@ class ExcelParserDictionaryDB(ExcelParser):
     def write(self):
         self.__cache = {}
 
-    def associate(self, form_id: str, row: RowObject) -> bool:
+    def associate(self, form_id: str, row: RowObject, comment: t.Optional[str] = None) -> bool:
         form = self.__cache["FormTable"][form_id]
         if row.__table__ == "CognatesetTable":
             id = self.__dataset["CognatesetTable", "id"].name
@@ -570,7 +573,8 @@ class ExcelParserDictionaryDB(ExcelParser):
                 judgement = Judgement({
                     self.__dataset["CognateTable", "id"].name: '{:}-{:}'.format(form_id, cognateset),
                     self.__dataset["CognateTable", "formReference"].name: form_id,
-                    self.__dataset["CognateTable", "cognatesetReference"].name: cognateset
+                    self.__dataset["CognateTable", "cognatesetReference"].name: cognateset,
+                    self.__dataset["CognateTable", "comment"].name: comment or '',
                 })
                 self.make_id_unique(judgement)
                 judgements[judgement[id]] = judgement
