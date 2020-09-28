@@ -148,7 +148,7 @@ class ExcelWriter():
                     # Transfer the cognateset comment to the first Excel cell.
                     if c_comment and col == 1 and cogset[c_comment]:
                         cell.comment = op.comments.Comment(
-                            cogset.cldf_comment, __package__)
+                            cogset["Comment"], __package__)
 
             row_index = new_row_index
         wb.save(filename=out)
@@ -244,8 +244,9 @@ class ExcelWriter():
             transcription += ''.join(s[0] for s in segments[old_end:start])
             transcription += '{ '
             transcription += ' '.join(segments[start:end])
-            # TODO: Fix segment slices and then work with alignments
-            #transcription += ' '.join(meta["Alignment"])
+            # TODO: Find a sensible way to split the alignments instead – this
+            # is trivial for a single segment slice, but requires some fiddling
+            # for split morphemes.
             transcription += ' }'
             old_end = end
         transcription += ''.join(s[0] for s in segments[old_end:len(segments)+1])
