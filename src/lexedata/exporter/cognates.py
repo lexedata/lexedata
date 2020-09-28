@@ -241,14 +241,14 @@ class ExcelWriter():
             start, end = startend.split(":")
             start = int(start)
             end = int(end)
-            transcription += ''.join(segments[old_end:start])
+            transcription += ''.join(s[0] for s in segments[old_end:start])
             transcription += '{ '
             transcription += ' '.join(segments[start:end])
             # TODO: Fix segment slices and then work with alignments
             #transcription += ' '.join(meta["Alignment"])
             transcription += ' }'
             old_end = end
-        transcription += ''.join(segments[old_end:len(segments)+1])
+        transcription += ''.join(s[0] for s in segments[old_end:len(segments)+1])
         transcription = transcription.strip()
         translations = []
 

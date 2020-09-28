@@ -5,7 +5,7 @@ import typing as t
 import openpyxl
 
 from lexedata.error_handling import *
-from lexedata.util import string_to_id
+from lexedata.util import string_to_id, clean_cell_value
 from lexedata.types import Form
 
 
@@ -378,13 +378,47 @@ class CellParser(NaiveCellParser):
             properties["cldf_source"] = {(source, context)}
 
 
+def alignment_from_braces(text, start=0):
+    """Convert a brace-delimited morpheme description into slices and alignments.
+
+    The "-" character is used as the alignment gap character, so it does not
+    count towards the segment slices.
+
+    >>> slice_from_braces("t{e x}t")
+    ([(1, 3)], ["e", "x"])
+    >>> slice_from_braces("{ t - e } x { t }")
+    ([(0, 2), (3, 4)], ["t", "-", "e", "t"])
+
+    """
+    before, remainder = text.split("{", 1)
+    content, remainder = remainder.split("}", 1)
+    content = content.strip()
+    i = len(before.strip())
+    j = len([s for s in content.split() if s != "-"])
+    slice = (start + i, start + i + j)
+    if '{' in remainder:
+        slices, alignment = alignment_from_braces(remainder, start + i + j)
+        slices.insert(0, slice)
+        return slices, content.split() + alignment
+    else:
+        return [slice], content.split()
+
+
 class CellParserHyperlink(CellParser):
     def parse(
             self, cell: openpyxl.cell.Cell, language_id: str, cell_identifier: str = ''
     ) -> t.Iterable[Form]:
         try:
             url = cell.hyperlink.target
-            yield Form({"ID": url.split("/")[-1]})
+            text = clean_cell_value(cell)
+            if not '{' in text:
+                yield Form({"ID": url.split("/")[-1]})
+            else:
+                slice, alignment = alignment_from_braces(text)
+                yield Form({"ID": url.split("/")[-1],
+                            "Segment_Slice": ','.join("{:}:{:}".format(i, j)
+                                                      for i, j in slice),
+                            "Alignment": alignment})
         except AttributeError:
             pass
 
