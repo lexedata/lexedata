@@ -1,3 +1,3 @@
-#lexedata
+# lexedata
 
-Tools to edit lexical data
+Tools to edit lexical data in CLDF
