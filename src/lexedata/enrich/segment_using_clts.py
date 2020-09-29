@@ -12,7 +12,7 @@ import cldfbench
 import cldfcatalog
 from cldfcatalog import Catalog
 
-clts_path = cldfcatalog.Config.from_file().get_clone('clts')
+clts_path = cldfcatalog.Config.from_file().get_clone("clts")
 clts = cldfbench.catalogs.CLTS(clts_path)
 bipa = clts.api.bipa
 
@@ -28,26 +28,34 @@ def cleanup(form: str) -> str:
 
 
 def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
-    if '.' in form:
-        return sum([segment_form(f) for f in form.split('.')], [])
+    if "." in form:
+        return sum([segment_form(f) for f in form.split(".")], [])
     segments = [
-        bipa[c] for c in tokenizer(
-            bipa.normalize(cleanup(form)), ipa=True).split()]
+        bipa[c] for c in tokenizer(bipa.normalize(cleanup(form)), ipa=True).split()
+    ]
     for s, segment in enumerate(segments):
-        if segment.type == 'unknownsound':
-            logging.warning("Unknown sound '%s' in form '%s' (segment #%d)",
-                            segment, form, s + 1)
+        if segment.type == "unknownsound":
+            logging.warning(
+                "Unknown sound '%s' in form '%s' (segment #%d)", segment, form, s + 1
+            )
     return segments
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("wordlist", default="cldf-metadata.json",
-                        type=Path, help="The wordlist to add Concepticon links to")
-    parser.add_argument("transcription", nargs="?",
-                        default=None,
-                        help="Column containing the IPA transcriptions."
-                        "(Default: The CLDF #form column)")
+    parser.add_argument(
+        "wordlist",
+        default="cldf-metadata.json",
+        type=Path,
+        help="The wordlist to add Concepticon links to",
+    )
+    parser.add_argument(
+        "transcription",
+        nargs="?",
+        default=None,
+        help="Column containing the IPA transcriptions."
+        "(Default: The CLDF #form column)",
+    )
     args = parser.parse_args()
 
     dataset = pycldf.Wordlist.from_metadata(args.wordlist)

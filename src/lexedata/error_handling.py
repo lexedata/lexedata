@@ -27,8 +27,7 @@ def error(db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
 
     """
     rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
-    raise ObjectNotFoundWarning(
-        f"Failed to find object {rep:} {cell:} in the database")
+    raise ObjectNotFoundWarning(f"Failed to find object {rep:} {cell:} in the database")
 
 
 def warn(db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
@@ -44,11 +43,14 @@ def warn(db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
     rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
     warnings.warn(
         f"Failed to find object {rep:} in the database. Skipped. In cell: {cell:}.",
-        ObjectNotFoundWarning)
+        ObjectNotFoundWarning,
+    )
     return False
 
 
-def warn_and_create(db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+def warn_and_create(
+    db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+) -> bool:
     """Should I add a missing object? Yes, but inform the user.
 
     Send a warning (ObjectNotFoundWarning) reporting the missing object and
@@ -62,7 +64,8 @@ def warn_and_create(db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None)
     rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
     warnings.warn(
         f"Failed to find object {rep:}in the database. Added. Object of cell: {cell:}",
-        ObjectNotFoundWarning)
+        ObjectNotFoundWarning,
+    )
     return True
 
 
@@ -88,4 +91,3 @@ def ignore(db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
 
     """
     return False
-

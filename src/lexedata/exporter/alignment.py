@@ -10,6 +10,7 @@ import pycldf.dataset
 
 from csvw.dsv import UnicodeDictReader
 
+
 def sanitise_name(name):
     """
     Take a name for a language or a feature which has come from somewhere like
@@ -41,8 +42,8 @@ def get_dataset(fname):
     """
     fname = Path(fname)
     if not fname.exists():
-        raise FileNotFoundError('{:} does not exist'.format(fname))
-    if fname.suffix == '.json':
+        raise FileNotFoundError("{:} does not exist".format(fname))
+    if fname.suffix == ".json":
         return pycldf.dataset.Dataset.from_metadata(fname)
     return pycldf.dataset.Dataset.from_data(fname)
 
@@ -72,8 +73,11 @@ def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
 
     # Make sure this is a kind of dataset BEASTling can handle
     if dataset.module not in ("Wordlist", "StructureDataset"):
-        raise ValueError("BEASTling does not know how to interpret CLDF {:} data.".format(
-            dataset.module))
+        raise ValueError(
+            "BEASTling does not know how to interpret CLDF {:} data.".format(
+                dataset.module
+            )
+        )
 
     # Build dictionaries of nice IDs for languages and features
     col_map = dataset.column_names
@@ -81,19 +85,25 @@ def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
     feature_ids = {}
     if col_map.parameters:
         for row in dataset["ParameterTable"]:
-            feature_ids[row[col_map.parameters.id]] = sanitise_name(row[col_map.parameters.name])
+            feature_ids[row[col_map.parameters.id]] = sanitise_name(
+                row[col_map.parameters.name]
+            )
 
     # Build actual data dictionary, based on dataset type
     if dataset.module == "Wordlist":
         # We search for cognatesetReferences in the FormTable or a separate CognateTable.
         cognate_column_in_form_table = True
         # If we find them in CognateTable, we store them keyed with formReference:
-        if not code_column:  # If code_column is given explicitly, we don't have to search!
+        if (
+            not code_column
+        ):  # If code_column is given explicitly, we don't have to search!
             code_column = col_map.forms.cognatesetReference
             if not code_column:
-                if (col_map.cognates and
-                    col_map.cognates.cognatesetReference and
-                    col_map.cognates.formReference):
+                if (
+                    col_map.cognates
+                    and col_map.cognates.cognatesetReference
+                    and col_map.cognates.formReference
+                ):
                     code_column = col_map.cognates.cognatesetReference
                     form_reference = col_map.cognates.formReference
                     cognatesets = collections.defaultdict(list)
@@ -104,7 +114,8 @@ def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
                         "Dataset {:} has no cognatesetReference column in its "
                         "primary table or in a separate cognate table. "
                         "Is this a metadata-free wordlist and you forgot to "
-                        "specify code_column explicitly?".format(filename))
+                        "specify code_column explicitly?".format(filename)
+                    )
                 form_column = dataset["FormTable", "id"].name
                 cognate_column_in_form_table = False
 
@@ -112,9 +123,19 @@ def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
         parameter_column = col_map.forms.parameterReference
 
         warnings.filterwarnings(
-            "ignore", '.*Unspecified column "Cognate_Set"', UserWarning, "csvw\.metadata", 0)
+            "ignore",
+            '.*Unspecified column "Cognate_Set"',
+            UserWarning,
+            "csvw\.metadata",
+            0,
+        )
         warnings.filterwarnings(
-            "ignore", '.*Unspecified column "{:}"'.format(code_column), UserWarning, "csvw\.metadata", 0)
+            "ignore",
+            '.*Unspecified column "{:}"'.format(code_column),
+            UserWarning,
+            "csvw\.metadata",
+            0,
+        )
         # We know how to deal with a 'Cognate_Set' column, even in a metadata-free CSV file
 
         for row in dataset["FormTable"].iterdicts():
@@ -130,10 +151,14 @@ def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
         code_column = col_map.values.codeReference or col_map.values.value
         for row in dataset["ValueTable"]:
             lang_id = lang_ids.get(
-                row[col_map.values.languageReference], row[col_map.values.languageReference])
+                row[col_map.values.languageReference],
+                row[col_map.values.languageReference],
+            )
             feature_id = feature_ids.get(
-                row[col_map.values.parameterReference], row[col_map.values.parameterReference])
-            data[lang_id][feature_id].add(row[code_column] or '')
+                row[col_map.values.parameterReference],
+                row[col_map.values.parameterReference],
+            )
+            data[lang_id][feature_id].add(row[code_column] or "")
         return data, language_code_map
 
 
@@ -159,8 +184,13 @@ def build_lang_ids(dataset, col_map):
     unique_names = len(set(names)) == len(names)
     unique_gcs = len(set(gcs)) == len(gcs) == len(names)
 
-    log.info('{0} are used as language identifiers'.format(
-        'Names' if unique_names else ('Glottocodes' if unique_gcs else 'dataset-local IDs')))
+    log.info(
+        "{0} are used as language identifiers".format(
+            "Names"
+            if unique_names
+            else ("Glottocodes" if unique_gcs else "dataset-local IDs")
+        )
+    )
 
     for row in langs:
         if unique_names:
@@ -177,55 +207,74 @@ def build_lang_ids(dataset, col_map):
     return lang_ids, language_code_map
 
 
-def root_meaning_code(dataset: t.Dict[t.Hashable, t.Dict[t.Hashable, t.Set[t.Hashable]]]):
+def root_meaning_code(
+    dataset: t.Dict[t.Hashable, t.Dict[t.Hashable, t.Set[t.Hashable]]]
+):
     roots: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
     for language, lexicon in dataset.items():
         for concept, cognatesets in lexicon.items():
             roots.setdefault(concept, set()).update(cognatesets)
     alignment: t.Dict[t.Hashable, t.List[t.Literal["0", "1", "?"]]] = {}
     for language, lexicon in dataset.items():
-        alignment[language] = ['0']
+        alignment[language] = ["0"]
         for concept, possible_roots in roots.items():
             entries = lexicon.get(concept)
             if entries is None:
                 alignment[language].extend(["?" for _ in possible_roots])
             else:
-                alignment[language].extend(["1" if k in entries else "0"
-                                            for k in possible_roots])
+                alignment[language].extend(
+                    ["1" if k in entries else "0" for k in possible_roots]
+                )
     return alignment
+
 
 def raw_alignment(alignment):
     l = max([len(str(l)) for l in alignment])
     for language, data in alignment.items():
         yield "{language:} {spacer:} {data:}".format(
-            language=language,
-            spacer=" "*(l - len(str(language))),
-            data="".join(data))
+            language=language, spacer=" " * (l - len(str(language))), data="".join(data)
+        )
 
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Export a CLDF dataset (or similar) to bioinformatics alignments")
-    parser.add_argument("--format", choices=("csv", "raw", "beast", "nexus"),
-                        default="raw",
-                        help="Target format: `raw` for one language name per row, followed by spaces and the alignment vector; `nexus` for a complete Nexus file; `beast` for the <data> tag to copy to a BEAST file, and `csv` for a CSV with languages in rows and features in columns.")
-    parser.add_argument("--metadata", help="Path to metadata file for dataset input",
-                        default="forms.csv")
-    parser.add_argument("--code-column",
-                        help="Name of the code column for metadata-free wordlists")
-    parser.add_argument("--coding", choices=("rootmeaning", "rootpresence", "multistate"),
-                        default="rootmeaning",
-                        help="Binarization method: In the `rootmeaning` coding system, every character describes the presence or absence of a particular root morpheme or cognate class in the word(s) for a given meaning; In the `rootpresence`, every character describes (up to the limitations of the data, which might not contain marginal forms) the presence or absence of a root (morpheme) in the language, independet of which meaning that root is attested in; And in the `multistate` coding, each character describes, possibly including uniform ambiguities, the cognate class of a meaning.")
+
+    parser = argparse.ArgumentParser(
+        description="Export a CLDF dataset (or similar) to bioinformatics alignments"
+    )
+    parser.add_argument(
+        "--format",
+        choices=("csv", "raw", "beast", "nexus"),
+        default="raw",
+        help="Target format: `raw` for one language name per row, followed by spaces and the alignment vector; `nexus` for a complete Nexus file; `beast` for the <data> tag to copy to a BEAST file, and `csv` for a CSV with languages in rows and features in columns.",
+    )
+    parser.add_argument(
+        "--metadata",
+        help="Path to metadata file for dataset input",
+        default="forms.csv",
+    )
+    parser.add_argument(
+        "--code-column", help="Name of the code column for metadata-free wordlists"
+    )
+    parser.add_argument(
+        "--coding",
+        choices=("rootmeaning", "rootpresence", "multistate"),
+        default="rootmeaning",
+        help="Binarization method: In the `rootmeaning` coding system, every character describes the presence or absence of a particular root morpheme or cognate class in the word(s) for a given meaning; In the `rootpresence`, every character describes (up to the limitations of the data, which might not contain marginal forms) the presence or absence of a root (morpheme) in the language, independet of which meaning that root is attested in; And in the `multistate` coding, each character describes, possibly including uniform ambiguities, the cognate class of a meaning.",
+    )
     args = parser.parse_args()
 
-    ds, language_map = read_cldf_dataset(args.metadata, code_column=args.code_column, expect_multiple=True)
+    ds, language_map = read_cldf_dataset(
+        args.metadata, code_column=args.code_column, expect_multiple=True
+    )
     if args.coding == "rootpresence":
         alignment = root_presence_code(ds)
     elif args.coding == "rootmeaning":
         alignment = root_meaning_code(ds)
     elif args.coding == "multistate":
         raise NotImplementedError(
-            "There are some conceptual problems, for the case of more than 9 different values for a slot, that have made us not implement multistate codes yet.")
+            "There are some conceptual problems, for the case of more than 9 different values for a slot, that have made us not implement multistate codes yet."
+        )
         alignment = multistate_code(ds)
     else:
         raise ValueError("Coding schema {:} unknown.".format(args.coding))
@@ -233,13 +282,22 @@ if __name__ == "__main__":
     alignment = {
         language: sequence
         for language, sequence in alignment.items()
-        if language not in ["p-alor1249", "p-east2519", "p-timo1261", "indo1316-lexi", "tetu1246", "tetu1245-suai"]
+        if language
+        not in [
+            "p-alor1249",
+            "p-east2519",
+            "p-timo1261",
+            "indo1316-lexi",
+            "tetu1246",
+            "tetu1245-suai",
+        ]
     }
 
     if args.format == "raw":
         print("\n".join(raw_alignment(alignment)))
     elif args.format == "nexus":
-        print("""#NEXUS
+        print(
+            """#NEXUS
 Begin Taxa;
   Dimensions ntax={len_taxa:d};
   TaxLabels {taxa:s}
@@ -254,17 +312,17 @@ Begin Data;
   ;
 End;
         """.format(
-            len_taxa = len(alignment),
-            taxa = " ".join([str(language) for language in alignment]),
-            len_alignment = len(next(iter(alignment.values()))),
-            sequences = "\n    ".join(raw_alignment(alignment))))
+                len_taxa=len(alignment),
+                taxa=" ".join([str(language) for language in alignment]),
+                len_alignment=len(next(iter(alignment.values()))),
+                sequences="\n    ".join(raw_alignment(alignment)),
+            )
+        )
     elif args.format == "beast":
         print('<data id="data_vocabulary" name="data_vocabulary" dataType="integer">')
         for language, sequence in alignment.items():
             sequence = "".join(sequence)
-            print(f'<sequence id="language_data_vocabulary:{language:}" taxon="{language:}" value="{sequence}" />')
-        print('</data>')
-
-
-
-
+            print(
+                f'<sequence id="language_data_vocabulary:{language:}" taxon="{language:}" value="{sequence}" />'
+            )
+        print("</data>")

@@ -29,18 +29,18 @@ def string_to_id(string: str) -> str:
     # characters (eg. Chinese) are unidecoded to contain non-word characters.
     # the japanese ist actually decoded incorrectly
     return invalid_id_elements.sub(
-        "_", uni.unidecode(
-            invalid_id_elements.sub("_", string)).lower()).strip("_")
+        "_", uni.unidecode(invalid_id_elements.sub("_", string)).lower()
+    ).strip("_")
 
 
 def clean_cell_value(cell: op.cell.cell.Cell):
     if cell.value is None:
-        return ''
+        return ""
     if type(cell.value) == float:
         if cell.value == int(cell.value):
             return int(cell.value)
         return cell.value
-    v = unicodedata.normalize('NFKD', (cell.value or '').strip())
+    v = unicodedata.normalize("NFKD", (cell.value or "").strip())
     if type(v) == float:
         if v == int(v):
             return int(v)
@@ -57,13 +57,12 @@ def get_cell_comment(cell: op.cell.Cell) -> t.Optional[str]:
     return cell.comment.text.strip() if cell.comment else ""
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
-    parser=argparse.ArgumentParser()
+
+    parser = argparse.ArgumentParser()
     parser.add_argument("file", nargs="+", type=Path)
     args = parser.parse_args()
     for file in args.file:
         content = file.open().read()
-        file.open("w").write(
-            unicodedata.normalize('NFKD', content))
-
+        file.open("w").write(unicodedata.normalize("NFKD", content))

@@ -16,14 +16,19 @@ def align(forms):
     for (language, segments), metadata in forms:
         yield segments + ["-"] * (l - len(segments)), metadata
 
+
 if __name__ == "__main__":
     import argparse
     import pycldf
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--metadata", nargs="?", type=Path,
+        "--metadata",
+        nargs="?",
+        type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json")
+        help="Path to the metadata.json",
+    )
     args = parser.parse_args()
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
@@ -58,15 +63,12 @@ if __name__ == "__main__":
                 i = int(s)
                 j = i + 1
             morpheme.extend(form[f_segments][slice(i, j)])
-        cognatesets.setdefault(
-            judgement[c_cognateset_id],
-            []).append(
-                ((form[f_language], morpheme), judgement[c_id])
-            )
+        cognatesets.setdefault(judgement[c_cognateset_id], []).append(
+            ((form[f_language], morpheme), judgement[c_id])
+        )
 
     for cognateset, morphemes in cognatesets.items():
         for alignment, id in align(morphemes):
             judgements[id][c_alignment] = alignment
 
     dataset["CognateTable"].write(judgements.values())
-

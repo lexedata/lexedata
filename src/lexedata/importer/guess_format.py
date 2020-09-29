@@ -12,13 +12,17 @@ import csvw
 import pycldf
 import openpyxl
 
-if os.name == 'nt':
+if os.name == "nt":
+
     def clear():
-        os.system('cls')
+        os.system("cls")
+
+
 else:
+
     def clear():
         return
-        os.system('clear')
+        os.system("clear")
 
 
 def select_sheet(wb: openpyxl.Workbook) -> openpyxl.worksheet.worksheet.Worksheet:
@@ -59,15 +63,15 @@ def to_width(s: str, target_width: int):
     """
     if target_width < 1:
         raise ValueError("Target width must be positive")
-    s = unicodedata.normalize('NFKD', s)
+    s = unicodedata.normalize("NFKD", s)
     if width(s) <= target_width:
-        return s + ' ' * (target_width - width(s))
+        return s + " " * (target_width - width(s))
     while width(s) > target_width - 1:
         s = s[:-1]
     if width(s) < target_width - 1:
-        return s + '…' + ' ' * (target_width - width(s) - 1)
+        return s + "…" + " " * (target_width - width(s) - 1)
     else:
-        return s + '…'
+        return s + "…"
 
 
 def width(value: t.Optional[str]) -> int:
@@ -88,20 +92,23 @@ def width(value: t.Optional[str]) -> int:
     >>> width("全角")
     4
     """
-    s: str = unicodedata.normalize('NFKD', value or '')
+    s: str = unicodedata.normalize("NFKD", value or "")
     # There might be CJK characters of double width, or things like that?
     # That's why we use the sum construction, which can be extended to such
     # cases.
-    return sum((unicodedata.category(c) not in {'Mn', 'Cf', 'Cc'}) +
-               (unicodedata.east_asian_width(c) in {'W', 'F'})
-               for c in s)
+    return sum(
+        (unicodedata.category(c) not in {"Mn", "Cf", "Cc"})
+        + (unicodedata.east_asian_width(c) in {"W", "F"})
+        for c in s
+    )
 
 
 WHITESPACE = r"\s*"
 
 
 def to_regex(pattern: str) -> re.Pattern:
-    r"""
+    """Convert a pattern to a regular expression with capturing groups.
+
     >>> l = to_regex("Language")
     >>> l.fullmatch("Maweti-Guarani ").groupdict()
     {'language': 'Maweti-Guarani'}
@@ -109,37 +116,44 @@ def to_regex(pattern: str) -> re.Pattern:
     >>> n = to_regex("Name (Abbreviation): Curator_Initials")
     >>> n.fullmatch("German (deu): MBO").groupdict()
     {'name': 'German', 'abbreviation': 'deu', 'curator_initials': 'MBO'}
-    >>> n.fullmatch("German  (deu):MBO	").groupdict()
+    >>> n.fullmatch("German  (deu):MBO   ").groupdict()
     {'name': 'German', 'abbreviation': 'deu', 'curator_initials': 'MBO'}
     """
     elements = re.compile(r"(\w+)").split(pattern)
     for i in range(0, len(elements), 2):
         elements[i] = WHITESPACE.join(
-            re.escape(s)
-            for s in [''] + elements[i].split() + [''])
+            re.escape(s) for s in [""] + elements[i].split() + [""]
+        )
         if elements[i] == WHITESPACE * 2:
             elements[i] = WHITESPACE
     for i in range(1, len(elements), 2):
         this = elements[i].lower()
         elements[i] = f"(?P<{this:}>.*?)"
-    return re.compile(''.join(elements), re.IGNORECASE)
+    return re.compile("".join(elements), re.IGNORECASE)
 
 
-def pretty(ws: openpyxl.worksheet.worksheet.Worksheet,
-           col_widths: t.List[int],
-           top: int, left: int,
-           tty_rows: int = 20) -> None:
+def pretty(
+    ws: openpyxl.worksheet.worksheet.Worksheet,
+    col_widths: t.List[int],
+    top: int,
+    left: int,
+    tty_rows: int = 20,
+) -> None:
     for r, row in enumerate(
-            ws.iter_rows(max_row=min(tty_rows - 2, ws.max_row),
-                         max_col=len(col_widths))):
-        c1, c2 = col_widths[:left - 1], col_widths[left - 1:]
+        ws.iter_rows(max_row=min(tty_rows - 2, ws.max_row), max_col=len(col_widths))
+    ):
+        c1, c2 = col_widths[: left - 1], col_widths[left - 1 :]
         if r + 1 == top:
-            print('┿'.join(['━' * c for c in c1]),
-                  '┿'.join(['━' * c for c in c2]),
-                  sep='╋')
-        print('│'.join(to_width(c.value or '', l) for c, l in zip(row, c1)),
-              '│'.join(to_width(c.value or '', l) for c, l in zip(row[left - 1:], c2)),
-              sep='┃')
+            print(
+                "┿".join(["━" * c for c in c1]),
+                "┿".join(["━" * c for c in c2]),
+                sep="╋",
+            )
+        print(
+            "│".join(to_width(c.value or "", l) for c, l in zip(row, c1)),
+            "│".join(to_width(c.value or "", l) for c, l in zip(row[left - 1 :], c2)),
+            sep="┃",
+        )
 
 
 CELL = re.compile(
@@ -152,21 +166,25 @@ CELL = re.compile(
     (?P<row>[0-9]+)       # The row number
     \W*                   # There may be trailing whitespace
     """,
-    re.VERBOSE | re.IGNORECASE)
+    re.VERBOSE | re.IGNORECASE,
+)
 
 
 def pretty_print_example_cells(example: t.List[openpyxl.cell.Cell]) -> None:
     i = 0
     for cell in example:
-        value = cell.value or ''
-        cell_content = '[{:}]'.format("\n     ".join(value.split("\n")))
+        value = cell.value or ""
+        cell_content = "[{:}]".format("\n     ".join(value.split("\n")))
         i += 1
         print(f"{i:2d}:", cell_content)
-        cell_comment = cell.comment.content if cell.comment else ''
-        cell_comment = ''.join((to_width(c, 15) if width(c) > 15 else c)
-                               for c in SEP_C_RE.split(cell_comment))
-        cell_comment = '({:})'.format(
-            '\n     '.join(l for l in cell_comment.split("\n")))
+        cell_comment = cell.comment.content if cell.comment else ""
+        cell_comment = "".join(
+            (to_width(c, 15) if width(c) > 15 else c)
+            for c in SEP_C_RE.split(cell_comment)
+        )
+        cell_comment = "({:})".format(
+            "\n     ".join(l for l in cell_comment.split("\n"))
+        )
         i += 1
         print(f"{i:2d}:", cell_comment)
 
@@ -194,7 +212,8 @@ def understand(c: str, top: int, left: int) -> t.Optional[t.Tuple[int, int]]:
         # User entered target cell coordinates
         groups = CELL.fullmatch(c).groupdict()
         return openpyxl.utils.cell.coordinate_to_tuple(
-            groups["col"].upper() + groups["row"])
+            groups["col"].upper() + groups["row"]
+        )
     elif re.fullmatch("[^a-z]*u[^a-z]*p?[^a-z]*", c):
         return (top - 1, left)
     elif re.fullmatch("[^a-z]*l[^a-z]*(eft)?[^a-z]*", c):
@@ -204,35 +223,37 @@ def understand(c: str, top: int, left: int) -> t.Optional[t.Tuple[int, int]]:
     elif re.fullmatch("[^a-z]*r[^a-z]*(ight)?[^a-z]*", c):
         return (top, left + 1)
     elif re.fullmatch("[^a-z]*([uldr][^a-z]*)+", c):
-        return (top + c.count("d") - c.count("u"),
-                left + c.count("r") - c.count("l"))
+        return (top + c.count("d") - c.count("u"), left + c.count("r") - c.count("l"))
     elif not re.fullmatch("[^a-z]*[h].*", c, re.IGNORECASE):
         print("Command not understood.")
-    print("""Enter (ie. type and then press 'Enter') one of the following:
+    print(
+        """Enter (ie. type and then press 'Enter') one of the following:
   • The Excel coordinates (eg. 'C2' or 'G3') of the top left cell of your data.
   • A single direction string ('up', 'left', 'down', or 'right') to shift the
     boundary between headers and data by one cell in that direction.
   • A sequence of one or more direction abbreviations ('u', 'drr') to shift
     the boundary by that.
   • 'H' or 'help' or anything starting with 'h' to display this help.
-  • Nothing, just press 'Enter', to accept the current boundary.""")
+  • Nothing, just press 'Enter', to accept the current boundary."""
+    )
     return understand(input(">"), top, left)
 
 
-FAV_SEP = '[,:;–]|\n|--'
+FAV_SEP = "[,:;–]|\n|--"
 SEP_RE = re.compile(FAV_SEP)
 SEP_C_RE = re.compile(f"({FAV_SEP:})")
 
+
 def most_content(
-        cells: t.Iterable[t.List[openpyxl.cell.Cell]]
+    cells: t.Iterable[t.List[openpyxl.cell.Cell]],
 ) -> t.List[openpyxl.cell.Cell]:
     mcl = 0
     for col in cells:
         content_length = sum(
-            len(cell.value or '') +
-            ((len(SEP_RE.split(cell.comment.content)) * 8 + 8)
-             if cell.comment else 0)
-            for cell in col)
+            len(cell.value or "")
+            + ((len(SEP_RE.split(cell.comment.content)) * 8 + 8) if cell.comment else 0)
+            for cell in col
+        )
         if content_length > mcl:
             long_col = col
             mcl = content_length
@@ -280,16 +301,17 @@ def completer(properties: t.Iterable[str] = CLDF):
                     return cmd
                 else:
                     state -= 1
+
     return complete
 
 
 # TODO: write cell_parser_semantics to metadata.json
 def create_parsers(
-        i: int,
-        mapping: t.Mapping[str, str] = CLDF,
-        # For testing, one might want to overload the input() fn with a mock,
-        # eg. a dictionary's .get()
-        input: t.Callable[[str], str] = input,
+    i: int,
+    mapping: t.Mapping[str, str] = CLDF,
+    # For testing, one might want to overload the input() fn with a mock,
+    # eg. a dictionary's .get()
+    input: t.Callable[[str], str] = input,
 ) -> t.Tuple[t.List[re.Pattern], t.List[re.Pattern]]:
     cell_parsers: t.List[re.Pattern] = []
     for j in range(1, i * 2 - 1):
@@ -317,9 +339,8 @@ def create_parsers(
 
 
 def add_table_with_columns(
-        table: str,
-        column_names: t.Set[str],
-        data: pycldf.Dataset) -> None:
+    table: str, column_names: t.Set[str], data: pycldf.Dataset
+) -> None:
     """Add a table with the given columns to the dataset.
 
     If such a table already exists, only add the columns that do not exist
@@ -335,27 +356,29 @@ def add_table_with_columns(
     columns = data[table].tableSchema.columns
     for c in range(len(columns) - 1, -1, -1):
         column = columns[c]
-        expected_name = "cldf_{}".format(
-            column.propertyUrl.uri.split("#")[-1].lower())
+        expected_name = "cldf_{}".format(column.propertyUrl.uri.split("#")[-1].lower())
         if expected_name not in column_names and delete:
             del columns[c]
         else:
             column_names.remove(expected_name)
     for column_name in column_names:
         data.add_columns(
-            table,
-            column_name.replace(
-                "cldf_", "http://cldf.clld.org/v1.0/terms.rdf#"))
+            table, column_name.replace("cldf_", "http://cldf.clld.org/v1.0/terms.rdf#")
+        )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate a custom lexical dataset parser and dataset metadata for a particular dataset")
+        description="Generate a custom lexical dataset parser and dataset metadata for a particular dataset"
+    )
     parser.add_argument("excel", type=Path, help="The Excel file to inspect")
     parser.add_argument(
-        "json", type=Path, nargs="?",
+        "json",
+        type=Path,
+        nargs="?",
         default="Wordlist-metadata.json",
-        help="The json metadata file to write")
+        help="The json metadata file to write",
+    )
     args = parser.parse_args()
 
     # STEP 1: Select a sheet
@@ -368,7 +391,7 @@ def main() -> None:
     running = 0
     col_widths: t.List[int] = []
     for col in ws.iter_cols():
-        w = min(15, max(len(cell.value or '') for cell in col))
+        w = min(15, max(len(cell.value or "") for cell in col))
         running += w + len("│")
         col_widths.append(w)
         if running >= tty_columns:
@@ -388,7 +411,9 @@ def main() -> None:
     while True:
         clear()
         pretty(ws, col_widths, top, left, tty_rows)
-        command = input("Enter a target cell or a direction (up/down/left/right) to move the data boundary. Enter [h]elp for more info. Press [Enter] to confirm. >")
+        command = input(
+            "Enter a target cell or a direction (up/down/left/right) to move the data boundary. Enter [h]elp for more info. Press [Enter] to confirm. >"
+        )
         tl = understand(command, top, left)
         if tl is None:
             break
@@ -397,7 +422,7 @@ def main() -> None:
     # STEP 3: Select the data type
     # ============================
     ms = input("Does this describe a [M]eaning/Concept or a cognate[s]et? > ")
-    if re.search(r'\w', ms) == 's':
+    if re.search(r"\w", ms) == "s":
         cognateset = True
     else:
         cognateset = False
@@ -410,9 +435,13 @@ def main() -> None:
     # =====================================================
     example_language = most_content(ws.iter_cols(min_col=left, max_row=top - 1))
     clear()
-    print("Your most verbose language metadata, with all potential cells and comments, looks like this:")
+    print(
+        "Your most verbose language metadata, with all potential cells and comments, looks like this:"
+    )
     pretty_print_example_cells(example_language)
-    print("What should these items be mapped to? Enter column names and separators like 'Name (Code)'.")
+    print(
+        "What should these items be mapped to? Enter column names and separators like 'Name (Code)'."
+    )
     print("For help: http://git.io/lexedata-g")
 
     readline.set_completer(completer(LANGUAGE_PROPERTIES))
@@ -430,15 +459,18 @@ def main() -> None:
 
     example_row = most_content(ws.iter_rows(max_col=left - 1, min_row=top))
     clear()
-    print("Your most verbose row metadata, with all potential cells and comments, looks like this:")
+    print(
+        "Your most verbose row metadata, with all potential cells and comments, looks like this:"
+    )
     pretty_print_example_cells(example_row)
-    print("What should these items be mapped to? Enter column names and separators like 'Name (Code)'.")
+    print(
+        "What should these items be mapped to? Enter column names and separators like 'Name (Code)'."
+    )
     print("For help: http://git.io/lexedata-g")
 
     readline.set_completer(
-        completer(COGNATESET_PROPERTIES
-                  if cognateset else
-                  CONCEPT_PROPERTIES))
+        completer(COGNATESET_PROPERTIES if cognateset else CONCEPT_PROPERTIES)
+    )
     readline.parse_and_bind("tab: complete")
     row_cell_regexes, row_comment_regexes = create_parsers(left)
 
@@ -449,15 +481,13 @@ def main() -> None:
         column_names.update(r.groupindex)
 
     add_table_with_columns(
-        "CognatesetTable" if cognateset else "ParameterTable",
-        column_names, data)
-    data.write(**{
-        "CognatesetTable" if cognateset else "ParameterTable":
-        []})
+        "CognatesetTable" if cognateset else "ParameterTable", column_names, data
+    )
+    data.write(**{"CognatesetTable" if cognateset else "ParameterTable": []})
 
     # For debugging:
     return locals()
 
+
 if __name__ == "__main__":
     globals().update(main())
-

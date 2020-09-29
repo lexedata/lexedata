@@ -12,26 +12,39 @@ from lexedata.importer.fromexcel import ExcelCognateParser, ExcelParserDictionar
 if __name__ == "__main__":
     import argparse
     import pycldf
-    parser = argparse.ArgumentParser(description="Load a Maweti-Guarani-style dataset into CLDF")
+
+    parser = argparse.ArgumentParser(
+        description="Load a Maweti-Guarani-style dataset into CLDF"
+    )
     parser.add_argument(
-        "cogsets", nargs="?",
+        "cogsets",
+        nargs="?",
         default="Cognates.xlsx",
-        help="Path to an Excel file containing cogsets and cognatejudgements")
+        help="Path to an Excel file containing cogsets and cognatejudgements",
+    )
     parser.add_argument(
-        "--db", nargs="?",
+        "--db",
+        nargs="?",
         default="",
-        help="Where to store the temp from reading the word list")
+        help="Where to store the temp from reading the word list",
+    )
     parser.add_argument(
-        "--metadata", nargs="?", type=Path,
+        "--metadata",
+        nargs="?",
+        type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json file (default: ./Wordlist-metadata.json)")
+        help="Path to the metadata.json file (default: ./Wordlist-metadata.json)",
+    )
     parser.add_argument(
-        "--debug-level", type=int, default=0,
-        help="Debug level: Higher numbers are less forgiving")
+        "--debug-level",
+        type=int,
+        default=0,
+        help="Debug level: Higher numbers are less forgiving",
+    )
     args = parser.parse_args()
 
     if args.db.startswith("sqlite:///"):
-        args.db = args.db[len("sqlite:///"):]
+        args.db = args.db[len("sqlite:///") :]
     if args.db == ":memory:":
         args.db = ""
     # Refuse in-memory DBs and use a temporary file instead. TODO: Actually,
@@ -42,7 +55,7 @@ if __name__ == "__main__":
     db = args.db
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
-        db = tmpdir / 'db.sqlite'
+        db = tmpdir / "db.sqlite"
     ws = openpyxl.load_workbook(args.cogsets).active
 
     dataset = pycldf.Dataset.from_metadata(args.metadata)
@@ -59,9 +72,11 @@ if __name__ == "__main__":
         comment_column = False
 
     row_header = []
-    for header, in ws.iter_cols(
-            min_row=1, max_row=1,
-            max_col=len(dataset["CognatesetTable"].tableSchema.columns)):
+    for (header,) in ws.iter_cols(
+        min_row=1,
+        max_row=1,
+        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
+    ):
         column_name = header.value
         if column_name is None:
             column_name = dataset["CognatesetTable", "id"].name
@@ -74,21 +89,21 @@ if __name__ == "__main__":
         row_header.append(column_name)
 
     class Parser(ExcelParserDictionaryDB, ExcelCognateParser):
-        def language_from_column(
-            self, column: t.List[openpyxl.cell.Cell]
-        ) -> Language:
-            data = [clean_cell_value(cell) for cell in column[:self.top - 1]]
+        def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
+            data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
             comment = get_cell_comment(column[0])
             id = string_to_id(data[0])
-            return Language({
-                # an id candidate must be provided, which is transformed into a unique id
-                dataset["LanguageTable", "name"].name: data[0],
-            })
+            return Language(
+                {
+                    # an id candidate must be provided, which is transformed into a unique id
+                    dataset["LanguageTable", "name"].name: data[0],
+                }
+            )
 
         def properties_from_row(
-                self, row: t.List[openpyxl.cell.Cell]
+            self, row: t.List[openpyxl.cell.Cell]
         ) -> t.Optional[RowObject]:
-            data = [clean_cell_value(cell) for cell in row[:self.left - 1]]
+            data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
             properties = dict(zip(self.row_header, data))
             if not any(properties.values()):
                 return None
@@ -96,26 +111,31 @@ if __name__ == "__main__":
             while None in properties.keys():
                 del properties[None]
 
-            comment = "\t".join([
-                get_cell_comment(cell)
-                for cell in row[:self.left - 1]]).strip()
-            properties[self._ExcelParserDictionaryDB__dataset["CognatesetTable", "comment"].name] = comment
+            comment = "\t".join(
+                [get_cell_comment(cell) for cell in row[: self.left - 1]]
+            ).strip()
+            properties[
+                self._ExcelParserDictionaryDB__dataset[
+                    "CognatesetTable", "comment"
+                ].name
+            ] = comment
             return CogSet(properties)
 
     excel_parser_cognate = Parser(
-        dataset, db,
-        top = 2,
+        dataset,
+        db,
+        top=2,
         # When the dataset has cognateset comments, that column is not a header
         # column, so this value is one higher than the actual number of header
         # columns, so actually correct for the 1-based indices. When there is
         # no comment column, we need to compensate for the 1-based Excel
         # indices.
-        cellparser = cell_parsers.CellParserHyperlink(),
-        row_header = row_header,
-        check_for_language_match = [dataset["LanguageTable", "name"].name],
-        check_for_match = [dataset["FormTable", "id"].name],
-        check_for_row_match = [dataset["CognatesetTable", "id"].name])
-
+        cellparser=cell_parsers.CellParserHyperlink(),
+        row_header=row_header,
+        check_for_language_match=[dataset["LanguageTable", "name"].name],
+        check_for_match=[dataset["FormTable", "id"].name],
+        check_for_row_match=[dataset["CognatesetTable", "id"].name],
+    )
 
     # TODO: This often doesn't work if the dataset is not perfect before this
     # program is called. In particular, it doesn't work if there are errors in
@@ -126,5 +146,8 @@ if __name__ == "__main__":
     excel_parser_cognate.drop_from_cache("CognateTable")
     excel_parser_cognate.parse_cells(ws)
     for table_type in ["CognateTable", "CognatesetTable"]:
-        excel_parser_cognate._ExcelParserDictionaryDB__dataset[table_type].common_props['dc:extent'] = excel_parser_cognate._ExcelParserDictionaryDB__dataset[table_type].write(
-            excel_parser_cognate.retrieve(table_type))
+        excel_parser_cognate._ExcelParserDictionaryDB__dataset[table_type].common_props[
+            "dc:extent"
+        ] = excel_parser_cognate._ExcelParserDictionaryDB__dataset[table_type].write(
+            excel_parser_cognate.retrieve(table_type)
+        )

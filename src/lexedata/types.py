@@ -1,8 +1,10 @@
 import typing as t
 import abc
 
+
 class Object(t.Dict[str, t.Any]):
     """Object"""
+
     @property
     @abc.abstractmethod
     def __table__(self) -> str:
@@ -11,11 +13,13 @@ class Object(t.Dict[str, t.Any]):
 
 class RowObject(Object):
     """A row in a lexical dataset, i.e. a concept or cognateset"""
+
     pass
 
 
 class Concept(RowObject):
     """concept"""
+
     @property
     def __table__(self) -> str:
         return "ParameterTable"
@@ -23,6 +27,7 @@ class Concept(RowObject):
 
 class CogSet(RowObject):
     """cognate set"""
+
     @property
     def __table__(self) -> str:
         return "CognatesetTable"
@@ -30,6 +35,7 @@ class CogSet(RowObject):
 
 class Form(Object):
     """form"""
+
     @property
     def __table__(self) -> str:
         return "FormTable"
@@ -37,6 +43,7 @@ class Form(Object):
 
 class Language(Object):
     """language"""
+
     @property
     def __table__(self) -> str:
         return "LanguageTable"
@@ -44,6 +51,7 @@ class Language(Object):
 
 class Source(Object):
     """source"""
+
     @property
     def __table__(self) -> str:
         return "SourceTable"
@@ -51,6 +59,7 @@ class Source(Object):
 
 class Reference(Object):
     """reference"""
+
     @property
     def __table__(self) -> str:
         return "FormTable_SourceTable__cldf_source"
@@ -58,7 +67,7 @@ class Reference(Object):
 
 class Judgement(RowObject):
     """cognate judgement"""
+
     @property
     def __table__(self) -> str:
         return "CognateTable"
-
