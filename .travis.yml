@@ -8,7 +8,8 @@ python:
 
 install:
   - pip install .
-  - pip install tox flake8  # you can also use tox
+  - pip install tox flake8
 
 script:
-  - tox -e py36,flake8
+  - black src/ test/
+  - tox || true
