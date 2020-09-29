@@ -37,6 +37,9 @@
         "check_for_row_match": [
             "cldf_name"
         ],
+        "check_for_language_match": [
+                "cldf_name"
+        ],
         "cell_parser": {
             "name": "MawetiCellParser",
             "form_separator": [
@@ -109,6 +112,9 @@
                 "source"
             ],
             "check_for_row_match": [
+                "cldf_name"
+            ],
+            "check_for_language_match": [
                 "cldf_name"
             ],
             "cell_parser": {

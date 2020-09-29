@@ -233,9 +233,12 @@ class ExcelParser:
                        (form_id, row["cldf_id"], comment)
                 )
                 conn.commit()
-            except sqlite3.IntegrityError:
+            except sqlite3.IntegrityError as err:
+
                 # TODO: Don't drop the user in a PDB!!!!
-                breakpoint()
+                # TODO: integrityerror was due to missing forms in database....
+                #breakpoint()
+                print(err)
         return True
 
     def insert_into_db(self, object: O) -> bool:
@@ -316,13 +319,18 @@ class ExcelParser:
                         form, self.check_for_match)
                     sources = form.pop("cldf_source", [])
                     for form_id in candidate_forms:
-                        break
+                        pass
                     else:
                         if not self.on_form_not_found(form, cell_with_forms):
-                            continue
+                            if candidate_forms:
+                                form_id = candidate_forms[0]
+                                self.associate(form_id, row_object)
+                            else:
+                                continue
                         form["cldf_id"] = "{:}_{:}".format(form["cldf_languageReference"], row_object["cldf_id"])
                         self.create_form_with_sources(form, row_object, sources=sources)
                         form_id = form["cldf_id"]
+                    print(form_id)
                     self.associate(form_id, row_object, comment=maybe_comment)
         self.commit()
 
@@ -385,7 +393,7 @@ class ExcelCognateParser(ExcelParser):
 
     def associate(self, form_id: str, row: RowObject, comment: t.Optional[str] = None) -> bool:
         assert row.__table__ == "CognatesetTable", \
-            "Expected Concept, but got {:}".format(row.__class__)
+            "Expected CognateSet, but got {:}".format(row.__class__)
         row_id = row["cldf_id"]
         judgement = Judgement(
             cldf_id = f"{form_id}-{row_id}",
