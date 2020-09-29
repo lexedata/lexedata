@@ -5,11 +5,9 @@ from pathlib import Path
 from csvw.metadata import URITemplate
 
 import pycldf
-import pyconcepticon
 import cldfcatalog
-from cldfcatalog import Catalog
 import cldfbench
-from pyconcepticon.glosses import concept_map, concept_map2
+from pyconcepticon.glosses import concept_map2
 
 concepticon_path = cldfcatalog.Config.from_file().get_clone("concepticon")
 concepticon = cldfbench.catalogs.Concepticon(concepticon_path)
@@ -52,7 +50,7 @@ def add_concepticon_references(
         for language in gloss_languages.values()
     }
 
-    cmaps: t.List[t.Dict[int, t.Tuple[t.List[int], int]],] = [
+    cmaps: t.List[t.Dict[int, t.Tuple[t.List[int], int]]] = [
         (
             concept_map2(
                 glosses,
