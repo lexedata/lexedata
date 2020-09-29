@@ -7,11 +7,8 @@ from tqdm import tqdm
 from csvw.metadata import URITemplate
 
 import pycldf
-import pyconcepticon
 import cldfcatalog
-from cldfcatalog import Catalog
 import cldfbench
-from pyconcepticon.glosses import concept_map, concept_map2
 
 concepticon_path = cldfcatalog.Config.from_file().get_clone("concepticon")
 concepticon = cldfbench.catalogs.Concepticon(concepticon_path)
@@ -61,7 +58,8 @@ if __name__ == "__main__":
 
     if c_cognateset is None:
         raise ValueError(
-            f"Dataset {dataset:} had no cognatesetReference column in a CognateTable or a FormTable and is thus not compatible with this script."
+            f"Dataset {dataset:} had no cognatesetReference column in a CognateTable"
+            " or a FormTable and is thus not compatible with this script."
         )
 
     print("Loading cognatesets…")
