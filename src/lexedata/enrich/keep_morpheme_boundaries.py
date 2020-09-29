@@ -5,7 +5,8 @@ import argparse
 import csv
 
 parser = argparse.ArgumentParser(
-    description="Transfer metadata of existing cognate sets to new cognatesets that may have different IDs, but the same composition in terms of contained forms."
+    description="Transfer metadata of existing cognate sets to new cognatesets that may"
+    " have different IDs, but the same composition in terms of contained forms."
 )
 parser.add_argument("judgements", type=Path)
 parser.add_argument("alignments", type=Path)

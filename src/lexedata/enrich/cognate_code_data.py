@@ -2,19 +2,15 @@
 
 import csv
 import hashlib
-import logging
 import argparse
 import typing as t
 from pathlib import Path
-
-from csvw.metadata import URITemplate
 
 import pycldf
 import pyclts
 import segments
 import cldfbench
 import cldfcatalog
-from cldfcatalog import Catalog
 
 import lingpy
 import lingpy.compare.partial
