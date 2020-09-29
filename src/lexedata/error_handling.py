@@ -2,8 +2,6 @@
 import typing as t
 import warnings
 
-from lexedata.types import *
-
 
 class ObjectNotFoundWarning(UserWarning):
     pass

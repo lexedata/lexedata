@@ -1,25 +1,32 @@
-"""Automatically align morphemes within each cognateset – if possible, align using existing lexstat scorer """
+"""Automatically align morphemes within each cognateset
+
+If possible, align using existing lexstat scorer.
+
+"""
 
 import typing as t
 from pathlib import Path
 
 import pycldf
 
-# TODO: This is DUMB. Write a function that does this more sensibly, using
-# LexStat scorers where available.
+
 def align(forms):
-    alignments = []
-    l = 0
+    """‘Align’ forms by adding gap characters to the end.
+
+    TODO: This is DUMB. Write a function that does this more sensibly, using
+    LexStat scorers where available.
+
+    """
+    length = 0
     for (language, segments), metadata in forms:
-        l = max(len(segments), l)
+        length = max(len(segments), length)
 
     for (language, segments), metadata in forms:
-        yield segments + ["-"] * (l - len(segments)), metadata
+        yield segments + ["-"] * (length - len(segments)), metadata
 
 
 if __name__ == "__main__":
     import argparse
-    import pycldf
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(

@@ -3,7 +3,6 @@ import pytest
 import unicodedata
 
 from lexedata.importer import cellparser as c
-from lexedata.error_handling import *
 
 
 def n(s: str):
@@ -108,7 +107,7 @@ def test_cellparser_7(parser):
 def test_cellparser_8(parser):
     # comment error due to not matching opening and closing brackets
     form = parser.parse_form(
-        "<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water))){2}",
+        "<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water))){2}",  # noqa: E501
         "language",
     )
     assert (
@@ -117,7 +116,7 @@ def test_cellparser_8(parser):
     )
     assert form["cldf_languageReference"] == "language"
     assert n(form["cldf_value"]) == n(
-        "<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water))){2}"
+        "<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water))){2}",  # noqa: E501
     )
     assert n(form["orthographic"]) == n("<eniãcũpũ>")
     assert not form.get("phonemic")
