@@ -4,7 +4,6 @@ import tempfile
 from pathlib import Path
 
 import pycldf
-import openpyxl
 
 import lexedata.importer.fromexcel as f
 from lexedata.exporter.cognates import ExcelWriter
@@ -77,7 +76,7 @@ def filled_cldf_wordlist(cldf_wordlist):
 def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
     lexicon, cogsets = excel_wordlist
     dataset = empty_cldf_wordlist
-    original = pycldf.Dataset.from_metadata(
+    pycldf.Dataset.from_metadata(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
     # TODO: parameterize original, like the other parameters, over possible
@@ -133,7 +132,7 @@ def test_roundtrip(filled_cldf_wordlist):
     filled_cldf_wordlist[0]["CognateTable"].write([])
     filled_cldf_wordlist[0]["CognatesetTable"].write([])
 
-    parser = ExcelCognateParser(filled_cldf_wordlist[0], excel_file=out_filename)
+    parser = f.ExcelCognateParser(filled_cldf_wordlist[0], excel_file=out_filename)
     parser.left = len(writer.header) + 1
     parser.parse_cells()
     # Really? Isn't there a shortcut to do this?
