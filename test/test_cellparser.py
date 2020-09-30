@@ -133,7 +133,3 @@ def test_cellparser_separate_2(parser):
     assert len(list(parser.separate("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]"))) == 1
 
 
-def test_cellparsercognate_errors():
-    parser = c.CognateParser()
-    # white spaces in excel cell
-    assert parser.parse_form("DUMMY", "language") is None
