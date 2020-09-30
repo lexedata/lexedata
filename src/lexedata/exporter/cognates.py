@@ -230,9 +230,11 @@ class ExcelWriter:
         hont i e m _litimuleni
         """
         segments = self.get_segments(form)
+        if segments is None:
+            return form["Form"]
         transcription = ""
         old_end = 0
-        if not meta["Segment_Slice"]:
+        if not meta.get("Segment_Slice"):
             meta["Segment_Slice"] = ["0:{:d}".format(len(segments))]
         for startend in meta["Segment_Slice"]:
             start, end = startend.split(":")
