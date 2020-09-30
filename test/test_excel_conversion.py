@@ -143,3 +143,12 @@ def test_roundtrip(filled_cldf_wordlist):
     }
 
     assert new_judgements == old_judgements
+
+
+def test_mg_import():
+    f.load_dataset(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json",
+        Path(__file__).parent / "data/excel/tg_lexicon.xlsx",
+        "",
+        Path(__file__).parent / "data/excel/tg_cognates.xlsx",
+                               )

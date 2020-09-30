@@ -36,7 +36,7 @@ class TableSpec(csvw.db.TableSpec):
             bfk.name += "_2"
         return cls(
             name=f"{atable:}_{btable:}{suffix:}",
-            columns=[afk, bfk] + ([ColSpec("context")] if context == "Source" else []),
+            columns=[afk, bfk] + [ColSpec("context")],
             foreign_keys=[
                 ([afk.name], atable, [apk]),
                 ([bfk.name], btable, [bpk]),

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 import re
 import sqlite3
 import argparse
@@ -16,10 +15,21 @@ import openpyxl
 import sqlalchemy
 from csvw.db import insert
 
-from lexedata.types import *
+from lexedata.types import (
+    Object,
+    Language,
+    RowObject,
+    Form,
+    Source,
+    Concept,
+    Reference,
+    CogSet,
+    Judgement,
+)
 from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 import lexedata.importer.cellparser as cell_parsers
 import lexedata.error_handling as err
+from lexedata.cldf.db import Database
 
 O = t.TypeVar("O", bound=Object)
 
@@ -48,7 +58,6 @@ warnings.formatwarning = formatwarning
 
 
 class ExcelParser:
-    # TODO: Gereon I think this class variable row_header should be initialized by the metadataset
     # TODO: Gereon an additional parameter row.object would be nice, too. To make it more generic.
     # for now, .properties_from_row cannot be more generic because of the return Concept(....) etc.
     def __init__(
@@ -259,7 +268,6 @@ class ExcelParser:
                 )
                 conn.commit()
             except sqlite3.IntegrityError as err:
-
                 # TODO: Don't drop the user in a PDB!!!!
                 # TODO: integrityerror was due to missing forms in database....
                 # breakpoint()
@@ -371,7 +379,6 @@ class ExcelParser:
                         )
                         self.create_form_with_sources(form, row_object, sources=sources)
                         form_id = form["cldf_id"]
-                    print(form_id)
                     self.associate(form_id, row_object, comment=maybe_comment)
         self.commit()
 
