@@ -86,11 +86,11 @@ def test_cellparser_5(parser):
 def test_cellparser_6(parser):
     form = parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ]", "language")
     assert form == {
-        "cldf_comment": "(GIVE BIRTH)",
+        "cldf_comment": "GIVE BIRTH",
         "cldf_languageReference": "language",
         "cldf_source": {("language_s1", None)},
         "cldf_value": "(GIVE BIRTH) [mbohaˈpɨ]",
-        "phonetic": "[mbohaˈpɨ]",
+        "phonetic": "mbohaˈpɨ",
     }
 
 
@@ -100,7 +100,7 @@ def test_cellparser_7(parser):
         "cldf_languageReference": "language",
         "cldf_source": {("language_s2", None)},
         "cldf_value": "[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}",
-        "phonetic": "[dʒi'tɨka]",
+        "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]", "{2}"],
     }
 
@@ -113,13 +113,13 @@ def test_cellparser_8(parser):
     )
     assert (
         form["cldf_comment"]
-        == "(good-tasting (sweet honey, hard candy, chocolate candy, water))"
+        == "good-tasting (sweet honey, hard candy, chocolate candy, water)"
     )
     assert form["cldf_languageReference"] == "language"
     assert n(form["cldf_value"]) == n(
         "<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water))){2}",  # noqa: E501
     )
-    assert n(form["orthographic"]) == n("<eniãcũpũ>")
+    assert n(form["orthographic"]) == n("eniãcũpũ")
     assert not form.get("phonemic")
 
 
