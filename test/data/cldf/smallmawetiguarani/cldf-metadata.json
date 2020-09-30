@@ -170,7 +170,7 @@
     "tables": [
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
-            "dc:extent": 20,
+            "dc:extent": 114,
             "tableSchema": {
                 "columns": [
                     {
@@ -279,7 +279,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#ParameterTable",
-            "dc:extent": 9,
+            "dc:extent": 29,
             "tableSchema": {
                 "columns": [
                     {
@@ -331,7 +331,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#LanguageTable",
-            "dc:extent": 4,
+            "dc:extent": 6,
             "tableSchema": {
                 "columns": [
                     {
@@ -367,7 +367,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognateTable",
-            "dc:extent": 21,
+            "dc:extent": 34617,
             "tableSchema": {
                 "columns": [
                     {
@@ -388,6 +388,10 @@
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
                         "required": true,
                         "name": "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict"
+                    },
+                    {
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
+                        "name": "Comment"
                     }
                 ],
                 "foreignKeys": [
@@ -422,7 +426,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognatesetTable",
-            "dc:extent": 19,
+            "dc:extent": 6526,
             "tableSchema": {
                 "columns": [
                     {
