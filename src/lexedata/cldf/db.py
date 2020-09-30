@@ -114,10 +114,10 @@ class TableSpec(csvw.db.TableSpec):
 
         """
         tables = {}
-        for tname, table in tg.tabledictyping.items():
+        for tname, table in tg.tabledict.items():
             t = cls.from_table_metadata(table)
-            tables[typing.name] = t
-            for at in typing.many_to_many.values():
+            tables[t.name] = t
+            for at in t.many_to_many.values():
                 tables[at.name] = at
 
         # We must determine the order in which tables must be created!
@@ -325,11 +325,11 @@ class Database(pycldf.db.Database):
                 lambda: defaultdict(list)
             )  # collects rows in association tables.
             for t in self.tables:
-                if typing.name not in items:
+                if t.name not in items:
                     continue
                 rows, keys = [], []
                 cols = {c.name: c for c in typing.columns}
-                for i, row in enumerate(items[typing.name]):
+                for i, row in enumerate(items[t.name]):
                     pk = (
                         row[typing.primary_key[0]]
                         if typing.primary_key and len(typing.primary_key) == 1
@@ -383,7 +383,7 @@ class Database(pycldf.db.Database):
                                 keys.append(col.name)
                             values.append(value)
                     rows.append(tuple(values))
-                insert(db, self.translate, typing.name, keys, *rows)
+                insert(db, self.translate, t.name, keys, *rows)
 
             for atkey, rows in refs.items():
                 insert(
