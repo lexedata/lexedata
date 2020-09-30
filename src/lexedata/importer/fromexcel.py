@@ -18,8 +18,10 @@ from csvw.db import insert
 
 from lexedata.types import *
 from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
+from lexedata.cldf.db import Database
 import lexedata.importer.cellparser as cell_parsers
 import lexedata.error_handling as err
+
 
 O = t.TypeVar("O", bound=Object)
 
