@@ -104,12 +104,14 @@ class TableSpec(csvw.db.TableSpec):
 
     @classmethod
     def schema(cls: t.Type[T], tg: csvw.TableGroup) -> t.List[T]:
-        """
-        Convert the table and column descriptions of a `TableGroup` into specifications for the
-        DB schema.
+        """Generate DB schema from TableGroup object
+
+        Convert the table and column descriptions of a `TableGroup` into
+        specifications for the DB schema.
 
         :param ds:
         :return: A pair (tables, reference_tables).
+
         """
         tables = {}
         for tname, table in tg.tabledict.items():
@@ -201,8 +203,8 @@ class Database(pycldf.db.Database):
                 pass
             for col in table.tableSchema.columns:
                 if col.propertyUrl and col.propertyUrl.uri in TERMS.by_uri:
-                    # Translate local column names to local names of CLDF Ontology terms, prefixed
-                    # with `cldf_`:
+                    # Translate local column names to local names of CLDF
+                    # Ontology terms, prefixed with `cldf_`:
                     col_name = "cldf_{0.name}".format(TERMS.by_uri[col.propertyUrl.uri])
                     translations[table.local_name].columns[col.header] = col_name
                     self._retranslate[table.local_name][col_name] = col.header
@@ -276,17 +278,18 @@ class Database(pycldf.db.Database):
         )
 
     def association_table_context(self, table, column, fkey):
-        """
-        Context for association tables is created calling this method.
+        """Context for association tables is created calling this method.
 
-        Note: If a custom value for the `context` column is created by overwriting this method,
-        `select_many_to_many` must be adapted accordingly, to make sure the custom
-        context is retrieved when reading the data from the db.
+        Note: If a custom value for the `context` column is created by
+        overwriting this method, `select_many_to_many` must be adapted
+        accordingly, to make sure the custom context is retrieved when reading
+        the data from the db.
 
         :param table:
         :param column:
         :param fkey:
         :return: a pair (foreign key, context)
+
         """
         # The default implementation takes the column name as context:
         if "[" in fkey:
@@ -319,33 +322,33 @@ class Database(pycldf.db.Database):
             refs = defaultdict(
                 lambda: defaultdict(list)
             )  # collects rows in association tables.
-            for t in self.tables:
-                if t.name not in items:
+            for table in self.tables:
+                if table.name not in items:
                     continue
                 rows, keys = [], []
-                cols = {c.name: c for c in t.columns}
-                for i, row in enumerate(items[t.name]):
+                cols = {c.name: c for c in table.columns}
+                for i, row in enumerate(items[table.name]):
                     pk = (
-                        row[t.primary_key[0]]
-                        if t.primary_key and len(t.primary_key) == 1
+                        row[table.primary_key[0]]
+                        if table.primary_key and len(table.primary_key) == 1
                         else None
                     )
                     values = []
                     for column, value in row.items():
-                        if column in t.many_to_many:
+                        if column in table.many_to_many:
                             assert pk
-                            at = t.many_to_many[column]
+                            at = table.many_to_many[column]
                             atkey = tuple([at.name] + [c.name for c in at.columns])
                             if len(atkey) == 4:
                                 for subvalue in value:
                                     fkey, context = self.association_table_context(
-                                        t, column, subvalue
+                                        table, column, subvalue
                                     )
                                     refs[atkey][pk, fkey].append(context)
                             elif len(atkey) == 3:
                                 for subvalue in value:
                                     fkey, context = self.association_table_context(
-                                        t, column, subvalue
+                                        table, column, subvalue
                                     )
                                     assert context is None
                                     refs[atkey][pk, fkey] = None
@@ -365,7 +368,8 @@ class Database(pycldf.db.Database):
                                     )
                             col = cols[column]
                             if isinstance(value, list):
-                                # Note: This assumes list-valued columns are of datatype string!
+                                # Note: This assumes list-valued columns are of
+                                # datatype string!
                                 value = (col.separator or ";").join(
                                     col.convert(vv) for vv in value
                                 )
@@ -377,7 +381,7 @@ class Database(pycldf.db.Database):
                                 keys.append(col.name)
                             values.append(value)
                     rows.append(tuple(values))
-                insert(db, self.translate, t.name, keys, *rows)
+                insert(db, self.translate, table.name, keys, *rows)
 
             for atkey, rows in refs.items():
                 insert(
@@ -403,7 +407,8 @@ class Database(pycldf.db.Database):
 
     def select_many_to_many(
         self,
-        db,  # Why does it need this argument? Can't we just `with self.connection() as db:`?
+        db,  # Why does it need this argument? Can't we instead just use
+        # self.connection(), `with self.connection() as db:`?
         table: TableSpec,
         _=None,
     ) -> t.Dict[str, t.List[t.Tuple[str, t.Optional[str]]]]:
