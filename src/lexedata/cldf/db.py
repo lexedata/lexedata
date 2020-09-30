@@ -1,5 +1,5 @@
 import functools
-import typing
+import typing as t
 from collections import OrderedDict, defaultdict
 
 import attr
@@ -9,24 +9,24 @@ import pycldf.db
 from csvw.db import ColSpec, quoted, insert
 from pycldf.db import BIBTEX_FIELDS, TERMS, PRIMARY_KEY_NAMES, clean_bibtex_key
 
-T = typing.TypeVar("T", bound="TableSpec")
+T = t.TypeVar("T", bound="TableSpec")
 
 
 @attr.s
 class TableTranslation(object):
-    name: typing.Optional[str] = attr.ib(default=None)
-    columns: typing.Dict[str, str] = attr.ib(factory=dict)
+    name: t.Optional[str] = attr.ib(default=None)
+    columns: t.Dict[str, str] = attr.ib(factory=dict)
 
 
 class TableSpec(csvw.db.TableSpec):
     @classmethod
     def association_table(
-        cls: typing.Type[T],
+        cls: t.Type[T],
         atable: str,
         apk: str,
         btable: str,
         bpk: str,
-        context: typing.Optional[str] = None,
+        context: t.Optional[str] = None,
     ) -> T:
         suffix = f"__{context:}" if context else ""
         afk = ColSpec("{0}_{1}".format(atable, apk))
@@ -36,7 +36,7 @@ class TableSpec(csvw.db.TableSpec):
             bfk.name += "_2"
         return cls(
             name=f"{atable:}_{btable:}{suffix:}",
-            columns=[afk, bfk] + ([ColSpec("context")] if context == "Source" else []),
+            columns=[afk, bfk] + [ColSpec("context")],
             foreign_keys=[
                 ([afk.name], atable, [apk]),
                 ([bfk.name], btable, [bpk]),
@@ -45,7 +45,7 @@ class TableSpec(csvw.db.TableSpec):
         )
 
     @classmethod
-    def from_table_metadata(cls: typing.Type[T], table: csvw.metadata.Table) -> T:
+    def from_table_metadata(cls: t.Type[T], table: csvw.metadata.Table) -> T:
         """
         Create a `TableSpec` from the schema description of a `csvw.metadata.Table`.
 
@@ -103,21 +103,19 @@ class TableSpec(csvw.db.TableSpec):
         return spec
 
     @classmethod
-    def schema(cls: typing.Type[T], tg: csvw.TableGroup) -> typing.List[T]:
-        """Convert `TableGroup` into specifications for the DB schema.
-
-        Take the table and column descriptions of a `TableGroup` and convert
-        them into the DB schema specs.
+    def schema(cls: t.Type[T], tg: csvw.TableGroup) -> t.List[T]:
+        """
+        Convert the table and column descriptions of a `TableGroup` into specifications for the
+        DB schema.
 
         :param ds:
         :return: A pair (tables, reference_tables).
-
         """
         tables = {}
-        for tname, table in tg.tabledictyping.items():
+        for tname, table in tg.tabledict.items():
             t = cls.from_table_metadata(table)
-            tables[typing.name] = t
-            for at in typing.many_to_many.values():
+            tables[t.name] = t
+            for at in t.many_to_many.values():
                 tables[at.name] = at
 
         # We must determine the order in which tables must be created!
@@ -143,7 +141,7 @@ class TableSpec(csvw.db.TableSpec):
 
 
 def translate(
-    d: typing.Dict[str, TableTranslation], table: str, col: typing.Optional[str] = None
+    d: t.Dict[str, TableTranslation], table: str, col: t.Optional[str] = None
 ) -> str:
     """
     Translate a db object name.
@@ -180,9 +178,7 @@ class Database(pycldf.db.Database):
 
     def __init__(self, dataset: pycldf.Dataset, **kw) -> None:
         self.dataset = dataset
-        self._retranslate = typing.DefaultDict[
-            typing.Any, typing.Dict[typing.Any, typing.Any]
-        ](dict)
+        self._retranslate = t.DefaultDict[t.Any, t.Dict[t.Any, t.Any]](dict)
         self._source_cols = ["id", "genre"] + BIBTEX_FIELDS
         self._duplicate_relationship_separator = ";\t"
 
@@ -205,8 +201,8 @@ class Database(pycldf.db.Database):
                 pass
             for col in table.tableSchema.columns:
                 if col.propertyUrl and col.propertyUrl.uri in TERMS.by_uri:
-                    # Translate local column names to local names of CLDF
-                    # Ontology terms, prefixed with `cldf_`:
+                    # Translate local column names to local names of CLDF Ontology terms, prefixed
+                    # with `cldf_`:
                     col_name = "cldf_{0.name}".format(TERMS.by_uri[col.propertyUrl.uri])
                     translations[table.local_name].columns[col.header] = col_name
                     self._retranslate[table.local_name][col_name] = col.header
@@ -280,18 +276,17 @@ class Database(pycldf.db.Database):
         )
 
     def association_table_context(self, table, column, fkey):
-        """Context for association tables is created calling this method.
+        """
+        Context for association tables is created calling this method.
 
-        Note: If a custom value for the `context` column is created by
-        overwriting this method, `select_many_to_many` must be adapted
-        accordingly, to make sure the custom context is retrieved when reading
-        the data from the db.
+        Note: If a custom value for the `context` column is created by overwriting this method,
+        `select_many_to_many` must be adapted accordingly, to make sure the custom
+        context is retrieved when reading the data from the db.
 
         :param table:
         :param column:
         :param fkey:
         :return: a pair (foreign key, context)
-
         """
         # The default implementation takes the column name as context:
         if "[" in fkey:
@@ -325,21 +320,21 @@ class Database(pycldf.db.Database):
                 lambda: defaultdict(list)
             )  # collects rows in association tables.
             for t in self.tables:
-                if typing.name not in items:
+                if t.name not in items:
                     continue
                 rows, keys = [], []
-                cols = {c.name: c for c in typing.columns}
-                for i, row in enumerate(items[typing.name]):
+                cols = {c.name: c for c in t.columns}
+                for i, row in enumerate(items[t.name]):
                     pk = (
-                        row[typing.primary_key[0]]
-                        if typing.primary_key and len(typing.primary_key) == 1
+                        row[t.primary_key[0]]
+                        if t.primary_key and len(t.primary_key) == 1
                         else None
                     )
                     values = []
                     for column, value in row.items():
-                        if column in typing.many_to_many:
+                        if column in t.many_to_many:
                             assert pk
-                            at = typing.many_to_many[column]
+                            at = t.many_to_many[column]
                             atkey = tuple([at.name] + [c.name for c in at.columns])
                             if len(atkey) == 4:
                                 for subvalue in value:
@@ -370,8 +365,7 @@ class Database(pycldf.db.Database):
                                     )
                             col = cols[column]
                             if isinstance(value, list):
-                                # Note: This assumes list-valued columns are of
-                                # datatype string!
+                                # Note: This assumes list-valued columns are of datatype string!
                                 value = (col.separator or ";").join(
                                     col.convert(vv) for vv in value
                                 )
@@ -383,7 +377,7 @@ class Database(pycldf.db.Database):
                                 keys.append(col.name)
                             values.append(value)
                     rows.append(tuple(values))
-                insert(db, self.translate, typing.name, keys, *rows)
+                insert(db, self.translate, t.name, keys, *rows)
 
             for atkey, rows in refs.items():
                 insert(
@@ -409,11 +403,10 @@ class Database(pycldf.db.Database):
 
     def select_many_to_many(
         self,
-        db,  # TODO: Why does it need this argument? Can't we just `with
-        # self.connection() as db:`?
+        db,  # Why does it need this argument? Can't we just `with self.connection() as db:`?
         table: TableSpec,
         _=None,
-    ) -> typing.Dict[str, typing.List[typing.Tuple[str, typing.Optional[str]]]]:
+    ) -> t.Dict[str, t.List[t.Tuple[str, t.Optional[str]]]]:
         if len(table.columns) == 2:
             context = False
             context_sql = "null"

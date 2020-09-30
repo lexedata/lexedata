@@ -6,7 +6,7 @@ from lexedata.types import *
 import openpyxl
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
-from lexedata.importer.fromexcel import ExcelCognateParser, ExcelParserDictionaryDB
+from lexedata.importer.fromexcel import ExcelCognateParser, DB
 
 
 if __name__ == "__main__":
@@ -88,7 +88,7 @@ if __name__ == "__main__":
             break
         row_header.append(column_name)
 
-    class Parser(ExcelParserDictionaryDB, ExcelCognateParser):
+    class Parser(DB, ExcelCognateParser):
         def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
             data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
             comment = get_cell_comment(column[0])
