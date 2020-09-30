@@ -219,7 +219,7 @@ class CellParser(NaiveCellParser):
             "/": ("phonemic", True),
         },
         separation_pattern: str = r"([;,])",
-        variant_separator: t.Optional[list] = None,
+        variant_separator: t.Optional[list] = ["~", "%"],
         add_default_source: str = "{1}",
     ):
         self.bracket_pairs = bracket_pairs
