@@ -32,30 +32,31 @@ def test_cellparser_1(parser):
     form = parser.parse_form("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]", "l1")
     assert form["cldf_source"] == {("l1_s1", None)}
     assert n(form["cldf_value"]) == n("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]")
-    assert n(form["orthographic"]) == n("<tɨ̈nɨmpɨ̈'ä>")
-    assert n(form["phonetic"]) == n("[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]")
+    assert n(form["orthographic"]) == n("tɨ̈nɨmpɨ̈'ä")
+    assert n(form["phonetic"]) == n("tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa")
 
 
 def test_cellparser_2(parser):
     form = parser.parse_form("/ta/ [ta.'ʔa] ['ta] (cabello púbico){4}", "language")
     assert form == {
-        "cldf_comment": "(cabello púbico)",
+        "cldf_comment": "cabello púbico",
         "cldf_languageReference": "language",
         "cldf_source": {("language_s4", None)},
         "cldf_value": "/ta/ [ta.'ʔa] ['ta] (cabello púbico){4}",
-        "phonemic": "/ta/",
-        "phonetic": "[ta.'ʔa]",
+        "phonemic": "ta",
+        "phonetic": "ta.'ʔa",
         "variants": ["['ta]"],
     }
 
 
 def test_cellparser_3(parser):
     form = parser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
+    print(form)
     assert form == {
         "cldf_languageReference": "language",
         "cldf_source": {("language_s2", None)},
         "cldf_value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
-        "phonetic": "[dʒi'tɨka]",
+        "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]", "{2}"],
     }
 
@@ -63,22 +64,22 @@ def test_cellparser_3(parser):
 def test_cellparser_4(parser):
     form = parser.parse_form(" /a/ [a.'ʔa] (cabello){4} /aʔa/", "language")
     assert form == {
-        "cldf_comment": "(cabello)",
+        "cldf_comment": "cabello",
         "cldf_languageReference": "language",
         "cldf_source": {("language_s4", None)},
         "cldf_value": " /a/ [a.'ʔa] (cabello){4} /aʔa/",
-        "phonemic": "/a/",
-        "phonetic": "[a.'ʔa]",
+        "phonemic": "a",
+        "phonetic": "a.'ʔa",
         "variants": ["/aʔa/"],
     }
 
 
 def test_cellparser_5(parser):
     form = parser.parse_form("[iɾũndɨ] (H.F.) (parir)", "language")
-    assert form["cldf_comment"] == "(H.F.)"
+    assert form["cldf_comment"] == "H.F."
     assert form["cldf_source"] == {("language_s1", None)}
     assert n(form["cldf_value"]) == n("[iɾũndɨ] (H.F.) (parir)")
-    assert n(form["phonetic"]) == n("[iɾũndɨ]")
+    assert n(form["phonetic"]) == n("iɾũndɨ")
     assert form["variants"] == ["(parir)"]
 
 
