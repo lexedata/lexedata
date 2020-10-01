@@ -28,7 +28,9 @@ def sanitise_name(name: str) -> str:
     return re.sub(r"\s", "_", name).replace(",", "")
 
 
-def read_cldf_dataset(filename, code_column=None):
+def read_cldf_dataset(
+    filename, code_column=None
+) -> t.Tuple[t.Mapping[str, t.Mapping[str, t.Set[str]]], t.Mapping[str, str]]:
     """Load a CLDF dataset.
 
     Load the file as `json` CLDF metadata description file, or as metadata-free
@@ -39,6 +41,31 @@ def read_cldf_dataset(filename, code_column=None):
     CLDF module specifications. Directories are checked for the presence of
     any CLDF datasets in undefined order of the dataset types.
 
+    Examples
+    --------
+
+    >>> data, mapping = read_cldf_dataset(
+    ...   Path(__file__).parent /
+    ...   "../../../test/data/cldf/minimal/cldf-metadata.json")
+    Names are used as language identifiers
+    >>> mapping
+    {}
+    >>> dict(data)
+    {'Autaa': defaultdict(<class 'set'>, {'1209': {'1'}})}
+
+    This function also works with cross-semantic cognate codes. For example, in
+    the Maweti-Guaraní example dataset, the Aché forms meaning “two” are
+    cognate with other languages' forms meaning “three”:
+
+    >>> data, mapping = read_cldf_dataset(
+    ...   Path(__file__).parent /
+    ...   "../../../test/data/cldf/smallmawetiguarani/cldf-metadata.json")
+    Names are used as language identifiers
+    >>> mapping
+    {}
+    >>> data["Aché"]["two"]
+    {'three8'}
+
     Parameters
     ----------
     fname : str or Path
@@ -47,9 +74,12 @@ def read_cldf_dataset(filename, code_column=None):
     Returns
     -------
     Dataset
+
     """
     dataset = get_dataset(filename)
-    data = collections.defaultdict(lambda: collections.defaultdict(set))
+    data: t.DefaultDict[str, t.DefaultDict[str, t.Set]] = t.DefaultDict(
+        lambda: t.DefaultDict(set)
+    )
 
     # Make sure this is a kind of dataset BEASTling can handle
     if dataset.module not in ("Wordlist", "StructureDataset"):
@@ -87,9 +117,11 @@ def read_cldf_dataset(filename, code_column=None):
                 ):
                     code_column = col_map.cognates.cognatesetReference
                     form_reference = col_map.cognates.formReference
-                    cognatesets = collections.defaultdict(list)
+                    cognatesets: t.Dict[
+                        t.Hashable, t.Set[t.Hashable]
+                    ] = collections.defaultdict(set)
                     for row in dataset["CognateTable"]:
-                        cognatesets[row[form_reference]].append(row[code_column])
+                        cognatesets[row[form_reference]].add(row[code_column])
                 else:
                     raise ValueError(
                         "Dataset {:} has no cognatesetReference column in its "
@@ -101,6 +133,15 @@ def read_cldf_dataset(filename, code_column=None):
 
         language_column = col_map.forms.languageReference
         parameter_column = col_map.forms.parameterReference
+        if dataset["FormTable", parameter_column].separator:
+
+            def all_parameters(parameter):
+                return list(parameter)
+
+        else:
+
+            def all_parameters(parameter):
+                return [parameter]
 
         warnings.filterwarnings(
             "ignore",
@@ -121,14 +162,15 @@ def read_cldf_dataset(filename, code_column=None):
 
         for row in dataset["FormTable"].iterdicts():
             lang_id = lang_ids.get(row[language_column], row[language_column])
-            feature_id = feature_ids.get(row[parameter_column], row[parameter_column])
-            if cognate_column_in_form_table:
-                data[lang_id][feature_id].add(row[code_column])
-            else:
-                data[lang_id][feature_id] = cognatesets[row[col_map.forms.id]]
+            for parameter in all_parameters(row[parameter_column]):
+                feature_id = feature_ids.get(parameter, parameter)
+                if cognate_column_in_form_table:
+                    data[lang_id][feature_id].add(row[code_column])
+                else:
+                    data[lang_id][feature_id] = cognatesets[row[col_map.forms.id]]
         return data, language_code_map
 
-    if dataset.module == "StructureDataset":
+    elif dataset.module == "StructureDataset":
         code_column = col_map.values.codeReference or col_map.values.value
         for row in dataset["ValueTable"]:
             lang_id = lang_ids.get(
@@ -142,8 +184,21 @@ def read_cldf_dataset(filename, code_column=None):
             data[lang_id][feature_id].add(row[code_column] or "")
         return data, language_code_map
 
+    else:
+        raise ValueError("Module {:} not supported".format(dataset.module))
+
 
 def build_lang_ids(dataset, col_map):
+    """Create a language ID translation table.
+
+    In the early days of CLDF, language tables often contained numerical IDs.
+    Those were really intransparent to the intermediate data users, so this
+    function tries to use sensible IDs instead. These days, this function is
+    probably obsolete and supported largely for legacy reasons. However, it is
+    possible, in principle, to encounter language IDs with ‘strange’ characters
+    in them, and for those tables, this infrastructure is still useful.
+
+    """
     if col_map.languages is None:
         # No language table so we can't do anything
         return {}, {}
@@ -159,12 +214,13 @@ def build_lang_ids(dataset, col_map):
     for row in dataset["LanguageTable"]:
         langs.append(row)
         names.append(row[col_map.name])
-        if row[col_map.glottocode]:
+        if row.get(col_map.glottocode):
             gcs.append(row[col_map.glottocode])
 
     unique_names = len(set(names)) == len(names)
     unique_gcs = len(set(gcs)) == len(gcs) == len(names)
 
+    # TODO: Use standard logging interface, this is an INFO.
     print(
         "{0} are used as language identifiers".format(
             "Names"
@@ -183,14 +239,31 @@ def build_lang_ids(dataset, col_map):
         else:
             # As a last resort, use the IDs which are guaranteed to be unique
             lang_ids[row[col_map.id]] = row[col_map.id]
-        if row[col_map.glottocode]:
+        if row.get(col_map.glottocode):
             language_code_map[lang_ids[row[col_map.id]]] = row[col_map.glottocode]
     return lang_ids, language_code_map
 
 
 def root_meaning_code(
-    dataset: t.Dict[t.Hashable, t.Dict[t.Hashable, t.Set[t.Hashable]]]
-):
+    dataset: t.Dict[t.Hashable, t.Mapping[t.Hashable, t.Set[t.Hashable]]]
+) -> t.Mapping[t.Hashable, t.List[t.Literal["0", "1", "?"]]]:
+    """Create a root-meaning coding from cognate codes in a dataset
+
+    Take the cognate code information from a wordlist, i.e. a mapping of the
+    form {Language ID: {Concept ID: {Cognateset ID}}}, and generate a binary
+    alignment from it that lists for every meaning which roots are used to
+    represent that meaning in each language. The first entry in each sequence
+    is always '0': The configuration where a form is absent from all languages
+    is never observed, but always possible, so we add this entry for the
+    purposes of ascertainment correction.
+
+    >>> root_meaning_code({"Language": {"Meaning": {"Cognateset 1"}}})
+    {'Language': ['0', '1']}
+    >>> root_meaning_code({"l1": {"m1": {"c1"}},
+    ...                    "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}})
+    {'l1': ['0', '1', '0', '?', '?'], 'l2': ['0', '0', '1', '1', '1']}
+
+    """
     roots: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
     for language, lexicon in dataset.items():
         for concept, cognatesets in lexicon.items():
@@ -210,13 +283,114 @@ def root_meaning_code(
 
 
 def root_presence_code(
+    dataset: t.Dict[t.Hashable, t.Mapping[t.Hashable, t.Set[t.Hashable]]],
+    important: t.Callable[[t.Set[t.Hashable]], t.Set[t.Hashable]] = lambda x: x,
+) -> t.Mapping[t.Hashable, t.List[t.Literal["0", "1", "?"]]]:
+    """Create a root-presence/absence coding from cognate codes in a dataset
+
+    Take the cognate code information from a wordlist, i.e. a mapping of the
+    form {Language ID: {Concept ID: {Cognateset ID}}}, and generate a binary
+    alignment from it that lists for every root whether it is present in that
+    language or not.
+
+    >>> root_presence_code({"Language": {"Meaning": {"Cognateset 1"}}})
+    {'Language': ['0', '1']}
+
+    The first entry in each sequence is always '0': The configuration where a
+    form is absent from all languages is never observed, but always possible,
+    so we add this entry for the purposes of ascertainment correction.
+
+    Because the word list is never a complete description of the language's
+    lexicon, the function employs the following heuristic: If a root is
+    attested at all, it is considered present. If a root is unattested, and
+    none of the concepts associated with this root is attested, the data on the
+    root's presence is considered missing. If all the concepts associated with
+    the root are present, but expressed by other roots, the root is assumed to
+    be absent in the target language.
+
+    >>> root_presence_code({"l1": {"m1": {"c1"}},
+    ...                     "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}})
+    {'l1': ['0', '1', '0', '?'], 'l2': ['0', '1', '1', '1']}
+
+    If only some concepts associated with the root in question are attested for
+    the target language, the function `important` is called on the concepts
+    associated with the root. The function returns a subset of the associated
+    concepts. If any of those concepts are attested, the root is assumed to be
+    absent.
+
+    By default, all concepts are considered ‘important’, that is, the function
+    `important` is the identity function.
+
+    """
+    associated_concepts: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
+    all_roots: t.Set[t.Hashable] = set()
+    language_roots: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
+    for language, lexicon in dataset.items():
+        language_roots[language] = set()
+        for concept, cognatesets in lexicon.items():
+            for cognateset in cognatesets:
+                associated_concepts.setdefault(cognateset, set()).add(concept)
+                all_roots.add(cognateset)
+                language_roots[language].add(cognateset)
+
+    all_roots_sorted = sorted(all_roots)
+
+    alignment: t.Dict[t.Hashable, t.List[t.Literal["0", "1", "?"]]] = {}
+    for language, lexicon in dataset.items():
+        alignment[language] = ["0"]
+        for root in all_roots_sorted:
+            if root in language_roots[language]:
+                alignment[language].append("1")
+            else:
+                for concept in important(associated_concepts[root]):
+                    if lexicon.get(concept):
+                        alignment[language].append("0")
+                        break
+                else:
+                    alignment[language].append("?")
+
+    return alignment
+
+
+def multistate_code(
     dataset: t.Dict[t.Hashable, t.Dict[t.Hashable, t.Set[t.Hashable]]]
-):
-    raise NotImplementedError
+) -> t.Mapping[t.Hashable, t.List[t.Optional[int]]]:
+    """Create a multistate root-meaning coding from cognate codes in a dataset
 
+    Take the cognate code information from a wordlist, i.e. a mapping of the
+    form {Language ID: {Concept ID: {Cognateset ID}}}, and generate a multistate
+    alignment from it that lists for every meaning which roots are used to
+    represent that meaning in each language.
 
-def multistate_code(dataset: t.Dict[t.Hashable, t.Dict[t.Hashable, t.Set[t.Hashable]]]):
-    raise NotImplementedError
+    >>> multistate_code({"Language": {"Meaning": {"Cognateset 1"}}})
+    {'Language': [0]}
+    >>> multistate_code({"l1": {"m1": {"c1"}},
+    ...                    "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}})
+    {'l1': [0, None], 'l2': [1, 0]}
+
+    """
+    roots: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
+    for language, lexicon in dataset.items():
+        for concept, cognatesets in lexicon.items():
+            roots.setdefault(concept, set()).update(cognatesets)
+    alignment: t.Dict[t.Hashable, t.List[t.Optional[int]]] = {}
+    for language, lexicon in dataset.items():
+        alignment[language] = []
+        for concept, possible_roots in sorted(roots.items()):
+            entries = lexicon.get(concept)
+            if entries is None:
+                alignment[language].append(None)
+            else:
+                alignment[language].append(
+                    # TODO: Bleagh, this is ugly, intransparent, error-prone,
+                    # and wrong. I typed it only because it is wrong anyway and
+                    # needs to be replaced ASAP.
+                    max(
+                        range(len(possible_roots)),
+                        key=lambda i: sorted(possible_roots)[i] in entries,
+                    )
+                )
+    return alignment
 
 
 def raw_alignment(alignment):
