@@ -372,7 +372,6 @@ class ExcelParser:
                         # if a candidate for form already exists, don't add the form
                         form_id = candidate_forms[0]
                         self.associate(form_id, row_object)
-                        continue
                     else:
                         # no candidates. form is created or not.
                         if not self.on_form_not_found(form, cell_with_forms):
