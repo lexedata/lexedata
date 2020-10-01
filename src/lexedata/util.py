@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import re
+import typing as t
 from pathlib import Path
 
 import unicodedata
 import unidecode as uni
-import typing as t
+
+import pycldf
 import openpyxl as op
 
 invalid_id_elements = re.compile(r"\W+")
@@ -66,3 +68,31 @@ if __name__ == "__main__":
     for file in args.file:
         content = file.open().read()
         file.open("w").write(unicodedata.normalize("NFKD", content))
+
+
+def get_dataset(fname: Path) -> pycldf.Dataset:
+    """Load a CLDF dataset.
+
+    Load the file as `json` CLDF metadata description file, or as metadata-free
+    dataset contained in a single csv file.
+
+    The distinction is made depending on the file extension: `.json` files are
+    loaded as metadata descriptions, all other files are matched against the
+    CLDF module specifications. Directories are checked for the presence of
+    any CLDF datasets in undefined order of the dataset types.
+
+    Parameters
+    ----------
+    fname : str or Path
+        Path to a CLDF dataset
+
+    Returns
+    -------
+    Dataset
+    """
+    fname = Path(fname)
+    if not fname.exists():
+        raise FileNotFoundError("{:} does not exist".format(fname))
+    if fname.suffix == ".json":
+        return pycldf.dataset.Dataset.from_metadata(fname)
+    return pycldf.dataset.Dataset.from_data(fname)

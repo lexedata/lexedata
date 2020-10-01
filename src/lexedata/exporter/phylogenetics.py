@@ -1,50 +1,34 @@
+import re
 import sys
 import typing as t
 import collections
 from pathlib import Path
 import warnings
 
-import pycldf.dataset
+from lexedata.util import get_dataset
 
 
-def sanitise_name(name):
-    """
+def sanitise_name(name: str) -> str:
+    """Clean a name for phylogenetics analyses.
+
     Take a name for a language or a feature which has come from somewhere like
-    a CLDF dataset and make sure it does not contain any characters which
-    will cause trouble for BEAST or postanalysis tools.
+    a CLDF dataset and make sure it does not contain any characters which will
+    cause trouble for BEAST or postanalysis tools.
+
+    >>> sanitise_name("Idempotent")
+    'Idempotent'
+    >>> sanitise_name("Name with Spaces")
+    'Name_with_Spaces'
+    >>> sanitise_name("Name\\tcontaining much\\nwhitespace")
+    'Name_containing_much_whitespace'
+    >>> sanitise_name("Name for this, or that")
+    'Name_for_this_or_that'
+
     """
-    return name.replace(" ", "_").replace(",", "")
+    return re.sub(r"\s", "_", name).replace(",", "")
 
 
-def get_dataset(fname):
-    """Load a CLDF dataset.
-
-    Load the file as `json` CLDF metadata description file, or as metadata-free
-    dataset contained in a single csv file.
-
-    The distinction is made depending on the file extension: `.json` files are
-    loaded as metadata descriptions, all other files are matched against the
-    CLDF module specifications. Directories are checked for the presence of
-    any CLDF datasets in undefined order of the dataset types.
-
-    Parameters
-    ----------
-    fname : str or Path
-        Path to a CLDF dataset
-
-    Returns
-    -------
-    Dataset
-    """
-    fname = Path(fname)
-    if not fname.exists():
-        raise FileNotFoundError("{:} does not exist".format(fname))
-    if fname.suffix == ".json":
-        return pycldf.dataset.Dataset.from_metadata(fname)
-    return pycldf.dataset.Dataset.from_data(fname)
-
-
-def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
+def read_cldf_dataset(filename, code_column=None):
     """Load a CLDF dataset.
 
     Load the file as `json` CLDF metadata description file, or as metadata-free
@@ -207,7 +191,7 @@ def build_lang_ids(dataset, col_map):
 def root_meaning_code(
     dataset: t.Dict[t.Hashable, t.Dict[t.Hashable, t.Set[t.Hashable]]]
 ):
-    roots: t.Dict[t.Hashable, t.set[t.Hashable]] = {}
+    roots: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
     for language, lexicon in dataset.items():
         for concept, cognatesets in lexicon.items():
             roots.setdefault(concept, set()).update(cognatesets)
@@ -314,9 +298,7 @@ if __name__ == "__main__":
     else:
         args.output_file = args.output_file.open("w")
 
-    ds, language_map = read_cldf_dataset(
-        args.metadata, code_column=args.code_column, expect_multiple=True
-    )
+    ds, language_map = read_cldf_dataset(args.metadata, code_column=args.code_column)
     ds = {
         language: {k: v for k, v in sequence.items() if k not in args.exclude_concept}
         for language, sequence in ds.items()
