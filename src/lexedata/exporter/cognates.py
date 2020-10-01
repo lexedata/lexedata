@@ -2,7 +2,6 @@
 import typing as t
 import urllib.parse
 from pathlib import Path
-from collections import OrderedDict, defaultdict
 
 import pycldf
 import openpyxl as op
@@ -66,8 +65,12 @@ class ExcelWriter:
         Parameters
         ==========
         out: The path of the Excel file to be written.
-        size_sort: If true, cognatesets are ordered by the number of cognates corresponding to the cognateset
-        language_order: column name, languages appear ordered by given column name from LanguageTable
+
+        size_sort: If true, cognatesets are ordered by the number of cognates
+            corresponding to the cognateset
+
+        language_order: column name, languages appear ordered by given column name from
+            LanguageTable
 
         """
         # TODO: Check whether openpyxl.worksheet._write_only.WriteOnlyWorksheet
@@ -160,8 +163,6 @@ class ExcelWriter:
         ws: op.worksheet.worksheet.Worksheet,
         all_forms: t.Dict[str, types.Form],
         row_index: int,
-        # FIXME: That's not just a str, it's a language_id, but String()
-        # alias Language.id.type is not a Type, according to `typing`.
     ) -> int:
         """Writes all forms for given cognate set to Excel.
 
@@ -173,7 +174,6 @@ class ExcelWriter:
         which can then be filled by the following cognate set.
 
         """
-        c_cogset = self.dataset["CognateTable", "cognatesetReference"].name
         c_form = self.dataset["CognateTable", "formReference"].name
         c_language = self.dataset["FormTable", "languageReference"].name
         # Read the forms from the database and group them by language
@@ -302,7 +302,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--url-template",
-        help="A template string for URLs pointing to individual forms. For example, to point to lexibank, you would use https://lexibank.clld.org/values/{:}. (default: https://example.org/lexicon/{:})",
+        help="A template string for URLs pointing to individual forms. For example, to"
+        " point to lexibank, you would use https://lexibank.clld.org/values/{:}."
+        " (default: https://example.org/lexicon/{:})",
     )
     # TODO: Derive URL template from the "special:domain" property of the
     # wordlist, where it exists? So something like

@@ -151,4 +151,4 @@ def test_mg_import():
         Path(__file__).parent / "data/excel/tg_lexicon.xlsx",
         "",
         Path(__file__).parent / "data/excel/tg_cognates.xlsx",
-                               )
+    )
