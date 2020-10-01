@@ -622,7 +622,7 @@ def load_dataset(
         EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
 
 
-class ExcelParserDictionaryDB(ExcelParser):
+class DB(ExcelParser):
     def init_db(self, output_dataset, fname=None):
         if fname is not None:
             print("Warning: dbase fname set, but ignored")

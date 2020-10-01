@@ -131,5 +131,3 @@ def test_cellparser_separate_1(parser):
 
 def test_cellparser_separate_2(parser):
     assert len(list(parser.separate("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]"))) == 1
-
-
