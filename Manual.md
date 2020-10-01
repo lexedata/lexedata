@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-Lexedata is a set of tools for managing, editing, and annotated large lexical datasets. In order to use lexedata you need to be somewhat familiar with command line and git. 
+Lexedata is a set of tools for managing, editing, and annotating large lexical datasets. In order to use lexedata you need to be somewhat familiar with command line and git. Below we give the basics you need to get started. TODO: maybe add a couple of links of online resources?
 
 ### 1.1 Navigation using the command line
 On a MacOS computer your can navigate to a specific folder using the command line on your terminal as follows: 
@@ -17,7 +17,7 @@ In order to push your local version to GitHub, so it is updated, you need to fir
 
 ## 2. Lexedata installation instructions
 
-The following instructions are for MacOS computers. Instructions for other operating systems will follow.
+The following instructions are for MacOS computers. TODO: write instructions for windows and linux
 
 #### 1. In order to install and use Lexedata you need to have Python 3 installed.
 
@@ -48,13 +48,23 @@ install lexedata and all its dependencies on your computer and make it
 automatically updatable every time you pull a new version of the Lexedata
 repository from GitHub. Now you should be ready to use lexedata!
 
-## 3. Importing a lexical dataset to lexedata
+## 3. Importing a lexical dataset to lexedata from excel
+Lexedata has two ways of creating a lexical dataset from raw data depending on the format the raw data are in ("long" or "matrix"). 
+The "long" format assumes that every field in CLDF is a different column in your spreadsheet, and that each sheet of your spreadsheet is a different language. In other words, it assumes that you have a wordlist per language. The "matrix" format assumes that your spreadsheet is a comparative wordlist with different languages as different columns. You may have different kind of information in each cell (e.g. forms and translations), as long as they are machine readable.
 
-### 3.1 Getting raw data from excel into cldf
-Variant one, example from our Arawak dataset
+### 3.1 Importing a lexical dataset in lexedata using the "long" format
+In order to import a lexical dataset in a "long" excel format you use the following command.
+
 ```
-python -m lexedata.importer.excelsinglewordlist --exclude-sheet Fields --exclude-sheet Sources --exclude-sheet Languages --add-running-id --concept-property TUS --concept-property TUP Comparative\ Arawakan\ Lexical\ Dataset\ \(active\).xlsx  TUE forms.csv
+python -m lexedata.importer.excelsinglewordlist --add-running-id <filename.xlsx>  <concept column name>  forms.csv
 ```
+You can exclude individual sheets from being imported by using the option `--exclude-sheet <sheet name>`. @Gereon I am not sure I understand the rest of the command. I think that --concept-property TUS is so that this column is added to the concept table, instead of being treated as another language. 
+
+### 3.2 Importing a lexical dataset in lexedata using the "matrix" format
+
+
+
+
 ### 3.2 Adding enriched data
 Adding segments, adding links to concepticon
 
@@ -62,14 +72,14 @@ Adding segments, adding links to concepticon
 
 ## 4. Adding a new language/new data to an existing lexical dataset in lexedata
 
-## 5. How to edit data in lexedata
+## 5. How to edit raw data in lexedata
 
 There are two ways to edit data in lexedata: through the web interface (under
 construction) and through editing the .csv files in your corresponding GitHub
 repository.
 
 ### 5.1 Editing raw data through GitHub
-This section describes how to edit raw data through GitHub. By raw data we mean any part of the data that are not cognate set assignments and annotations. While it is possible to edit cognate set assignments and annotations this way as well, we recommend that you use the cognate table for this purpose (see section XXX). 
+This section describes how to edit raw data through GitHub. By raw data we mean any part of the data that are not cognate set judgements, alignments and related annotations. While it is possible to edit cognate set assignments and annotations this way as well, we recommend that you use the cognate table for this purpose (see section XXX). 
 Raw data are contained in three .csv files in the cldf format: concepts.csv, forms.csv, and languages.csv. Note that for small .csv files, instead of following the steps below, you can edit them directly through GitHub's web interface. 
 
 #### 1. pull the dataset repository from GitHub
@@ -100,7 +110,7 @@ existing cognate sets and cognate judgements, as well as any associated comments
 (cognate comments and cognate judgement comments).
 
 IMPORTANT: you cannot edit the raw data (forms, translation, form comments etc)
-through this process. Instead see XXX how to edit form data in lexedata.
+through this process. Instead see XXX how to edit raw data in lexedata.
 
 #### 1. Validate your dataset using the cldf validate command
 It is always a good idea to validate your dataset before and after any edits to make sure that everything is linked as it should in the cldf format.
