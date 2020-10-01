@@ -33,17 +33,12 @@
             ".*"
         ],
         "check_for_match": [
-            "cldf_languageReference",
-            "cldf_parameterReference",
-            "phonemic",
-            "phonetic",
-            "orthographic",
-            "cldf_source"
-        ],
-        "check_for_language_match": [
-            "cldf_name"
+            "cldf_id"
         ],
         "check_for_row_match": [
+            "cldf_name"
+        ],
+        "check_for_language_match": [
             "cldf_name"
         ],
         "cell_parser": {
@@ -117,10 +112,10 @@
                 "phonetic",
                 "source"
             ],
-            "check_for_language_match": [
+            "check_for_row_match": [
                 "cldf_name"
             ],
-            "check_for_row_match": [
+            "check_for_language_match": [
                 "cldf_name"
             ],
             "cell_parser": {
@@ -170,7 +165,7 @@
     "tables": [
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
-            "dc:extent": 114,
+            "dc:extent": 35,
             "tableSchema": {
                 "columns": [
                     {
@@ -279,7 +274,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#ParameterTable",
-            "dc:extent": 29,
+            "dc:extent": 9,
             "tableSchema": {
                 "columns": [
                     {
@@ -331,7 +326,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#LanguageTable",
-            "dc:extent": 6,
+            "dc:extent": 4,
             "tableSchema": {
                 "columns": [
                     {
@@ -367,7 +362,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognateTable",
-            "dc:extent": 34617,
+            "dc:extent": 32,
             "tableSchema": {
                 "columns": [
                     {
@@ -385,13 +380,14 @@
                         "name": "Form_ID"
                     },
                     {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
+                        "name": "Comment"
+                    },
+                    {
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
                         "required": true,
                         "name": "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict"
-                    },
-                    {
-                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
-                        "name": "Comment"
                     }
                 ],
                 "foreignKeys": [
@@ -426,7 +422,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognatesetTable",
-            "dc:extent": 6526,
+            "dc:extent": 19,
             "tableSchema": {
                 "columns": [
                     {
