@@ -1,14 +1,10 @@
-import csv
 import sys
 import typing as t
 import collections
 from pathlib import Path
-import chardet
 import warnings
 
 import pycldf.dataset
-
-from csvw.dsv import UnicodeDictReader
 
 
 def sanitise_name(name):
@@ -91,7 +87,8 @@ def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
 
     # Build actual data dictionary, based on dataset type
     if dataset.module == "Wordlist":
-        # We search for cognatesetReferences in the FormTable or a separate CognateTable.
+        # We search for cognatesetReferences in the FormTable or a separate
+        # CognateTable.
         cognate_column_in_form_table = True
         # If we find them in CognateTable, we store them keyed with formReference:
         if (
@@ -116,7 +113,6 @@ def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
                         "Is this a metadata-free wordlist and you forgot to "
                         "specify code_column explicitly?".format(filename)
                     )
-                form_column = dataset["FormTable", "id"].name
                 cognate_column_in_form_table = False
 
         language_column = col_map.forms.languageReference
@@ -126,17 +122,18 @@ def read_cldf_dataset(filename, code_column=None, expect_multiple=True):
             "ignore",
             '.*Unspecified column "Cognate_Set"',
             UserWarning,
-            "csvw\.metadata",
+            r"csvw\.metadata",
             0,
         )
         warnings.filterwarnings(
             "ignore",
             '.*Unspecified column "{:}"'.format(code_column),
             UserWarning,
-            "csvw\.metadata",
+            r"csvw\.metadata",
             0,
         )
-        # We know how to deal with a 'Cognate_Set' column, even in a metadata-free CSV file
+        # We know how to deal with a 'Cognate_Set' column, even in a
+        # metadata-free CSV file
 
         for row in dataset["FormTable"].iterdicts():
             lang_id = lang_ids.get(row[language_column], row[language_column])
@@ -228,11 +225,23 @@ def root_meaning_code(
     return alignment
 
 
+def root_presence_code(
+    dataset: t.Dict[t.Hashable, t.Dict[t.Hashable, t.Set[t.Hashable]]]
+):
+    raise NotImplementedError
+
+
+def multistate_code(dataset: t.Dict[t.Hashable, t.Dict[t.Hashable, t.Set[t.Hashable]]]):
+    raise NotImplementedError
+
+
 def raw_alignment(alignment):
-    l = max([len(str(l)) for l in alignment])
+    max_length = max([len(str(a)) for a in alignment])
     for language, data in alignment.items():
         yield "{language:} {spacer:} {data:}".format(
-            language=language, spacer=" " * (l - len(str(language))), data="".join(data)
+            language=language,
+            spacer=" " * (max_length - len(str(language))),
+            data="".join(data),
         )
 
 
@@ -247,7 +256,10 @@ if __name__ == "__main__":
         "--format",
         choices=("csv", "raw", "beast", "nexus"),
         default="raw",
-        help="Target format: `raw` for one language name per row, followed by spaces and the alignment vector; `nexus` for a complete Nexus file; `beast` for the <data> tag to copy to a BEAST file, and `csv` for a CSV with languages in rows and features in columns.",
+        help="""Target format: `raw` for one language name per row, followed by spaces and
+            the alignment vector; `nexus` for a complete Nexus file; `beast`
+            for the <data> tag to copy to a BEAST file, and `csv` for a CSV
+            with languages in rows and features in columns.""",
     )
     parser.add_argument(
         "--metadata",
@@ -257,7 +269,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output-file",
         type=Path,
-        help="File to write output to. (If format=xml and output file exists, replace the first `data` tag in there.) Default: Write to stdout",
+        help="""File to write output to. (If format=xml and output file exists, replace the
+            first `data` tag in there.) Default: Write to stdout""",
     )
     parser.add_argument(
         "--code-column", help="Name of the code column for metadata-free wordlists"
@@ -273,7 +286,15 @@ if __name__ == "__main__":
         "--coding",
         choices=("rootmeaning", "rootpresence", "multistate"),
         default="rootmeaning",
-        help="Binarization method: In the `rootmeaning` coding system, every character describes the presence or absence of a particular root morpheme or cognate class in the word(s) for a given meaning; In the `rootpresence`, every character describes (up to the limitations of the data, which might not contain marginal forms) the presence or absence of a root (morpheme) in the language, independet of which meaning that root is attested in; And in the `multistate` coding, each character describes, possibly including uniform ambiguities, the cognate class of a meaning.",
+        help="""Binarization method: In the `rootmeaning` coding system, every character
+            describes the presence or absence of a particular root morpheme or
+            cognate class in the word(s) for a given meaning; In the
+            `rootpresence`, every character describes (up to the limitations of
+            the data, which might not contain marginal forms) the presence or
+            absence of a root (morpheme) in the language, independet of which
+            meaning that root is attested in; And in the `multistate` coding,
+            each character describes, possibly including uniform ambiguities,
+            the cognate class of a meaning.""",
     )
     args = parser.parse_args()
 
@@ -316,7 +337,9 @@ if __name__ == "__main__":
         alignment = root_meaning_code(ds)
     elif args.coding == "multistate":
         raise NotImplementedError(
-            "There are some conceptual problems, for the case of more than 9 different values for a slot, that have made us not implement multistate codes yet."
+            """There are some conceptual problems, for the case of more than 9 different
+                values for a slot, that have made us not implement multistate
+                codes yet."""
         )
         alignment = multistate_code(ds)
     else:
@@ -336,7 +359,7 @@ Begin Data;
   Dimensions NChar={len_alignment:d};
   Format Datatype=Standard, Missing=?;
   Matrix
-    [The first column is constant zero, for programs who need that kind of thing for ascertainment correction]
+    [The first column is constant zero, for programs with ascertainment correction]
     {sequences:s}
   ;
 End;
