@@ -7,13 +7,170 @@
     ],
     "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#Wordlist",
     "dc:source": "sources.bib",
+    "special:fromexcel": {
+        "row_cell_regexes": [
+            "(?P<set>.*)",
+            "(?P<cldf_name>.*)",
+            "(?P<English>.*)",
+            "(?P<Spanish>.*)",
+            "(?P<Portuguese>.*)",
+            "(?P<French>.*)"
+        ],
+        "row_comment_regexes": [
+            ".*",
+            ".*",
+            ".*",
+            ".*",
+            ".*",
+            ".*"
+        ],
+        "lang_cell_regexes": [
+            "(?P<cldf_name>.*)",
+            "(?P<Curator>.*)"
+        ],
+        "lang_comment_regexes": [
+            ".*",
+            ".*"
+        ],
+        "check_for_match": [
+            "cldf_languageReference",
+            "cldf_parameterReference",
+            "phonemic",
+            "phonetic",
+            "orthographic",
+            "cldf_source"
+        ],
+        "check_for_language_match": [
+            "cldf_name"
+        ],
+        "check_for_row_match": [
+            "cldf_name"
+        ],
+        "cell_parser": {
+            "name": "MawetiCellParser",
+            "form_separator": [
+                ";",
+                ","
+            ],
+            "variant_separator": [
+                "~",
+                "%"
+            ],
+            "add_default_source": "{1}",
+            "cell_parser_semantics": {
+                "cldf_comment": [
+                    "(",
+                    ")",
+                    false
+                ],
+                "cldf_source": [
+                    "{",
+                    "}",
+                    false
+                ],
+                "phonetic": [
+                    "[",
+                    "]",
+                    true
+                ],
+                "phonemic": [
+                    "/",
+                    "/",
+                    true
+                ],
+                "orthographic": [
+                    "<",
+                    ">",
+                    true
+                ]
+            }
+        },
+        "cognates": {
+            "row_cell_regexes": [
+                "(?P<Set>.*)",
+                "(?P<cldf_name>.*)",
+                ".*",
+                ".*",
+                ".*",
+                ".*"
+            ],
+            "row_comment_regexes": [
+                ".*",
+                ".*",
+                ".*",
+                ".*",
+                ".*",
+                ".*"
+            ],
+            "lang_cell_regexes": [
+                "(?P<cldf_name>.*)",
+                "(?P<Curator>.*)"
+            ],
+            "lang_comment_regexes": [
+                ".*",
+                ".*"
+            ],
+            "check_for_match": [
+                "orthographic",
+                "cldf_languageReference",
+                "phonemic",
+                "phonetic",
+                "source"
+            ],
+            "check_for_language_match": [
+                "cldf_name"
+            ],
+            "check_for_row_match": [
+                "cldf_name"
+            ],
+            "cell_parser": {
+                "name": "MawetiCognateCellParser",
+                "form_separator": [
+                    ";",
+                    ","
+                ],
+                "variant_separator": [
+                    "~",
+                    "%"
+                ],
+                "add_default_source": "{1}",
+                "cell_parser_semantics": {
+                    "cldf_comment": [
+                        "(",
+                        ")",
+                        false
+                    ],
+                    "cldf_source": [
+                        "{",
+                        "}",
+                        false
+                    ],
+                    "phonetic": [
+                        "[",
+                        "]",
+                        true
+                    ],
+                    "phonemic": [
+                        "/",
+                        "/",
+                        true
+                    ],
+                    "orthographic": [
+                        "<",
+                        ">",
+                        true
+                    ]
+                }
+            }
+        }
+    },
     "dialect": {
         "commentPrefix": null
     },
     "tables": [
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
-            "dc:extent": 20,
+            "dc:extent": 114,
             "tableSchema": {
                 "columns": [
                     {
@@ -73,6 +230,11 @@
                     },
                     {
                         "datatype": "string",
+                        "required": false,
+                        "name": "procedural_comment"
+                    },
+                    {
+                        "datatype": "string",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#value",
                         "required": true,
                         "name": "Value"
@@ -117,7 +279,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#ParameterTable",
-            "dc:extent": 9,
+            "dc:extent": 29,
             "tableSchema": {
                 "columns": [
                     {
@@ -169,7 +331,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#LanguageTable",
-            "dc:extent": 4,
+            "dc:extent": 6,
             "tableSchema": {
                 "columns": [
                     {
@@ -205,7 +367,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognateTable",
-            "dc:extent": 21,
+            "dc:extent": 34617,
             "tableSchema": {
                 "columns": [
                     {
@@ -226,6 +388,10 @@
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
                         "required": true,
                         "name": "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict"
+                    },
+                    {
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
+                        "name": "Comment"
                     }
                 ],
                 "foreignKeys": [
@@ -260,7 +426,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognatesetTable",
-            "dc:extent": 19,
+            "dc:extent": 6526,
             "tableSchema": {
                 "columns": [
                     {
@@ -274,12 +440,19 @@
                     },
                     {
                         "datatype": "string",
-                        "name": "properties"
+                        "required": false,
+                        "name": "Set"
                     },
                     {
                         "datatype": "string",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
                         "name": "Comment"
+                    },
+                    {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#name",
+                        "required": true,
+                        "name": "Name"
                     }
                 ],
                 "primaryKey": [
