@@ -80,9 +80,9 @@ def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
     # TODO: parameterize original, like the other parameters, over possible
-    # test datasets.
-    f.load_mg_style_dataset(
-        Path(dataset.tablegroup._fname), str(lexicon), str(cogsets), ""
+    # test datasets
+    f.load_dataset(
+        Path(dataset.tablegroup._fname), str(lexicon), "", str(cogsets)
     )
 
 
@@ -94,8 +94,8 @@ def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
     )
     # TODO: parameterize original, like the other parameters, over possible
     # test datasets.
-    f.load_mg_style_dataset(
-        Path(dataset.tablegroup._fname), str(lexicon), str(cogsets), ""
+    f.load_dataset(
+        Path(dataset.tablegroup._fname), str(lexicon), "", str(cogsets)
     )
     form_ids_from_excel = {form["ID"] for form in dataset["FormTable"]}
     form_ids_original = {form["ID"] for form in original["FormTable"]}
@@ -145,10 +145,10 @@ def test_roundtrip(filled_cldf_wordlist):
     assert new_judgements == old_judgements
 
 
-def test_mg_import():
-    f.load_dataset(
-        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json",
-        Path(__file__).parent / "data/excel/tg_lexicon.xlsx",
-        "",
-        Path(__file__).parent / "data/excel/tg_cognates.xlsx",
-    )
+#def test_mg_import():
+#    f.load_dataset(
+#        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json",
+#        Path(__file__).parent / "data/excel/tg_lexicon.xlsx",
+#        "",
+#        Path(__file__).parent / "data/excel/tg_cognates.xlsx",
+#    )
