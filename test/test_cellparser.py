@@ -32,8 +32,8 @@ def test_cellparser_1(parser):
     form = parser.parse_form("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]", "l1")
     assert form["cldf_source"] == {("l1_s1", None)}
     assert n(form["cldf_value"]) == n("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]")
-    assert n(form["orthographic"]) == n("<tɨ̈nɨmpɨ̈'ä>")
-    assert n(form["phonetic"]) == n("[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]")
+    assert n(form["orthographic"]) == n("tɨ̈nɨmpɨ̈'ä")
+    assert n(form["phonetic"]) == n("tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa")
 
 
 def test_cellparser_2(parser):
