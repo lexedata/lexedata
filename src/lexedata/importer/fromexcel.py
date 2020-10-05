@@ -367,21 +367,22 @@ class ExcelParser:
                         form, self.check_for_match
                     )
                     sources = form.pop("cldf_source", [])
-                    for form_id in candidate_forms:
-                        pass
+
+                    if candidate_forms:
+                        # if a candidate for form already exists, don't add the form
+                        form_id = candidate_forms[0]
+                        self.associate(form_id, row_object)
                     else:
+                        # no candidates. form is created or not.
                         if not self.on_form_not_found(form, cell_with_forms):
-                            if candidate_forms:
-                                form_id = candidate_forms[0]
-                                self.associate(form_id, row_object)
-                            else:
-                                continue
-                        form["cldf_id"] = "{:}_{:}".format(
-                            form["cldf_languageReference"], row_object["cldf_id"]
-                        )
-                        self.create_form_with_sources(form, row_object, sources=sources)
-                        form_id = form["cldf_id"]
-                    self.associate(form_id, row_object, comment=maybe_comment)
+                            form["cldf_id"] = "{:}_{:}".format(
+                                form["cldf_languageReference"], row_object["cldf_id"]
+                            )
+                            self.create_form_with_sources(form, row_object, sources=sources)
+                            form_id = form["cldf_id"]
+                            self.associate(form_id, row_object, comment=maybe_comment)
+                        else:
+                            continue
         self.commit()
 
     def commit(self):
