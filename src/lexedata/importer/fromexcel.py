@@ -266,7 +266,6 @@ class ExcelParser:
                     (form_id, row["cldf_id"], comment),
                 )
                 conn.commit()
-                print("row object associated")
             except sqlite3.IntegrityError as err:
                 # TODO: Don't drop the user in a PDB!!!!
                 # TODO: integrityerror was due to missing forms in database....
@@ -369,11 +368,9 @@ class ExcelParser:
                         form, self.check_for_match
                     )
                     sources = form.pop("cldf_source", [])
-                    print(form)
                     if candidate_forms:
                         # if a candidate for form already exists, don't add the form
                         form_id = candidate_forms[0]
-                        print(candidate_forms)
                         self.associate(form_id, row_object)
                     else:
                         # no candidates. form is created or not.
@@ -383,7 +380,6 @@ class ExcelParser:
                             )
                             self.create_form_with_sources(form, row_object, sources=sources)
                             form_id = form["cldf_id"]
-                            print("im heeere")
                             self.associate(form_id, row_object, comment=maybe_comment)
                         else:
                             continue
