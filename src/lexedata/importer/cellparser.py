@@ -387,9 +387,7 @@ class CellParser(NaiveCellParser):
         # remove delimiters from comment
         try:
             comment = properties["cldf_comment"]
-            print(f"comments_before_splitting{comment}")
             comment = comment.split(comment_separator)
-            print(f"comments_after_splitting{comment}")
             clean_comment = ""
             for c in comment:
                 c = c.rstrip(" ").lstrip(" ")
