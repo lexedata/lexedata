@@ -1,0 +1,15 @@
+ID,Form_ID,Comment,FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict
+kaiwa_one-one1,kaiwa_one,,one1
+kaiwa_one-one2,kaiwa_one,,one2
+ache_one-one6,ache_one,,one6
+kaiwa_two-two1,kaiwa_two,,two1
+paraguayan_guarani_three-three1,paraguayan_guarani_three,,three1
+kaiwa_three-three1,kaiwa_three,,three1
+ache_two-three8,ache_two,,three8
+ache_three-three9,ache_three,,three9
+ache_four_1-four1,ache_four_1,,four1
+paraguayan_guarani_four-four1,paraguayan_guarani_four,,four1
+kaiwa_four-four1,kaiwa_four,,four1
+ache_four-four8,ache_four,,four8
+ache_one-five,ache_one,,five
+kaiwa_five-five5,kaiwa_five,,five5
