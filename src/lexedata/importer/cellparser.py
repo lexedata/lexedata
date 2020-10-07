@@ -403,9 +403,12 @@ class CellParser(NaiveCellParser):
         source = properties.pop("cldf_source", None)
         if self.add_default_source and source is None:
             source = self.add_default_source
-        if source:
+        # if source is already a set with source, don't change anything
+        if source and not isinstance(source, set):
             source, context = self.source_from_source_string(source, language_id)
             properties["cldf_source"] = {(source, context)}
+        else:
+            properties["cldf_source"] = source
 
 
 def alignment_from_braces(text, start=0):
@@ -531,7 +534,11 @@ class MawetiCellParser(CellParser):
                 del properties["cldf_comment"]
         except KeyError:
             pass
-
+        # if source present, turn into Source object
+        source = properties.pop("cldf_source", None)
+        if source:
+            source, context = self.source_from_source_string(source, language_id)
+            properties["cldf_source"] = {(source, context)}
         # TODO: Ask Gereon: What kind of separator between comments and sources?
         # if variants already exists, it may contain a actual variant, additional comments or sources
         start_of_comment = ""
@@ -614,7 +621,7 @@ class MawetiCellParser(CellParser):
                             if not value[-1] == closing:
                                 value = value + closing
                             variants.append(separator + value)
-        super().postprocess_form(properties, language_id)
+        super().postprocess_form(properties, language_id, comment_separator=comment_separator)
 
 
 class MawetiCognateCellParser(MawetiCellParser):
