@@ -387,9 +387,12 @@ class CellParser(NaiveCellParser):
         # remove delimiters from comment
         try:
             comment = properties["cldf_comment"]
+            print(f"comments_before_splitting{comment}")
             comment = comment.split(comment_separator)
+            print(f"comments_after_splitting{comment}")
             clean_comment = ""
             for c in comment:
+                c = c.rstrip(" ").lstrip(" ")
                 if c[0] in self.bracket_pairs and c.endswith(self.bracket_pairs[c[0]]):
                     clean_comment += c[1:-1] + comment_separator
             clean_comment = clean_comment.rstrip(comment_separator)
@@ -522,8 +525,7 @@ class MawetiCellParser(CellParser):
         """
         # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
         # but a procedural comment could land in variants, thus this case needs to be checked as well
-        # procedural_comments are stripped of dilimiters in this function as they are specific for the Mawati Dataset
-        super().postprocess_form(properties, language_id)
+        # procedural_comments are stripped of delimiters in this function as they are specific for the Mawati Dataset
         try:
             comment = properties["cldf_comment"]
             if re.search(r"^[A-Z]{2,}:", comment[1:]):
@@ -614,6 +616,7 @@ class MawetiCellParser(CellParser):
                             if not value[-1] == closing:
                                 value = value + closing
                             variants.append(separator + value)
+        super().postprocess_form(properties, language_id)
 
 
 class MawetiCognateCellParser(MawetiCellParser):
