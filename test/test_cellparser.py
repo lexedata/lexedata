@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
 import unicodedata
+import argparse
+from pathlib import Path
+import json
 
 from lexedata.importer import cellparser as c
 
@@ -51,7 +54,6 @@ def test_cellparser_2(parser):
 
 def test_cellparser_3(parser):
     form = parser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
-    print(form)
     assert form == {
         "cldf_languageReference": "language",
         "cldf_source": {("language_s2", None)},
@@ -131,3 +133,51 @@ def test_cellparser_separate_1(parser):
 
 def test_cellparser_separate_2(parser):
     assert len(list(parser.separate("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]"))) == 1
+
+
+@pytest.fixture
+def mawetiparser():
+    metadata = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    dialect = argparse.Namespace(**json.load(metadata.open("r", encoding="utf8"))["special:fromexcel"])
+    element_semantics = dict()
+    bracket_pairs = dict()
+    for key, value in dialect.cell_parser["cell_parser_semantics"].items():
+        opening, closing, my_bool = value
+        bracket_pairs[opening] = closing
+        element_semantics[opening] = (key, my_bool)
+    initialized_cell_parser = getattr(c, dialect.cell_parser["name"])(
+        bracket_pairs=bracket_pairs,
+        element_semantics=element_semantics,
+        separation_pattern=fr"([{''.join(dialect.cell_parser['form_separator'])}])",
+        variant_separator=dialect.cell_parser["variant_separator"],
+        add_default_source=dialect.cell_parser["add_default_source"],
+    )
+    return initialized_cell_parser
+
+
+def test_mawetiparser_no_dublicate_sources(mawetiparser):
+    form = mawetiparser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
+    assert form == {
+        "cldf_languageReference": "language",
+        "cldf_source": {("language_s2", None)},
+        "cldf_value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
+        "phonetic": "dʒi'tɨka",
+        "variants": ["~[ʒi'tɨka]"],
+    }
+
+
+def test_mawetiparser_multiple_comments(mawetiparser):
+    form = mawetiparser.parse_form("/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
+                                   "(test comment) (test comment 2){4}",
+                                   "language")
+    assert form == {
+        "cldf_languageReference": "language",
+        "cldf_source": {("language_s4", None)},
+        "cldf_value": "/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
+                      "(test comment) (test comment 2){4}",
+        "phonetic": "e.ta.'kɾã",
+        "phonemic": "etakɾã",
+        "cldf_comment": "uno; solo\ttest comment\ttest comment 2",
+        "variants": ["~[test_variant with various comments]"],
+    }
+
