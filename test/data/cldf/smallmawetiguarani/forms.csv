@@ -1,20 +1,16 @@
 ID,Language_ID,Concept_ID,Form,orthographic,phonemic,phonetic,variants,Segments,Comment,procedural_comment,Value,Source
-paraguayan_guarani_one1,paraguayan_guarani,,,peteĩ,,,,,,,<peteĩ>,paraguayan_guarani_s1
-paraguayan_guarani_one1_1,paraguayan_guarani,,,peteĩha,,,,,FIRST,,<peteĩha> (FIRST),paraguayan_guarani_s1
-kaiwa_one1,kaiwa,,,,,petẽˈʔĩ,,,,,[petẽˈʔĩ],kaiwa_s1
-ache_one6,ache,,,,etakrã,,,,,,/etakrã/,ache_s1
-ache_one6_1,ache,,,,etakɾã,e.ta.'kɾã,,,uno; solo,,/etakɾã/ [e.ta.'kɾã] (uno; solo){4},ache_s4
-paraguayan_guarani_two1,paraguayan_guarani,,,mokõi,,,,,,,<mokõi>,paraguayan_guarani_s1
-kaiwa_two1,kaiwa,,,,,mõˈkõj̃,,,,,[mõˈkõj̃],kaiwa_s1
-ache_three1,ache,,,,buǰa1,,,,,,/buǰa1/,ache_s1
-paraguayan_guarani_three1,paraguayan_guarani,,,mbohapy,,,,,,,<mbohapy>,paraguayan_guarani_s1
-kaiwa_three1,kaiwa,,,,,mbohaˈpɨ,,,,,[mbohaˈpɨ],kaiwa_s1
-ache_three8,ache,,,,mirõ,,,,TWO,,/mirõ/ (TWO),ache_s1
-ache_three8_1,ache,,,,bĩɾõ1,mĩ.'ɾõ1,,,dos,,/bĩɾõ1/ [mĩ.'ɾõ1] (dos){4},ache_s4
-ache_three9,ache,,,,bɾewi pɨʧa,bɾe.'wi pɨ.'ʧa,,,trés,,/bɾewi pɨʧa/ [bɾe.'wi pɨ.'ʧa] (trés){4},ache_s4
-ache_four1,ache,,,,irõdɨ,i.ɾõ.'ndɨ,,,la gente se mi subgrupo,,/irõdɨ/ [i.ɾõ.'ndɨ] (la gente se mi subgrupo){4},ache_s4
-paraguayan_guarani_four1,paraguayan_guarani,,,irundy,,,,,,,<irundy> #iɾundɨ#,paraguayan_guarani_s1
-kaiwa_four1,kaiwa,,,,,iɾũndɨ,,,,,[iɾũndɨ],kaiwa_s1
-ache_four8,ache,,,,gwɨɾa pɨʧã,gwɨ.'ɾa pɨ.'ʧa,,,cuatro,,/gwɨɾa pɨʧã/ [gwɨ.'ɾa pɨ.'ʧa] (cuatro){4},ache_s4
-kaiwa_five5,kaiwa,,,,,teʔiowaa,,,,,[teʔiowaa],kaiwa_s1
-kaiwa_five5_1,kaiwa,,,,,teɲoˈʔa,,,,,[teɲoˈʔa],kaiwa_s1
+ache_one,ache,one,,,etakɾã,e.ta.'kɾã,~[test_variant with various comments],,uno; solo	(test comment)	(test comment 2),,/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) (test comment) (test comment 2){4},ache_s4
+paraguayan_guarani_one,paraguayan_guarani,one,,peteĩ,,,,,uno	(Test comment 3),,<peteĩ>(uno){Guasch1962:670} (Test comment 3),paraguayan_guarani_sguasch1962[670]
+kaiwa_one,kaiwa,one,,,,petẽˈʔĩ,,,,PC: Test procedural commen,[petẽˈʔĩ] (NPC: Test procedural comment),kaiwa_s1
+ache_two,ache,two,,,bĩɾõ1,mĩ.'ɾõ1,%[testvariant],,dos,,/bĩɾõ1/ [mĩ.'ɾõ1] %[testvariant] (dos){4},ache_s4
+paraguayan_guarani_two,paraguayan_guarani,two,,mokõi,,,,,dos,PCP: Test procedural comment lands in variants,<mokõi>(dos){Guasch1962:616} (PCP: Test procedural comment lands in variants),paraguayan_guarani_sguasch1962[616]
+kaiwa_two,kaiwa,two,,,,mõˈkõj̃,,,(dos),CP: Procedural comment before real commen,[mõˈkõj̃] (PCP: Procedural comment before real comment) (dos),kaiwa_s1
+ache_three,ache,three,,,bɾewi pɨʧa,bɾe.'wi pɨ.'ʧa,,,trés,,/bɾewi pɨʧa/ [bɾe.'wi pɨ.'ʧa] (trés){4},ache_s4
+paraguayan_guarani_three,paraguayan_guarani,three,,mbohapy,,,,,tres,,<mbohapy>(tres){Guasch1962:598},paraguayan_guarani_sguasch1962[598]
+kaiwa_three,kaiwa,three,,,,mbohaˈpɨ,,,,,[mbohaˈpɨ],kaiwa_s1
+paraguayan_guarani_four,paraguayan_guarani,four,,irundy,,,,,cuatro,,<irundy>(cuatro){Guasch1962:542},paraguayan_guarani_sguasch1962[542]
+kaiwa_four,kaiwa,four,,,,iɾũndɨ,,,,,[iɾũndɨ],kaiwa_s1
+ache_four_1,ache,four_1,,,irõdɨ,i.ɾõ.'ndɨ,,,la gente se mi subgrupo,,/irõdɨ/ [i.ɾõ.'ndɨ] (la gente se mi subgrupo){4},ache_s4
+ache_five,ache,five,,,,,,,,,...,ache_s1
+paraguayan_guarani_five,paraguayan_guarani,five,,po,,,,,"cinco, neol.",,"<po>(cinco, neol.){Guasch1962:113}",paraguayan_guarani_sguasch1962[113]
+kaiwa_five,kaiwa,five,,,,teʔiowaa,,,,,[teʔiowaa],kaiwa_s1

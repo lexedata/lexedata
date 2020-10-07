@@ -165,7 +165,7 @@
     "tables": [
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
-            "dc:extent": 19,
+            "dc:extent": 15,
             "tableSchema": {
                 "columns": [
                     {
@@ -362,7 +362,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognateTable",
-            "dc:extent": 22,
+            "dc:extent": 13,
             "tableSchema": {
                 "columns": [
                     {

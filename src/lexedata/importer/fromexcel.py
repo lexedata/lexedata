@@ -238,9 +238,6 @@ class ExcelParser:
         row_object: RowObject,
         sources: t.List[t.Tuple[Source, t.Optional[str]]] = [],
     ) -> None:
-        form["cldf_id"] = "{:}_{:}".format(
-            form["cldf_languageReference"], row_object["cldf_id"]
-        )
         self.make_id_unique(form)
 
         self.insert_into_db(form)
@@ -363,18 +360,21 @@ class ExcelParser:
                     # TODO: Can we avoid that magic string '"Cell_Comment"'?
                     maybe_comment: t.Optional[str] = params.pop("Cell_Comment", None)
                     form = Form(params)
+                    # candidate for form[cldf_id] must be created here
+                    form["cldf_id"] = "{:}_{:}".format(
+                        form["cldf_languageReference"], row_object["cldf_id"]
+                    )
                     candidate_forms = self.find_db_candidates(
                         form, self.check_for_match
                     )
                     sources = form.pop("cldf_source", [])
-
                     if candidate_forms:
                         # if a candidate for form already exists, don't add the form
                         form_id = candidate_forms[0]
                         self.associate(form_id, row_object)
                     else:
                         # no candidates. form is created or not.
-                        if not self.on_form_not_found(form, cell_with_forms):
+                        if self.on_form_not_found(form, cell_with_forms):
                             form["cldf_id"] = "{:}_{:}".format(
                                 form["cldf_languageReference"], row_object["cldf_id"]
                             )
