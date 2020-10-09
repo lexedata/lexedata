@@ -48,11 +48,13 @@ install lexedata and all its dependencies on your computer and make it
 automatically updatable every time you pull a new version of the Lexedata
 repository from GitHub. Now you should be ready to use lexedata!
 
-## 3. Importing a lexical dataset to lexedata from excel
+## 3. Importing data (lexedata.importer)
+
+### 3.1 Importing a lexical dataset to lexedata from excel
 Lexedata has two ways of creating a lexical dataset from raw data depending on the format the raw data are in ("long" or "matrix"). 
 The "long" format assumes that every field in CLDF is a different column in your spreadsheet, and that each sheet of your spreadsheet is a different language. In other words, it assumes that you have a wordlist per language. The "matrix" format assumes that your spreadsheet is a comparative wordlist with different languages as different columns. You may have different kind of information in each cell (e.g. forms and translations), as long as they are machine readable.
 
-### 3.1 Importing a lexical dataset in lexedata using the "long" format
+#### 3.1.1 Importing a lexical dataset in lexedata using the "long" format
 In order to import a lexical dataset in a "long" excel format you use the following command.
 
 ```
@@ -60,17 +62,19 @@ python -m lexedata.importer.excelsinglewordlist --add-running-id <filename.xlsx>
 ```
 You can exclude individual sheets from being imported by using the option `--exclude-sheet <sheet name>`. @Gereon I am not sure I understand the rest of the command. I think that --concept-property TUS is so that this column is added to the concept table, instead of being treated as another language. 
 
-### 3.2 Importing a lexical dataset in lexedata using the "matrix" format
+#### 3.2.1 Importing a lexical dataset in lexedata using the "matrix" format
+
+#### 3.2 Adding a new language/new data to an existing lexical dataset in lexedata
 
 
+## 4. Enriching data (lexedata.enrich)
+
+### 4.1 Linking concepts to concepticon
+Lexedata can automatically link the concepts of a dataset with concepts sets in the Concepticon (https://concepticon.clld.org/). In order to use this functionality, navigate to your depository and type ```python -m lexedata.enrich.guess_concepticon Wordlist-metadata.json```.
+Your concepts.csv will now have two new columns: Concepticon ID and Concepticon Name. 
 
 
-### 3.2 Adding enriched data
-Adding segments, adding links to concepticon
-
-### 3.3 Automatic cognate detection
-
-## 4. Adding a new language/new data to an existing lexical dataset in lexedata
+### 4.2 Automatic cognate detection
 
 ## 5. How to edit raw data in lexedata
 
@@ -96,8 +100,9 @@ This command will perform tests to ensure that your cldf database has no errors.
 #### 4. commit and push your dataset to GitHub
 While in the dataset repository, type `git commit` and add a commit message describing your latest changes. Then type  `git push` to publish the latest version to GitHub.
 
+## 6. Exporting data (lexedata.exporter)
 
-## 6. Cognate Table export-import loop
+### 6.1 Cognate Table export-import loop
 
 Lexedata offers the possibility to edit and annotate cognate set (or
 root-meaning set) judgements in a spreadsheet format using the spreadsheet
@@ -148,3 +153,5 @@ as described in step 1. Hopefully, if you did not see any issues in step 1, you 
 #### 6. Commit and Push (publish) your new version on your dataset repository
 You now have an updated version of the repository. If you want to do more
 editing of cognate steps, start again at step 1.
+
+### 6.2 Exporting coded data for phylogenetic analyses
