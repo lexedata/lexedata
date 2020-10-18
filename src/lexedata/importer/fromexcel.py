@@ -7,6 +7,7 @@ import warnings
 import typing as t
 from pathlib import Path
 from tempfile import mkdtemp
+import logging
 
 from tqdm import tqdm
 
@@ -270,7 +271,8 @@ class ExcelParser:
                 # TODO: Don't drop the user in a PDB!!!!
                 # TODO: integrityerror was due to missing forms in database....
                 # breakpoint()
-                print(err)
+                #print(err)
+                pass
         return True
 
     def insert_into_db(self, object: O) -> bool:
@@ -592,6 +594,7 @@ def excel_parser_from_dialect(
 def load_dataset(
     metadata: Path, lexicon: str, db: str, cognate_lexicon: t.Optional[str]
 ):
+    logging.basicConfig(filename='warnings.log')
     dataset = pycldf.Dataset.from_metadata(metadata)
     dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     if db == "":
