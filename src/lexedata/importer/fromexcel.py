@@ -7,6 +7,7 @@ import warnings
 import typing as t
 from pathlib import Path
 from tempfile import mkdtemp
+import logging
 
 from tqdm import tqdm
 
@@ -67,7 +68,6 @@ class ExcelParser:
         output_dataset: pycldf.Dataset,
         db_fname: str,
         top: int = 2,
-        left: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
         row_header: t.List[str] = ["set", "cldf_name", None],
         check_for_match: t.List[str] = ["cldf_id"],
@@ -84,7 +84,7 @@ class ExcelParser:
 
         self.cell_parser: cell_parsers.NaiveCellParser = cellparser
         self.top = top
-        self.left = left
+        self.left = len(row_header) + 1
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
         self.check_for_language_match = check_for_language_match
@@ -270,7 +270,8 @@ class ExcelParser:
                 # TODO: Don't drop the user in a PDB!!!!
                 # TODO: integrityerror was due to missing forms in database....
                 # breakpoint()
-                print(err)
+                #print(err)
+                pass
         return True
 
     def insert_into_db(self, object: O) -> bool:
@@ -396,7 +397,6 @@ class ExcelCognateParser(ExcelParser):
         output_dataset: pycldf.Dataset,
         db_fname: str,
         top: int = 3,
-        left=None,  # TODO: Always derive this from the row header
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
         row_header=["set", "cldf_name", None],
         check_for_match: t.List[str] = ["cldf_id"],
@@ -410,7 +410,6 @@ class ExcelCognateParser(ExcelParser):
             output_dataset=output_dataset,
             db_fname=db_fname,
             top=top,
-            left=left or len(row_header) + 1,
             cellparser=cellparser,
             check_for_match=check_for_match,
             row_header=row_header,
@@ -473,7 +472,10 @@ def excel_parser_from_dialect(
         Row = Concept
         Parser = ExcelParser
     top = len(dialect.lang_cell_regexes) + 1
-    left = len(dialect.row_cell_regexes) + 1
+    row_header = []
+    for row_regex in dialect.row_cell_regexes:
+        match = re.fullmatch(row_regex, "", re.DOTALL)
+        row_header += list(match.groupdict().keys()) or [None]
     # prepare cellparser
     element_semantics = dict()
     bracket_pairs = dict()
@@ -499,7 +501,7 @@ def excel_parser_from_dialect(
                 output_dataset=output_dataset,
                 db_fname=db_fname,
                 top=top,
-                left=left,
+                row_header=row_header,
                 cellparser=initialized_cell_parser,
                 check_for_match=dialect.check_for_match,
                 check_for_row_match=dialect.check_for_row_match,
@@ -592,6 +594,7 @@ def excel_parser_from_dialect(
 def load_dataset(
     metadata: Path, lexicon: str, db: str, cognate_lexicon: t.Optional[str]
 ):
+    logging.basicConfig(filename='warnings.log')
     dataset = pycldf.Dataset.from_metadata(metadata)
     dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     if db == "":
