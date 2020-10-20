@@ -189,10 +189,11 @@ class NaiveCellParser:
         self, cell: openpyxl.cell.Cell, language_id: str, cell_identifier: str = ""
     ) -> t.Iterable[Form]:
         """Return form properties for every form in the cell"""
-        if not cell.value:
+        text = clean_cell_value(cell)
+        if not text:
             return []
 
-        for element in self.separate(cell.value):
+        for element in self.separate(text):
             try:
                 form = self.parse_form(element, language_id, cell_identifier)
             except KeyError:
@@ -219,8 +220,8 @@ class CellParser(NaiveCellParser):
             "/": ("phonemic", True),
         },
         separation_pattern: str = r"([;,])",
-        variant_separator: t.Optional[list] = ["~", "%"],
-        add_default_source: str = "{1}",
+        variant_separator: t.Optional[t.List[str]] = ["~", "%"],
+        add_default_source: t.Optional[str] = "{1}",
     ):
         self.bracket_pairs = bracket_pairs
         self.element_semantics = element_semantics
@@ -417,10 +418,10 @@ def alignment_from_braces(text, start=0):
     The "-" character is used as the alignment gap character, so it does not
     count towards the segment slices.
 
-    >>> slice_from_braces("t{e x}t")
-    ([(1, 3)], ["e", "x"])
-    >>> slice_from_braces("{ t - e } x { t }")
-    ([(0, 2), (3, 4)], ["t", "-", "e", "t"])
+    >>> alignment_from_braces("t{e x}t")
+    ([(1, 3)], ['e', 'x'])
+    >>> alignment_from_braces("{ t - e } x { t }")
+    ([(0, 2), (3, 4)], ['t', '-', 'e', 't'])
 
     """
     before, remainder = text.split("{", 1)
@@ -476,7 +477,7 @@ class MawetiCellParser(CellParser):
         element_semantics: t.Dict[str, str],
         separation_pattern: str,
         variant_separator: list,
-        add_default_source: str,
+        add_default_source: t.Optional[str],
     ):
         super(MawetiCellParser, self).__init__(
             bracket_pairs=bracket_pairs,
@@ -621,7 +622,9 @@ class MawetiCellParser(CellParser):
                             if not value[-1] == closing:
                                 value = value + closing
                             variants.append(separator + value)
-        super().postprocess_form(properties, language_id, comment_separator=comment_separator)
+        super().postprocess_form(
+            properties, language_id, comment_separator=comment_separator
+        )
 
 
 class MawetiCognateCellParser(MawetiCellParser):
