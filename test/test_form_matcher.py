@@ -1,3 +1,4 @@
+import pytest
 import argparse
 from pathlib import Path
 from tempfile import mkdtemp
@@ -52,7 +53,8 @@ class MockWorkbook:
             yield col
 
 
-def test_form_association():
+@pytest.fixture
+def minimal_parser_with_dialect():
     tmpdir = Path(mkdtemp("", "fromexcel"))
     forms = tmpdir / "forms.csv"
     with (forms).open("w") as f:
@@ -103,6 +105,10 @@ def test_form_association():
 
     EP = EP(dataset, db_fname=db)
     EP.write()
+    return EP
+
+
+def test_form_association(minimal_parser_with_dialect):
     lexicon_wb = MockWorkbook(
         [
             ["", "L1", "L2"],
@@ -110,14 +116,45 @@ def test_form_association():
             ["C2", "<L1C2>{1}", "<L2C2>{1}"],
         ]
     )
-    EP.parse_cells(lexicon_wb)
+    minimal_parser_with_dialect.parse_cells(lexicon_wb)
 
-    print(EP.cldfdatabase.query("SELECT cldf_form FROM FormTable"))
     assert set(
-        EP.cldfdatabase.query("SELECT cldf_languageReference, cldf_form FROM FormTable")
+        minimal_parser_with_dialect.cldfdatabase.query(
+            "SELECT cldf_languageReference, cldf_form FROM FormTable"
+        )
     ) == {
         ("l1", "L1C1"),
         ("l2", "L2C1"),
         ("l1", "L1C2"),
         ("l2", "L2C2"),
+    }
+
+
+def test_form_association_identical(minimal_parser_with_dialect):
+    lexicon_wb = MockWorkbook(
+        [
+            ["", "L1", "L2"],
+            ["C1", "<L1C1>{1}", "<L2C1>{1}"],
+            ["C2", "<L1C1>{1}", "<L2C2>{1}"],
+        ]
+    )
+    minimal_parser_with_dialect.parse_cells(lexicon_wb)
+
+    assert (
+        minimal_parser_with_dialect.cldfdatabase.query(
+            "SELECT cldf_languageReference, cldf_form FROM FormTable"
+        ).count(("l1", "L1C1"))
+        == 1
+    )
+
+    assert set(
+        minimal_parser_with_dialect.cldfdatabase.query(
+            """SELECT FormTable_cldf_id, ParameterTable_cldf_id
+            FROM FormTable_ParameterTable__cldf_parameterReference"""
+        )
+    ) == {
+        ("l1_c1", "c1"),
+        ("l1_c1", "c2"),
+        ("l2_c1", "c1"),
+        ("l2_c2", "c2"),
     }
