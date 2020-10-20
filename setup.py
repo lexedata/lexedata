@@ -24,6 +24,10 @@ setup(
         "pyclts",
         "lingpy",
         "unidecode",
+        "cldfbench",
+        "pyglottolog",
+        "pyconcepticon",
+        "pyclts"
     ],
     entry_points={
         "console_scripts": [

@@ -378,7 +378,9 @@ class ExcelParser:
                             form["cldf_id"] = "{:}_{:}".format(
                                 form["cldf_languageReference"], row_object["cldf_id"]
                             )
-                            self.create_form_with_sources(form, row_object, sources=sources)
+                            self.create_form_with_sources(
+                                form, row_object, sources=sources
+                            )
                             form_id = form["cldf_id"]
                             self.associate(form_id, row_object, comment=maybe_comment)
                         else:

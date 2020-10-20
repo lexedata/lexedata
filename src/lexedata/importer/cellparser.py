@@ -621,7 +621,9 @@ class MawetiCellParser(CellParser):
                             if not value[-1] == closing:
                                 value = value + closing
                             variants.append(separator + value)
-        super().postprocess_form(properties, language_id, comment_separator=comment_separator)
+        super().postprocess_form(
+            properties, language_id, comment_separator=comment_separator
+        )
 
 
 class MawetiCognateCellParser(MawetiCellParser):
