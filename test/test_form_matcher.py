@@ -180,7 +180,9 @@ def test_form_association_id_after_normalization(minimal_parser_with_dialect):
 
     assert (
         forms.count(("l1", "n\u0303")) + forms.count(("l1", "\xf1")) == 1
-    ), "Only one variant, either the composed or the decomposed version, should persist."
+    ), """Only one variant, either the composed or the decomposed version, should
+          persist. (It should be the decomposed one, but that is not a
+          guarantee of the code, just an implementation detail.)"""
 
     assert set(
         minimal_parser_with_dialect.cldfdatabase.query(
