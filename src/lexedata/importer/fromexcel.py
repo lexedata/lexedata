@@ -270,7 +270,7 @@ class ExcelParser:
                 # TODO: Don't drop the user in a PDB!!!!
                 # TODO: integrityerror was due to missing forms in database....
                 # breakpoint()
-                #print(err)
+                # print(err)
                 pass
         return True
 
@@ -490,7 +490,7 @@ def excel_parser_from_dialect(
         element_semantics=element_semantics,
         separation_pattern=fr"([{''.join(dialect.cell_parser['form_separator'])}])",
         variant_separator=dialect.cell_parser["variant_separator"],
-        add_default_source=dialect.cell_parser["add_default_source"],
+        add_default_source=dialect.cell_parser.get("add_default_source"),
     )
 
     class SpecializedExcelParser(Parser):
@@ -596,7 +596,7 @@ def excel_parser_from_dialect(
 def load_dataset(
     metadata: Path, lexicon: str, db: str, cognate_lexicon: t.Optional[str]
 ):
-    logging.basicConfig(filename='warnings.log')
+    logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
     dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     if db == "":
@@ -607,6 +607,9 @@ def load_dataset(
     try:
         EP = excel_parser_from_dialect(dialect, cognate=False)
     except KeyError:
+        logging.warning(
+            "Dialect not found or dialect was missing a key, falling back to default parser"
+        )
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     EP = EP(dataset, db_fname=db)

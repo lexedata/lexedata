@@ -219,8 +219,8 @@ class CellParser(NaiveCellParser):
             "/": ("phonemic", True),
         },
         separation_pattern: str = r"([;,])",
-        variant_separator: t.Optional[list] = ["~", "%"],
-        add_default_source: str = "{1}",
+        variant_separator: t.Optional[t.List[str]] = ["~", "%"],
+        add_default_source: t.Optional[str] = "{1}",
     ):
         self.bracket_pairs = bracket_pairs
         self.element_semantics = element_semantics
@@ -476,7 +476,7 @@ class MawetiCellParser(CellParser):
         element_semantics: t.Dict[str, str],
         separation_pattern: str,
         variant_separator: list,
-        add_default_source: str,
+        add_default_source: t.Optional[str],
     ):
         super(MawetiCellParser, self).__init__(
             bracket_pairs=bracket_pairs,
