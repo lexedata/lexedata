@@ -1,5 +1,6 @@
 import pytest
 import argparse
+import unicodedata
 from pathlib import Path
 from tempfile import mkdtemp
 
@@ -158,3 +159,37 @@ def test_form_association_identical(minimal_parser_with_dialect):
         ("l2_c1", "c1"),
         ("l2_c2", "c2"),
     }
+
+
+def test_form_association_id_after_normalization(minimal_parser_with_dialect):
+    f1 = "\xf1"  # Composed form of ñ
+    f2 = "n\u0303"  # Decomposed form of ñ
+    assert unicodedata.normalize("NFD", f1) == unicodedata.normalize("NFD", f2)
+    lexicon_wb = MockWorkbook(
+        [
+            ["", "L1", "L2"],
+            ["C1", f"<{f1}>{{1}}", "<L2C1>{1}"],
+            ["C2", f"<{f2}>{{1}}", "<L2C2>{1}"],
+        ]
+    )
+    minimal_parser_with_dialect.parse_cells(lexicon_wb)
+
+    forms = minimal_parser_with_dialect.cldfdatabase.query(
+        "SELECT cldf_languageReference, cldf_form FROM FormTable"
+    )
+
+    assert (
+        forms.count(("l1", "n\u0303")) + forms.count(("l1", "\xf1")) == 1
+    ), "Only one variant, either the composed or the decomposed version, should persist."
+
+    assert set(
+        minimal_parser_with_dialect.cldfdatabase.query(
+            """SELECT FormTable_cldf_id, ParameterTable_cldf_id
+            FROM FormTable_ParameterTable__cldf_parameterReference"""
+        )
+    ) == {
+        ("l1_c1", "c1"),
+        ("l1_c1", "c2"),
+        ("l2_c1", "c1"),
+        ("l2_c2", "c2"),
+    }, "Accordingly, both C1 and C2 should be linked to the same form."

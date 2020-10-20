@@ -42,7 +42,7 @@ def clean_cell_value(cell: op.cell.cell.Cell):
         if cell.value == int(cell.value):
             return int(cell.value)
         return cell.value
-    v = unicodedata.normalize("NFKD", (cell.value or "").strip())
+    v = unicodedata.normalize("NFKC", (cell.value or "").strip())
     if type(v) == float:
         if v == int(v):
             return int(v)

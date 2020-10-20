@@ -189,10 +189,11 @@ class NaiveCellParser:
         self, cell: openpyxl.cell.Cell, language_id: str, cell_identifier: str = ""
     ) -> t.Iterable[Form]:
         """Return form properties for every form in the cell"""
-        if not cell.value:
+        text = clean_cell_value(cell)
+        if not text:
             return []
 
-        for element in self.separate(cell.value):
+        for element in self.separate(text):
             try:
                 form = self.parse_form(element, language_id, cell_identifier)
             except KeyError:
