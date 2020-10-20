@@ -417,10 +417,10 @@ def alignment_from_braces(text, start=0):
     The "-" character is used as the alignment gap character, so it does not
     count towards the segment slices.
 
-    >>> slice_from_braces("t{e x}t")
-    ([(1, 3)], ["e", "x"])
-    >>> slice_from_braces("{ t - e } x { t }")
-    ([(0, 2), (3, 4)], ["t", "-", "e", "t"])
+    >>> alignment_from_braces("t{e x}t")
+    ([(1, 3)], ['e', 'x'])
+    >>> alignment_from_braces("{ t - e } x { t }")
+    ([(0, 2), (3, 4)], ['t', '-', 'e', 't'])
 
     """
     before, remainder = text.split("{", 1)
