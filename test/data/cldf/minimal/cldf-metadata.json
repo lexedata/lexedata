@@ -37,9 +37,15 @@
             "required": true
           },
           {
+              "datatype": "string",
+              "name": "Form",
+              "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#form"
+          },
+          {
             "datatype": "string",
-            "name": "Form",
-            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#form"
+            "separator": " ",
+            "name": "Segments",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#segments"
           },
           {
             "datatype": "string",

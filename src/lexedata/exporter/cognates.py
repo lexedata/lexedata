@@ -149,7 +149,7 @@ class ExcelWriter:
                         value = column.separator.join([str(v) for v in cogset[db_name]])
                     cell = ws.cell(row=row, column=col, value=value)
                     # Transfer the cognateset comment to the first Excel cell.
-                    if c_comment and col == 1 and cogset[c_comment]:
+                    if c_comment and col == 1 and cogset.get(c_comment):
                         cell.comment = op.comments.Comment(
                             cogset["Comment"], __package__
                         )

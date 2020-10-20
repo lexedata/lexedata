@@ -107,7 +107,7 @@ def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
 
 def test_toexcel_runs(filled_cldf_wordlist):
     writer = ExcelWriter(
-        filled_cldf_wordlist[0], filled_cldf_wordlist[1], override_database=True
+        dataset=filled_cldf_wordlist[0], database_url=filled_cldf_wordlist[1], override_database=True
     )
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
