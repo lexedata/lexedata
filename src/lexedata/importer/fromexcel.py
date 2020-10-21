@@ -11,6 +11,8 @@ import logging
 
 from tqdm import tqdm
 
+tqdm = lambda x: x
+
 import pycldf
 import openpyxl
 import sqlalchemy
@@ -27,7 +29,12 @@ from lexedata.types import (
     CogSet,
     Judgement,
 )
-from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
+from lexedata.util import (
+    string_to_id,
+    clean_cell_value,
+    get_cell_comment,
+    edit_distance,
+)
 from lexedata.cldf.db import Database
 import lexedata.importer.cellparser as cell_parsers
 import lexedata.error_handling as err
@@ -270,7 +277,7 @@ class ExcelParser:
                 # TODO: Don't drop the user in a PDB!!!!
                 # TODO: integrityerror was due to missing forms in database....
                 # breakpoint()
-                # print(err)
+                print(err)
                 pass
         return True
 
@@ -385,6 +392,27 @@ class ExcelParser:
                             form_id = form["cldf_id"]
                             self.associate(form_id, row_object, comment=maybe_comment)
                         else:
+                            print("The form you were looking for was")
+                            print(form)
+                            print("with this unicode representation:")
+                            print(str(form).encode("ascii", "backslashreplace"))
+                            print("The closest forms were")
+                            with self.cldfdatabase.connection() as conn:
+                                conn.create_function("edit_distance", 2, edit_distance)
+                                data = conn.execute(
+                                    """
+                                    SELECT cldf_id, *
+                                    FROM FormTable
+                                    WHERE cldf_languageReference == ?
+                                    ORDER BY edit_distance(cldf_value, ?)
+                                    LIMIT 10
+                                    """,
+                                    (
+                                        form["cldf_value"],
+                                        form["cldf_languageReference"],
+                                    ),
+                                ).fetchall()
+                            print(*data, sep="\n")
                             continue
         self.commit()
 

@@ -14,4 +14,4 @@ install:
 
 script:
   - black src/ test/
-  - tox || true
+  - tox
