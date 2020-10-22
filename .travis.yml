@@ -13,6 +13,9 @@ before_install:
   - (cd ~/.config/cldf/ && [ -d glottolog ] || git clone --depth 1 https://github.com/glottolog/glottolog.git)
   - (cd ~/.config/cldf/ && [ -d concepticon-data ] || git clone --depth 1 https://github.com/concepticon/concepticon-data.git)
   - (cd ~/.config/cldf/ && [ -d clts ] || git clone --depth 1 https://github.com/cldf-clts/clts.git)
+  - pip install cldfbench
+  - cldfbench catconfig
+  - cldfbench catinfo
   - pip install tox flake8 black
 
 install:
