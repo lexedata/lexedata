@@ -8,9 +8,15 @@ matrix:
       env: TOXENV=py38
     - env: TOXENV=flake8
 
+before_install:
+  - mkdir -p ~/.config/cldf/
+  - cd ~/.config/cldf/ && [ -d glottolog ] || git clone --depth 1 git@github.com:glottolog/glottolog.git
+  - cd ~/.config/cldf/ && [ -d concepticon-data ] || git clone --depth 1 git@github.com:concepticon/concepticon-data.git
+  - cd ~/.config/cldf/ && [ -d clts ] || git clone --depth 1 git@github.com:cldf-clts/clts.git
+  - pip install tox flake8 black
+
 install:
   - pip install .
-  - pip install tox flake8 black
 
 script:
   - black src/ test/
