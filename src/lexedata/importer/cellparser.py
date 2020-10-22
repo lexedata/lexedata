@@ -357,6 +357,14 @@ class CellParser(NaiveCellParser):
         self.postprocess_form(properties, language_id)
         return Form(properties)
 
+    def create_cldf_form(self, properties: t.Dict[str, t.Any], transcriptions: t.List[str]):
+        for candidate in transcriptions:
+            if candidate in properties:
+                return properties[candidate]
+            else:
+                continue
+        return None
+
     def postprocess_form(
         self,
         properties: t.Dict[str, t.Any],
@@ -411,6 +419,9 @@ class CellParser(NaiveCellParser):
         else:
             properties["cldf_source"] = source
 
+        # add form to properties
+        if "cldf_form" not in properties:
+            properties["cldf_form"] = self.create_cldf_form(properties, transcriptions)
 
 def alignment_from_braces(text, start=0):
     """Convert a brace-delimited morpheme description into slices and alignments.
