@@ -81,9 +81,7 @@ def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
     )
     # TODO: parameterize original, like the other parameters, over possible
     # test datasets
-    f.load_dataset(
-        Path(dataset.tablegroup._fname), str(lexicon), "", str(cogsets)
-    )
+    f.load_dataset(Path(dataset.tablegroup._fname), str(lexicon), "", str(cogsets))
 
 
 def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
@@ -94,9 +92,7 @@ def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
     )
     # TODO: parameterize original, like the other parameters, over possible
     # test datasets.
-    f.load_dataset(
-        Path(dataset.tablegroup._fname), str(lexicon), "", str(cogsets)
-    )
+    f.load_dataset(Path(dataset.tablegroup._fname), str(lexicon), "", str(cogsets))
     form_ids_from_excel = {form["ID"] for form in dataset["FormTable"]}
     form_ids_original = {form["ID"] for form in original["FormTable"]}
     assert form_ids_original == form_ids_from_excel, "{:} and {:} don't match.".format(
@@ -107,7 +103,9 @@ def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
 
 def test_toexcel_runs(filled_cldf_wordlist):
     writer = ExcelWriter(
-        dataset=filled_cldf_wordlist[0], database_url=filled_cldf_wordlist[1], override_database=True
+        dataset=filled_cldf_wordlist[0],
+        database_url=filled_cldf_wordlist[1],
+        override_database=True,
     )
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
@@ -145,7 +143,7 @@ def test_roundtrip(filled_cldf_wordlist):
     assert new_judgements == old_judgements
 
 
-#def test_mg_import():
+# def test_mg_import():
 #    f.load_dataset(
 #        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json",
 #        Path(__file__).parent / "data/excel/tg_lexicon.xlsx",

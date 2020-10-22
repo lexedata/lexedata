@@ -138,7 +138,9 @@ def test_cellparser_separate_2(parser):
 @pytest.fixture
 def mawetiparser():
     metadata = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
-    dialect = argparse.Namespace(**json.load(metadata.open("r", encoding="utf8"))["special:fromexcel"])
+    dialect = argparse.Namespace(
+        **json.load(metadata.open("r", encoding="utf8"))["special:fromexcel"]
+    )
     element_semantics = dict()
     bracket_pairs = dict()
     for key, value in dialect.cell_parser["cell_parser_semantics"].items():
@@ -167,17 +169,18 @@ def test_mawetiparser_no_dublicate_sources(mawetiparser):
 
 
 def test_mawetiparser_multiple_comments(mawetiparser):
-    form = mawetiparser.parse_form("/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
-                                   "(test comment) (test comment 2){4}",
-                                   "language")
+    form = mawetiparser.parse_form(
+        "/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
+        "(test comment) (test comment 2){4}",
+        "language",
+    )
     assert form == {
         "cldf_languageReference": "language",
         "cldf_source": {("language_s4", None)},
         "cldf_value": "/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
-                      "(test comment) (test comment 2){4}",
+        "(test comment) (test comment 2){4}",
         "phonetic": "e.ta.'kɾã",
         "phonemic": "etakɾã",
         "cldf_comment": "uno; solo\ttest comment\ttest comment 2",
         "variants": ["~[test_variant with various comments]"],
     }
-

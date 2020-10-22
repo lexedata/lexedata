@@ -11,6 +11,8 @@ import logging
 
 from tqdm import tqdm
 
+tqdm = lambda x: x
+
 import pycldf
 import openpyxl
 import sqlalchemy
@@ -27,7 +29,12 @@ from lexedata.types import (
     CogSet,
     Judgement,
 )
-from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
+from lexedata.util import (
+    string_to_id,
+    clean_cell_value,
+    get_cell_comment,
+    edit_distance,
+)
 from lexedata.cldf.db import Database
 import lexedata.importer.cellparser as cell_parsers
 import lexedata.error_handling as err
@@ -270,7 +277,7 @@ class ExcelParser:
                 # TODO: Don't drop the user in a PDB!!!!
                 # TODO: integrityerror was due to missing forms in database....
                 # breakpoint()
-                # print(err)
+                print(err)
                 pass
         return True
 
@@ -385,6 +392,69 @@ class ExcelParser:
                             form_id = form["cldf_id"]
                             self.associate(form_id, row_object, comment=maybe_comment)
                         else:
+                            print(
+                                "The missing form was {:} in {:}, given as {:}.".format(
+                                    row_object["cldf_id"], this_lan, form["cldf_value"]
+                                )
+                            )
+                            with self.cldfdatabase.connection() as conn:
+                                conn.create_function("edit_distance", 2, edit_distance)
+                                conn.row_factory = sqlite3.Row
+                                data = conn.execute(
+                                    """
+                                    SELECT
+                                        cldf_languageReference as language,
+                                        ParameterTable.cldf_name as concept,
+                                        cldf_value as original
+                                    FROM FormTable
+                                        JOIN FormTable_ParameterTable__cldf_parameterReference
+                                            ON FormTable_cldf_id == FormTable.cldf_id
+                                        JOIN ParameterTable
+                                            ON ParameterTable_cldf_id == ParameterTable.cldf_id
+                                    WHERE
+                                        cldf_languageReference == ? AND
+                                        ({:})
+                                    ORDER BY
+                                        ({:})
+                                    LIMIT 3
+                                    """.format(
+                                        " OR ".join(
+                                            [
+                                                "edit_distance({:}, ?) < 0.3".format(m)
+                                                for m in self.check_for_match
+                                                if m
+                                                not in {
+                                                    "source",
+                                                    "cldf_languageReference",
+                                                }
+                                            ]
+                                        ),
+                                        " + ".join(
+                                            [
+                                                "edit_distance({:}, ?)".format(m)
+                                                for m in self.check_for_match
+                                                if m
+                                                not in {
+                                                    "source",
+                                                    "cldf_languageReference",
+                                                }
+                                            ]
+                                        ),
+                                    ),
+                                    [this_lan]
+                                    + [
+                                        form.get(m, "")
+                                        for m in self.check_for_match
+                                        if m not in {"source", "cldf_languageReference"}
+                                    ]
+                                    + [
+                                        form.get(m, "")
+                                        for m in self.check_for_match
+                                        if m not in {"source", "cldf_languageReference"}
+                                    ],
+                                ).fetchall()
+                            for row in data:
+                                print("Did you mean ", dict(row), "?")
                             continue
         self.commit()
 

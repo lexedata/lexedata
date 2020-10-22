@@ -96,3 +96,16 @@ def get_dataset(fname: Path) -> pycldf.Dataset:
     if fname.suffix == ".json":
         return pycldf.dataset.Dataset.from_metadata(fname)
     return pycldf.dataset.Dataset.from_data(fname)
+
+
+from lingpy.compare.strings import ldn_swap
+
+
+def edit_distance(text1: str, text2: str) -> float:
+    # We request LingPy as dependency anyway, so use its implementation
+    if not text1 and not text2:
+        return 0.3
+    text1 = uni.unidecode(text1 or "").lower()
+    text2 = uni.unidecode(text2 or "").lower()
+    length = max(len(text1), len(text2))
+    return ldn_swap(text1, text2, normalized=False) / length

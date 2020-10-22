@@ -2,16 +2,22 @@ language: python
 
 matrix:
   include:
-    - python: 3.7
-      env: TOXENV=py37
     - python: 3.8
       env: TOXENV=py38
-    - env: TOXENV=flake8
+
+before_install:
+  - mkdir -p ~/.config/cldf/
+  - (cd ~/.config/cldf/ && [ -d glottolog ] || git clone --depth 1 https://github.com/glottolog/glottolog.git)
+  - (cd ~/.config/cldf/ && [ -d concepticon-data ] || git clone --depth 1 https://github.com/concepticon/concepticon-data.git concepticon)
+  - (cd ~/.config/cldf/ && [ -d clts ] || git clone --depth 1 https://github.com/cldf-clts/clts.git)
+  - pip install cldfbench pyglottolog pyconcepticon pyclts
+  - cldfbench catconfig
+  - cldfbench catinfo
+  - pip install tox flake8 black
 
 install:
   - pip install .
-  - pip install tox flake8 black
 
 script:
   - black src/ test/
-  - tox || true
+  - tox
