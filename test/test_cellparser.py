@@ -4,8 +4,10 @@ import unicodedata
 import argparse
 from pathlib import Path
 import json
+from collections import OrderedDict
 
 from lexedata.importer import cellparser as c
+
 
 
 def n(s: str):
@@ -49,6 +51,7 @@ def test_cellparser_2(parser):
         "phonemic": "ta",
         "phonetic": "ta.'ʔa",
         "variants": ["['ta]"],
+        "cldf_form": "ta.'ʔa"
     }
 
 
@@ -60,6 +63,7 @@ def test_cellparser_3(parser):
         "cldf_value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]", "{2}"],
+        "cldf_form": "dʒi'tɨka"
     }
 
 
@@ -73,6 +77,7 @@ def test_cellparser_4(parser):
         "phonemic": "a",
         "phonetic": "a.'ʔa",
         "variants": ["/aʔa/"],
+        "cldf_form": "a.'ʔa"
     }
 
 
@@ -93,6 +98,7 @@ def test_cellparser_6(parser):
         "cldf_source": {("language_s1", None)},
         "cldf_value": "(GIVE BIRTH) [mbohaˈpɨ]",
         "phonetic": "mbohaˈpɨ",
+        "cldf_form": "mbohaˈpɨ"
     }
 
 
@@ -104,6 +110,7 @@ def test_cellparser_7(parser):
         "cldf_value": "[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]", "{2}"],
+        "cldf_form": "dʒi'tɨka"
     }
 
 
@@ -141,12 +148,12 @@ def mawetiparser():
     dialect = argparse.Namespace(
         **json.load(metadata.open("r", encoding="utf8"))["special:fromexcel"]
     )
-    element_semantics = dict()
-    bracket_pairs = dict()
-    for key, value in dialect.cell_parser["cell_parser_semantics"].items():
-        opening, closing, my_bool = value
+    element_semantics = OrderedDict()
+    bracket_pairs = OrderedDict()
+    for value in dialect.cell_parser["cell_parser_semantics"]:
+        name, opening, closing, my_bool = value
         bracket_pairs[opening] = closing
-        element_semantics[opening] = (key, my_bool)
+        element_semantics[opening] = (name, my_bool)
     initialized_cell_parser = getattr(c, dialect.cell_parser["name"])(
         bracket_pairs=bracket_pairs,
         element_semantics=element_semantics,
@@ -165,6 +172,7 @@ def test_mawetiparser_no_dublicate_sources(mawetiparser):
         "cldf_value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]"],
+        "cldf_form": "dʒi'tɨka"
     }
 
 
@@ -183,4 +191,5 @@ def test_mawetiparser_multiple_comments(mawetiparser):
         "phonemic": "etakɾã",
         "cldf_comment": "uno; solo\ttest comment\ttest comment 2",
         "variants": ["~[test_variant with various comments]"],
+        "cldf_form": "e.ta.'kɾã"
     }
