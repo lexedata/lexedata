@@ -533,7 +533,8 @@ class MawetiCellParser(CellParser):
         ...  "variants": ["%<lexidata>", "~/lεksidata/"],
         ...  "cldf_comment": "from lexicon + edit + data\\tanother comment",
         ...  "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first",
-        ...  "cldf_source": {("abui1241_s1", None)}}
+        ...  "cldf_source": {("abui1241_s1", None)},
+        ...  "cldf_form": "lεksedata",}
         True
         """
         # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
