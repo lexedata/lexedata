@@ -92,10 +92,10 @@ def minimal_parser_with_dialect():
                 "form_separator": ",",
                 "variant_separator": "~",
                 "name": "MawetiCellParser",
-                "cell_parser_semantics": {
-                    "cldf_form": ["<", ">", True],
-                    "cldf_source": ["{", "}", False],
-                },
+                "cell_parser_semantics": [
+                    ["cldf_form", "<", ">", True],
+                    ["cldf_source", "{", "}", False]
+                ]
             },
             check_for_match=["cldf_form"],
             check_for_row_match=["cldf_name"],
