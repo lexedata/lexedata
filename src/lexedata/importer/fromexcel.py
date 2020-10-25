@@ -44,7 +44,7 @@ from lexedata.cldf.db import Database
 
 O = t.TypeVar("O", bound=Object)
 
-
+logger = logging.getLogger(__name__)
 # NOTE: Excel uses 1-based indices, this shows up in a few places in this file.
 
 
@@ -275,11 +275,7 @@ class ExcelParser:
                 )
                 conn.commit()
             except sqlite3.IntegrityError as err:
-                # TODO: Don't drop the user in a PDB!!!!
-                # TODO: integrityerror was due to missing forms in database....
-                # breakpoint()
-                print(err)
-                pass
+                logger.error(err)
         return True
 
     def insert_into_db(self, object: O) -> bool:
@@ -455,7 +451,7 @@ class ExcelParser:
                                     ],
                                 ).fetchall()
                             for row in data:
-                                print("Did you mean ", dict(row), "?")
+                                logger.info(f"Did you mean {dict(row)} ?")
                             continue
         self.commit()
 
@@ -678,7 +674,7 @@ def load_dataset(
     try:
         EP = excel_parser_from_dialect(dialect, cognate=False)
     except KeyError:
-        logging.warning(
+        logger.warning(
             "Dialect not found or dialect was missing a key, falling back to default parser"
         )
         EP = ExcelParser
@@ -705,7 +701,7 @@ def load_dataset(
 class DB(ExcelParser):
     def init_db(self, output_dataset, fname=None):
         if fname is not None:
-            print("Warning: dbase fname set, but ignored")
+            logger.inf0("Warning: dbase fname set, but ignored")
         self.__cache = {}
         self.__dataset = output_dataset
 
