@@ -3,7 +3,6 @@
 import re
 import sqlite3
 import argparse
-import warnings
 import typing as t
 from pathlib import Path
 from tempfile import mkdtemp
@@ -16,7 +15,6 @@ tqdm = lambda x: x
 
 import pycldf
 import openpyxl
-import sqlalchemy
 from csvw.db import insert
 
 from lexedata.types import (
@@ -36,7 +34,6 @@ from lexedata.util import (
     get_cell_comment,
     edit_distance,
 )
-from lexedata.cldf.db import Database
 import lexedata.importer.cellparser as cell_parsers
 import lexedata.error_handling as err
 from lexedata.cldf.db import Database
@@ -45,6 +42,7 @@ from lexedata.cldf.db import Database
 O = t.TypeVar("O", bound=Object)
 
 logger = logging.getLogger(__name__)
+
 # NOTE: Excel uses 1-based indices, this shows up in a few places in this file.
 
 
@@ -52,25 +50,7 @@ def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
     return not any([clean_cell_value(cell) for cell in cells])
 
 
-# Adapt warnings – TODO: Probably the `logging` package would be better for
-# this job than `warnings`.
-def formatwarning(
-    message: str,
-    category: t.Type[Warning],
-    filename: str,
-    lineno: int,
-    line: t.Optional[str] = None,
-) -> str:
-    # ignore everything except the message
-    return str(message) + "\n"
-
-
-warnings.formatwarning = formatwarning
-
-
 class ExcelParser:
-    # TODO: Gereon an additional parameter row.object would be nice, too. To make it more generic.
-    # for now, .properties_from_row cannot be more generic because of the return Concept(....) etc.
     def __init__(
         self,
         output_dataset: pycldf.Dataset,
@@ -116,22 +96,8 @@ class ExcelParser:
         table = self.cldfdatabase.dataset[table_type]
         return [self.cldfdatabase.retranslate(table, item) for item in items]
 
-    # Run `write` for an ExcelParser after __init__, but not for an
-    # ExcelCognateParser, when constructing these objects from the command line
-    # input in load_mg_style_dataset
+    # Run `write` for an ExcelParser after __init__, but not for an ExcelCognateParser
     def write(self):
-        # Die when the database file already exists – either it's empty, then
-        # the user can delete it themself (so they should get a very explicit
-        # warning!), or it is not empty, then I don't want it. It could contain
-        # valuable data, the wrong table schema, or any other undesirable
-        # content, so we are better of dying and letting the user decide. TODO:
-        # If for quick testing, we sometimes want to ignore an existing file,
-        # that should be handled using eg. a `force` parameter to __init__
-        # which can be set from calling tests or the command line. Maybe we can
-        # accept existing empty files, eg. tempfiles, without complaint after
-        # we have checked that .write does not mind them. TODO: Well, actually,
-        # this is necessary so that the cognate parser can start working after
-        # the lexical parser. What is the way forward??
         if Path(self.cldfdatabase.fname).exists():
             raise FileExistsError(
                 "The database file {:} exists, but ExcelParser expects "
@@ -243,7 +209,6 @@ class ExcelParser:
     def create_form_with_sources(
         self,
         form: Form,
-        row_object: RowObject,
         sources: t.List[t.Tuple[Source, t.Optional[str]]] = [],
     ) -> None:
         self.make_id_unique(form)
@@ -281,9 +246,6 @@ class ExcelParser:
     def insert_into_db(self, object: O) -> bool:
         for key, value in object.items():
             if type(value) == list:
-                # TODO: Is there a shortcut? The csvw module has to do
-                # something similar when adding entries to the database, what
-                # do they do?
                 columns = self.cldfdatabase.dataset[
                     object.__table__
                 ].tableSchema.columns
@@ -304,6 +266,7 @@ class ExcelParser:
                 object.keys(),
                 tuple(object.values()),
             )
+            # commit to the database
             conn.commit()
         return True
 
@@ -362,10 +325,10 @@ class ExcelParser:
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
-                    # TODO: Can we avoid that magic string '"Cell_Comment"'?
+                    # Cellparser adds comment of a excel cell to "Cell_Comment" if given
                     maybe_comment: t.Optional[str] = params.pop("Cell_Comment", None)
                     form = Form(params)
-                    # candidate for form[cldf_id] must be created here
+                    # create candidate for form[cldf_id]
                     form["cldf_id"] = "{:}_{:}".format(
                         form["cldf_languageReference"], row_object["cldf_id"]
                     )
@@ -384,12 +347,12 @@ class ExcelParser:
                                 form["cldf_languageReference"], row_object["cldf_id"]
                             )
                             self.create_form_with_sources(
-                                form, row_object, sources=sources
+                                form, sources=sources
                             )
                             form_id = form["cldf_id"]
                             self.associate(form_id, row_object, comment=maybe_comment)
                         else:
-                            print(
+                            logger.error(
                                 "The missing form was {:} in {:}, given as {:}.".format(
                                     row_object["cldf_id"], this_lan, form["cldf_value"]
                                 )
@@ -493,13 +456,6 @@ class ExcelCognateParser(ExcelParser):
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         # TODO: Ask Gereon: get_cell_comment with unicode normalization or not?
-        # TODO: When coming out of lexedata.exporter.cognates, the data may be
-        # quite rich, it might even contain list-valued entries, separated by
-        # the same separator used in the CLDF, or sources with context. We need
-        # to parse this wisely, WHILE ALSO assume that some human touched the
-        # data and made it messy. The same flexibility would actually be nice
-        # for MG-style datasets, so I suggest to not split this functionality
-        # out in a subclass.
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
         properties = dict(zip(self.row_header, data))
         # delete all possible None entries coming from row_header
@@ -585,8 +541,6 @@ def excel_parser_from_dialect(
             ValueError: When the cell cannot be parsed with the specified regex.
 
             """
-            # TODO: If a property appears twice, currently the later
-            # appearance overwrites the earlier one. Merge wiser.
             d: t.Dict[str, str] = {}
             for cell, cell_regex, comment_regex in zip(
                 column, dialect.lang_cell_regexes, dialect.lang_comment_regexes
@@ -626,8 +580,6 @@ def excel_parser_from_dialect(
             ValueError: When the cell cannot be parsed with the specified regex.
 
             """
-            # FIXME: If a property appears twice, currently the later
-            # appearance overwrites the earlier one. Merge wiser.
             d: t.Dict[str, str] = {}
             for cell, cell_regex, comment_regex in zip(
                 row, dialect.row_cell_regexes, dialect.row_comment_regexes
@@ -636,7 +588,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(cell_regex, cell.value.strip(), re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}, but found {cell.value}"
+                            f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}"
+                            f", but found {cell.value}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -647,7 +600,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match for {comment_regex}, but found {cell.comment.content}"
+                            f"In cell {cell.coordinate}: Expected to encounter match for {comment_regex},"
+                            f"but found {cell.comment.content}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -824,9 +778,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.db.startswith("sqlite:///"):
-        args.db = args.db[len("sqlite:///") :]
+        args.db = args.db[len("sqlite:///"):]
     if args.db == ":memory:":
         args.db = ""
-    # We have too many difficult database connections in different APIs, we
-    # refuse in-memory DBs and use a temporary file instead.
+
     load_dataset(args.metadata, args.lexicon, args.db, args.cogsets)
