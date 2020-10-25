@@ -8,6 +8,7 @@ import typing as t
 from pathlib import Path
 from tempfile import mkdtemp
 import logging
+from collections import OrderedDict
 
 from tqdm import tqdm
 
@@ -544,17 +545,17 @@ def excel_parser_from_dialect(
         Row = Concept
         Parser = ExcelParser
     top = len(dialect.lang_cell_regexes) + 1
+    # prepare cellparser
     row_header = []
     for row_regex in dialect.row_cell_regexes:
         match = re.fullmatch(row_regex, "", re.DOTALL)
         row_header += list(match.groupdict().keys()) or [None]
-    # prepare cellparser
-    element_semantics = dict()
-    bracket_pairs = dict()
-    for key, value in dialect.cell_parser["cell_parser_semantics"].items():
-        opening, closing, my_bool = value
+    element_semantics = OrderedDict()
+    bracket_pairs = OrderedDict()
+    for value in dialect.cell_parser["cell_parser_semantics"]:
+        name, opening, closing, my_bool = value
         bracket_pairs[opening] = closing
-        element_semantics[opening] = (key, my_bool)
+        element_semantics[opening] = (name, my_bool)
     initialized_cell_parser = getattr(cell_parsers, dialect.cell_parser["name"])(
         bracket_pairs=bracket_pairs,
         element_semantics=element_semantics,
@@ -666,7 +667,7 @@ def excel_parser_from_dialect(
 def load_dataset(
     metadata: Path, lexicon: str, db: str, cognate_lexicon: t.Optional[str]
 ):
-    logging.basicConfig(filename="warnings.log")
+    #logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
     dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     if db == "":
