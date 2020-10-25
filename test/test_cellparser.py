@@ -193,3 +193,22 @@ def test_mawetiparser_multiple_comments(mawetiparser):
         "variants": ["~[test_variant with various comments]"],
         "cldf_form": "e.ta.'kɾã"
     }
+
+
+def test_mawetiparser_postprocessing(mawetiparser):
+    form = {"orthographic": "<lexedata % lexidata>",
+            "phonemic": "/lεksedata ~ lεksidata/",
+            "variants": ["(from lexicon + edit + data)", "(another comment)"],
+            "cldf_comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)"
+            }
+    mawetiparser.postprocess(form, "abui1241")
+    assert form == {"orthographic": "lexedata",
+                    "phonemic": "lεksedata",
+                    "variants": ["%<lexidata>", "~/lεksidata/"],
+                    "cldf_comment": "from lexicon + edit + data\\tanother comment",
+                    "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first",
+                    "cldf_source": {("abui1241_s1", None)},
+                    "cldf_form": "lεksedata"
+                    }
+
+
