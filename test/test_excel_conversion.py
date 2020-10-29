@@ -21,24 +21,20 @@ def excel_wordlist():
 
 @pytest.fixture(
     params=[
-        ("data/cldf/minimal/cldf-metadata.json", "data/cldf/minimal/db.sqlite"),
-        (
-            "data/cldf/smallmawetiguarani/cldf-metadata.json",
-            "data/cldf/smallmawetiguarani/db.sqlite",
-        ),
-    ]
+        pytest.param("data/cldf/minimal/cldf-metadata.json", marks=pytest.mark.skip),
+        "data/cldf/smallmawetiguarani/cldf-metadata.json",
+        ]
 )
 def cldf_wordlist(request):
     return (
-        Path(__file__).parent / request.param[0],
-        Path(__file__).parent / request.param[1],
+        Path(__file__).parent / request.param
     )
 
 
 @pytest.fixture
-def empty_cldf_wordlist():
+def empty_cldf_wordlist(cldf_wordlist):
     # Copy the dataset metadata file to a temporary directory.
-    original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    original = Path(__file__).parent / cldf_wordlist
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
     shutil.copyfile(original, target)
@@ -47,17 +43,16 @@ def empty_cldf_wordlist():
     dataset = pycldf.Dataset.from_metadata(target)
     dataset.write(**{str(table.url): [] for table in dataset.tables})
     # Return the dataset API handle, which knows the metadata and tables.
-    return dataset
+    return dataset, target
 
 
 @pytest.fixture
 def filled_cldf_wordlist(cldf_wordlist):
     # Copy the dataset to a different temporary location, so that editing the
     # dataset will not change it.
-    original = cldf_wordlist[0]
+    original = cldf_wordlist
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
-    databasefile = dirname / cldf_wordlist[1].name
     shutil.copyfile(original, target)
     dataset = pycldf.Dataset.from_metadata(target)
     for table in dataset.tables:
@@ -70,14 +65,14 @@ def filled_cldf_wordlist(cldf_wordlist):
     t = target.parent / link
     shutil.copyfile(o, t)
     dataset.sources = pycldf.dataset.Sources.from_file(dataset.bibpath)
-    return dataset, databasefile
+    return dataset, target
 
 
 def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
     lexicon, cogsets = excel_wordlist
-    dataset = empty_cldf_wordlist
+    dataset = empty_cldf_wordlist[0]
     pycldf.Dataset.from_metadata(
-        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+        empty_cldf_wordlist[1]
     )
     # TODO: parameterize original, like the other parameters, over possible
     # test datasets
@@ -86,9 +81,9 @@ def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
 
 def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
     lexicon, cogsets = excel_wordlist
-    dataset = empty_cldf_wordlist
+    dataset = empty_cldf_wordlist[0]
     original = pycldf.Dataset.from_metadata(
-        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+        empty_cldf_wordlist[1]
     )
     # TODO: parameterize original, like the other parameters, over possible
     # test datasets.
@@ -143,10 +138,4 @@ def test_roundtrip(filled_cldf_wordlist):
     assert new_judgements == old_judgements
 
 
-# def test_mg_import():
-#    f.load_dataset(
-#        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json",
-#        Path(__file__).parent / "data/excel/tg_lexicon.xlsx",
-#        "",
-#        Path(__file__).parent / "data/excel/tg_cognates.xlsx",
-#    )
+

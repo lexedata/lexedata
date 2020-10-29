@@ -357,7 +357,11 @@ class CellParser(NaiveCellParser):
         self.postprocess_form(properties, language_id)
         return Form(properties)
 
-    def create_cldf_form(self, properties: t.Dict[str, t.Any], transcriptions: t.List[str]):
+    def create_cldf_form(self, properties: t.Dict[str, t.Any], transcriptions: t.List[str])->t.Optional[str]:
+        """
+        Return first transcription out of properties as a candidate for cldf_form.
+        Order of transcriptions corresponds to order of cell_parser_semantics as provided in the metadata.
+        """
         for candidate in transcriptions:
             if candidate in properties:
                 return properties[candidate]
@@ -406,9 +410,6 @@ class CellParser(NaiveCellParser):
             properties["cldf_comment"] = clean_comment
         except KeyError:
             pass
-        # TODO: Currently "..." lands in the forms, with empty other entries
-        # (and non-empty source). This is not too bad for now, how should it
-        # be?
         source = properties.pop("cldf_source", None)
         if self.add_default_source and source is None:
             source = self.add_default_source
@@ -422,6 +423,7 @@ class CellParser(NaiveCellParser):
         # add form to properties
         if "cldf_form" not in properties:
             properties["cldf_form"] = self.create_cldf_form(properties, transcriptions)
+
 
 def alignment_from_braces(text, start=0):
     """Convert a brace-delimited morpheme description into slices and alignments.
@@ -476,12 +478,6 @@ class CellParserHyperlink(CellParser):
 
 
 class MawetiCellParser(CellParser):
-    # TODO: Write a subclass for Maweti-Guarani that also uses what we know
-    # about that dataset:
-    # • TODO Pick out the two- or three-letter editor
-    #   procedural comments.
-    # • TODO: Split forms that contain '%' or '~', drop the variant in
-    #   variants.
     def __init__(
         self,
         bracket_pairs: t.Dict[str, str],
@@ -504,9 +500,15 @@ class MawetiCellParser(CellParser):
         language_id: str,
         comment_separator: str = "\t",
     ) -> None:
+        """
+        Post processing specific to the Maweti dataset
+        """
         # catch procedural comments (e.g. NPC: ...) in cldf_comments and add to corresponding field
         # but a procedural comment could land in variants, thus this case needs to be checked as well
-        # procedural_comments are stripped of delimiters in this function as they are specific for the Mawati Dataset
+        # procedural_comments are stripped of delimiters in this function as they are specific for the Maweti dataset
+        # TODO: Currently "..." lands in the forms, with empty other entries
+        # (and non-empty source). This is not too bad for now, how should it
+        # be?
         try:
             comment = properties["cldf_comment"]
             if re.search(r"^[A-Z]{2,}:", comment[1:]):
