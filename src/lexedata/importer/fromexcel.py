@@ -655,7 +655,7 @@ def load_dataset(
 class DB(ExcelParser):
     def init_db(self, output_dataset, fname=None):
         if fname is not None:
-            logger.inf0("Warning: dbase fname set, but ignored")
+            logger.info("Warning: dbase fname set, but ignored")
         self.__cache = {}
         self.__dataset = output_dataset
 
