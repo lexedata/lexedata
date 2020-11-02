@@ -4,8 +4,10 @@ import tempfile
 from pathlib import Path
 
 import pycldf
+import openpyxl
 
 import lexedata.importer.fromexcel as f
+from lexedata.importer.cognates import CognateImportParser
 from lexedata.exporter.cognates import ExcelWriter
 
 # todo: these test must be adapted to new interface of fromexcel.py
@@ -71,9 +73,6 @@ def filled_cldf_wordlist(cldf_wordlist):
 def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
     lexicon, cogsets = excel_wordlist
     dataset = empty_cldf_wordlist[0]
-    pycldf.Dataset.from_metadata(
-        empty_cldf_wordlist[1]
-    )
     # TODO: parameterize original, like the other parameters, over possible
     # test datasets
     f.load_dataset(Path(dataset.tablegroup._fname), str(lexicon), "", str(cogsets))
@@ -116,7 +115,7 @@ def test_roundtrip(filled_cldf_wordlist):
         (row[c_formReference], row[c_cogsetReference])
         for row in filled_cldf_wordlist[0]["CognateTable"].iterdicts()
     }
-    writer = ExcelWriter(filled_cldf_wordlist[0], filled_cldf_wordlist[1])
+    writer = ExcelWriter(filled_cldf_wordlist[0])
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
 
@@ -125,11 +124,13 @@ def test_roundtrip(filled_cldf_wordlist):
     filled_cldf_wordlist[0]["CognateTable"].write([])
     filled_cldf_wordlist[0]["CognatesetTable"].write([])
 
-    parser = f.ExcelCognateParser(filled_cldf_wordlist[0], excel_file=out_filename)
-    parser.left = len(writer.header) + 1
-    parser.parse_cells()
-    # Really? Isn't there a shortcut to do this?
-    parser.cldfdatabase.to_cldf(filled_cldf_wordlist[0].tablegroup._fname.parent)
+    ws_out = openpyxl.load_workbook(out_filename).active
+    parser = CognateImportParser.load_from_excel_with_metadata(filled_cldf_wordlist[0], "", ws_out)
+    parser.cache_dataset()
+    parser.drop_from_cache("CognatesetTable")
+    parser.drop_from_cache("CognateTable")
+    parser.parse_cells(ws_out)
+    parser.cldfdatabase.to_cldf(Path(filled_cldf_wordlist[0]).parent)
     new_judgements = {
         (row[c_formReference], row[c_cogsetReference])
         for row in filled_cldf_wordlist[0]["CognateTable"].iterdicts()
