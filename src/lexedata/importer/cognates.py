@@ -2,11 +2,99 @@ from pathlib import Path
 from tempfile import mkdtemp
 import typing as t
 from lexedata.types import *
+import pycldf
 
 import openpyxl
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 from lexedata.importer.fromexcel import ExcelCognateParser, DB
+
+
+def row_header_from_cognateset(
+        dataset: pycldf.Dataset,
+        sheet: openpyxl.worksheet.worksheet.Worksheet
+)->t.List[str]:
+    try:
+        c_comment = dataset["CognatesetTable", "comment"].name
+        comment_column = True
+    except KeyError:
+        c_comment = None
+        comment_column = False
+
+    row_header = []
+    for (header,) in sheet.iter_cols(
+        min_row=1,
+        max_row=1,
+        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
+    ):
+        column_name = header.value
+        if column_name is None:
+            column_name = dataset["CognatesetTable", "id"].name
+        elif column_name == "CogSet":
+            column_name = dataset["CognatesetTable", "id"].name
+        try:
+            column_name = dataset["CognatesetTable", column_name].name
+        except KeyError:
+            break
+        row_header.append(column_name)
+    return row_header
+
+
+class CognateImportParser(DB, ExcelCognateParser):
+
+    @classmethod
+    def load_from_excel_with_metadata(cls, dataset: pycldf.Dataset, db:str, cognate_excel: openpyxl.worksheet.worksheet.Worksheet):
+        row_header = row_header_from_cognateset(dataset, cognate_excel)
+        return cls(
+            dataset,
+            db,
+            top=2,
+            # When the dataset has cognateset comments, that column is not a header
+            # column, so this value is one higher than the actual number of header
+            # columns, so actually correct for the 1-based indices. When there is
+            # no comment column, we need to compensate for the 1-based Excel
+            # indices.
+            cellparser=cell_parsers.CellParserHyperlink(),
+            row_header=row_header,
+            check_for_language_match=[dataset["LanguageTable", "name"].name],
+            check_for_match=[dataset["FormTable", "id"].name],
+            check_for_row_match=[dataset["CognatesetTable", "id"].name],
+        )
+
+    def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
+        data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
+        comment = get_cell_comment(column[0])
+        id = string_to_id(data[0])
+        l =  Language(
+            {
+                # an id candidate must be provided, which is transformed into a unique id
+                self.dataset["LanguageTable", "id"].name: id,
+                self.dataset["LanguageTable", "name"].name: data[0],
+            }
+        )
+        #print(l)
+        return l
+
+    def properties_from_row(
+            self, row: t.List[openpyxl.cell.Cell]
+    ) -> t.Optional[RowObject]:
+        data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
+        properties = dict(zip(self.row_header, data))
+        if not any(properties.values()):
+            return None
+        # delete all possible None entries coming from row_header
+        while None in properties.keys():
+            del properties[None]
+
+        comment = "\t".join(
+            [get_cell_comment(cell) for cell in row[: self.left - 1]]
+        ).strip()
+        properties[
+            self.dataset[
+                "CognatesetTable", "comment"
+            ].name
+        ] = comment
+        return CogSet(properties)
 
 
 if __name__ == "__main__":
@@ -56,91 +144,9 @@ if __name__ == "__main__":
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / "db.sqlite"
+    dataset = pycldf.Dataset.from_data(args.metadata)
     ws = openpyxl.load_workbook(args.cogsets).active
-
-    dataset = pycldf.Dataset.from_metadata(args.metadata)
-
-    # TODO the following lines of code would make a good template for the
-    # import of cognate sets in fromexcel. Can we write a single function for
-    # both use cases?
-
-    try:
-        c_comment = dataset["CognatesetTable", "comment"].name
-        comment_column = True
-    except KeyError:
-        c_comment = None
-        comment_column = False
-
-    row_header = []
-    for (header,) in ws.iter_cols(
-        min_row=1,
-        max_row=1,
-        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
-    ):
-        column_name = header.value
-        if column_name is None:
-            column_name = dataset["CognatesetTable", "id"].name
-        elif column_name == "CogSet":
-            column_name = dataset["CognatesetTable", "id"].name
-        try:
-            column_name = dataset["CognatesetTable", column_name].name
-        except KeyError:
-            break
-        row_header.append(column_name)
-
-    class Parser(DB, ExcelCognateParser):
-        def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
-            data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
-            comment = get_cell_comment(column[0])
-            id = string_to_id(data[0])
-            return Language(
-                {
-                    # an id candidate must be provided, which is transformed into a unique id
-                    dataset["LanguageTable", "name"].name: data[0],
-                }
-            )
-
-        def properties_from_row(
-            self, row: t.List[openpyxl.cell.Cell]
-        ) -> t.Optional[RowObject]:
-            data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
-            properties = dict(zip(self.row_header, data))
-            if not any(properties.values()):
-                return None
-            # delete all possible None entries coming from row_header
-            while None in properties.keys():
-                del properties[None]
-
-            comment = "\t".join(
-                [get_cell_comment(cell) for cell in row[: self.left - 1]]
-            ).strip()
-            properties[
-                self._ExcelParserDictionaryDB__dataset[
-                    "CognatesetTable", "comment"
-                ].name
-            ] = comment
-            return CogSet(properties)
-
-    excel_parser_cognate = Parser(
-        dataset,
-        db,
-        top=2,
-        # When the dataset has cognateset comments, that column is not a header
-        # column, so this value is one higher than the actual number of header
-        # columns, so actually correct for the 1-based indices. When there is
-        # no comment column, we need to compensate for the 1-based Excel
-        # indices.
-        cellparser=cell_parsers.CellParserHyperlink(),
-        row_header=row_header,
-        check_for_language_match=[dataset["LanguageTable", "name"].name],
-        check_for_match=[dataset["FormTable", "id"].name],
-        check_for_row_match=[dataset["CognatesetTable", "id"].name],
-    )
-
-    # TODO: This often doesn't work if the dataset is not perfect before this
-    # program is called. In particular, it doesn't work if there are errors in
-    # the cognate sets or judgements, which will be reset in just a moment. How
-    # else should we solve this?
+    excel_parser_cognate = CognateImportParser.load_from_excel_with_metadata(dataset, db, ws)
     excel_parser_cognate.cache_dataset()
     excel_parser_cognate.drop_from_cache("CognatesetTable")
     excel_parser_cognate.drop_from_cache("CognateTable")
