@@ -2,6 +2,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 import typing as t
 from lexedata.types import *
+import pycldf
 
 import openpyxl
 import lexedata.importer.cellparser as cell_parsers
@@ -21,7 +22,7 @@ def row_header_from_cognateset(
         comment_column = False
 
     row_header = []
-    for (header,) in ws.iter_cols(
+    for (header,) in sheet.iter_cols(
         min_row=1,
         max_row=1,
         max_col=len(dataset["CognatesetTable"].tableSchema.columns),
@@ -42,10 +43,8 @@ def row_header_from_cognateset(
 class CognateImportParser(DB, ExcelCognateParser):
 
     @classmethod
-    def load_from_excel_with_metadata(cls, metadata: str, cognate_excel: str):
-        dataset = pycldf.Dataset.from_metadata(metadata)
-        ws = openpyxl.load_workbook(cognate_excel).active
-        row_header = row_header_from_cognateset(dataset, ws)
+    def load_from_excel_with_metadata(cls, dataset: pycldf.Dataset, db:str, cognate_excel: openpyxl.worksheet.worksheet.Worksheet):
+        row_header = row_header_from_cognateset(dataset, cognate_excel)
         return cls(
             dataset,
             db,
@@ -66,12 +65,15 @@ class CognateImportParser(DB, ExcelCognateParser):
         data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
         comment = get_cell_comment(column[0])
         id = string_to_id(data[0])
-        return Language(
+        l =  Language(
             {
                 # an id candidate must be provided, which is transformed into a unique id
-                dataset["LanguageTable", "name"].name: data[0],
+                self.dataset["LanguageTable", "id"].name: id,
+                self.dataset["LanguageTable", "name"].name: data[0],
             }
         )
+        #print(l)
+        return l
 
     def properties_from_row(
             self, row: t.List[openpyxl.cell.Cell]
@@ -88,7 +90,7 @@ class CognateImportParser(DB, ExcelCognateParser):
             [get_cell_comment(cell) for cell in row[: self.left - 1]]
         ).strip()
         properties[
-            self._ExcelParserDictionaryDB__dataset[
+            self.dataset[
                 "CognatesetTable", "comment"
             ].name
         ] = comment
@@ -142,7 +144,9 @@ if __name__ == "__main__":
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / "db.sqlite"
-    excel_parser_cognate = CognateImportParser.load_from_excel_with_metadata(args.metadata, args.cogsets)
+    dataset = pycldf.Dataset.from_data(args.metadata)
+    ws = openpyxl.load_workbook(args.cogsets).active
+    excel_parser_cognate = CognateImportParser.load_from_excel_with_metadata(dataset, db, ws)
     excel_parser_cognate.cache_dataset()
     excel_parser_cognate.drop_from_cache("CognatesetTable")
     excel_parser_cognate.drop_from_cache("CognateTable")
