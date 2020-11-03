@@ -12,6 +12,36 @@ from lexedata.importer.fromexcel import ExcelCognateParser, DB
 from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 
 
+class Parser(DB, ExcelCognateParser):
+    def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
+        data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
+        comment = get_cell_comment(column[0])
+        id = string_to_id(data[0])
+        return Language(
+            {
+                # an id candidate must be provided, which is transformed into a unique id
+                dataset["LanguageTable", "name"].name: data[0],
+            }
+        )
+
+    def properties_from_row(
+        self, row: t.List[openpyxl.cell.Cell]
+    ) -> t.Optional[RowObject]:
+        data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
+        properties = dict(zip(self.row_header, data))
+        if not any(properties.values()):
+            return None
+        # delete all possible None entries coming from row_header
+        while None in properties.keys():
+            del properties[None]
+
+        comment = "\t".join(
+            [get_cell_comment(cell) for cell in row[: self.left - 1]]
+        ).strip()
+        properties[self._DB__dataset["CognatesetTable", "comment"].name] = comment
+        return CogSet(properties)
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
@@ -88,35 +118,6 @@ if __name__ == "__main__":
         except KeyError:
             break
         row_header.append(column_name)
-
-    class Parser(DB, ExcelCognateParser):
-        def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
-            data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
-            comment = get_cell_comment(column[0])
-            id = string_to_id(data[0])
-            return Language(
-                {
-                    # an id candidate must be provided, which is transformed into a unique id
-                    dataset["LanguageTable", "name"].name: data[0],
-                }
-            )
-
-        def properties_from_row(
-            self, row: t.List[openpyxl.cell.Cell]
-        ) -> t.Optional[RowObject]:
-            data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
-            properties = dict(zip(self.row_header, data))
-            if not any(properties.values()):
-                return None
-            # delete all possible None entries coming from row_header
-            while None in properties.keys():
-                del properties[None]
-
-            comment = "\t".join(
-                [get_cell_comment(cell) for cell in row[: self.left - 1]]
-            ).strip()
-            properties[self._DB__dataset["CognatesetTable", "comment"].name] = comment
-            return CogSet(properties)
 
     excel_parser_cognate = Parser(
         dataset,
