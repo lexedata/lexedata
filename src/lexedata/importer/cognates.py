@@ -1,17 +1,18 @@
+import argparse
+import typing as t
 from pathlib import Path
 from tempfile import mkdtemp
-import typing as t
-from lexedata.types import *
 
+import pycldf
 import openpyxl
+
+from lexedata.types import *
 import lexedata.importer.cellparser as cell_parsers
-from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 from lexedata.importer.fromexcel import ExcelCognateParser, DB
+from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 
 
 if __name__ == "__main__":
-    import argparse
-    import pycldf
 
     parser = argparse.ArgumentParser(
         description="Load a Maweti-Guarani-style dataset into CLDF"
