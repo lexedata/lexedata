@@ -357,7 +357,9 @@ class CellParser(NaiveCellParser):
         self.postprocess_form(properties, language_id)
         return Form(properties)
 
-    def create_cldf_form(self, properties: t.Dict[str, t.Any], transcriptions: t.List[str])->t.Optional[str]:
+    def create_cldf_form(
+        self, properties: t.Dict[str, t.Any], transcriptions: t.List[str]
+    ) -> t.Optional[str]:
         """
         Return first transcription out of properties as a candidate for cldf_form.
         Order of transcriptions corresponds to order of cell_parser_semantics as provided in the metadata.

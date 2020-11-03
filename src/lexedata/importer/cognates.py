@@ -12,7 +12,7 @@ from lexedata.importer.fromexcel import ExcelCognateParser, DB
 from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 
 
-class Parser(DB, ExcelCognateParser):
+class Parser(ExcelCognateParser):
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
         data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
         comment = get_cell_comment(column[0])
@@ -31,11 +31,10 @@ class Parser(DB, ExcelCognateParser):
         properties: t.Dict[t.Optional[str], t.Any] = dict(zip(self.row_header, data))
         if not any(properties.values()):
             return None
+
         # delete all possible None entries coming from row_header
         cogset: t.Dict[str, t.Any] = {
-            key: value
-            for key, value in properties.items()
-            if key is not None
+            key: value for key, value in properties.items() if key is not None
         }
 
         while None in properties.keys():
@@ -47,7 +46,7 @@ class Parser(DB, ExcelCognateParser):
             if c is not None:
                 comments.append(c)
         comment = "\t".join(comments).strip()
-        cogset[self._DB__dataset["CognatesetTable", "comment"].name] = comment
+        cogset[self.db.dataset["CognatesetTable", "comment"].name] = comment
         return CogSet(cogset)
 
 
@@ -148,13 +147,13 @@ if __name__ == "__main__":
     # program is called. In particular, it doesn't work if there are errors in
     # the cognate sets or judgements, which will be reset in just a moment. How
     # else should we solve this?
-    excel_parser_cognate.cache_dataset()
-    excel_parser_cognate.drop_from_cache("CognatesetTable")
-    excel_parser_cognate.drop_from_cache("CognateTable")
+    excel_parser_cognate.db.cache_dataset()
+    excel_parser_cognate.db.drop_from_cache("CognatesetTable")
+    excel_parser_cognate.db.drop_from_cache("CognateTable")
     excel_parser_cognate.parse_cells(ws)
     for table_type in ["CognateTable", "CognatesetTable"]:
-        excel_parser_cognate._DB__dataset[table_type].common_props[
+        excel_parser_cognate.db.dataset[table_type].common_props[
             "dc:extent"
-        ] = excel_parser_cognate._DB__dataset[table_type].write(
-            excel_parser_cognate.retrieve(table_type)
+        ] = excel_parser_cognate.db.dataset[table_type].write(
+            excel_parser_cognate.db.retrieve(table_type)
         )

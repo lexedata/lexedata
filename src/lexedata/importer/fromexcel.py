@@ -256,9 +256,9 @@ class ExcelParser:
             # Parse the row header, creating or retrieving the associated row
             # object (i.e. a concept or a cognateset)
             properties = self.properties_from_row(row_header)
-            c_r_id = self.db.dataset[properties.__table__, "id"].name
-            c_r_name = self.db.dataset[properties.__table__, "name"].name
             if properties is not None:
+                c_r_id = self.db.dataset[properties.__table__, "id"].name
+                c_r_name = self.db.dataset[properties.__table__, "name"].name
                 similar = self.db.find_db_candidates(
                     properties, self.check_for_row_match
                 )
@@ -267,7 +267,10 @@ class ExcelParser:
                     break
                 else:
                     if self.on_row_not_found(properties, row[0]):
-                        properties[c_r_id] = string_to_id(properties.get(c_r_name, ""))
+                        if c_r_id not in properties:
+                            properties[c_r_id] = string_to_id(
+                                str(properties.get(c_r_name, ""))
+                            )
                         self.db.make_id_unique(properties)
                         self.db.insert_into_db(properties)
                     else:
@@ -297,10 +300,11 @@ class ExcelParser:
                     # Cellparser adds comment of a excel cell to "Cell_Comment" if given
                     maybe_comment: t.Optional[str] = params.pop("Cell_Comment", None)
                     form = Form(params)
-                    # create candidate for form[cldf_id]
-                    form[c_f_id] = "{:}_{:}".format(
-                        form[c_f_language], row_object[c_r_id]
-                    )
+                    if c_f_id not in form:
+                        # create candidate for form[cldf_id]
+                        form[c_f_id] = "{:}_{:}".format(
+                            form[c_f_language], row_object[c_r_id]
+                        )
                     candidate_forms = iter(
                         self.db.find_db_candidates(form, self.check_for_match)
                     )
