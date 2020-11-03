@@ -28,18 +28,27 @@ class Parser(DB, ExcelCognateParser):
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
-        properties = dict(zip(self.row_header, data))
+        properties: t.Dict[t.Optional[str], t.Any] = dict(zip(self.row_header, data))
         if not any(properties.values()):
             return None
         # delete all possible None entries coming from row_header
+        cogset: t.Dict[str, t.Any] = {
+            key: value
+            for key, value in properties.items()
+            if key is not None
+        }
+
         while None in properties.keys():
             del properties[None]
 
-        comment = "\t".join(
-            [get_cell_comment(cell) for cell in row[: self.left - 1]]
-        ).strip()
-        properties[self._DB__dataset["CognatesetTable", "comment"].name] = comment
-        return CogSet(properties)
+        comments: t.List[str] = []
+        for cell in row[: self.left - 1]:
+            c = get_cell_comment(cell)
+            if c is not None:
+                comments.append(c)
+        comment = "\t".join(comments).strip()
+        cogset[self._DB__dataset["CognatesetTable", "comment"].name] = comment
+        return CogSet(cogset)
 
 
 if __name__ == "__main__":
