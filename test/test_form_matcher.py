@@ -5,8 +5,22 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 import pycldf
+import pyclts
+import segments
+import cldfbench
+import cldfcatalog
 
 from lexedata.importer.fromexcel import excel_parser_from_dialect
+
+
+@pytest.fixture
+def bipa():
+    clts_path = cldfcatalog.Config.from_file().get_clone("clts")
+    clts = cldfbench.catalogs.CLTS(clts_path)
+    bipa = clts.api.bipa
+    tokenizer = segments.Tokenizer()
+
+    return bipa
 
 
 class C:
@@ -211,7 +225,7 @@ def test_form_association_identical(minimal_parser_with_dialect):
 def test_form_association_id_after_normalization(minimal_parser_with_dialect):
     f1 = "\xf1"  # Composed form of ñ
     f2 = "n\u0303"  # Decomposed form of ñ
-    assert unicodedata.normalize("NFD", f1) == unicodedata.normalize("NFD", f2)
+    assert unicodedata.normalize("NFC", f1) == unicodedata.normalize("NFC", f2)
     lexicon_wb = MockWorkbook(
         [
             ["", "L1", "L2"],
@@ -233,3 +247,17 @@ def test_form_association_id_after_normalization(minimal_parser_with_dialect):
     assert ["c1", "c2"] in [
         f["Parameter_ID"] for f in complete_forms
     ], "Accordingly, there should be one form both C1 and C2 are linked to."
+
+
+def test_all_ipa_symbols(minimal_parser_with_dialect, bipa):
+    lexicon_wb = MockWorkbook(
+        [["", "L1"]] + [[s, f"<{s:}>"] for s in bipa.sounds.keys()]
+    )
+    minimal_parser_with_dialect.parse_cells(lexicon_wb)
+
+    complete_forms = minimal_parser_with_dialect.db.retrieve("FormTable")
+    forms = {f["Form"] for f in complete_forms}
+
+    assert set(unicodedata.normalize("NFC", f) for f in bipa.sounds.keys()) == set(
+        unicodedata.normalize("NFC", f) for f in forms
+    ), "Some IPA symbols got lost under import"
