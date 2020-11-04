@@ -9,7 +9,6 @@ from collections import OrderedDict
 from lexedata.importer import cellparser as c
 
 
-
 def n(s: str):
     return unicodedata.normalize("NFKC", s)
 
@@ -17,9 +16,9 @@ def n(s: str):
 def test_cellparser_error():
     parser = c.NaiveCellParser()
     assert parser.parse_form("form ", "language") == {
-        "cldf_form": "form",
-        "cldf_languageReference": "language",
-        "cldf_value": "form ",
+        "Form": "form",
+        "Language_ID": "language",
+        "Value": "form ",
     }
 
 
@@ -35,8 +34,8 @@ def test_cellparser_empty(parser):
 
 def test_cellparser_1(parser):
     form = parser.parse_form("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]", "l1")
-    assert form["cldf_source"] == {("l1_s1", None)}
-    assert n(form["cldf_value"]) == n("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]")
+    assert form["Source"] == {("l1_s1", None)}
+    assert n(form["Value"]) == n("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]")
     assert n(form["orthographic"]) == n("tɨ̈nɨmpɨ̈'ä")
     assert n(form["phonetic"]) == n("tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa")
 
@@ -44,48 +43,48 @@ def test_cellparser_1(parser):
 def test_cellparser_2(parser):
     form = parser.parse_form("/ta/ [ta.'ʔa] ['ta] (cabello púbico){4}", "language")
     assert form == {
-        "cldf_comment": "cabello púbico",
-        "cldf_languageReference": "language",
-        "cldf_source": {("language_s4", None)},
-        "cldf_value": "/ta/ [ta.'ʔa] ['ta] (cabello púbico){4}",
+        "Comment": "cabello púbico",
+        "Language_ID": "language",
+        "Source": {("language_s4", None)},
+        "Value": "/ta/ [ta.'ʔa] ['ta] (cabello púbico){4}",
         "phonemic": "ta",
         "phonetic": "ta.'ʔa",
         "variants": ["['ta]"],
-        "cldf_form": "ta.'ʔa"
+        "Form": "ta.'ʔa",
     }
 
 
 def test_cellparser_3(parser):
     form = parser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
     assert form == {
-        "cldf_languageReference": "language",
-        "cldf_source": {("language_s2", None)},
-        "cldf_value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
+        "Language_ID": "language",
+        "Source": {("language_s2", None)},
+        "Value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]", "{2}"],
-        "cldf_form": "dʒi'tɨka"
+        "Form": "dʒi'tɨka",
     }
 
 
 def test_cellparser_4(parser):
     form = parser.parse_form(" /a/ [a.'ʔa] (cabello){4} /aʔa/", "language")
     assert form == {
-        "cldf_comment": "cabello",
-        "cldf_languageReference": "language",
-        "cldf_source": {("language_s4", None)},
-        "cldf_value": " /a/ [a.'ʔa] (cabello){4} /aʔa/",
+        "Comment": "cabello",
+        "Language_ID": "language",
+        "Source": {("language_s4", None)},
+        "Value": " /a/ [a.'ʔa] (cabello){4} /aʔa/",
         "phonemic": "a",
         "phonetic": "a.'ʔa",
         "variants": ["/aʔa/"],
-        "cldf_form": "a.'ʔa"
+        "Form": "a.'ʔa",
     }
 
 
 def test_cellparser_5(parser):
     form = parser.parse_form("[iɾũndɨ] (H.F.) (parir)", "language")
-    assert form["cldf_comment"] == "H.F."
-    assert form["cldf_source"] == {("language_s1", None)}
-    assert n(form["cldf_value"]) == n("[iɾũndɨ] (H.F.) (parir)")
+    assert form["Comment"] == "H.F."
+    assert form["Source"] == {("language_s1", None)}
+    assert n(form["Value"]) == n("[iɾũndɨ] (H.F.) (parir)")
     assert n(form["phonetic"]) == n("iɾũndɨ")
     assert form["variants"] == ["(parir)"]
 
@@ -93,24 +92,24 @@ def test_cellparser_5(parser):
 def test_cellparser_6(parser):
     form = parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ]", "language")
     assert form == {
-        "cldf_comment": "GIVE BIRTH",
-        "cldf_languageReference": "language",
-        "cldf_source": {("language_s1", None)},
-        "cldf_value": "(GIVE BIRTH) [mbohaˈpɨ]",
+        "Comment": "GIVE BIRTH",
+        "Language_ID": "language",
+        "Source": {("language_s1", None)},
+        "Value": "(GIVE BIRTH) [mbohaˈpɨ]",
         "phonetic": "mbohaˈpɨ",
-        "cldf_form": "mbohaˈpɨ"
+        "Form": "mbohaˈpɨ",
     }
 
 
 def test_cellparser_7(parser):
     form = parser.parse_form("[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}", "language")
     assert form == {
-        "cldf_languageReference": "language",
-        "cldf_source": {("language_s2", None)},
-        "cldf_value": "[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}",
+        "Language_ID": "language",
+        "Source": {("language_s2", None)},
+        "Value": "[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]", "{2}"],
-        "cldf_form": "dʒi'tɨka"
+        "Form": "dʒi'tɨka",
     }
 
 
@@ -121,11 +120,11 @@ def test_cellparser_8(parser):
         "language",
     )
     assert (
-        form["cldf_comment"]
+        form["Comment"]
         == "good-tasting (sweet honey, hard candy, chocolate candy, water)"
     )
-    assert form["cldf_languageReference"] == "language"
-    assert n(form["cldf_value"]) == n(
+    assert form["Language_ID"] == "language"
+    assert n(form["Value"]) == n(
         "<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water))){2}",  # noqa: E501
     )
     assert n(form["orthographic"]) == n("eniãcũpũ")
@@ -167,12 +166,12 @@ def mawetiparser():
 def test_mawetiparser_no_dublicate_sources(mawetiparser):
     form = mawetiparser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
     assert form == {
-        "cldf_languageReference": "language",
-        "cldf_source": {("language_s2", None)},
-        "cldf_value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
+        "Language_ID": "language",
+        "Source": {("language_s2", None)},
+        "Value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]"],
-        "cldf_form": "dʒi'tɨka"
+        "Form": "dʒi'tɨka",
     }
 
 
@@ -183,32 +182,32 @@ def test_mawetiparser_multiple_comments(mawetiparser):
         "language",
     )
     assert form == {
-        "cldf_languageReference": "language",
-        "cldf_source": {("language_s4", None)},
-        "cldf_value": "/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
+        "Language_ID": "language",
+        "Source": {("language_s4", None)},
+        "Value": "/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
         "(test comment) (test comment 2){4}",
         "phonetic": "e.ta.'kɾã",
         "phonemic": "etakɾã",
-        "cldf_comment": "uno; solo\ttest comment\ttest comment 2",
+        "Comment": "uno; solo\ttest comment\ttest comment 2",
         "variants": ["~[test_variant with various comments]"],
-        "cldf_form": "e.ta.'kɾã"
+        "Form": "e.ta.'kɾã",
     }
 
 
 def test_mawetiparser_postprocessing(mawetiparser):
-    form = {"orthographic": "<lexedata % lexidata>",
-            "phonemic": "/lεksedata ~ lεksidata/",
-            "variants": ["(from lexicon + edit + data)", "(another comment)"],
-            "cldf_comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)"
-            }
+    form = {
+        "orthographic": "<lexedata % lexidata>",
+        "phonemic": "/lεksedata ~ lεksidata/",
+        "variants": ["(from lexicon + edit + data)", "(another comment)"],
+        "Comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)",
+    }
     mawetiparser.postprocess_form(form, "abui1241")
-    assert form == {"orthographic": "lexedata",
-                    "phonemic": "lεksedata",
-                    "variants": ["~/lεksidata/", "%<lexidata>"],
-                    "cldf_comment": "from lexicon + edit + data\tanother comment",
-                    "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first",
-                    "cldf_source": {("abui1241_s1", None)},
-                    "cldf_form": "lεksedata"
-                    }
-
-
+    assert form == {
+        "orthographic": "lexedata",
+        "phonemic": "lεksedata",
+        "variants": ["~/lεksidata/", "%<lexidata>"],
+        "Comment": "from lexicon + edit + data\tanother comment",
+        "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first",
+        "Source": {("abui1241_s1", None)},
+        "Form": "lεksedata",
+    }

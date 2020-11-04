@@ -12,7 +12,7 @@ from lexedata.importer.fromexcel import ExcelCognateParser, DB
 from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 
 
-class Parser(ExcelCognateParser):
+class CognateEditParser(ExcelCognateParser):
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
         data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
         comment = get_cell_comment(column[0])
@@ -127,7 +127,7 @@ if __name__ == "__main__":
             break
         row_header.append(column_name)
 
-    excel_parser_cognate = Parser(
+    excel_parser_cognate = CognateEditParser(
         dataset,
         db,
         top=2,
@@ -151,9 +151,6 @@ if __name__ == "__main__":
     excel_parser_cognate.db.drop_from_cache("CognatesetTable")
     excel_parser_cognate.db.drop_from_cache("CognateTable")
     excel_parser_cognate.parse_cells(ws)
-    for table_type in ["CognateTable", "CognatesetTable"]:
-        excel_parser_cognate.db.dataset[table_type].common_props[
-            "dc:extent"
-        ] = excel_parser_cognate.db.dataset[table_type].write(
-            excel_parser_cognate.db.retrieve(table_type)
-        )
+    excel_parser_cognate.db.write_dataset_from_cache(
+        ["CognateTable", "CognatesetTable"]
+    )

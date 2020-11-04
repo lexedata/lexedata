@@ -7,7 +7,7 @@ import pycldf
 import openpyxl
 
 import lexedata.importer.fromexcel as f
-from lexedata.importer.cognates import CognateImportParser
+from lexedata.importer.cognates import CognateEditParser
 from lexedata.exporter.cognates import ExcelWriter
 
 # todo: these test must be adapted to new interface of fromexcel.py
@@ -25,12 +25,10 @@ def excel_wordlist():
     params=[
         pytest.param("data/cldf/minimal/cldf-metadata.json", marks=pytest.mark.skip),
         "data/cldf/smallmawetiguarani/cldf-metadata.json",
-        ]
+    ]
 )
 def cldf_wordlist(request):
-    return (
-        Path(__file__).parent / request.param
-    )
+    return Path(__file__).parent / request.param
 
 
 @pytest.fixture
@@ -81,9 +79,7 @@ def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
 def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
     lexicon, cogsets = excel_wordlist
     dataset = empty_cldf_wordlist[0]
-    original = pycldf.Dataset.from_metadata(
-        empty_cldf_wordlist[1]
-    )
+    original = pycldf.Dataset.from_metadata(empty_cldf_wordlist[1])
     # TODO: parameterize original, like the other parameters, over possible
     # test datasets.
     f.load_dataset(Path(dataset.tablegroup._fname), str(lexicon), "", str(cogsets))
@@ -125,7 +121,9 @@ def test_roundtrip(filled_cldf_wordlist):
     filled_cldf_wordlist[0]["CognatesetTable"].write([])
 
     ws_out = openpyxl.load_workbook(out_filename).active
-    parser = CognateImportParser.load_from_excel_with_metadata(filled_cldf_wordlist[0], "", ws_out)
+    parser = CognateImportParser.load_from_excel_with_metadata(
+        filled_cldf_wordlist[0], "", ws_out
+    )
     parser.cache_dataset()
     parser.drop_from_cache("CognatesetTable")
     parser.drop_from_cache("CognateTable")
@@ -137,6 +135,3 @@ def test_roundtrip(filled_cldf_wordlist):
     }
 
     assert new_judgements == old_judgements
-
-
-

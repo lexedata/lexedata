@@ -179,9 +179,9 @@ class NaiveCellParser:
     ) -> t.Optional[Form]:
         return Form(
             {
-                "cldf_value": form_string,
-                "cldf_form": form_string.strip(),
-                "cldf_languageReference": language_id,
+                "Value": form_string,
+                "Form": form_string.strip(),
+                "Language_ID": language_id,
             }
         )
 
@@ -213,9 +213,9 @@ class CellParser(NaiveCellParser):
             "/": "/",
         },
         element_semantics: t.Dict[str, str] = {
-            "(": ("cldf_comment", False),
+            "(": ("Comment", False),
             "[": ("phonetic", True),
-            "{": ("cldf_source", False),
+            "{": ("Source", False),
             "<": ("orthographic", True),
             "/": ("phonemic", True),
         },
@@ -288,8 +288,8 @@ class CellParser(NaiveCellParser):
         cell_identifier = "{}: ".format(cell_identifier) if cell_identifier else ""
 
         properties: t.Dict[str, t.Any] = {
-            "cldf_languageReference": language_id,
-            "cldf_value": form_string,
+            "Language_ID": language_id,
+            "Value": form_string,
         }
 
         # Semantics: 'None' for no variant expected, any string for the
@@ -334,11 +334,7 @@ class CellParser(NaiveCellParser):
             # clean this up in self.postprocessing
 
             if field in properties:
-                if (
-                    not expect_variant
-                    and field != "cldf_comment"
-                    and field != "cldf_source"
-                ):
+                if not expect_variant and field != "Comment" and field != "Source":
                     logger.warning(
                         f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}"
                     )
@@ -401,7 +397,7 @@ class CellParser(NaiveCellParser):
                 continue
         # remove delimiters from comment
         try:
-            comment = properties["cldf_comment"]
+            comment = properties["Comment"]
             comment = comment.split(comment_separator)
             clean_comment = ""
             for c in comment:
@@ -409,22 +405,22 @@ class CellParser(NaiveCellParser):
                 if c[0] in self.bracket_pairs and c.endswith(self.bracket_pairs[c[0]]):
                     clean_comment += c[1:-1] + comment_separator
             clean_comment = clean_comment.rstrip(comment_separator)
-            properties["cldf_comment"] = clean_comment
+            properties["Comment"] = clean_comment
         except KeyError:
             pass
-        source = properties.pop("cldf_source", None)
+        source = properties.pop("Source", None)
         if self.add_default_source and source is None:
             source = self.add_default_source
         # if source is already a set with source, don't change anything
         if source and not isinstance(source, set):
             source, context = self.source_from_source_string(source, language_id)
-            properties["cldf_source"] = {(source, context)}
+            properties["Source"] = {(source, context)}
         else:
-            properties["cldf_source"] = source
+            properties["Source"] = source
 
         # add form to properties
-        if "cldf_form" not in properties:
-            properties["cldf_form"] = self.create_cldf_form(properties, transcriptions)
+        if "Form" not in properties:
+            properties["Form"] = self.create_cldf_form(properties, transcriptions)
 
 
 def alignment_from_braces(text, start=0):
@@ -512,25 +508,25 @@ class MawetiCellParser(CellParser):
         # (and non-empty source). This is not too bad for now, how should it
         # be?
         try:
-            comment = properties["cldf_comment"]
+            comment = properties["Comment"]
             if re.search(r"^[A-Z]{2,}:", comment[1:]):
                 properties["procedural_comment"] = comment[1:-1]  # strip delimiters
-                del properties["cldf_comment"]
+                del properties["Comment"]
         except KeyError:
             pass
         # if source present, turn into Source object
-        source = properties.pop("cldf_source", None)
+        source = properties.pop("Source", None)
         if source:
             source, context = self.source_from_source_string(source, language_id)
-            properties["cldf_source"] = {(source, context)}
+            properties["Source"] = {(source, context)}
         # TODO: Ask Gereon: What kind of separator between comments and sources?
         # if variants already exists, it may contain a actual variant, additional comments or sources
         start_of_comment = ""
         start_of_source = ""
         for k, v in self.element_semantics.items():
-            if v[0] == "cldf_comment":
+            if v[0] == "Comment":
                 start_of_comment = k
-            if v[0] == "cldf_source":
+            if v[0] == "Source":
                 start_of_source = k
         try:
             actual_variants = []
@@ -552,13 +548,13 @@ class MawetiCellParser(CellParser):
                             properties["procedural_comment"] = variant[1:-1]
                     else:
                         try:
-                            properties["cldf_comment"] += comment_separator + variant
+                            properties["Comment"] += comment_separator + variant
                         except KeyError:
-                            properties["cldf_comment"] = variant
+                            properties["Comment"] = variant
 
                 # check for misplaced sources
                 elif start == start_of_source:
-                    properties.setdefault("cldf_source", set()).add(
+                    properties.setdefault("Source", set()).add(
                         self.source_from_source_string(variant, language_id)
                     )
 
