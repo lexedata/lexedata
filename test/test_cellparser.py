@@ -184,7 +184,8 @@ def test_mawetiparser_multiple_comments(mawetiparser):
     assert form == {
         "Language_ID": "language",
         "Source": {"language_s4"},
-        "Value": "/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
+        "Value": ""
+        "/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
         "(test comment) (test comment 2){4}",
         "phonetic": "e.ta.'kɾã",
         "phonemic": "etakɾã",
@@ -199,7 +200,8 @@ def test_mawetiparser_postprocessing(mawetiparser):
         "orthographic": "<lexedata % lexidata>",
         "phonemic": "/lεksedata ~ lεksidata/",
         "variants": ["(from lexicon + edit + data)", "(another comment)"],
-        "Comment": "(GAK: We should pick one of those names, I'm 80% sure it should be the first)",
+        "Comment": ""
+        "(GAK: We should pick one of those names, I'm 80% sure it should be the first)",
     }
     mawetiparser.postprocess_form(form, "abui1241")
     assert form == {
@@ -207,7 +209,8 @@ def test_mawetiparser_postprocessing(mawetiparser):
         "phonemic": "lεksedata",
         "variants": ["~/lεksidata/", "%<lexidata>"],
         "Comment": "from lexicon + edit + data\tanother comment",
-        "procedural_comment": "GAK: We should pick one of those names, I'm 80% sure it should be the first",
+        "procedural_comment": ""
+        "GAK: We should pick one of those names, I'm 80% sure it should be the first",
         "Source": {"abui1241_s1"},
         "Form": "lεksedata",
     }
