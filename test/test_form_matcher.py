@@ -53,6 +53,14 @@ class MockWorkbook:
                 break
             yield col
 
+    @property
+    def max_column(self):
+        return max(len(r) for r in self.data)
+
+    @property
+    def max_row(self):
+        return len(self.data)
+
 
 @pytest.fixture
 def minimal_parser_with_dialect():
@@ -169,7 +177,35 @@ def test_form_association_identical(minimal_parser_with_dialect):
     )
     minimal_parser_with_dialect.parse_cells(lexicon_wb)
 
-    assert list(minimal_parser_with_dialect.db.retrieve("FormTable")) == [{'Language_ID': 'l1', 'Value': '<L1C1>{1}', 'Form': 'L1C1', 'variants': [], 'Source': {('l1_s1', None)}, 'ID': 'l1_c1', 'Parameter_ID': ['c1', 'c2']}, {'Language_ID': 'l2', 'Value': '<L2C1>{1}', 'Form': 'L2C1', 'variants': [], 'Source': {('l2_s1', None)}, 'ID': 'l2_c1', 'Parameter_ID': ['c1']}, {'Language_ID': 'l2', 'Value': '<L2C2>{1}', 'Form': 'L2C2', 'variants': [], 'Source': {('l2_s1', None)}, 'ID': 'l2_c2', 'Parameter_ID': ['c2']}]
+    assert list(minimal_parser_with_dialect.db.retrieve("FormTable")) == [
+        {
+            "Language_ID": "l1",
+            "Value": "<L1C1>{1}",
+            "Form": "L1C1",
+            "variants": [],
+            "Source": {("l1_s1", None)},
+            "ID": "l1_c1",
+            "Parameter_ID": ["c1", "c2"],
+        },
+        {
+            "Language_ID": "l2",
+            "Value": "<L2C1>{1}",
+            "Form": "L2C1",
+            "variants": [],
+            "Source": {("l2_s1", None)},
+            "ID": "l2_c1",
+            "Parameter_ID": ["c1"],
+        },
+        {
+            "Language_ID": "l2",
+            "Value": "<L2C2>{1}",
+            "Form": "L2C2",
+            "variants": [],
+            "Source": {("l2_s1", None)},
+            "ID": "l2_c2",
+            "Parameter_ID": ["c2"],
+        },
+    ]
 
 
 def test_form_association_id_after_normalization(minimal_parser_with_dialect):
@@ -194,4 +230,6 @@ def test_form_association_id_after_normalization(minimal_parser_with_dialect):
           persist. (It should be the NFC one, but that is not a
           guarantee of the code, just an implementation detail.)"""
 
-    assert ["c1","c2"] in [f["Parameter_ID"] for f in complete_forms], "Accordingly, there should be one form both C1 and C2 are linked to."
+    assert ["c1", "c2"] in [
+        f["Parameter_ID"] for f in complete_forms
+    ], "Accordingly, there should be one form both C1 and C2 are linked to."

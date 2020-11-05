@@ -50,6 +50,7 @@ class DB:
         if fname is not None:
             logger.info("Warning: dbase fname set, but ignored")
         self.dataset = output_dataset
+        self.cache = {}
 
     def cache_dataset(self):
         for table in self.dataset.tables:

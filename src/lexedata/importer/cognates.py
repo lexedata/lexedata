@@ -20,7 +20,7 @@ class CognateEditParser(ExcelCognateParser):
         return Language(
             {
                 # an id candidate must be provided, which is transformed into a unique id
-                dataset["LanguageTable", "name"].name: data[0],
+                self.db.dataset["LanguageTable", "name"].name: data[0],
             }
         )
 
@@ -62,12 +62,6 @@ if __name__ == "__main__":
         help="Path to an Excel file containing cogsets and cognatejudgements",
     )
     parser.add_argument(
-        "--db",
-        nargs="?",
-        default="",
-        help="Where to store the temp from reading the word list",
-    )
-    parser.add_argument(
         "--metadata",
         nargs="?",
         type=Path,
@@ -82,19 +76,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.db.startswith("sqlite:///"):
-        args.db = args.db[len("sqlite:///") :]
-    if args.db == ":memory:":
-        args.db = ""
-    # Refuse in-memory DBs and use a temporary file instead. TODO: Actually,
-    # now that we have recovered and are back to using only CLDF, we should
-    # permit in-memory DBs again, they might be a lot faster on machines where
-    # temporary files do not live in RAM.
-
-    db = args.db
-    if db == "":
-        tmpdir = Path(mkdtemp("", "fromexcel"))
-        db = tmpdir / "db.sqlite"
     ws = openpyxl.load_workbook(args.cogsets).active
 
     dataset = pycldf.Dataset.from_metadata(args.metadata)
@@ -102,13 +83,6 @@ if __name__ == "__main__":
     # TODO the following lines of code would make a good template for the
     # import of cognate sets in fromexcel. Can we write a single function for
     # both use cases?
-
-    try:
-        c_comment = dataset["CognatesetTable", "comment"].name
-        comment_column = True
-    except KeyError:
-        c_comment = None
-        comment_column = False
 
     row_header = []
     for (header,) in ws.iter_cols(
@@ -129,7 +103,7 @@ if __name__ == "__main__":
 
     excel_parser_cognate = CognateEditParser(
         dataset,
-        db,
+        None,
         top=2,
         # When the dataset has cognateset comments, that column is not a header
         # column, so this value is one higher than the actual number of header
