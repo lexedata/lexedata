@@ -273,7 +273,7 @@ class ExcelParser:
             # Parse the row header, creating or retrieving the associated row
             # object (i.e. a concept or a cognateset)
             properties = self.properties_from_row(row_header)
-            if properties is not None:
+            if properties:
                 c_r_id = self.db.dataset[properties.__table__, "id"].name
                 c_r_name = self.db.dataset[properties.__table__, "name"].name
                 similar = self.db.find_db_candidates(
