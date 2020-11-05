@@ -411,18 +411,24 @@ class CellParser(NaiveCellParser):
             properties["Comment"] = clean_comment
         except KeyError:
             pass
-        source = properties.pop("Source", None)
+        c_f_source = "Source"
+        source = properties.pop(c_f_source, None)
         if self.add_default_source and source is None:
             source = self.add_default_source
         # if source is already a set with source, don't change anything
         if source and not isinstance(source, set):
             source, context = self.source_from_source_string(source, language_id)
             if context:
-                properties["Source"] = {f"{source:}:{context:}"}
+                properties[c_f_source] = {f"{source:}:{context:}"}
             else:
-                properties["Source"] = {f"{source:}"}
+                properties[c_f_source] = {f"{source:}"}
         else:
-            properties["Source"] = {f"{s:}:{c:}" if c else f"{s:}" for (s, c) in source}
+            if source is None:
+                pass
+            else:
+                properties[c_f_source] = {
+                    f"{s:}:{c:}" if c else f"{s:}" for (s, c) in source
+                }
 
         # add form to properties
         if "Form" not in properties:

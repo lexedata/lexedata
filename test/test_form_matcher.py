@@ -5,8 +5,6 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 import pycldf
-import pyclts
-import segments
 import cldfbench
 import cldfcatalog
 
@@ -18,8 +16,6 @@ def bipa():
     clts_path = cldfcatalog.Config.from_file().get_clone("clts")
     clts = cldfbench.catalogs.CLTS(clts_path)
     bipa = clts.api.bipa
-    tokenizer = segments.Tokenizer()
-
     return bipa
 
 
