@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-import sqlite3
 import argparse
 import typing as t
 from pathlib import Path
@@ -11,20 +10,15 @@ from collections import OrderedDict
 
 from tqdm import tqdm
 
-tqdm = lambda x: x
-
 import pycldf
 import openpyxl
-from csvw.db import insert
 
 from lexedata.types import (
     Object,
     Language,
     RowObject,
     Form,
-    Source,
     Concept,
-    Reference,
     CogSet,
     Judgement,
 )
@@ -36,10 +30,9 @@ from lexedata.util import (
 )
 import lexedata.importer.cellparser as cell_parsers
 import lexedata.error_handling as err
-from lexedata.cldf.db import Database
 
 
-O = t.TypeVar("O", bound=Object)
+Ob = t.TypeVar("O", bound=Object)
 
 logger = logging.getLogger(__name__)
 
@@ -126,13 +119,13 @@ class DB:
             form.setdefault(column.name, []).append(row[id])
         return True
 
-    def insert_into_db(self, object: O) -> bool:
+    def insert_into_db(self, object: Ob) -> bool:
         id = self.dataset[object.__table__, "id"].name
         assert object[id] not in self.cache[object.__table__]
         self.cache[object.__table__][object[id]] = object
         return True
 
-    def make_id_unique(self, object: O) -> str:
+    def make_id_unique(self, object: Ob) -> str:
         id = self.dataset[object.__table__, "id"].name
         raw_id = object[id]
         i = 0
@@ -142,12 +135,25 @@ class DB:
         return object[id]
 
     def find_db_candidates(
-        self, object: O, properties_for_match: t.Iterable[str]
+        self,
+        object: Ob,
+        properties_for_match: t.Iterable[str],
+        edit_dist_threshold: t.Optional[int] = None,
     ) -> t.Iterable[str]:
+        if edit_dist_threshold:
+
+            def match(x, y):
+                return edit_distance(x, y) <= edit_dist_threshold
+
+        else:
+
+            def match(x, y):
+                return x == y
+
         return [
             candidate
             for candidate, properties in self.cache[object.__table__].items()
-            if all(properties[p] == object[p] for p in properties_for_match)
+            if all(match(properties[p], object[p]) for p in properties_for_match)
         ]
 
     def commit(self):
@@ -230,7 +236,8 @@ class ExcelParser:
         languages_by_column: t.Dict[str, str] = {}
         # iterate over language columns
         for lan_col in tqdm(
-            sheet.iter_cols(min_row=1, max_row=self.top - 1, min_col=self.left)
+            sheet.iter_cols(min_row=1, max_row=self.top - 1, min_col=self.left),
+            total=sheet.max_column - self.left,
         ):
             if cells_are_empty(lan_col):
                 # Skip empty languages
@@ -257,9 +264,10 @@ class ExcelParser:
         languages = self.parse_all_languages(sheet)
         row_object = None
         c_f_id = self.db.dataset["FormTable", "id"].name
-        c_f_source = self.db.dataset["FormTable", "source"].name
         c_f_language = self.db.dataset["FormTable", "languageReference"].name
-        for row in tqdm(sheet.iter_rows(min_row=self.top)):
+        for row in tqdm(
+            sheet.iter_rows(min_row=self.top), total=sheet.max_row - self.top
+        ):
             row_header, row_forms = row[: self.left - 1], row[self.left - 1 :]
             # Parse the row header, creating or retrieving the associated row
             # object (i.e. a concept or a cognateset)
@@ -288,7 +296,8 @@ class ExcelParser:
             if row_object is None:
                 if any(c.value for c in row_forms):
                     raise AssertionError(
-                        "Empty first row: Row had no properties, and there was no previous row to copy"
+                        "Empty first row: Row had no properties, "
+                        "and there was no previous row to copy"
                     )
                 else:
                     continue
@@ -338,7 +347,9 @@ class ExcelParser:
                                 )
                             )
                             # TODO: Fill data with a fuzzy search
-                            for row in data:
+                            for row in self.db.find_db_candidates(
+                                form, self.check_for_match, edit_distance=4
+                            ):
                                 logger.info(f"Did you mean {dict(row)} ?")
                             continue
         self.db.commit()
@@ -471,7 +482,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(cell_regex, cell.value.strip(), re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}, but found {cell.value}"
+                            f"In cell {cell.coordinate}: Expected to encounter match "
+                            f"for {cell_regex}, but found {cell.value}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -482,7 +494,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match for {comment_regex}, but found {cell.comment.content}"
+                            f"In cell {cell.coordinate}: Expected to encounter match "
+                            f"for {comment_regex}, but found {cell.comment.content}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -512,8 +525,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(cell_regex, cell.value.strip(), re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}"
-                            f", but found {cell.value}"
+                            f"In cell {cell.coordinate}: Expected to encounter match"
+                            f"for {cell_regex}, but found {cell.value}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -524,8 +537,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match for {comment_regex},"
-                            f"but found {cell.comment.content}"
+                            f"In cell {cell.coordinate}: Expected to encounter match "
+                            f"for {comment_regex}, but found {cell.comment.content}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -553,7 +566,8 @@ def load_dataset(
         EP = excel_parser_from_dialect(dialect, cognate=False)
     except KeyError:
         logger.warning(
-            "Dialect not found or dialect was missing a key, falling back to default parser"
+            "Dialect not found or dialect was missing a key, "
+            "falling back to default parser"
         )
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
