@@ -9,6 +9,9 @@ import unidecode as uni
 import pycldf
 import openpyxl as op
 
+from lingpy.compare.strings import ldn_swap
+
+
 invalid_id_elements = re.compile(r"\W+")
 
 
@@ -96,9 +99,6 @@ def get_dataset(fname: Path) -> pycldf.Dataset:
     if fname.suffix == ".json":
         return pycldf.dataset.Dataset.from_metadata(fname)
     return pycldf.dataset.Dataset.from_data(fname)
-
-
-from lingpy.compare.strings import ldn_swap
 
 
 def edit_distance(text1: str, text2: str) -> float:

@@ -1,25 +1,22 @@
 import argparse
 import typing as t
 from pathlib import Path
-from tempfile import mkdtemp
 
 import pycldf
 import openpyxl
 
-from lexedata.types import *
+from lexedata.types import Language, RowObject, CogSet
 import lexedata.importer.cellparser as cell_parsers
-from lexedata.importer.fromexcel import ExcelCognateParser, DB
-from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
+from lexedata.importer.fromexcel import ExcelCognateParser
+from lexedata.util import clean_cell_value, get_cell_comment
 
 
 class CognateEditParser(ExcelCognateParser):
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
         data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
-        comment = get_cell_comment(column[0])
-        id = string_to_id(data[0])
+        # Do we need to know language comments? – comment = get_cell_comment(column[0])
         return Language(
             {
-                # an id candidate must be provided, which is transformed into a unique id
                 self.db.dataset["LanguageTable", "name"].name: data[0],
             }
         )

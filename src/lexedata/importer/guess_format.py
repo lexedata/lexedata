@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 import shutil
 import argparse
 import readline
@@ -183,7 +182,7 @@ def pretty_print_example_cells(example: t.List[openpyxl.cell.Cell]) -> None:
             for c in SEP_C_RE.split(cell_comment)
         )
         cell_comment = "({:})".format(
-            "\n     ".join(l for l in cell_comment.split("\n"))
+            "\n     ".join(e for e in cell_comment.split("\n"))
         )
         i += 1
         print(f"{i:2d}:", cell_comment)

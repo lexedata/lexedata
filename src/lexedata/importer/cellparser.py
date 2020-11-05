@@ -4,7 +4,6 @@ import logging
 import typing as t
 import openpyxl
 
-from lexedata.error_handling import *
 from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 from lexedata.types import Form
 
@@ -464,7 +463,7 @@ class CellParserHyperlink(CellParser):
             url = cell.hyperlink.target
             text = clean_cell_value(cell)
             comment = get_cell_comment(cell)
-            if not "{" in text:
+            if "{" not in text:
                 yield Form({"ID": url.split("/")[-1]})
             else:
                 slice, alignment = alignment_from_braces(text)
