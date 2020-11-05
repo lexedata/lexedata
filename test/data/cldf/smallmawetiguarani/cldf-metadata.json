@@ -135,37 +135,37 @@
                 ],
                 "add_default_source": "{1}",
                 "cell_parser_semantics": [
-                [
-                    "Comment",
-                    "(",
-                    ")",
-                    false
-                ],
-                [
-                    "Source",
-                    "{",
-                    "}",
-                    false
-                ],
-                [
-                    "phonetic",
-                    "[",
-                    "]",
-                    true
-                ],
-                [
-                    "phonemic",
-                    "/",
-                    "/",
-                    true
-                ],
-                [
-                    "orthographic",
-                    "<",
-                    ">",
-                    true
+                    [
+                        "Comment",
+                        "(",
+                        ")",
+                        false
+                    ],
+                    [
+                        "Source",
+                        "{",
+                        "}",
+                        false
+                    ],
+                    [
+                        "phonetic",
+                        "[",
+                        "]",
+                        true
+                    ],
+                    [
+                        "phonemic",
+                        "/",
+                        "/",
+                        true
+                    ],
+                    [
+                        "orthographic",
+                        "<",
+                        ">",
+                        true
+                    ]
                 ]
-            ]
             }
         }
     },
@@ -175,7 +175,7 @@
     "tables": [
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
-            "dc:extent": 24200,
+            "dc:extent": 34,
             "tableSchema": {
                 "columns": [
                     {
@@ -284,7 +284,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#ParameterTable",
-            "dc:extent": 1153,
+            "dc:extent": 23,
             "tableSchema": {
                 "columns": [
                     {
@@ -336,7 +336,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#LanguageTable",
-            "dc:extent": 38,
+            "dc:extent": 4,
             "tableSchema": {
                 "columns": [
                     {
@@ -372,7 +372,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognateTable",
-            "dc:extent": 25368,
+            "dc:extent": 0,
             "tableSchema": {
                 "columns": [
                     {
@@ -432,7 +432,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognatesetTable",
-            "dc:extent": 6450,
+            "dc:extent": 0,
             "tableSchema": {
                 "columns": [
                     {
