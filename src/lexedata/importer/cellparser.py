@@ -162,6 +162,8 @@ class NaiveCellParser:
                 )
             source_string = source_part + "}"
             context = context[:-1].strip()
+
+            context = context.replace(":", "").replace(",", "")
         else:
             context = None
 
@@ -171,6 +173,8 @@ class NaiveCellParser:
             source_id = string_to_id(source_string)
         else:
             source_id = string_to_id(f"{language_id:}_s{source_string:}")
+
+        source_id = source_id.replace(":", "").replace(",", "")
 
         return source_id, context
 
@@ -414,9 +418,12 @@ class CellParser(NaiveCellParser):
         # if source is already a set with source, don't change anything
         if source and not isinstance(source, set):
             source, context = self.source_from_source_string(source, language_id)
-            properties["Source"] = {(source, context)}
+            if context:
+                properties["Source"] = {f"{source:}:{context:}"}
+            else:
+                properties["Source"] = {f"{source:}"}
         else:
-            properties["Source"] = source
+            properties["Source"] = {f"{s:}:{c:}" if c else f"{s:}" for (s, c) in source}
 
         # add form to properties
         if "Form" not in properties:
