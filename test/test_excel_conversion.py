@@ -7,34 +7,24 @@ import pycldf
 import openpyxl
 
 import lexedata.importer.fromexcel as f
-from lexedata.importer.cognates import CognateImportParser
 from lexedata.exporter.cognates import ExcelWriter
+import lexedata.importer.cellparser as cell_parsers
+from lexedata.importer.cognates import CognateEditParser
 
 # todo: these test must be adapted to new interface of fromexcel.py
 
 
-@pytest.fixture
-def excel_wordlist():
-    return (
-        Path(__file__).parent / "data/excel/small.xlsx",
-        Path(__file__).parent / "data/excel/small_cog.xlsx",
-    )
-
-
 @pytest.fixture(
     params=[
-        pytest.param("data/cldf/minimal/cldf-metadata.json", marks=pytest.mark.skip),
+        "data/cldf/minimal/cldf-metadata.json",
         "data/cldf/smallmawetiguarani/cldf-metadata.json",
-        ]
+    ]
 )
 def cldf_wordlist(request):
-    return (
-        Path(__file__).parent / request.param
-    )
+    return Path(__file__).parent / request.param
 
 
-@pytest.fixture
-def empty_cldf_wordlist(cldf_wordlist):
+def empty_copy_of_cldf_wordlist(cldf_wordlist):
     # Copy the dataset metadata file to a temporary directory.
     original = Path(__file__).parent / cldf_wordlist
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
@@ -45,7 +35,18 @@ def empty_cldf_wordlist(cldf_wordlist):
     dataset = pycldf.Dataset.from_metadata(target)
     dataset.write(**{str(table.url): [] for table in dataset.tables})
     # Return the dataset API handle, which knows the metadata and tables.
-    return dataset, target
+    return dataset, original
+
+
+@pytest.fixture
+def excel_wordlist():
+    return (
+        Path(__file__).parent / "data/excel/small.xlsx",
+        Path(__file__).parent / "data/excel/small_cog.xlsx",
+        empty_copy_of_cldf_wordlist(
+            Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+        ),
+    )
 
 
 @pytest.fixture
@@ -70,28 +71,28 @@ def filled_cldf_wordlist(cldf_wordlist):
     return dataset, target
 
 
-def test_fromexcel_runs(excel_wordlist, empty_cldf_wordlist):
-    lexicon, cogsets = excel_wordlist
-    dataset = empty_cldf_wordlist[0]
-    # TODO: parameterize original, like the other parameters, over possible
-    # test datasets
-    f.load_dataset(Path(dataset.tablegroup._fname), str(lexicon), "", str(cogsets))
-
-
-def test_fromexcel_correct(excel_wordlist, empty_cldf_wordlist):
-    lexicon, cogsets = excel_wordlist
-    dataset = empty_cldf_wordlist[0]
-    original = pycldf.Dataset.from_metadata(
-        empty_cldf_wordlist[1]
+def test_fromexcel_runs(excel_wordlist):
+    lexicon, cogsets, (empty_dataset, original) = excel_wordlist
+    f.load_dataset(
+        Path(empty_dataset.tablegroup._fname), str(lexicon), "", str(cogsets)
     )
+
+
+def test_fromexcel_correct(excel_wordlist):
+    lexicon, cogsets, (empty_dataset, original_md) = excel_wordlist
+    original = pycldf.Wordlist.from_metadata(original_md)
     # TODO: parameterize original, like the other parameters, over possible
     # test datasets.
-    f.load_dataset(Path(dataset.tablegroup._fname), str(lexicon), "", str(cogsets))
-    form_ids_from_excel = {form["ID"] for form in dataset["FormTable"]}
+    f.load_dataset(
+        Path(empty_dataset.tablegroup._fname), str(lexicon), "", str(cogsets)
+    )
+    form_ids_from_excel = {form["ID"] for form in empty_dataset["FormTable"]}
     form_ids_original = {form["ID"] for form in original["FormTable"]}
     assert form_ids_original == form_ids_from_excel, "{:} and {:} don't match.".format(
-        dataset["FormTable"]._parent._fname.parent / str(dataset["FormTable"].url),
-        original["FormTable"]._parent._fname.parent / str(dataset["FormTable"].url),
+        empty_dataset["FormTable"]._parent._fname.parent
+        / str(empty_dataset["FormTable"].url),
+        original["FormTable"]._parent._fname.parent
+        / str(empty_dataset["FormTable"].url),
     )
 
 
@@ -105,38 +106,73 @@ def test_toexcel_runs(filled_cldf_wordlist):
     writer.create_excel(out_filename)
 
 
-@pytest.mark.skip(reason="ExcelWriter is currently broken")
 def test_roundtrip(filled_cldf_wordlist):
-    c_formReference = filled_cldf_wordlist[0]["CognateTable", "formReference"].name
-    c_cogsetReference = filled_cldf_wordlist[0][
-        "CognateTable", "cognatesetReference"
-    ].name
+    dataset, target = filled_cldf_wordlist
+    c_formReference = dataset["CognateTable", "formReference"].name
+    c_cogsetReference = dataset["CognateTable", "cognatesetReference"].name
     old_judgements = {
         (row[c_formReference], row[c_cogsetReference])
-        for row in filled_cldf_wordlist[0]["CognateTable"].iterdicts()
+        for row in dataset["CognateTable"].iterdicts()
     }
-    writer = ExcelWriter(filled_cldf_wordlist[0])
+    writer = ExcelWriter(dataset)
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
 
     # Reset the existing cognatesets and cognate judgements, to avoid
     # interference with the the data in the Excel file
-    filled_cldf_wordlist[0]["CognateTable"].write([])
-    filled_cldf_wordlist[0]["CognatesetTable"].write([])
+    dataset["CognateTable"].write([])
+    dataset["CognatesetTable"].write([])
 
     ws_out = openpyxl.load_workbook(out_filename).active
-    parser = CognateImportParser.load_from_excel_with_metadata(filled_cldf_wordlist[0], "", ws_out)
-    parser.cache_dataset()
-    parser.drop_from_cache("CognatesetTable")
-    parser.drop_from_cache("CognateTable")
-    parser.parse_cells(ws_out)
-    parser.cldfdatabase.to_cldf(Path(filled_cldf_wordlist[0]).parent)
+
+    row_header = []
+    for (header,) in ws_out.iter_cols(
+        min_row=1,
+        max_row=1,
+        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
+    ):
+        column_name = header.value
+        if column_name is None:
+            column_name = dataset["CognatesetTable", "id"].name
+        elif column_name == "CogSet":
+            column_name = dataset["CognatesetTable", "id"].name
+        try:
+            column_name = dataset["CognatesetTable", column_name].name
+        except KeyError:
+            break
+        row_header.append(column_name)
+
+    excel_parser_cognate = CognateEditParser(
+        dataset,
+        None,
+        top=2,
+        # When the dataset has cognateset comments, that column is not a header
+        # column, so this value is one higher than the actual number of header
+        # columns, so actually correct for the 1-based indices. When there is
+        # no comment column, we need to compensate for the 1-based Excel
+        # indices.
+        cellparser=cell_parsers.CellParserHyperlink(),
+        row_header=row_header,
+        check_for_language_match=[dataset["LanguageTable", "name"].name],
+        check_for_match=[dataset["FormTable", "id"].name],
+        check_for_row_match=[dataset["CognatesetTable", "id"].name],
+    )
+
+    # TODO: This often doesn't work if the dataset is not perfect before this
+    # program is called. In particular, it doesn't work if there are errors in
+    # the cognate sets or judgements, which will be reset in just a moment. How
+    # else should we solve this?
+    excel_parser_cognate.db.cache_dataset()
+    excel_parser_cognate.db.drop_from_cache("CognatesetTable")
+    excel_parser_cognate.db.drop_from_cache("CognateTable")
+    excel_parser_cognate.parse_cells(ws_out)
+    excel_parser_cognate.db.write_dataset_from_cache(
+        ["CognateTable", "CognatesetTable"]
+    )
+
     new_judgements = {
         (row[c_formReference], row[c_cogsetReference])
-        for row in filled_cldf_wordlist[0]["CognateTable"].iterdicts()
+        for row in dataset["CognateTable"].iterdicts()
     }
 
     assert new_judgements == old_judgements
-
-
-

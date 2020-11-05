@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-import sqlite3
 import argparse
 import typing as t
 from pathlib import Path
@@ -11,20 +10,15 @@ from collections import OrderedDict
 
 from tqdm import tqdm
 
-tqdm = lambda x: x
-
 import pycldf
 import openpyxl
-from csvw.db import insert
 
 from lexedata.types import (
     Object,
     Language,
     RowObject,
     Form,
-    Source,
     Concept,
-    Reference,
     CogSet,
     Judgement,
 )
@@ -36,10 +30,9 @@ from lexedata.util import (
 )
 import lexedata.importer.cellparser as cell_parsers
 import lexedata.error_handling as err
-from lexedata.cldf.db import Database
 
 
-O = t.TypeVar("O", bound=Object)
+Ob = t.TypeVar("O", bound=Object)
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +43,124 @@ def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
     return not any([clean_cell_value(cell) for cell in cells])
 
 
+class DB:
+    cache: t.Dict[str, t.Dict[t.Hashable, t.Dict[str, t.Any]]]
+
+    def __init__(self, output_dataset: pycldf.Wordlist, fname=None):
+        if fname is not None:
+            logger.info("Warning: dbase fname set, but ignored")
+        self.dataset = output_dataset
+        self.cache = {}
+
+    def cache_dataset(self):
+        for table in self.dataset.tables:
+            table_type = (
+                table.common_props.get("dc:conformsTo", "").rsplit("#", 1)[1]
+                or table.url
+            )
+            (id,) = table.tableSchema.primaryKey
+            self.cache[table_type] = {row[id]: row for row in table}
+
+    def drop_from_cache(self, table: str):
+        self.cache[table] = {}
+
+    def retrieve(self, table_type: str):
+        return self.cache[table_type].values()
+
+    def empty_cache(self):
+        self.cache = {
+            # TODO: Is there a simpler way to get the list of all tables?
+            table.common_props.get("dc:conformsTo", "").rsplit("#", 1)[1]
+            or table.url: {}
+            for table in self.dataset.tables
+        }
+
+    def write_dataset_from_cache(self, tables: t.Optional[t.List[str]] = None):
+        if tables is None:
+            tables = self.cache.keys()
+        for table_type in tables:
+            self.dataset[table_type].common_props["dc:extent"] = self.dataset[
+                table_type
+            ].write(self.retrieve(table_type))
+        self.dataset.write_metadata()
+
+    def associate(
+        self, form_id: str, row: RowObject, comment: t.Optional[str] = None
+    ) -> bool:
+        form = self.cache["FormTable"][form_id]
+        if row.__table__ == "CognatesetTable":
+            id = self.dataset["CognatesetTable", "id"].name
+            try:
+                column = self.dataset["FormTable", "cognatesetReference"]
+            except KeyError:
+                judgements = self.cache["CognateTable"]
+                cognateset = row[self.dataset["CognatesetTable", "id"].name]
+                judgement = Judgement(
+                    {
+                        self.dataset["CognateTable", "id"].name: "{:}-{:}".format(
+                            form_id, cognateset
+                        ),
+                        self.dataset["CognateTable", "formReference"].name: form_id,
+                        self.dataset[
+                            "CognateTable", "cognatesetReference"
+                        ].name: cognateset,
+                        self.dataset["CognateTable", "comment"].name: comment or "",
+                    }
+                )
+                self.make_id_unique(judgement)
+                judgements[judgement[id]] = judgement
+                return True
+        elif row.__table__ == "ParameterTable":
+            column = self.dataset["FormTable", "parameterReference"]
+            id = self.dataset["ParameterTable", "id"].name
+
+        if column.separator is None:
+            form[column.name] = row[id]
+        else:
+            form.setdefault(column.name, []).append(row[id])
+        return True
+
+    def insert_into_db(self, object: Ob) -> bool:
+        id = self.dataset[object.__table__, "id"].name
+        assert object[id] not in self.cache[object.__table__]
+        self.cache[object.__table__][object[id]] = object
+        return True
+
+    def make_id_unique(self, object: Ob) -> str:
+        id = self.dataset[object.__table__, "id"].name
+        raw_id = object[id]
+        i = 0
+        while object[id] in self.cache[object.__table__]:
+            i += 1
+            object[id] = "{:}_{:d}".format(raw_id, i)
+        return object[id]
+
+    def find_db_candidates(
+        self,
+        object: Ob,
+        properties_for_match: t.Iterable[str],
+        edit_dist_threshold: t.Optional[int] = None,
+    ) -> t.Iterable[str]:
+        if edit_dist_threshold:
+
+            def match(x, y):
+                return edit_distance(x, y) <= edit_dist_threshold
+
+        else:
+
+            def match(x, y):
+                return x == y
+
+        return [
+            candidate
+            for candidate, properties in self.cache[object.__table__].items()
+            if all(match(properties[p], object[p]) for p in properties_for_match)
+        ]
+
+    def commit(self):
+        pass
+
+
 class ExcelParser:
     def __init__(
         self,
@@ -57,10 +168,14 @@ class ExcelParser:
         db_fname: str,
         top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
-        row_header: t.List[str] = ["set", "cldf_name", None],
-        check_for_match: t.List[str] = ["cldf_id"],
-        check_for_row_match: t.List[str] = ["cldf_name"],
-        check_for_language_match: t.List[str] = ["cldf_name"],
+        # The following column names should be generated from CLDF terms. This
+        # will likely mean that the __init__ method would have to get a
+        # slightly different signature, to take that dependency on the output
+        # dataset into account.
+        row_header: t.List[str] = ["set", "Name", None],
+        check_for_match: t.List[str] = ["ID"],
+        check_for_row_match: t.List[str] = ["Name"],
+        check_for_language_match: t.List[str] = ["Name"],
         on_language_not_found: err.MissingHandler = err.create,
         on_row_not_found: err.MissingHandler = err.create,
         on_form_not_found: err.MissingHandler = err.create,
@@ -76,34 +191,7 @@ class ExcelParser:
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
         self.check_for_language_match = check_for_language_match
-        self.init_db(output_dataset, fname=db_fname)
-
-    def init_db(self, output_dataset, fname=None):
-        self.cldfdatabase = Database(output_dataset, fname=fname)
-
-    def cache_dataset(self):
-        self.cldfdatabase.write_from_tg(_force=True)
-
-    def drop_from_cache(self, table: str):
-        assert "`" not in table
-        with self.cldfdatabase.connection() as conn:
-            conn.execute("DELETE FROM `{:s}`".format(table))
-            conn.commit()
-
-    def retrieve(self, table_type: str):
-        data = self.cldfdatabase.read()
-        items = data[table_type]
-        table = self.cldfdatabase.dataset[table_type]
-        return [self.cldfdatabase.retranslate(table, item) for item in items]
-
-    # Run `write` for an ExcelParser after __init__, but not for an ExcelCognateParser
-    def write(self):
-        if Path(self.cldfdatabase.fname).exists():
-            raise FileExistsError(
-                "The database file {:} exists, but ExcelParser expects "
-                "to start from a clean slate."
-            )
-        self.cldfdatabase.write()
+        self.db = DB(output_dataset, fname=db_fname)
 
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
         data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
@@ -111,52 +199,17 @@ class ExcelParser:
         id = string_to_id(data[0])
         return Language(
             # an id candidate must be provided, which is transformed into a unique id
-            cldf_id=id,
-            cldf_name=data[0],
-            cldf_comment=comment,
+            ID=id,
+            Name=data[0],
+            Comment=comment,
         )
-
-    def find_db_candidates(
-        self, object: O, properties_for_match: t.Iterable[str]
-    ) -> t.Iterable[str]:
-        where_clauses = []
-        where_parameters = []
-        join = ""
-        for property in properties_for_match:
-            if property not in object:
-                continue
-            elif property == "cldf_source":
-                # Sources are handled specially.
-                where_clauses.append(
-                    "FormTable_SourceTable__cldf_source.FormTable_cldf_id == ?"
-                )
-                where_parameters.append(list(object[property])[0][0])
-                # TODO: Should we instead match an OR or an AND of all sources?
-                # This checks whether the first source matches, which is
-                # correct for MG, I think.
-                join = "JOIN FormTable_SourceTable__cldf_source ON FormTable_cldf_id == cldf_id"
-            elif type(object[property]) not in {float, int, str}:
-                raise ValueError(
-                    "Cannot find a DB candidate for column {:}: Data type {:} not supported.".format(
-                        property, type(object[property])
-                    )
-                )
-            else:
-                where_clauses.append("{0} == ?".format(property))
-                where_parameters.append(object[property])
-        if where_clauses:
-            where = "WHERE {}".format(" AND ".join(where_clauses))
-        else:
-            where = ""
-        candidates = self.cldfdatabase.query(
-            "SELECT cldf_id, * FROM {0} {2} {1} ".format(object.__table__, where, join),
-            where_parameters,
-        )
-        return [c[0] for c in candidates]
 
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
+        c_r_id = self.db.dataset[RowObject.__table__, "id"].name
+        c_r_name = self.db.dataset[RowObject.__table__, "name"].name
+        c_r_comment = self.db.dataset[RowObject.__table__, "comment"].name
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
         properties = dict(zip(self.row_header, data))
         # delete all possible None entries coming from row_header
@@ -165,10 +218,10 @@ class ExcelParser:
 
         # fetch cell comment
         comment = get_cell_comment(row[0])
-        properties["cldf_comment"] = comment
+        properties[c_r_comment] = comment
 
         # cldf_name serves as cldf_id candidate
-        properties["cldf_id"] = properties["cldf_name"]
+        properties[c_r_id] = properties[c_r_name]
 
         return Concept(properties)
 
@@ -184,13 +237,14 @@ class ExcelParser:
         languages_by_column: t.Dict[str, str] = {}
         # iterate over language columns
         for lan_col in tqdm(
-            sheet.iter_cols(min_row=1, max_row=self.top - 1, min_col=self.left)
+            sheet.iter_cols(min_row=1, max_row=self.top - 1, min_col=self.left),
+            total=sheet.max_column - self.left,
         ):
             if cells_are_empty(lan_col):
                 # Skip empty languages
                 continue
             language = self.language_from_column(lan_col)
-            candidates = self.find_db_candidates(
+            candidates = self.db.find_db_candidates(
                 language, self.check_for_language_match
             )
             for language_id in candidates:
@@ -198,109 +252,44 @@ class ExcelParser:
             else:
                 if not (
                     self.on_language_not_found(language, lan_col[0])
-                    and self.insert_into_db(language)
+                    and self.db.insert_into_db(language)
                 ):
                     continue
-                language_id = language["cldf_id"]
+                # TODO: use term→column name
+                language_id = language["ID"]
             languages_by_column[lan_col[0].column] = language_id
 
         return languages_by_column
 
-    def create_form_with_sources(
-        self,
-        form: Form,
-        sources: t.List[t.Tuple[Source, t.Optional[str]]] = [],
-    ) -> None:
-        self.make_id_unique(form)
-
-        self.insert_into_db(form)
-        for source, context in sources:
-            self.insert_into_db(
-                Reference(
-                    FormTable_cldf_id=form["cldf_id"],
-                    SourceTable_id=source,
-                    context=context,
-                )
-            )
-
-    def associate(
-        self, form_id: str, row: RowObject, comment: t.Optional[str] = None
-    ) -> bool:
-        assert (
-            row.__table__ == "ParameterTable"
-        ), "Expected Concept, but got {:}".format(row.__class__)
-        with self.cldfdatabase.connection() as conn:
-            try:
-                insert(
-                    conn,
-                    self.cldfdatabase.translate,
-                    "FormTable_ParameterTable__cldf_parameterReference",
-                    ("FormTable_cldf_id", "ParameterTable_cldf_id", "context"),
-                    (form_id, row["cldf_id"], comment),
-                )
-                conn.commit()
-            except sqlite3.IntegrityError as err:
-                logger.error(err)
-        return True
-
-    def insert_into_db(self, object: O) -> bool:
-        for key, value in object.items():
-            if type(value) == list:
-                columns = self.cldfdatabase.dataset[
-                    object.__table__
-                ].tableSchema.columns
-                sep = [
-                    c.separator
-                    for c in columns
-                    if self.cldfdatabase.translate(c.name) == key
-                ][0]
-                # Join values using the separator
-                object[key] = sep.join(value)
-            elif type(value) == set:
-                raise ValueError("Sets should be handled by association tables.")
-        with self.cldfdatabase.connection() as conn:
-            insert(
-                conn,
-                self.cldfdatabase.translate,
-                object.__table__,
-                object.keys(),
-                tuple(object.values()),
-            )
-            # commit to the database
-            conn.commit()
-        return True
-
-    def make_id_unique(self, object: O) -> str:
-        raw_id = object["cldf_id"]
-        i = 0
-        while self.cldfdatabase.query(
-            "SELECT cldf_id FROM {0} WHERE cldf_id == ?".format(object.__table__),
-            (object["cldf_id"],),
-        ):
-            i += 1
-            object["cldf_id"] = "{:}_{:d}".format(raw_id, i)
-        return object["cldf_id"]
-
     def parse_cells(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
         languages = self.parse_all_languages(sheet)
         row_object = None
-        for row in tqdm(sheet.iter_rows(min_row=self.top)):
+        c_f_id = self.db.dataset["FormTable", "id"].name
+        c_f_language = self.db.dataset["FormTable", "languageReference"].name
+        for row in tqdm(
+            sheet.iter_rows(min_row=self.top), total=sheet.max_row - self.top
+        ):
             row_header, row_forms = row[: self.left - 1], row[self.left - 1 :]
             # Parse the row header, creating or retrieving the associated row
             # object (i.e. a concept or a cognateset)
             properties = self.properties_from_row(row_header)
             if properties is not None:
-                similar = self.find_db_candidates(properties, self.check_for_row_match)
+                c_r_id = self.db.dataset[properties.__table__, "id"].name
+                c_r_name = self.db.dataset[properties.__table__, "name"].name
+                similar = self.db.find_db_candidates(
+                    properties, self.check_for_row_match
+                )
                 for row_id in similar:
-                    properties["cldf_id"] = row_id
+                    properties[c_r_id] = row_id
                     break
                 else:
                     if self.on_row_not_found(properties, row[0]):
-                        properties["cldf_id"] = string_to_id(
-                            properties.get("cldf_name", "")
-                        )
-                        self.make_id_unique(properties)
-                        self.insert_into_db(properties)
+                        if c_r_id not in properties:
+                            properties[c_r_id] = string_to_id(
+                                str(properties.get(c_r_name, ""))
+                            )
+                        self.db.make_id_unique(properties)
+                        self.db.insert_into_db(properties)
                     else:
                         continue
                 row_object = properties
@@ -308,7 +297,8 @@ class ExcelParser:
             if row_object is None:
                 if any(c.value for c in row_forms):
                     raise AssertionError(
-                        "Empty first row: Row had no properties, and there was no previous row to copy"
+                        "Empty first row: Row had no properties, "
+                        "and there was no previous row to copy"
                     )
                 else:
                     continue
@@ -328,99 +318,42 @@ class ExcelParser:
                     # Cellparser adds comment of a excel cell to "Cell_Comment" if given
                     maybe_comment: t.Optional[str] = params.pop("Cell_Comment", None)
                     form = Form(params)
-                    # create candidate for form[cldf_id]
-                    form["cldf_id"] = "{:}_{:}".format(
-                        form["cldf_languageReference"], row_object["cldf_id"]
+                    if c_f_id not in form:
+                        # create candidate for form[id]
+                        form[c_f_id] = "{:}_{:}".format(
+                            form[c_f_language], row_object[c_r_id]
+                        )
+                    candidate_forms = iter(
+                        self.db.find_db_candidates(form, self.check_for_match)
                     )
-                    candidate_forms = self.find_db_candidates(
-                        form, self.check_for_match
-                    )
-                    sources = form.pop("cldf_source", [])
-                    if candidate_forms:
+                    try:
                         # if a candidate for form already exists, don't add the form
-                        form_id = candidate_forms[0]
-                        self.associate(form_id, row_object)
-                    else:
+                        form_id = next(candidate_forms)
+                        self.db.associate(form_id, row_object)
+                    except StopIteration:
                         # no candidates. form is created or not.
                         if self.on_form_not_found(form, cell_with_forms):
-                            form["cldf_id"] = "{:}_{:}".format(
-                                form["cldf_languageReference"], row_object["cldf_id"]
+                            form[c_f_id] = "{:}_{:}".format(
+                                form[c_f_language], row_object[c_r_id]
                             )
-                            self.create_form_with_sources(
-                                form, sources=sources
+                            self.db.insert_into_db(form)
+                            form_id = form[c_f_id]
+                            self.db.associate(
+                                form_id, row_object, comment=maybe_comment
                             )
-                            form_id = form["cldf_id"]
-                            self.associate(form_id, row_object, comment=maybe_comment)
                         else:
                             logger.error(
                                 "The missing form was {:} in {:}, given as {:}.".format(
-                                    row_object["cldf_id"], this_lan, form["cldf_value"]
+                                    row_object["ID"], this_lan, form["Value"]
                                 )
                             )
-                            with self.cldfdatabase.connection() as conn:
-                                conn.create_function("edit_distance", 2, edit_distance)
-                                conn.row_factory = sqlite3.Row
-                                data = conn.execute(
-                                    """
-                                    SELECT
-                                        cldf_languageReference as language,
-                                        ParameterTable.cldf_name as concept,
-                                        cldf_value as original
-                                    FROM FormTable
-                                        JOIN FormTable_ParameterTable__cldf_parameterReference
-                                            ON FormTable_cldf_id == FormTable.cldf_id
-                                        JOIN ParameterTable
-                                            ON ParameterTable_cldf_id == ParameterTable.cldf_id
-                                    WHERE
-                                        cldf_languageReference == ? AND
-                                        ({:})
-                                    ORDER BY
-                                        ({:})
-                                    LIMIT 3
-                                    """.format(
-                                        " OR ".join(
-                                            [
-                                                "edit_distance({:}, ?) < 0.3".format(m)
-                                                for m in self.check_for_match
-                                                if m
-                                                not in {
-                                                    "source",
-                                                    "cldf_languageReference",
-                                                }
-                                            ]
-                                        ),
-                                        " + ".join(
-                                            [
-                                                "edit_distance({:}, ?)".format(m)
-                                                for m in self.check_for_match
-                                                if m
-                                                not in {
-                                                    "source",
-                                                    "cldf_languageReference",
-                                                }
-                                            ]
-                                        ),
-                                    ),
-                                    [this_lan]
-                                    + [
-                                        form.get(m, "")
-                                        for m in self.check_for_match
-                                        if m not in {"source", "cldf_languageReference"}
-                                    ]
-                                    + [
-                                        form.get(m, "")
-                                        for m in self.check_for_match
-                                        if m not in {"source", "cldf_languageReference"}
-                                    ],
-                                ).fetchall()
-                            for row in data:
+                            # TODO: Fill data with a fuzzy search
+                            for row in self.db.find_db_candidates(
+                                form, self.check_for_match, edit_distance=4
+                            ):
                                 logger.info(f"Did you mean {dict(row)} ?")
                             continue
-        self.commit()
-
-    def commit(self):
-        with self.cldfdatabase.connection() as conn:
-            conn.commit()
+        self.db.commit()
 
 
 class ExcelCognateParser(ExcelParser):
@@ -430,10 +363,10 @@ class ExcelCognateParser(ExcelParser):
         db_fname: str,
         top: int = 3,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
-        row_header=["set", "cldf_name", None],
-        check_for_match: t.List[str] = ["cldf_id"],
-        check_for_row_match: t.List[str] = ["cldf_name"],
-        check_for_language_match: t.List[str] = ["cldf_name"],
+        row_header=["set", "Name", None],
+        check_for_match: t.List[str] = ["ID"],
+        check_for_row_match: t.List[str] = ["Name"],
+        check_for_language_match: t.List[str] = ["Name"],
         on_language_not_found: err.MissingHandler = err.error,
         on_row_not_found: err.MissingHandler = err.create,
         on_form_not_found: err.MissingHandler = err.warn,
@@ -464,10 +397,10 @@ class ExcelCognateParser(ExcelParser):
 
         # fetch cell comment
         comment = get_cell_comment(row[0])
-        properties["cldf_comment"] = comment
+        properties["Comment"] = comment
 
         # cldf_name serves as cldf_id candidate
-        properties["cldf_id"] = properties["cldf_id"] or properties["cldf_name"]
+        properties["ID"] = properties.get("ID") or properties["Name"]
         return CogSet(properties)
 
     def associate(
@@ -483,16 +416,16 @@ class ExcelCognateParser(ExcelParser):
             cldf_cognatesetReference=row_id,
             cldf_comment=comment or "",
         )
-        self.make_id_unique(judgement)
-        return self.insert_into_db(judgement)
+        self.db.make_id_unique(judgement)
+        return self.db.insert_into_db(judgement)
 
 
 def excel_parser_from_dialect(
     dialect: argparse.Namespace, cognate: bool
 ) -> t.Type[ExcelParser]:
     if cognate:
-        Row = CogSet
-        Parser = ExcelCognateParser
+        Row: t.Type[RowObject] = CogSet
+        Parser: t.Type[ExcelParser] = ExcelCognateParser
     else:
         Row = Concept
         Parser = ExcelParser
@@ -532,6 +465,7 @@ def excel_parser_from_dialect(
                 check_for_row_match=dialect.check_for_row_match,
                 check_for_language_match=dialect.check_for_language_match,
             )
+            self.db.empty_cache()
 
         def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
             """Parse the row, according to regexes from the metadata.
@@ -549,7 +483,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(cell_regex, cell.value.strip(), re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}, but found {cell.value}"
+                            f"In cell {cell.coordinate}: Expected to encounter match "
+                            f"for {cell_regex}, but found {cell.value}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -560,7 +495,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match for {comment_regex}, but found {cell.comment.content}"
+                            f"In cell {cell.coordinate}: Expected to encounter match "
+                            f"for {comment_regex}, but found {cell.comment.content}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -568,8 +504,10 @@ def excel_parser_from_dialect(
                         else:
                             d[k] = v
 
-            if "cldf_id" not in d:
-                d["cldf_id"] = string_to_id(d["cldf_name"])
+            c_l_id = self.db.dataset["LanguageTable", "id"].name
+            c_l_name = self.db.dataset["LanguageTable", "name"].name
+            if c_l_id not in d:
+                d[c_l_id] = string_to_id(d[c_l_name])
             return Language(d)
 
         def properties_from_row(self, row: t.List[openpyxl.cell.Cell]) -> Row:
@@ -588,8 +526,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(cell_regex, cell.value.strip(), re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match for {cell_regex}"
-                            f", but found {cell.value}"
+                            f"In cell {cell.coordinate}: Expected to encounter match"
+                            f"for {cell_regex}, but found {cell.value}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -600,8 +538,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match for {comment_regex},"
-                            f"but found {cell.comment.content}"
+                            f"In cell {cell.coordinate}: Expected to encounter match "
+                            f"for {comment_regex}, but found {cell.comment.content}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -615,9 +553,9 @@ def excel_parser_from_dialect(
 
 
 def load_dataset(
-    metadata: Path, lexicon: str, db: str, cognate_lexicon: t.Optional[str]
+    metadata: Path, lexicon: str, db: Path, cognate_lexicon: t.Optional[str]
 ):
-    #logging.basicConfig(filename="warnings.log")
+    # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
     dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     if db == "":
@@ -629,112 +567,28 @@ def load_dataset(
         EP = excel_parser_from_dialect(dialect, cognate=False)
     except KeyError:
         logger.warning(
-            "Dialect not found or dialect was missing a key, falling back to default parser"
+            "Dialect not found or dialect was missing a key, "
+            "falling back to default parser"
         )
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     EP = EP(dataset, db_fname=db)
-    EP.write()
+    EP.db.empty_cache()
     EP.parse_cells(lexicon_wb)
-    EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
     # load cognate data set if provided by metadata
     cognate = True if cognate_lexicon and dialect.cognates else False
     if cognate:
         try:
-            EP = excel_parser_from_dialect(
+            ECP = excel_parser_from_dialect(
                 argparse.Namespace(**dialect.cognates), cognate=cognate
             )
         except KeyError:
-            EP = ExcelCognateParser(dataset, db_fname=db)
-        EP = EP(dataset, db)
+            ECP = ExcelCognateParser(dataset, db_fname=db)
+        ECP = ECP(dataset, db)
+        ECP.db = EP.db
         for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
             EP.parse_cells(sheet)
-        EP.cldfdatabase.to_cldf(metadata.parent, mdname=metadata.name)
-
-
-class DB(ExcelParser):
-    def init_db(self, output_dataset, fname=None):
-        if fname is not None:
-            logger.info("Warning: dbase fname set, but ignored")
-        self.__cache = {}
-        self.__dataset = output_dataset
-
-    def cache_dataset(self):
-        for table in self.__dataset.tables:
-            table_type = table.common_props["dc:conformsTo"].rsplit("#", 1)[1]
-            (id,) = table.tableSchema.primaryKey
-            self.__cache[table_type] = {row[id]: row for row in table}
-
-    def drop_from_cache(self, table: str):
-        self.__cache[table] = {}
-
-    def retrieve(self, table_type: str):
-        return self.__cache[table_type].values()
-
-    def write(self):
-        self.__cache = {}
-
-    def associate(
-        self, form_id: str, row: RowObject, comment: t.Optional[str] = None
-    ) -> bool:
-        form = self.__cache["FormTable"][form_id]
-        if row.__table__ == "CognatesetTable":
-            id = self.__dataset["CognatesetTable", "id"].name
-            try:
-                column = self.__dataset["FormTable", "cognatesetReference"]
-            except KeyError:
-                judgements = self.__cache["CognateTable"]
-                cognateset = row[self.__dataset["CognatesetTable", "id"].name]
-                judgement = Judgement(
-                    {
-                        self.__dataset["CognateTable", "id"].name: "{:}-{:}".format(
-                            form_id, cognateset
-                        ),
-                        self.__dataset["CognateTable", "formReference"].name: form_id,
-                        self.__dataset[
-                            "CognateTable", "cognatesetReference"
-                        ].name: cognateset,
-                        self.__dataset["CognateTable", "comment"].name: comment or "",
-                    }
-                )
-                self.make_id_unique(judgement)
-                judgements[judgement[id]] = judgement
-                return True
-        elif row.__table__ == "ParameterTable":
-            column = self.__dataset["FormTable", "parameterReference"]
-            id = self.__dataset["ParameterTable", "id"].name
-
-        if column.separator is None:
-            form_id[column_name] = row[id]
-        else:
-            form_id.setdefault(column_name).append(row[id])
-        return True
-
-    def insert_into_db(self, object: O) -> bool:
-        id = self.__dataset[object.__table__, "id"].name
-        assert object[id] not in self.__cache[object.__table__]
-        self.__cache[object.__table__][object[id]] = object
-
-    def make_id_unique(self, object: O) -> str:
-        id = self.__dataset[object.__table__, "id"].name
-        raw_id = object[id]
-        i = 0
-        while object[id] in self.__cache[object.__table__]:
-            i += 1
-            object[id] = "{:}_{:d}".format(raw_id, i)
-        return object[id]
-
-    def find_db_candidates(
-        self, object: O, properties_for_match: t.Iterable[str]
-    ) -> t.Iterable[str]:
-        return [
-            candidate
-            for candidate, properties in self.__cache[object.__table__].items()
-            if all(properties[p] == object[p] for p in properties_for_match)
-        ]
-
-    def commit(self):
-        pass
+    EP.db.write_dataset_from_cache()
 
 
 if __name__ == "__main__":
@@ -778,7 +632,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.db.startswith("sqlite:///"):
-        args.db = args.db[len("sqlite:///"):]
+        args.db = args.db[len("sqlite:///") :]
     if args.db == ":memory:":
         args.db = ""
 

@@ -53,6 +53,14 @@ class MockWorkbook:
                 break
             yield col
 
+    @property
+    def max_column(self):
+        return max(len(r) for r in self.data)
+
+    @property
+    def max_row(self):
+        return len(self.data)
+
 
 @pytest.fixture
 def minimal_parser_with_dialect():
@@ -84,28 +92,28 @@ def minimal_parser_with_dialect():
 
     EP = excel_parser_from_dialect(
         argparse.Namespace(
-            lang_cell_regexes=["(?P<cldf_name>.*)"],
+            lang_cell_regexes=["(?P<Name>.*)"],
             lang_comment_regexes=[".*"],
-            row_cell_regexes=["(?P<cldf_name>.*)"],
+            row_cell_regexes=["(?P<Name>.*)"],
             row_comment_regexes=[".*"],
             cell_parser={
                 "form_separator": ",",
                 "variant_separator": "~",
                 "name": "MawetiCellParser",
                 "cell_parser_semantics": [
-                    ["cldf_form", "<", ">", True],
-                    ["cldf_source", "{", "}", False]
-                ]
+                    ["Form", "<", ">", True],
+                    ["Source", "{", "}", False],
+                ],
             },
-            check_for_match=["cldf_form"],
-            check_for_row_match=["cldf_name"],
-            check_for_language_match=["cldf_name"],
+            check_for_match=["Form"],
+            check_for_row_match=["Name"],
+            check_for_language_match=["Name"],
         ),
         cognate=False,
     )
 
     EP = EP(dataset, db_fname=db)
-    EP.write()
+    EP.db.write_dataset_from_cache()
     return EP
 
 
@@ -119,16 +127,44 @@ def test_form_association(minimal_parser_with_dialect):
     )
     minimal_parser_with_dialect.parse_cells(lexicon_wb)
 
-    assert set(
-        minimal_parser_with_dialect.cldfdatabase.query(
-            "SELECT cldf_languageReference, cldf_form FROM FormTable"
-        )
-    ) == {
-        ("l1", "L1C1"),
-        ("l2", "L2C1"),
-        ("l1", "L1C2"),
-        ("l2", "L2C2"),
-    }
+    assert list(minimal_parser_with_dialect.db.retrieve("FormTable")) == [
+        {
+            "Language_ID": "l1",
+            "Value": "<L1C1>{1}",
+            "Form": "L1C1",
+            "variants": [],
+            "Source": {"l1_s1"},
+            "ID": "l1_c1",
+            "Parameter_ID": ["c1"],
+        },
+        {
+            "Language_ID": "l2",
+            "Value": "<L2C1>{1}",
+            "Form": "L2C1",
+            "variants": [],
+            "Source": {"l2_s1"},
+            "ID": "l2_c1",
+            "Parameter_ID": ["c1"],
+        },
+        {
+            "Language_ID": "l1",
+            "Value": "<L1C2>{1}",
+            "Form": "L1C2",
+            "variants": [],
+            "Source": {"l1_s1"},
+            "ID": "l1_c2",
+            "Parameter_ID": ["c2"],
+        },
+        {
+            "Language_ID": "l2",
+            "Value": "<L2C2>{1}",
+            "Form": "L2C2",
+            "variants": [],
+            "Source": {"l2_s1"},
+            "ID": "l2_c2",
+            "Parameter_ID": ["c2"],
+        },
+    ]
 
 
 def test_form_association_identical(minimal_parser_with_dialect):
@@ -141,24 +177,35 @@ def test_form_association_identical(minimal_parser_with_dialect):
     )
     minimal_parser_with_dialect.parse_cells(lexicon_wb)
 
-    assert (
-        minimal_parser_with_dialect.cldfdatabase.query(
-            "SELECT cldf_languageReference, cldf_form FROM FormTable"
-        ).count(("l1", "L1C1"))
-        == 1
-    )
-
-    assert set(
-        minimal_parser_with_dialect.cldfdatabase.query(
-            """SELECT FormTable_cldf_id, ParameterTable_cldf_id
-            FROM FormTable_ParameterTable__cldf_parameterReference"""
-        )
-    ) == {
-        ("l1_c1", "c1"),
-        ("l1_c1", "c2"),
-        ("l2_c1", "c1"),
-        ("l2_c2", "c2"),
-    }
+    assert list(minimal_parser_with_dialect.db.retrieve("FormTable")) == [
+        {
+            "Language_ID": "l1",
+            "Value": "<L1C1>{1}",
+            "Form": "L1C1",
+            "variants": [],
+            "Source": {"l1_s1"},
+            "ID": "l1_c1",
+            "Parameter_ID": ["c1", "c2"],
+        },
+        {
+            "Language_ID": "l2",
+            "Value": "<L2C1>{1}",
+            "Form": "L2C1",
+            "variants": [],
+            "Source": {"l2_s1"},
+            "ID": "l2_c1",
+            "Parameter_ID": ["c1"],
+        },
+        {
+            "Language_ID": "l2",
+            "Value": "<L2C2>{1}",
+            "Form": "L2C2",
+            "variants": [],
+            "Source": {"l2_s1"},
+            "ID": "l2_c2",
+            "Parameter_ID": ["c2"],
+        },
+    ]
 
 
 def test_form_association_id_after_normalization(minimal_parser_with_dialect):
@@ -174,24 +221,15 @@ def test_form_association_id_after_normalization(minimal_parser_with_dialect):
     )
     minimal_parser_with_dialect.parse_cells(lexicon_wb)
 
-    forms = minimal_parser_with_dialect.cldfdatabase.query(
-        "SELECT cldf_languageReference, cldf_form FROM FormTable"
-    )
+    complete_forms = minimal_parser_with_dialect.db.retrieve("FormTable")
+    forms = [(f["Language_ID"], f["Form"]) for f in complete_forms]
 
     assert (
         forms.count(("l1", "n\u0303")) + forms.count(("l1", "\xf1")) == 1
     ), """Only one variant, either the composed or the decomposed version, should
-          persist. (It should be the decomposed one, but that is not a
+          persist. (It should be the NFC one, but that is not a
           guarantee of the code, just an implementation detail.)"""
 
-    assert set(
-        minimal_parser_with_dialect.cldfdatabase.query(
-            """SELECT FormTable_cldf_id, ParameterTable_cldf_id
-            FROM FormTable_ParameterTable__cldf_parameterReference"""
-        )
-    ) == {
-        ("l1_c1", "c1"),
-        ("l1_c1", "c2"),
-        ("l2_c1", "c1"),
-        ("l2_c2", "c2"),
-    }, "Accordingly, both C1 and C2 should be linked to the same form."
+    assert ["c1", "c2"] in [
+        f["Parameter_ID"] for f in complete_forms
+    ], "Accordingly, there should be one form both C1 and C2 are linked to."

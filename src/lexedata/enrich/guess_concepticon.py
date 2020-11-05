@@ -25,7 +25,6 @@ def add_concepticon_names(
     # Create a concepticonReference column
     try:
         dataset.add_columns("ParameterTable", column_name)
-        c = dataset["ParameterTable"].tableSchema.columns[-1]
         dataset.write_metadata()
     except ValueError:
         pass
