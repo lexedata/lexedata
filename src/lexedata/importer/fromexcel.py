@@ -140,7 +140,7 @@ class DB:
         object: Ob,
         properties_for_match: t.Iterable[str],
         edit_dist_threshold: t.Optional[int] = None,
-    ) -> t.Iterable[str]:
+    ) -> t.List[str]:
         if edit_dist_threshold:
 
             def match(x, y):
@@ -150,12 +150,12 @@ class DB:
 
             def match(x, y):
                 return x == y
-
-        return [
-            candidate
-            for candidate, properties in self.cache[object.__table__].items()
-            if all(match(properties[p], object[p]) for p in properties_for_match)
-        ]
+        candidates = []
+        for candidate, properties in self.cache[object.__table__].items():
+            properties_in_object = [p for p in properties_for_match if p in object and p in properties]
+            if all(match(properties[p], object[p]) for p in properties_in_object):
+                candidates.append(candidate)
+        return candidates
 
     def commit(self):
         pass
@@ -323,12 +323,14 @@ class ExcelParser:
                         form[c_f_id] = "{:}_{:}".format(
                             form[c_f_language], row_object[c_r_id]
                         )
-                    candidate_forms = iter(
-                        self.db.find_db_candidates(form, self.check_for_match)
-                    )
+                    candidate_forms = self.db.find_db_candidates(form, self.check_for_match)
+
+                    print(candidate_forms)
+                    candidate_forms = iter(candidate_forms)
                     try:
                         # if a candidate for form already exists, don't add the form
                         form_id = next(candidate_forms)
+                        print("hellooooo")
                         self.db.associate(form_id, row_object)
                     except StopIteration:
                         # no candidates. form is created or not.
@@ -349,9 +351,9 @@ class ExcelParser:
                             )
                             # TODO: Fill data with a fuzzy search
                             for row in self.db.find_db_candidates(
-                                form, self.check_for_match, edit_distance=4
+                                form, self.check_for_match, edit_dist_threshold=4
                             ):
-                                logger.info(f"Did you mean {dict(row)} ?")
+                                logger.info(f"Did you mean {row} ?")
                             continue
         self.db.commit()
 
@@ -406,6 +408,7 @@ class ExcelCognateParser(ExcelParser):
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None
     ) -> bool:
+        print("hello")
         assert (
             row.__table__ == "CognatesetTable"
         ), "Expected CognateSet, but got {:}".format(row.__class__)
@@ -417,6 +420,7 @@ class ExcelCognateParser(ExcelParser):
             cldf_comment=comment or "",
         )
         self.db.make_id_unique(judgement)
+        print(judgement)
         return self.db.insert_into_db(judgement)
 
 
@@ -557,13 +561,13 @@ def load_dataset(
 ):
     # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
-    dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / "db.sqlite"
     lexicon_wb = openpyxl.load_workbook(lexicon).active
     # load lexical data set
     try:
+        dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
         EP = excel_parser_from_dialect(dialect, cognate=False)
     except KeyError:
         logger.warning(
@@ -579,6 +583,7 @@ def load_dataset(
     cognate = True if cognate_lexicon and dialect.cognates else False
     if cognate:
         try:
+            dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
             ECP = excel_parser_from_dialect(
                 argparse.Namespace(**dialect.cognates), cognate=cognate
             )
@@ -587,8 +592,8 @@ def load_dataset(
         ECP = ECP(dataset, db)
         ECP.db = EP.db
         for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
-            EP.parse_cells(sheet)
-    EP.db.write_dataset_from_cache()
+            ECP.parse_cells(sheet)
+    ECP.db.write_dataset_from_cache()
 
 
 if __name__ == "__main__":
