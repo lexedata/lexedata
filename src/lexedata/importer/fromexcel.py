@@ -207,9 +207,6 @@ class ExcelParser:
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
-        c_r_id = self.db.dataset[RowObject.__table__, "id"].name
-        c_r_name = self.db.dataset[RowObject.__table__, "name"].name
-        c_r_comment = self.db.dataset[RowObject.__table__, "comment"].name
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
         properties = dict(zip(self.row_header, data))
         # delete all possible None entries coming from row_header
@@ -218,10 +215,10 @@ class ExcelParser:
 
         # fetch cell comment
         comment = get_cell_comment(row[0])
-        properties[c_r_comment] = comment
+        properties["Comment"] = comment
 
         # cldf_name serves as cldf_id candidate
-        properties[c_r_id] = properties[c_r_name]
+        properties["ID"] = properties["Name"]
 
         return Concept(properties)
 
@@ -580,19 +577,21 @@ def load_dataset(
     EP.db.empty_cache()
     EP.parse_cells(lexicon_wb)
     # load cognate data set if provided by metadata
-    cognate = True if cognate_lexicon and dialect.cognates else False
-    if cognate:
-        try:
-            dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
+    try:
+        dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
+        cognate = True if cognate_lexicon and dialect.cognates else False
+        if cognate:
             ECP = excel_parser_from_dialect(
                 argparse.Namespace(**dialect.cognates), cognate=cognate
             )
-        except KeyError:
-            ECP = ExcelCognateParser(dataset, db_fname=db)
-        ECP = ECP(dataset, db)
-        ECP.db = EP.db
-        for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
-            ECP.parse_cells(sheet)
+        else:
+            raise KeyError
+    except KeyError:
+        ECP = ExcelCognateParser
+    ECP = ECP(dataset, db)
+    ECP.db = EP.db
+    for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
+        ECP.parse_cells(sheet)
     ECP.db.write_dataset_from_cache()
 
 
