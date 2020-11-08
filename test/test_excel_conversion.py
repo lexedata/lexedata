@@ -88,11 +88,19 @@ def test_fromexcel_correct(excel_wordlist):
     )
     form_ids_from_excel = {form["ID"] for form in empty_dataset["FormTable"]}
     form_ids_original = {form["ID"] for form in original["FormTable"]}
+    cognate_ids_from_excel = {cognate["ID"] for cognate in empty_dataset["CognateTable"]}
+    cognate_ids_original = {form["ID"] for form in original["CognateTable"]}
     assert form_ids_original == form_ids_from_excel, "{:} and {:} don't match.".format(
         empty_dataset["FormTable"]._parent._fname.parent
         / str(empty_dataset["FormTable"].url),
         original["FormTable"]._parent._fname.parent
         / str(empty_dataset["FormTable"].url),
+    )
+    assert cognate_ids_original == cognate_ids_from_excel, "{:} and {:} don't match.".format(
+        empty_dataset["CognateTable"]._parent._fname.parent
+        / str(empty_dataset["CognateTable"].url),
+        original["CognateTable"]._parent._fname.parent
+        / str(empty_dataset["CognateTable"].url),
     )
 
 
