@@ -322,12 +322,10 @@ class ExcelParser:
                         )
                     candidate_forms = self.db.find_db_candidates(form, self.check_for_match)
 
-                    print(candidate_forms)
                     candidate_forms = iter(candidate_forms)
                     try:
                         # if a candidate for form already exists, don't add the form
                         form_id = next(candidate_forms)
-                        print("hellooooo")
                         self.db.associate(form_id, row_object)
                     except StopIteration:
                         # no candidates. form is created or not.
@@ -360,7 +358,7 @@ class ExcelCognateParser(ExcelParser):
         self,
         output_dataset: pycldf.Dataset,
         db_fname: str,
-        top: int = 3,
+        top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
         row_header=["set", "Name", None],
         check_for_match: t.List[str] = ["ID"],
@@ -405,7 +403,6 @@ class ExcelCognateParser(ExcelParser):
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None
     ) -> bool:
-        print("hello")
         assert (
             row.__table__ == "CognatesetTable"
         ), "Expected CognateSet, but got {:}".format(row.__class__)
@@ -417,7 +414,6 @@ class ExcelCognateParser(ExcelParser):
             cldf_comment=comment or "",
         )
         self.db.make_id_unique(judgement)
-        print(judgement)
         return self.db.insert_into_db(judgement)
 
 
