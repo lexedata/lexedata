@@ -329,7 +329,7 @@ class ExcelParser:
                     try:
                         # if a candidate for form already exists, don't add the form
                         form_id = next(candidate_forms)
-                        self.db.associate(form_id, row_object)
+                        self.db.associate(form_id, row_object, maybe_comment)
                     except StopIteration:
                         # no candidates. form is created or not.
                         if self.on_form_not_found(form, cell_with_forms):
