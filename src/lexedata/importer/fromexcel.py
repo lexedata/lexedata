@@ -151,12 +151,12 @@ class DB:
             def match(x, y):
                 return x == y
         #candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
-        #              all(match(properties[p], object[p]) for p in properties)]
-        candidates = []
-        for candidate, properties in self.cache[object.__table__].items():
-            properties_in_object = [p for p in properties_for_match if p in object and p in properties]
-            if all(match(properties[p], object[p]) for p in properties_in_object):
-                candidates.append(candidate)
+                      all(match(properties[p], object[p]) for p in properties)]
+        #candidates = []
+        #for candidate, properties in self.cache[object.__table__].items():
+            #properties_in_object = [p for p in properties_for_match if p in object and p in properties]
+            #if all(match(properties[p], object[p]) for p in properties_in_object):
+                #candidates.append(candidate)
         return candidates
         # candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if all(match(properties[p], object[p]) for p in properties]
 
@@ -169,6 +169,7 @@ class ExcelParser:
         self,
         output_dataset: pycldf.Dataset,
         db_fname: str,
+        row_object: Object = Concept,
         top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
         # The following column names should be generated from CLDF terms. This
@@ -189,6 +190,7 @@ class ExcelParser:
         self.row_header = row_header
 
         self.cell_parser: cell_parsers.NaiveCellParser = cellparser
+        self.row_object = row_object
         self.top = top
         self.left = len(row_header) + 1
         self.check_for_match = check_for_match
@@ -210,6 +212,9 @@ class ExcelParser:
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
+        c_id = self.db.dataset[self.row_object.__table__, "id"].name
+        c_comment = self.db.dataset[self.row_object.__table__, "comment"].name
+        c_name = self.db.dataset[self.row_object.__table__, "name"].name
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
         properties = dict(zip(self.row_header, data))
         # delete all possible None entries coming from row_header
@@ -218,12 +223,12 @@ class ExcelParser:
 
         # fetch cell comment
         comment = get_cell_comment(row[0])
-        properties["Comment"] = comment
+        properties[c_comment] = comment
 
         # cldf_name serves as cldf_id candidate
-        properties["ID"] = properties["Name"]
+        properties[c_id] = properties[c_name]
 
-        return Concept(properties)
+        return self.row_object(properties)
 
     def parse_all_languages(
         self, sheet: openpyxl.worksheet.worksheet.Worksheet
@@ -266,6 +271,8 @@ class ExcelParser:
         row_object = None
         c_f_id = self.db.dataset["FormTable", "id"].name
         c_f_language = self.db.dataset["FormTable", "languageReference"].name
+        c_f_value = self.db.dataset["FormTable", "value"].name
+        c_f_comment = self.db.dataset["FormTable", "comment"].name
         for row in tqdm(
             sheet.iter_rows(min_row=self.top), total=sheet.max_row - self.top
         ):
@@ -316,6 +323,7 @@ class ExcelParser:
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
                     # Cellparser adds comment of a excel cell to "Cell_Comment" if given
+                    # TODO: Gereon, I don't think that params.pop(c_f_comment, None) is correct here. Is it?
                     maybe_comment: t.Optional[str] = params.pop("Cell_Comment", None)
                     form = Form(params)
                     if c_f_id not in form:
@@ -342,7 +350,7 @@ class ExcelParser:
                         else:
                             logger.error(
                                 "The missing form was {:} in {:}, given as {:}.".format(
-                                    row_object["ID"], this_lan, form["Value"]
+                                    row_object[c_r_id], this_lan, form[c_f_value]
                                 )
                             )
                             # TODO: Fill data with a fuzzy search
@@ -359,6 +367,7 @@ class ExcelCognateParser(ExcelParser):
         self,
         output_dataset: pycldf.Dataset,
         db_fname: str,
+        row_object: Object = CogSet,
         top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
         row_header=["set", "Name", None],
@@ -372,6 +381,7 @@ class ExcelCognateParser(ExcelParser):
         super().__init__(
             output_dataset=output_dataset,
             db_fname=db_fname,
+            row_object=row_object,
             top=top,
             cellparser=cellparser,
             check_for_match=check_for_match,
@@ -387,6 +397,9 @@ class ExcelCognateParser(ExcelParser):
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         # TODO: Ask Gereon: get_cell_comment with unicode normalization or not?
+        c_id = self.db.dataset[self.row_object.__table__, "id"].name
+        c_comment = self.db.dataset[self.row_object.__table__, "comment"].name
+        c_name = self.db.dataset[self.row_object.__table__, "name"].name
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
         properties = dict(zip(self.row_header, data))
         # delete all possible None entries coming from row_header
@@ -395,19 +408,20 @@ class ExcelCognateParser(ExcelParser):
 
         # fetch cell comment
         comment = get_cell_comment(row[0])
-        properties["Comment"] = comment
+        properties[c_comment] = comment
 
         # cldf_name serves as cldf_id candidate
-        properties["ID"] = properties.get("ID") or properties["Name"]
-        return CogSet(properties)
+        properties[c_id] = properties.get(c_id) or properties[c_name]
+        return self.row_object(properties)
 
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None
     ) -> bool:
+        c_id = self.db.dataset[self.row_object, "id"].name
         assert (
             row.__table__ == "CognatesetTable"
         ), "Expected CognateSet, but got {:}".format(row.__class__)
-        row_id = row["cldf_id"]
+        row_id = row[c_id]
         judgement = Judgement(
             cldf_id=f"{form_id}-{row_id}",
             cldf_formReference=form_id,
