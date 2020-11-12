@@ -491,19 +491,17 @@ class CellParserHyperlink(CellParser):
             text = clean_cell_value(cell)
             comment = get_cell_comment(cell)
             if "{" not in text:
-                yield Form({c_id: url.split("/")[-1]})
+                slice, alignment = alignment_from_braces("{" + text + "}")
             else:
                 slice, alignment = alignment_from_braces(text)
-                yield Form(
-                    {
-                        c_id: url.split("/")[-1],
-                        c_segment: ",".join(
-                            "{:}:{:}".format(i, j) for i, j in slice
-                        ),
-                        c_alignment: alignment,
-                        c_comment: comment,
-                    }
-                )
+            yield Form(
+                {
+                    c_id: url.split("/")[-1],
+                    c_segment: ",".join("{:}:{:}".format(i, j) for i, j in slice),
+                    c_alignment: alignment,
+                    c_comment: comment,
+                }
+            )
         except AttributeError:
             pass
 
