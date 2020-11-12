@@ -274,7 +274,6 @@ class ExcelParser:
         c_f_id = self.db.dataset["FormTable", "id"].name
         c_f_language = self.db.dataset["FormTable", "languageReference"].name
         c_f_value = self.db.dataset["FormTable", "value"].name
-        c_f_comment = self.db.dataset["FormTable", "comment"].name
         for row in tqdm(
             sheet.iter_rows(min_row=self.top), total=sheet.max_row - self.top
         ):
