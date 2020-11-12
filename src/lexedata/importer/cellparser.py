@@ -147,15 +147,6 @@ class NaiveCellParser:
         self, source_string: str, language_id: t.Optional[str]
     ) -> t.Tuple[str, t.Optional[str]]:
         """Parse a string referencing a language-specific source
-
-        >>> b = NaiveCellParser()
-        >>> b.source_from_source_string("{1}", "abui")
-        ('abui_s1', None)
-        >>> b.source_from_source_string("", "abui")
-        ('abui_s', None)
-        >>> b.source_from_source_string("{Gul2020: p. 4}", "abui")
-        ('abui_sgul2020', 'p. 4')
-
         """
         context: t.Optional[str]
         if ":" in source_string:
@@ -252,17 +243,6 @@ class CellParser(NaiveCellParser):
         If the brackets don't match, the whole remainder string is passed on,
         so that the form parser can try to recover as much as possible or throw
         an exception.
-
-        >>> b = CellParser()
-        >>> list(b.separate("hic, haec, hoc"))
-        ['hic', 'haec', 'hoc']
-        >>> list(b.separate("hic (this, also: here); hoc"))
-        ['hic (this, also: here)', 'hoc']
-        >>> list(b.separate("hic (this, also: here"))
-        ['hic (this, also: here']
-        >>> list(b.separate("illic,"))
-        ['illic']
-
         """
         raw_split = re.split(self.separation_pattern, values)
         while len(raw_split) > 1:
@@ -288,11 +268,6 @@ class CellParser(NaiveCellParser):
 
         Extract each value (transcriptions, comments, sources etc.) from a
         string describing a single form.
-
-        >>> c = CellParser()
-        >>> c.parse_form(" \t", "abui") == None
-        True
-
         """
         c_l_id = self.dataset["FormTable", "languageReference"].name
         c_value = self.dataset["FormTable", "value"].name
