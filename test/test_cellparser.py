@@ -6,6 +6,8 @@ from pathlib import Path
 import json
 from collections import OrderedDict
 
+import pycldf
+
 from lexedata.importer import cellparser as c
 
 
@@ -14,7 +16,10 @@ def n(s: str):
 
 
 def test_cellparser_error():
-    parser = c.NaiveCellParser()
+    dataset = pycldf.Dataset.from_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    parser = c.NaiveCellParser(dataset)
     assert parser.parse_form("form ", "language") == {
         "Form": "form",
         "Language_ID": "language",
@@ -24,7 +29,10 @@ def test_cellparser_error():
 
 @pytest.fixture
 def parser():
-    return c.CellParser()
+    dataset = pycldf.Dataset.from_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    return c.CellParser(dataset)
 
 
 def test_cellparser_empty(parser):
@@ -144,6 +152,7 @@ def test_cellparser_separate_2(parser):
 @pytest.fixture
 def mawetiparser():
     metadata = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    dataset = pycldf.Dataset.from_metadata(metadata)
     dialect = argparse.Namespace(
         **json.load(metadata.open("r", encoding="utf8"))["special:fromexcel"]
     )
@@ -154,6 +163,7 @@ def mawetiparser():
         bracket_pairs[opening] = closing
         element_semantics[opening] = (name, my_bool)
     initialized_cell_parser = getattr(c, dialect.cell_parser["name"])(
+        dataset,
         bracket_pairs=bracket_pairs,
         element_semantics=element_semantics,
         separation_pattern=fr"([{''.join(dialect.cell_parser['form_separator'])}])",

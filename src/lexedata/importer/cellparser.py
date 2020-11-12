@@ -511,6 +511,7 @@ class CellParserHyperlink(CellParser):
 class MawetiCellParser(CellParser):
     def __init__(
         self,
+        dataset: pycldf.Dataset,
         bracket_pairs: t.Dict[str, str],
         element_semantics: t.Dict[str, str],
         separation_pattern: str,
@@ -518,6 +519,7 @@ class MawetiCellParser(CellParser):
         add_default_source: t.Optional[str],
     ):
         super(MawetiCellParser, self).__init__(
+            dataset,
             bracket_pairs=bracket_pairs,
             element_semantics=element_semantics,
             separation_pattern=separation_pattern,
