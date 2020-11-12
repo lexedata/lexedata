@@ -2,7 +2,9 @@
 import re
 import logging
 import typing as t
+
 import openpyxl
+import pycldf
 
 from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 from lexedata.types import Form
@@ -131,6 +133,9 @@ def components_in_brackets(form_string, bracket_pairs):
 
 
 class NaiveCellParser:
+    def __init__(self, dataset: pycldf.Dataset):
+        self.dataset = dataset
+
     def separate(self, values: str) -> t.Iterable[str]:
         """Separate different form descriptions in one string.
 
@@ -180,11 +185,14 @@ class NaiveCellParser:
     def parse_form(
         self, form_string: str, language_id: str, cell_identifier: str = ""
     ) -> t.Optional[Form]:
+        c_value = self.dataset["FormTable", "value"].name
+        c_form = self.dataset["FormTable", "form"].name
+        c_l_id = self.dataset["FormTable", "languageReference"].name
         return Form(
             {
-                "Value": form_string,
-                "Form": form_string.strip(),
-                "Language_ID": language_id,
+                c_value: form_string,
+                c_form: form_string.strip(),
+                c_l_id: language_id,
             }
         )
 
@@ -208,6 +216,7 @@ class NaiveCellParser:
 class CellParser(NaiveCellParser):
     def __init__(
         self,
+        dataset: pycldf.Dataset,
         bracket_pairs: t.Dict[str, str] = {
             "(": ")",
             "[": "]",
@@ -226,6 +235,7 @@ class CellParser(NaiveCellParser):
         variant_separator: t.Optional[t.List[str]] = ["~", "%"],
         add_default_source: t.Optional[str] = "{1}",
     ):
+        super().__init__(dataset)
         self.bracket_pairs = bracket_pairs
         self.element_semantics = element_semantics
         self.separation_pattern = separation_pattern
@@ -284,6 +294,11 @@ class CellParser(NaiveCellParser):
         True
 
         """
+        c_l_id = self.dataset["FormTable", "languageReference"].name
+        c_value = self.dataset["FormTable", "value"].name
+        c_comment = self.dataset["FormTable", "comment"].name
+        c_source = self.dataset["FormTable", "source"].name
+        c_variants = self.dataset["FormTable", "variants"].name
         # if string is only whitespaces, there is no form.
         if not form_string.strip():
             return None
@@ -291,8 +306,8 @@ class CellParser(NaiveCellParser):
         cell_identifier = "{}: ".format(cell_identifier) if cell_identifier else ""
 
         properties: t.Dict[str, t.Any] = {
-            "Language_ID": language_id,
-            "Value": form_string,
+            c_l_id: language_id,
+            c_value: form_string,
         }
 
         # Semantics: 'None' for no variant expected, any string for the
@@ -337,11 +352,11 @@ class CellParser(NaiveCellParser):
             # clean this up in self.postprocessing
 
             if field in properties:
-                if not expect_variant and field != "Comment" and field != "Source":
+                if not expect_variant and field != c_comment and field != c_source:
                     logger.warning(
                         f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}"
                     )
-                properties.setdefault("variants", []).append(
+                properties.setdefault(c_variants, []).append(
                     (expect_variant or "") + element
                 )
             else:
@@ -382,6 +397,9 @@ class CellParser(NaiveCellParser):
         sources, cut of delimiters, split unmarked variants, etc.
 
         """
+        c_comment = self.dataset["FormTable", "comment"].name
+        c_f_source = self.dataset["FormTable", "source"].name
+        c_form = self.dataset["FormTable", "form"].name
         # remove delimiters from transcriptions
         transcriptions = [
             semantics[0]
@@ -400,7 +418,7 @@ class CellParser(NaiveCellParser):
                 continue
         # remove delimiters from comment
         try:
-            comment = properties["Comment"]
+            comment = properties[c_comment]
             comment = comment.split(comment_separator)
             clean_comment = ""
             for c in comment:
@@ -408,10 +426,9 @@ class CellParser(NaiveCellParser):
                 if c[0] in self.bracket_pairs and c.endswith(self.bracket_pairs[c[0]]):
                     clean_comment += c[1:-1] + comment_separator
             clean_comment = clean_comment.rstrip(comment_separator)
-            properties["Comment"] = clean_comment
+            properties[c_comment] = clean_comment
         except KeyError:
             pass
-        c_f_source = "Source"
         source = properties.pop(c_f_source, None)
         if self.add_default_source and source is None:
             source = self.add_default_source
@@ -432,7 +449,7 @@ class CellParser(NaiveCellParser):
 
         # add form to properties
         if "Form" not in properties:
-            properties["Form"] = self.create_cldf_form(properties, transcriptions)
+            properties[c_form] = self.create_cldf_form(properties, transcriptions)
 
 
 def alignment_from_braces(text, start=0):
@@ -465,22 +482,26 @@ class CellParserHyperlink(CellParser):
     def parse(
         self, cell: openpyxl.cell.Cell, language_id: str, cell_identifier: str = ""
     ) -> t.Iterable[Form]:
+        c_comment = self.dataset["CognateTable", "comment"].name
+        c_id = self.dataset["CognateTable", "id"].name
+        c_segment = self.dataset["CognateTable", "segment_slice"].name
+        c_alignment = self.dataset["CognateTable", "alignment"].name
         try:
             url = cell.hyperlink.target
             text = clean_cell_value(cell)
             comment = get_cell_comment(cell)
             if "{" not in text:
-                yield Form({"ID": url.split("/")[-1]})
+                yield Form({c_id: url.split("/")[-1]})
             else:
                 slice, alignment = alignment_from_braces(text)
                 yield Form(
                     {
-                        "ID": url.split("/")[-1],
-                        "Segment_Slice": ",".join(
+                        c_id: url.split("/")[-1],
+                        c_segment: ",".join(
                             "{:}:{:}".format(i, j) for i, j in slice
                         ),
-                        "Alignment": alignment,
-                        "Cell_Comment": comment,
+                        c_alignment: alignment,
+                        c_comment: comment,
                     }
                 )
         except AttributeError:
@@ -519,30 +540,34 @@ class MawetiCellParser(CellParser):
         # TODO: Currently "..." lands in the forms, with empty other entries
         # (and non-empty source). This is not too bad for now, how should it
         # be?
+        c_comment = self.dataset["FormTable", "comment"].name
+        c_f_source = self.dataset["FormTable", "source"].name
+        c_variant = self.dataset["FormTable", "variants"].name
+
         try:
-            comment = properties["Comment"]
+            comment = properties[c_comment]
             if re.search(r"^[A-Z]{2,}:", comment[1:]):
                 properties["procedural_comment"] = comment[1:-1]  # strip delimiters
-                del properties["Comment"]
+                del properties[c_comment]
         except KeyError:
             pass
         # if source present, turn into Source object
-        source = properties.pop("Source", None)
+        source = properties.pop(c_f_source, None)
         if source:
             source, context = self.source_from_source_string(source, language_id)
-            properties["Source"] = {(source, context)}
+            properties[c_f_source] = {(source, context)}
         # TODO: Ask Gereon: What kind of separator between comments and sources?
         # if variants already exists, it may contain a actual variant, additional comments or sources
         start_of_comment = ""
         start_of_source = ""
         for k, v in self.element_semantics.items():
-            if v[0] == "Comment":
+            if v[0] == c_comment:
                 start_of_comment = k
-            if v[0] == "Source":
+            if v[0] == c_f_source:
                 start_of_source = k
         try:
             actual_variants = []
-            for variant in properties["variants"]:
+            for variant in properties[c_variant]:
                 start = variant[0]
                 # check for actual variants
                 if start in self.variant_separator:
@@ -560,17 +585,17 @@ class MawetiCellParser(CellParser):
                             properties["procedural_comment"] = variant[1:-1]
                     else:
                         try:
-                            properties["Comment"] += comment_separator + variant
+                            properties[c_comment] += comment_separator + variant
                         except KeyError:
-                            properties["Comment"] = variant
+                            properties[c_comment] = variant
 
                 # check for misplaced sources
                 elif start == start_of_source:
-                    properties.setdefault("Source", set()).add(
+                    properties.setdefault(c_f_source, set()).add(
                         self.source_from_source_string(variant, language_id)
                     )
 
-            properties["variants"] = actual_variants
+            properties[c_variant] = actual_variants
         except KeyError:
             pass
 
@@ -581,7 +606,7 @@ class MawetiCellParser(CellParser):
             if semantics[1]
         ]
         # if variants not in properties, add default list
-        variants = properties.setdefault("variants", [])
+        variants = properties.setdefault(c_variant, [])
         for key in transcriptions:
             try:
                 property_value = properties[key]
