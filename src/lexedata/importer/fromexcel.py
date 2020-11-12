@@ -140,7 +140,7 @@ class DB:
         object: Ob,
         properties_for_match: t.Iterable[str],
         edit_dist_threshold: t.Optional[int] = None,
-    ) -> t.List[str]:
+    ) -> t.Iterable[str]:
         if edit_dist_threshold:
 
             def match(x, y):
@@ -150,12 +150,15 @@ class DB:
 
             def match(x, y):
                 return x == y
-        candidates = []
-        for candidate, properties in self.cache[object.__table__].items():
-            properties_in_object = [p for p in properties_for_match if p in object and p in properties]
-            if all(match(properties[p], object[p]) for p in properties_in_object):
-                candidates.append(candidate)
+        candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
+                      all(match(properties[p], object[p]) for p in properties)]
+        #candidates = []
+        #for candidate, properties in self.cache[object.__table__].items():
+            #properties_in_object = [p for p in properties_for_match if p in object and p in properties]
+            #if all(match(properties[p], object[p]) for p in properties_in_object):
+                #candidates.append(candidate)
         return candidates
+        # candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if all(match(properties[p], object[p]) for p in properties]
 
     def commit(self):
         pass
@@ -320,9 +323,7 @@ class ExcelParser:
                         form[c_f_id] = "{:}_{:}".format(
                             form[c_f_language], row_object[c_r_id]
                         )
-                    candidate_forms = self.db.find_db_candidates(form, self.check_for_match)
-
-                    candidate_forms = iter(candidate_forms)
+                    candidate_forms = iter(self.db.find_db_candidates(form, self.check_for_match))
                     try:
                         # if a candidate for form already exists, don't add the form
                         form_id = next(candidate_forms)
@@ -558,36 +559,37 @@ def load_dataset(
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / "db.sqlite"
     lexicon_wb = openpyxl.load_workbook(lexicon).active
-    # load lexical data set
+    # load dialect from metadata
     try:
         dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
-        EP = excel_parser_from_dialect(dialect, cognate=False)
     except KeyError:
         logger.warning(
             "Dialect not found or dialect was missing a key, "
             "falling back to default parser"
         )
+        dialect = None
+    # load lexical data set
+    if dialect:
+        EP = excel_parser_from_dialect(dialect, cognate=False)
+    else:
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     EP = EP(dataset, db_fname=db)
     EP.db.empty_cache()
     EP.parse_cells(lexicon_wb)
     # load cognate data set if provided by metadata
-    try:
-        dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
-        cognate = True if cognate_lexicon and dialect.cognates else False
-        if cognate:
-            ECP = excel_parser_from_dialect(
-                argparse.Namespace(**dialect.cognates), cognate=cognate
-            )
-        else:
-            raise KeyError
-    except KeyError:
+    cognate = True if cognate_lexicon and dialect.cognates else False
+    if cognate:
+        ECP = excel_parser_from_dialect(
+            argparse.Namespace(**dialect.cognates), cognate=cognate
+        )
+    else:
         ECP = ExcelCognateParser
     ECP = ECP(dataset, db)
     ECP.db = EP.db
-    for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
-        ECP.parse_cells(sheet)
+    if cognate_lexicon:  # in case no cognate file given, nothing happens
+        for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
+            ECP.parse_cells(sheet)
     ECP.db.write_dataset_from_cache()
 
 
