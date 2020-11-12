@@ -151,14 +151,14 @@ class DB:
             def match(x, y):
                 return x == y
         #candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
-                      all(match(properties[p], object[p]) for p in properties)]
-        #candidates = []
-        #for candidate, properties in self.cache[object.__table__].items():
-            #properties_in_object = [p for p in properties_for_match if p in object and p in properties]
-            #if all(match(properties[p], object[p]) for p in properties_in_object):
-                #candidates.append(candidate)
+                      # all(match(properties[p], object[p]) for p in properties)]
+        candidates = []
+        for candidate, properties in self.cache[object.__table__].items():
+            properties_in_object = [p for p in properties_for_match if p in object and p in properties]
+            if all(match(properties[p], object[p]) for p in properties_in_object):
+                candidates.append(candidate)
         return candidates
-        # candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if all(match(properties[p], object[p]) for p in properties]
+
 
     def commit(self):
         pass
@@ -171,7 +171,7 @@ class ExcelParser:
         db_fname: str,
         row_object: Object = Concept,
         top: int = 2,
-        cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
+        cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
         # The following column names should be generated from CLDF terms. This
         # will likely mean that the __init__ method would have to get a
         # slightly different signature, to take that dependency on the output
@@ -189,7 +189,7 @@ class ExcelParser:
         self.on_form_not_found = on_form_not_found
         self.row_header = row_header
 
-        self.cell_parser: cell_parsers.NaiveCellParser = cellparser
+        self.cell_parser = cellparser(output_dataset)
         self.row_object = row_object
         self.top = top
         self.left = len(row_header) + 1
@@ -369,7 +369,7 @@ class ExcelCognateParser(ExcelParser):
         db_fname: str,
         row_object: Object = CogSet,
         top: int = 2,
-        cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
+        cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
         row_header=["set", "Name", None],
         check_for_match: t.List[str] = ["ID"],
         check_for_row_match: t.List[str] = ["Name"],
@@ -383,7 +383,7 @@ class ExcelCognateParser(ExcelParser):
             db_fname=db_fname,
             row_object=row_object,
             top=top,
-            cellparser=cellparser,
+            cellparser=cellparser(output_dataset),
             check_for_match=check_for_match,
             row_header=row_header,
             check_for_row_match=check_for_row_match,
@@ -432,7 +432,7 @@ class ExcelCognateParser(ExcelParser):
         return self.db.insert_into_db(judgement)
 
 
-def excel_parser_from_dialect(
+def excel_parser_from_dialect(output_dataset,
     dialect: argparse.Namespace, cognate: bool
 ) -> t.Type[ExcelParser]:
     if cognate:
@@ -454,6 +454,7 @@ def excel_parser_from_dialect(
         bracket_pairs[opening] = closing
         element_semantics[opening] = (name, my_bool)
     initialized_cell_parser = getattr(cell_parsers, dialect.cell_parser["name"])(
+        output_dataset,
         bracket_pairs=bracket_pairs,
         element_semantics=element_semantics,
         separation_pattern=fr"([{''.join(dialect.cell_parser['form_separator'])}])",
@@ -584,7 +585,7 @@ def load_dataset(
         dialect = None
     # load lexical data set
     if dialect:
-        EP = excel_parser_from_dialect(dialect, cognate=False)
+        EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
     else:
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
@@ -595,7 +596,7 @@ def load_dataset(
     cognate = True if cognate_lexicon and dialect.cognates else False
     if cognate:
         ECP = excel_parser_from_dialect(
-            argparse.Namespace(**dialect.cognates), cognate=cognate
+            dataset, argparse.Namespace(**dialect.cognates), cognate=cognate
         )
     else:
         ECP = ExcelCognateParser
