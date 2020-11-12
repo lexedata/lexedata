@@ -150,13 +150,13 @@ class DB:
 
             def match(x, y):
                 return x == y
-        candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
-                      all(match(properties[p], object[p]) for p in properties)]
-        #candidates = []
-        #for candidate, properties in self.cache[object.__table__].items():
-            #properties_in_object = [p for p in properties_for_match if p in object and p in properties]
-            #if all(match(properties[p], object[p]) for p in properties_in_object):
-                #candidates.append(candidate)
+        #candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
+        #              all(match(properties[p], object[p]) for p in properties)]
+        candidates = []
+        for candidate, properties in self.cache[object.__table__].items():
+            properties_in_object = [p for p in properties_for_match if p in object and p in properties]
+            if all(match(properties[p], object[p]) for p in properties_in_object):
+                candidates.append(candidate)
         return candidates
         # candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if all(match(properties[p], object[p]) for p in properties]
 
