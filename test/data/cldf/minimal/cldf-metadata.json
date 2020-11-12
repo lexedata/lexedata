@@ -184,6 +184,14 @@
           },
           {
             "datatype": "string",
+            "name": "Segment_Slice"
+          },
+          {
+            "datatype": "string",
+            "name": "Alignment"
+          },
+          {
+            "datatype": "string",
             "name": "Comment",
             "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
           }

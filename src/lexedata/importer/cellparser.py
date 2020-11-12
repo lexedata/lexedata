@@ -484,8 +484,8 @@ class CellParserHyperlink(CellParser):
     ) -> t.Iterable[Form]:
         c_comment = self.dataset["CognateTable", "comment"].name
         c_id = self.dataset["CognateTable", "id"].name
-        c_segment = self.dataset["CognateTable", "segment_slice"].name
-        c_alignment = self.dataset["CognateTable", "alignment"].name
+        c_segment = self.dataset["CognateTable", "Segment_Slice"].name
+        c_alignment = self.dataset["CognateTable", "Alignment"].name
         try:
             url = cell.hyperlink.target
             text = clean_cell_value(cell)
