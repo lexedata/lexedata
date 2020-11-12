@@ -101,6 +101,7 @@ def minimal_parser_with_dialect():
     db = tmpdir / "db.sqlite"
 
     EP = excel_parser_from_dialect(
+        dataset,
         argparse.Namespace(
             lang_cell_regexes=["(?P<Name>.*)"],
             lang_comment_regexes=[".*"],

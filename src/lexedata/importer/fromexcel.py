@@ -188,8 +188,10 @@ class ExcelParser:
         self.on_row_not_found = on_row_not_found
         self.on_form_not_found = on_form_not_found
         self.row_header = row_header
-
-        self.cell_parser = cellparser(output_dataset)
+        try:
+            self.cell_parser = getattr(cell_parsers, cellparser)(output_dataset)
+        except TypeError:
+            self.cell_parser = cellparser
         self.row_object = row_object
         self.top = top
         self.left = len(row_header) + 1
@@ -383,7 +385,7 @@ class ExcelCognateParser(ExcelParser):
             db_fname=db_fname,
             row_object=row_object,
             top=top,
-            cellparser=cellparser(output_dataset),
+            cellparser=cellparser,
             check_for_match=check_for_match,
             row_header=row_header,
             check_for_row_match=check_for_row_match,
@@ -472,6 +474,7 @@ def excel_parser_from_dialect(output_dataset,
                 output_dataset=output_dataset,
                 db_fname=db_fname,
                 top=top,
+                row_object=Row,
                 row_header=row_header,
                 cellparser=initialized_cell_parser,
                 check_for_match=dialect.check_for_match,
