@@ -274,6 +274,7 @@ class ExcelParser:
         c_f_id = self.db.dataset["FormTable", "id"].name
         c_f_language = self.db.dataset["FormTable", "languageReference"].name
         c_f_value = self.db.dataset["FormTable", "value"].name
+        c_f_comment = self.db.dataset["FormTable", "comment"].name
         for row in tqdm(
             sheet.iter_rows(min_row=self.top), total=sheet.max_row - self.top
         ):
@@ -325,7 +326,7 @@ class ExcelParser:
                 ):
                     # Cellparser adds comment of a excel cell to "Cell_Comment" if given
                     # TODO: Gereon, I don't think that params.pop(c_f_comment, None) is correct here. Is it?
-                    maybe_comment: t.Optional[str] = params.pop("Cell_Comment", None)
+                    maybe_comment: t.Optional[str] = params.pop(c_f_comment, None)
                     form = Form(params)
                     if c_f_id not in form:
                         # create candidate for form[id]
