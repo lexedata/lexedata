@@ -49,8 +49,7 @@ def excel_wordlist():
     )
 
 
-@pytest.fixture
-def filled_cldf_wordlist(cldf_wordlist):
+def copy_to_temp(cldf_wordlist):
     # Copy the dataset to a different temporary location, so that editing the
     # dataset will not change it.
     original = cldf_wordlist
@@ -104,7 +103,8 @@ def test_fromexcel_correct(excel_wordlist):
     )
 
 
-def test_toexcel_runs(filled_cldf_wordlist):
+def test_toexcel_runs(cldf_wordlist):
+    filled_cldf_wordlist = copy_to_temp(cldf_wordlist)
     writer = ExcelWriter(
         dataset=filled_cldf_wordlist[0],
         database_url=filled_cldf_wordlist[1],
@@ -114,7 +114,8 @@ def test_toexcel_runs(filled_cldf_wordlist):
     writer.create_excel(out_filename)
 
 
-def test_roundtrip(filled_cldf_wordlist):
+def test_roundtrip(cldf_wordlist):
+    filled_cldf_wordlist = copy_to_temp(cldf_wordlist)
     dataset, target = filled_cldf_wordlist
     c_formReference = dataset["CognateTable", "formReference"].name
     c_cogsetReference = dataset["CognateTable", "cognatesetReference"].name
@@ -184,3 +185,66 @@ def test_roundtrip(filled_cldf_wordlist):
     }
 
     assert new_judgements == old_judgements
+
+
+def test_cell_comments():
+    dataset, _ = copy_to_temp(
+        Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
+    )
+    ws_test = openpyxl.load_workbook(
+        Path(__file__).parent / "data/excel/judgement_cell_with_note.xlsx"
+    ).active
+
+    row_header = []
+    for (header,) in ws_test.iter_cols(
+        min_row=1,
+        max_row=1,
+        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
+    ):
+        column_name = header.value
+        if column_name is None:
+            column_name = dataset["CognatesetTable", "id"].name
+        elif column_name == "CogSet":
+            column_name = dataset["CognatesetTable", "id"].name
+        try:
+            column_name = dataset["CognatesetTable", column_name].name
+        except KeyError:
+            break
+        row_header.append(column_name)
+
+    excel_parser_cognate = CognateEditParser(
+        dataset,
+        None,
+        top=2,
+        # When the dataset has cognateset comments, that column is not a header
+        # column, so this value is one higher than the actual number of header
+        # columns, so actually correct for the 1-based indices. When there is
+        # no comment column, we need to compensate for the 1-based Excel
+        # indices.
+        cellparser=cell_parsers.CellParserHyperlink(),
+        row_header=row_header,
+        check_for_language_match=[dataset["LanguageTable", "name"].name],
+        check_for_match=[dataset["FormTable", "id"].name],
+        check_for_row_match=[dataset["CognatesetTable", "id"].name],
+    )
+
+    # TODO: This often doesn't work if the dataset is not perfect before this
+    # program is called. In particular, it doesn't work if there are errors in
+    # the cognate sets or judgements, which will be reset in just a moment. How
+    # else should we solve this?
+    excel_parser_cognate.db.cache_dataset()
+    excel_parser_cognate.db.drop_from_cache("CognatesetTable")
+    excel_parser_cognate.db.drop_from_cache("CognateTable")
+    excel_parser_cognate.parse_cells(ws_test)
+
+    assert excel_parser_cognate.db.cache["CognateTable"] == {
+        "aaa_1209-cogset": {
+            "ID": "aaa_1209-cogset",
+            "Form_ID": "aaa_1209",
+            "Cognateset": "cogset",
+            "Comment": "Comment on judgement",
+        }
+    }
+    assert excel_parser_cognate.db.cache["CognatesetTable"] == {
+        "cogset": {"Name": "cogset", "Comment": "Cognateset-comment", "ID": "cogset"}
+    }
