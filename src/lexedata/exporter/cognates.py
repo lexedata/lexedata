@@ -210,7 +210,8 @@ class ExcelWriter:
         cell_value = self.form_to_cell_value(judgement[0], judgement[1])
         form_cell = ws.cell(row=row, column=column, value=cell_value)
         c_id = self.dataset["FormTable", "id"].name
-        comment = judgement[1].get("comment", None)
+        c_comment = self.dataset["CognateTable", "comment"].name
+        comment = judgement[1].get(c_comment, None)
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
         link = self.URL_BASE.format(urllib.parse.quote(judgement[0][c_id]))
