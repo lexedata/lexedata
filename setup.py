@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+import platform
 
 setup(
     name="lexedata",
@@ -27,7 +28,9 @@ setup(
         "cldfbench",
         "pyglottolog",
         "pyconcepticon",
-        "pyclts"
+        "pyclts",
+        "readline ; platform.system() =!'Windows'",
+        "pyreadline ; platform.system() =='Windows'"
     ],
     entry_points={
         "console_scripts": [
