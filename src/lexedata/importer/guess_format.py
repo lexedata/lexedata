@@ -2,14 +2,20 @@ import os
 import re
 import shutil
 import argparse
-import readline
 import typing as t
 import unicodedata
 from pathlib import Path
+import platform
 
 import csvw
 import pycldf
 import openpyxl
+
+if platform.system() != "Windows":
+    import readline
+else:
+    from pyreadline import Readline
+    readline = Readline()
 
 if os.name == "nt":
 
