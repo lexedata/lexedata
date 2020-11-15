@@ -2,20 +2,20 @@ from setuptools import setup, find_packages
 import platform
 
 REQUIRES = [
-        "attrs",
-        "python-igraph",
-        "openpyxl",
-        "pycldf",
-        "sqlalchemy",
-        "segments",
-        "pyclts",
-        "lingpy",
-        "unidecode",
-        "cldfbench",
-        "pyglottolog",
-        "pyconcepticon",
-        "pyclts",
-    ]
+    "attrs",
+    "python-igraph",
+    "openpyxl",
+    "pycldf",
+    "sqlalchemy",
+    "segments",
+    "pyclts",
+    "lingpy",
+    "unidecode",
+    "cldfbench",
+    "pyglottolog",
+    "pyconcepticon",
+    "pyclts",
+]
 if platform.system() != 'Windows':
     REQUIRES.append("readline")
 else:
