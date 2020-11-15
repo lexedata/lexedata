@@ -248,3 +248,24 @@ def test_cell_comments():
     assert excel_parser_cognate.db.cache["CognatesetTable"] == {
         "cogset": {"Name": "cogset", "Comment": "Cognateset-comment", "ID": "cogset"}
     }
+
+
+def test_cell_comments_export():
+    dataset, _ = copy_to_temp(
+        Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
+    )
+    _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
+
+    E = ExcelWriter(dataset)
+    E.set_header()
+    E.create_excel(out_filename, size_sort=False, language_order="Name")
+
+    ws_out = openpyxl.load_workbook(out_filename).active
+    for col in ws_out.iter_cols():
+        pass
+    assert col[
+        -1
+    ].comment.content, "Last row of last column should contain a judgement, with a comment attached to it."
+    assert (
+        col[-1].comment.content == "A judgement comment"
+    ), "Comment should match the comment from the cognate table"
