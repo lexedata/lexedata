@@ -1,4 +1,25 @@
 from setuptools import setup, find_packages
+import platform
+
+REQUIRES = [
+    "attrs",
+    "python-igraph",
+    "openpyxl",
+    "pycldf",
+    "sqlalchemy",
+    "segments",
+    "pyclts",
+    "lingpy",
+    "unidecode",
+    "cldfbench",
+    "pyglottolog",
+    "pyconcepticon",
+    "pyclts",
+]
+if platform.system() != 'Windows':
+    REQUIRES.append("readline")
+else:
+    REQUIRES.append("pyreadline")
 
 setup(
     name="lexedata",
@@ -14,21 +35,7 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     platforms="any",
-    install_requires=[
-        "attrs",
-        "python-igraph",
-        "openpyxl",
-        "pycldf",
-        "sqlalchemy",
-        "segments",
-        "pyclts",
-        "lingpy",
-        "unidecode",
-        "cldfbench",
-        "pyglottolog",
-        "pyconcepticon",
-        "pyclts"
-    ],
+    install_requires=REQUIRES,
     entry_points={
         "console_scripts": [
             "import-data-mg = importer.cells:main",
