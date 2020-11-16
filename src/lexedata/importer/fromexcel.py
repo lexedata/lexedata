@@ -51,6 +51,7 @@ class DB:
             logger.info("Warning: dbase fname set, but ignored")
         self.dataset = output_dataset
         self.cache = {}
+        self.source_ids = set()
 
     def cache_dataset(self):
         for table in self.dataset.tables:
@@ -60,12 +61,18 @@ class DB:
             )
             (id,) = table.tableSchema.primaryKey
             self.cache[table_type] = {row[id]: row for row in table}
+        # TODO: what is the actual API
+        for source in self.dataset.sources:
+            self.source_ids.add(source.id)
 
     def drop_from_cache(self, table: str):
         self.cache[table] = {}
 
     def retrieve(self, table_type: str):
         return self.cache[table_type].values()
+
+    def add_source(self, source_id):
+        self.source_ids.add(source_id)
 
     def empty_cache(self):
         self.cache = {
@@ -83,6 +90,9 @@ class DB:
                 table_type
             ].write(self.retrieve(table_type))
         self.dataset.write_metadata()
+        # TODO: Write BIB file, without pycldf
+        for source in self.source_ids:
+            print("@misc{" + source + ", title={" + source + "} }")
 
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None
@@ -275,6 +285,7 @@ class ExcelParser:
         c_f_language = self.db.dataset["FormTable", "languageReference"].name
         c_f_value = self.db.dataset["FormTable", "value"].name
         c_f_comment = self.db.dataset["FormTable", "comment"].name
+        c_f_source = self.db.dataset["FormTable", "source"].name
         for row in tqdm(
             sheet.iter_rows(min_row=self.top), total=sheet.max_row - self.top
         ):
@@ -324,6 +335,15 @@ class ExcelParser:
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
+                    if c_f_source in params:
+                        # Add all sources to sources set
+                        for source, _ in params[c_f_source]:
+                            self.db.add_source(source)
+                        # Glue contex to source
+                        params[c_f_source] = {
+                            f"{source:}[{context:}]" if context else source
+                            for source, context in params[c_f_source]
+                        }
                     # Cellparser adds comment of a excel cell to "Cell_Comment" if given
                     # TODO: Gereon, I don't think that params.pop(c_f_comment, None) is correct here. Is it?
                     maybe_comment: t.Optional[str] = params.pop(c_f_comment, None)
