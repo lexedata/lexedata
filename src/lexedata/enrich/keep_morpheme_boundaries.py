@@ -40,8 +40,8 @@ if __name__ == "__main__":
                 old_line = old_judgements[
                     line["Form_ID"], cognatesets_old_reversed[cognates]
                 ]
-                old_line["ID"] = line["ID"]
-                old_line["Cognateset_ID"] = line["Cognateset_ID"]
+                line["Alignment"] = old_line["Alignment"]
+                line["Segment_Slice"] = old_line["Segment_Slice"]
             else:
-                old_line = line
-            out.writerow(old_line)
+                pass
+            out.writerow(line)
