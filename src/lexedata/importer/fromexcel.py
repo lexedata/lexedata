@@ -150,12 +150,15 @@ class DB:
 
             def match(x, y):
                 return x == y
+        #candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
+                      # all(match(properties[p], object[p]) for p in properties)]
+        candidates = []
+        for candidate, properties in self.cache[object.__table__].items():
+            properties_in_object = [p for p in properties_for_match if p in object and p in properties]
+            if all(match(properties[p], object[p]) for p in properties_in_object):
+                candidates.append(candidate)
+        return candidates
 
-        return [
-            candidate
-            for candidate, properties in self.cache[object.__table__].items()
-            if all(match(properties[p], object[p]) for p in properties_for_match)
-        ]
 
     def commit(self):
         pass
@@ -166,8 +169,9 @@ class ExcelParser:
         self,
         output_dataset: pycldf.Dataset,
         db_fname: str,
+        row_object: Object = Concept,
         top: int = 2,
-        cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
+        cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
         # The following column names should be generated from CLDF terms. This
         # will likely mean that the __init__ method would have to get a
         # slightly different signature, to take that dependency on the output
@@ -184,8 +188,11 @@ class ExcelParser:
         self.on_row_not_found = on_row_not_found
         self.on_form_not_found = on_form_not_found
         self.row_header = row_header
-
-        self.cell_parser: cell_parsers.NaiveCellParser = cellparser
+        try:
+            self.cell_parser = getattr(cell_parsers, cellparser)(output_dataset)
+        except TypeError:
+            self.cell_parser = cellparser
+        self.row_object = row_object
         self.top = top
         self.left = len(row_header) + 1
         self.check_for_match = check_for_match
@@ -207,9 +214,9 @@ class ExcelParser:
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
-        c_r_id = self.db.dataset[RowObject.__table__, "id"].name
-        c_r_name = self.db.dataset[RowObject.__table__, "name"].name
-        c_r_comment = self.db.dataset[RowObject.__table__, "comment"].name
+        c_id = self.db.dataset[self.row_object.__table__, "id"].name
+        c_comment = self.db.dataset[self.row_object.__table__, "comment"].name
+        c_name = self.db.dataset[self.row_object.__table__, "name"].name
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
         properties = dict(zip(self.row_header, data))
         # delete all possible None entries coming from row_header
@@ -218,12 +225,12 @@ class ExcelParser:
 
         # fetch cell comment
         comment = get_cell_comment(row[0])
-        properties[c_r_comment] = comment
+        properties[c_comment] = comment
 
         # cldf_name serves as cldf_id candidate
-        properties[c_r_id] = properties[c_r_name]
+        properties[c_id] = properties[c_name]
 
-        return Concept(properties)
+        return self.row_object(properties)
 
     def parse_all_languages(
         self, sheet: openpyxl.worksheet.worksheet.Worksheet
@@ -266,6 +273,8 @@ class ExcelParser:
         row_object = None
         c_f_id = self.db.dataset["FormTable", "id"].name
         c_f_language = self.db.dataset["FormTable", "languageReference"].name
+        c_f_value = self.db.dataset["FormTable", "value"].name
+        c_f_comment = self.db.dataset["FormTable", "comment"].name
         for row in tqdm(
             sheet.iter_rows(min_row=self.top), total=sheet.max_row - self.top
         ):
@@ -316,16 +325,15 @@ class ExcelParser:
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
                     # Cellparser adds comment of a excel cell to "Cell_Comment" if given
-                    maybe_comment: t.Optional[str] = params.pop("Cell_Comment", None)
+                    # TODO: Gereon, I don't think that params.pop(c_f_comment, None) is correct here. Is it?
+                    maybe_comment: t.Optional[str] = params.pop(c_f_comment, None)
                     form = Form(params)
                     if c_f_id not in form:
                         # create candidate for form[id]
                         form[c_f_id] = "{:}_{:}".format(
                             form[c_f_language], row_object[c_r_id]
                         )
-                    candidate_forms = iter(
-                        self.db.find_db_candidates(form, self.check_for_match)
-                    )
+                    candidate_forms = iter(self.db.find_db_candidates(form, self.check_for_match))
                     try:
                         # if a candidate for form already exists, don't add the form
                         form_id = next(candidate_forms)
@@ -344,14 +352,14 @@ class ExcelParser:
                         else:
                             logger.error(
                                 "The missing form was {:} in {:}, given as {:}.".format(
-                                    row_object["ID"], this_lan, form["Value"]
+                                    row_object[c_r_id], this_lan, form[c_f_value]
                                 )
                             )
                             # TODO: Fill data with a fuzzy search
                             for row in self.db.find_db_candidates(
-                                form, self.check_for_match, edit_distance=4
+                                form, self.check_for_match, edit_dist_threshold=4
                             ):
-                                logger.info(f"Did you mean {dict(row)} ?")
+                                logger.info(f"Did you mean {row} ?")
                             continue
         self.db.commit()
 
@@ -361,8 +369,9 @@ class ExcelCognateParser(ExcelParser):
         self,
         output_dataset: pycldf.Dataset,
         db_fname: str,
-        top: int = 3,
-        cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser(),
+        row_object: Object = CogSet,
+        top: int = 2,
+        cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
         row_header=["set", "Name", None],
         check_for_match: t.List[str] = ["ID"],
         check_for_row_match: t.List[str] = ["Name"],
@@ -374,6 +383,7 @@ class ExcelCognateParser(ExcelParser):
         super().__init__(
             output_dataset=output_dataset,
             db_fname=db_fname,
+            row_object=row_object,
             top=top,
             cellparser=cellparser,
             check_for_match=check_for_match,
@@ -389,6 +399,9 @@ class ExcelCognateParser(ExcelParser):
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         # TODO: Ask Gereon: get_cell_comment with unicode normalization or not?
+        c_id = self.db.dataset[self.row_object.__table__, "id"].name
+        c_comment = self.db.dataset[self.row_object.__table__, "comment"].name
+        c_name = self.db.dataset[self.row_object.__table__, "name"].name
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
         properties = dict(zip(self.row_header, data))
         # delete all possible None entries coming from row_header
@@ -397,19 +410,20 @@ class ExcelCognateParser(ExcelParser):
 
         # fetch cell comment
         comment = get_cell_comment(row[0])
-        properties["Comment"] = comment
+        properties[c_comment] = comment
 
         # cldf_name serves as cldf_id candidate
-        properties["ID"] = properties.get("ID") or properties["Name"]
-        return CogSet(properties)
+        properties[c_id] = properties.get(c_id) or properties[c_name]
+        return self.row_object(properties)
 
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None
     ) -> bool:
+        c_id = self.db.dataset[self.row_object, "id"].name
         assert (
             row.__table__ == "CognatesetTable"
         ), "Expected CognateSet, but got {:}".format(row.__class__)
-        row_id = row["cldf_id"]
+        row_id = row[c_id]
         judgement = Judgement(
             cldf_id=f"{form_id}-{row_id}",
             cldf_formReference=form_id,
@@ -420,7 +434,7 @@ class ExcelCognateParser(ExcelParser):
         return self.db.insert_into_db(judgement)
 
 
-def excel_parser_from_dialect(
+def excel_parser_from_dialect(output_dataset,
     dialect: argparse.Namespace, cognate: bool
 ) -> t.Type[ExcelParser]:
     if cognate:
@@ -442,6 +456,7 @@ def excel_parser_from_dialect(
         bracket_pairs[opening] = closing
         element_semantics[opening] = (name, my_bool)
     initialized_cell_parser = getattr(cell_parsers, dialect.cell_parser["name"])(
+        output_dataset,
         bracket_pairs=bracket_pairs,
         element_semantics=element_semantics,
         separation_pattern=fr"([{''.join(dialect.cell_parser['form_separator'])}])",
@@ -459,6 +474,7 @@ def excel_parser_from_dialect(
                 output_dataset=output_dataset,
                 db_fname=db_fname,
                 top=top,
+                row_object=Row,
                 row_header=row_header,
                 cellparser=initialized_cell_parser,
                 check_for_match=dialect.check_for_match,
@@ -557,19 +573,23 @@ def load_dataset(
 ):
     # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
-    dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / "db.sqlite"
     lexicon_wb = openpyxl.load_workbook(lexicon).active
-    # load lexical data set
+    # load dialect from metadata
     try:
-        EP = excel_parser_from_dialect(dialect, cognate=False)
+        dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     except KeyError:
         logger.warning(
             "Dialect not found or dialect was missing a key, "
             "falling back to default parser"
         )
+        dialect = None
+    # load lexical data set
+    if dialect:
+        EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
+    else:
         EP = ExcelParser
     # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
     EP = EP(dataset, db_fname=db)
@@ -578,17 +598,17 @@ def load_dataset(
     # load cognate data set if provided by metadata
     cognate = True if cognate_lexicon and dialect.cognates else False
     if cognate:
-        try:
-            ECP = excel_parser_from_dialect(
-                argparse.Namespace(**dialect.cognates), cognate=cognate
-            )
-        except KeyError:
-            ECP = ExcelCognateParser(dataset, db_fname=db)
-        ECP = ECP(dataset, db)
-        ECP.db = EP.db
+        ECP = excel_parser_from_dialect(
+            dataset, argparse.Namespace(**dialect.cognates), cognate=cognate
+        )
+    else:
+        ECP = ExcelCognateParser
+    ECP = ECP(dataset, db)
+    ECP.db = EP.db
+    if cognate_lexicon:  # in case no cognate file given, nothing happens
         for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
-            EP.parse_cells(sheet)
-    EP.db.write_dataset_from_cache()
+            ECP.parse_cells(sheet)
+    ECP.db.write_dataset_from_cache()
 
 
 if __name__ == "__main__":

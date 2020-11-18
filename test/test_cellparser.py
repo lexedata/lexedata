@@ -6,6 +6,8 @@ from pathlib import Path
 import json
 from collections import OrderedDict
 
+import pycldf
+
 from lexedata.importer import cellparser as c
 
 
@@ -13,9 +15,22 @@ def n(s: str):
     return unicodedata.normalize("NFKC", s)
 
 
-def test_cellparser_error():
-    parser = c.NaiveCellParser()
-    assert parser.parse_form("form ", "language") == {
+@pytest.fixture
+def naive_parser():
+    dataset = pycldf.Dataset.from_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    return c.NaiveCellParser(dataset)
+
+
+def test_source_from_source_string(naive_parser):
+    assert naive_parser.source_from_source_string("{1}", "abui") == ('abui_s1', None)
+    assert naive_parser.source_from_source_string("", "abui") == ('abui_s', None)
+    assert naive_parser.source_from_source_string("{Gul2020: p. 4}", "abui") == ('abui_sgul2020', 'p. 4')
+
+
+def test_cellparser_error(naive_parser):
+    assert naive_parser.parse_form("form ", "language") == {
         "Form": "form",
         "Language_ID": "language",
         "Value": "form ",
@@ -24,12 +39,23 @@ def test_cellparser_error():
 
 @pytest.fixture
 def parser():
-    return c.CellParser()
+    dataset = pycldf.Dataset.from_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    return c.CellParser(dataset)
+
+
+def test_cellparser_separate(parser):
+    assert list(parser.separate("hic, haec, hoc")) == ['hic', 'haec', 'hoc']
+    assert list(parser.separate("hic (this, also: here); hoc")) == ['hic (this, also: here)', 'hoc']
+    assert list(parser.separate("hic (this, also: here")) == ['hic (this, also: here']
+    assert list(parser.separate("illic,")) == ['illic']
 
 
 def test_cellparser_empty(parser):
     # white spaces in excel cell
     assert parser.parse_form(" ", "language") is None
+    assert parser.parse_form(" \t", "abui") is None
 
 
 def test_cellparser_1(parser):
@@ -144,6 +170,7 @@ def test_cellparser_separate_2(parser):
 @pytest.fixture
 def mawetiparser():
     metadata = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    dataset = pycldf.Dataset.from_metadata(metadata)
     dialect = argparse.Namespace(
         **json.load(metadata.open("r", encoding="utf8"))["special:fromexcel"]
     )
@@ -154,6 +181,7 @@ def mawetiparser():
         bracket_pairs[opening] = closing
         element_semantics[opening] = (name, my_bool)
     initialized_cell_parser = getattr(c, dialect.cell_parser["name"])(
+        dataset,
         bracket_pairs=bracket_pairs,
         element_semantics=element_semantics,
         separation_pattern=fr"([{''.join(dialect.cell_parser['form_separator'])}])",

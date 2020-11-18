@@ -215,16 +215,15 @@
             "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
             "required": true
           },
-            {
-                "datatype": "string",
-                "name": "Name",
-                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#name",
-                "required": true
+          {
+            "datatype": "string",
+            "name": "Name",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#name"
           },
-            {
-                "datatype": "string",
-                "name": "Comment",
-                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
+          {
+            "datatype": "string",
+            "name": "Comment",
+            "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment"
           }
         ],
         "primaryKey": [

@@ -395,6 +395,14 @@
                         "name": "Comment"
                     },
                     {
+                        "datatype": "string",
+                        "name": "Segment_Slice"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "Alignment"
+                    },
+                    {
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
                         "required": true,
                         "name": "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict"
