@@ -225,7 +225,7 @@ def import_language_from_sheet(
         }
         # value is a required field of form, containing the content in its original form
         data[dataset["FormTable", "value"].name] = " ".join(
-            [str(e) for e in [c.value or "" for c in row]]
+            [str(e) for e in [c.value or "" for j, c in enumerate(row) if j not in empty_cols]]
         )
         if "Language" in dataset_header:
             data["Language"] = language
