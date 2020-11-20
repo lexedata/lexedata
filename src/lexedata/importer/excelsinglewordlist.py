@@ -175,7 +175,8 @@ def get_headers_from_excel(
     empty_cols: t.Set[int] = set()
     for i, col in enumerate(sheet.iter_cols()):
         column = [
-            unicodedata.normalize("NFKD", (str(c.value) or "").strip()) for c in col
+            str(unicodedata.normalize("NFKD", (str(e)).strip())).strip()
+            for e in [c.value or "" for c in col]
         ]
         if not any(column[1:]):
             empty_cols.add(i)
