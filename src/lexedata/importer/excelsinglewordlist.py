@@ -138,7 +138,6 @@ def read_single_excel_sheet(
         parser.insert_into_db(language)
     # TODO: shall new properties be added, although they were not present in the table so far?
     for form, concept in new_data:
-        print(form)
         concept = Concept(**concept)
         concept_candidates = parser.find_db_candidates(concept, match_for_concepts)
         if concept_candidates:
@@ -211,9 +210,6 @@ def import_language_from_sheet(
         ]
         if not any(column[1:]):
             empty_cols.add(i)
-    print(column)
-    print(empty_cols)
-    breakpoint()
     # skip first row
     row_iter = sheet.iter_rows()
     next(row_iter)
