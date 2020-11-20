@@ -241,6 +241,8 @@ def build_lang_ids(dataset, col_map):
             lang_ids[row[col_map.id]] = row[col_map.id]
         if row.get(col_map.glottocode):
             language_code_map[lang_ids[row[col_map.id]]] = row[col_map.glottocode]
+    lang_ids = dict(sorted(lang_ids.items()))
+    language_code_map = dict(sorted(language_code_map.items()))
     return lang_ids, language_code_map
 
 
