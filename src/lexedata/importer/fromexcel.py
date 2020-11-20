@@ -44,6 +44,7 @@ def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
 
 class DB:
     cache: t.Dict[str, t.Dict[t.Hashable, t.Dict[str, t.Any]]]
+    source_ids: t.Set[str]
 
     def __init__(self, output_dataset: pycldf.Wordlist, fname=None):
         if fname is not None:
@@ -61,7 +62,7 @@ class DB:
             (id,) = table.tableSchema.primaryKey
             self.cache[table_type] = {row[id]: row for row in table}
         # TODO: what is the actual API
-        for source in self.dataset.sources:
+        for source_id, _ in pycldf.sources.Sources.from_file(self.dataset.bibpath)
             self.source_ids.add(source.id)
 
     def drop_from_cache(self, table: str):
@@ -90,8 +91,9 @@ class DB:
             ].write(self.retrieve(table_type))
         self.dataset.write_metadata()
         # TODO: Write BIB file, without pycldf
-        for source in self.source_ids:
-            print("@misc{" + source + ", title={" + source + "} }")
+        with open(self.dataset.bibpath):
+            for source in self.source_ids:
+                print("@misc{" + source + ", title={" + source + "} }")
 
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None
