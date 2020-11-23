@@ -14,7 +14,7 @@ from lexedata.types import (
     Concept,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__file__)
 
 # TODO: Remark for Gereon: On purpose, I chose not to append new concepts and forms to the csv-files.
 # I  thought, it is rather redundant to initiate the DB and then not really use it.
@@ -262,7 +262,7 @@ if __name__ == "__main__":
     parser.add_argument("metadata", help="Title of the column linking rows to concepts")
     parser.add_argument(
         "--concept-property",
-        action="append",
+        nargs="*",
         type=str,
         default=[],
         help="Additional columns titles that describe concept properties, not form properties",
@@ -273,8 +273,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--exclude-sheet",
         "-x",
-        type=lambda s: s.split(","),
-        action="append",
+        type=str,
+        nargs="*",
         default=[],
         help="Sheets not to parse",
     )
