@@ -466,11 +466,13 @@ if __name__ == "__main__":
     if args.format == "beast":
         if args.output_file is None:
             root = ET.fromstring("<beast><data /></beast>")
+            et = ET.ElementTree(root)
         elif args.output_file.exists():
             et = ET.parse(args.output_file)
             root = et.getroot()
         else:
             root = ET.fromstring("<beast><data /></beast>")
+            et = ET.ElementTree(root)
         datas = list(root.iter("data"))
         data_object = datas[0]
 
@@ -543,12 +545,12 @@ End;
         }
         data_object.text = "\n"
         for language, sequence in alignment.items():
-            sequence = "".join(sequence)
+            seq = "".join(sequence)
             ET.SubElement(
                 data_object,
                 "sequence",
                 id=f"language_data_vocabulary:{language:}",
                 taxon=f"{language:}",
-                value=f"{sequence:}",
+                value=f"{seq:}",
             ).tail = "\n"
         et.write(args.output_file, encoding="unicode")
