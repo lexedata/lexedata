@@ -62,8 +62,8 @@ class DB:
             (id,) = table.tableSchema.primaryKey
             self.cache[table_type] = {row[id]: row for row in table}
         # TODO: what is the actual API
-        for source_id, _ in pycldf.sources.Sources.from_file(self.dataset.bibpath)
-            self.source_ids.add(source.id)
+        for source_id, _ in pycldf.sources.Sources.from_file(self.dataset.bibpath):
+            self.source_ids.add(source_id)
 
     def drop_from_cache(self, table: str):
         self.cache[table] = {}
@@ -615,51 +615,50 @@ def excel_parser_from_dialect(
 
 
 def load_dataset(
-    metadata: Path, lexicon: str, db: Path, cognate_lexicon: t.Optional[str]
+    metadata: Path, lexicon: t.Optional[str], db: Path, cognate_lexicon: t.Optional[str]
 ):
+
     # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
     if db == "":
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / "db.sqlite"
-    lexicon_wb = openpyxl.load_workbook(lexicon).active
-    # check for dialect.cognate in metadata
-    dialect_cognate = False
-    try:
-        dialect = argparse.Namespace(
-            **dataset.tablegroup.common_props["special:fromexcel"]
-        )
-        dialect_cognate = True if dialect.cognates else False
-    except KeyError:
-        logger.warning(
-            "Dialect not found or dialect was missing a key, "
-            "falling back to default parser"
-        )
-        dialect = None
-    # load lexical data set
-    if dialect:
-        EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
-    else:
-        EP = ExcelParser
-    # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    EP = EP(dataset, db_fname=db)
-    EP.db.empty_cache()
-    EP.parse_cells(lexicon_wb)
-    # load cognate data set if provided by metadata
-    # in case no cognate file given, nothing happens
-    if cognate_lexicon:
-        if dialect_cognate:
-            ECP = excel_parser_from_dialect(
-                dataset, argparse.Namespace(**dialect.cognates), cognate=True
+    if lexicon:
+        # load dialect from metadata
+        try:
+            dialect = argparse.Namespace(
+                **dataset.tablegroup.common_props["special:fromexcel"]
             )
-        else:
-            ECP = ExcelCognateParser
+            EP = excel_parser_from_dialect(dialect, cognate=False)
+        except KeyError:
+            logger.warning(
+                "Dialect not found or dialect was missing a key, "
+                "falling back to default parser"
+            )
+            EP = ExcelParser
+            # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
+        EP = EP(dataset, db_fname=db)
+
+        EP.db.empty_cache()
+
+        lexicon_wb = openpyxl.load_workbook(lexicon).active
+        EP.parse_cells(lexicon_wb)
+        EP.db.write_dataset_from_cache()
+
+    # load cognate data set if provided by metadata
+    cognate = True if cognate_lexicon and dialect.cognates else False
+    if cognate:
+        try:
+            ECP = excel_parser_from_dialect(
+                argparse.Namespace(**dialect.cognates), cognate=cognate
+            )
+        except KeyError:
+            ECP = ExcelCognateParser(dataset, db_fname=db)
         ECP = ECP(dataset, db)
-        ECP.db = EP.db
+        ECP.db.cache_dataset()
         for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
             ECP.parse_cells(sheet)
-        EP.db = ECP.db
-    EP.db.write_dataset_from_cache()
+        ECP.db.write_dataset_from_cache()
 
 
 if __name__ == "__main__":
@@ -672,7 +671,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "lexicon",
         nargs="?",
-        default="TG_comparative_lexical_online_MASTER.xlsx",
+        default=None,
         help="Path to an Excel file containing the dataset",
     )
     parser.add_argument(
