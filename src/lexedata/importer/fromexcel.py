@@ -61,9 +61,8 @@ class DB:
             )
             (id,) = table.tableSchema.primaryKey
             self.cache[table_type] = {row[id]: row for row in table}
-        # TODO: what is the actual API
-        for source_id, _ in pycldf.sources.Sources.from_file(self.dataset.bibpath):
-            self.source_ids.add(source_id)
+        for source in self.dataset.sources:
+            self.source_ids.add(source.id)
 
     def drop_from_cache(self, table: str):
         self.cache[table] = {}
@@ -91,7 +90,7 @@ class DB:
             ].write(self.retrieve(table_type))
         self.dataset.write_metadata()
         # TODO: Write BIB file, without pycldf
-        with open(self.dataset.bibpath):
+        with open(self.dataset.bibpath, "w"):
             for source in self.source_ids:
                 print("@misc{" + source + ", title={" + source + "} }")
 
@@ -155,6 +154,8 @@ class DB:
         if edit_dist_threshold:
 
             def match(x, y):
+                if (not x and y) or (x and not y):
+                    return False
                 return edit_distance(x, y) <= edit_dist_threshold
 
         else:
@@ -162,16 +163,13 @@ class DB:
             def match(x, y):
                 return x == y
 
-        # candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
-        # all(match(properties[p], object[p]) for p in properties)]
-        candidates = []
-        for candidate, properties in self.cache[object.__table__].items():
-            properties_in_object = [
-                p for p in properties_for_match if p in object and p in properties
-            ]
-            if all(match(properties[p], object[p]) for p in properties_in_object):
-                candidates.append(candidate)
-        return candidates
+        return [
+            candidate
+            for candidate, properties in self.cache[object.__table__].items()
+            if all(
+                match(properties.get(p), object.get(p)) for p in properties_for_match
+            )
+        ]
 
     def commit(self):
         pass
