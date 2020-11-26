@@ -91,9 +91,9 @@ class DB:
             ].write(self.retrieve(table_type))
         self.dataset.write_metadata()
         # TODO: Write BIB file, without pycldf
-        with open(self.dataset.bibpath, "w"):
+        with open(self.dataset.bibpath, "w") as bibfile:
             for source in self.source_ids:
-                print("@misc{" + source + ", title={" + source + "} }")
+                print("@misc{" + source + ", title={" + source + "} }", file=bibfile)
 
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None
@@ -592,7 +592,10 @@ def excel_parser_from_dialect(output_dataset,
 
 
 def load_dataset(
-    metadata: Path, lexicon: t.Optional[str], db: Path, cognate_lexicon: t.Optional[str]
+    metadata: Path,
+    lexicon: t.Optional[str],
+    db: Path,
+    cognate_lexicon: t.Optional[str] = None,
 ):
 
     # logging.basicConfig(filename="warnings.log")
@@ -620,11 +623,10 @@ def load_dataset(
         EP.db.write_dataset_from_cache()
 
     # load cognate data set if provided by metadata
-    cognate = True if cognate_lexicon and dialect.cognates else False
-    if cognate:
+    if cognate_lexicon:
         try:
             ECP = excel_parser_from_dialect(
-                argparse.Namespace(**dialect.cognates), cognate=cognate
+                argparse.Namespace(**dialect.cognates), cognate=True
             )
         except KeyError:
             ECP = ExcelCognateParser(dataset, db_fname=db)
