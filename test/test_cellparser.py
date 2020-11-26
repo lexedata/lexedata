@@ -17,6 +17,10 @@ def n(s: str):
 
 @pytest.fixture
 def naive_parser():
+    dataset = pycldf.Dataset.from_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    return c.NaiveCellParser(dataset)
     return c.NaiveCellParser()
 
 
@@ -46,10 +50,13 @@ def parser():
 
 
 def test_cellparser_separate(parser):
-    assert list(parser.separate("hic, haec, hoc")) == ['hic', 'haec', 'hoc']
-    assert list(parser.separate("hic (this, also: here); hoc")) == ['hic (this, also: here)', 'hoc']
-    assert list(parser.separate("hic (this, also: here")) == ['hic (this, also: here']
-    assert list(parser.separate("illic,")) == ['illic']
+    assert list(parser.separate("hic, haec, hoc")) == ["hic", "haec", "hoc"]
+    assert list(parser.separate("hic (this, also: here); hoc")) == [
+        "hic (this, also: here)",
+        "hoc",
+    ]
+    assert list(parser.separate("hic (this, also: here")) == ["hic (this, also: here"]
+    assert list(parser.separate("illic,")) == ["illic"]
 
 
 def test_cellparser_separate(parser):

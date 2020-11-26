@@ -163,8 +163,9 @@ class DB:
 
             def match(x, y):
                 return x == y
-        #candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
-                      # all(match(properties[p], object[p]) for p in properties)]
+
+        # candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
+        # all(match(properties[p], object[p]) for p in properties)]
         return [
             candidate
             for candidate, properties in self.cache[object.__table__].items()
@@ -356,7 +357,9 @@ class ExcelParser:
                         form[c_f_id] = "{:}_{:}".format(
                             form[c_f_language], row_object[c_r_id]
                         )
-                    candidate_forms = iter(self.db.find_db_candidates(form, self.check_for_match))
+                    candidate_forms = iter(
+                        self.db.find_db_candidates(form, self.check_for_match)
+                    )
                     try:
                         # if a candidate for form already exists, don't add the form
                         form_id = next(candidate_forms)
@@ -457,8 +460,8 @@ class ExcelCognateParser(ExcelParser):
         return self.db.insert_into_db(judgement)
 
 
-def excel_parser_from_dialect(output_dataset,
-    dialect: argparse.Namespace, cognate: bool
+def excel_parser_from_dialect(
+    output_dataset: pycldf.Wordlist, dialect: argparse.Namespace, cognate: bool
 ) -> t.Type[ExcelParser]:
     if cognate:
         Row: t.Type[RowObject] = CogSet
@@ -604,9 +607,21 @@ def load_dataset(
         tmpdir = Path(mkdtemp("", "fromexcel"))
         db = tmpdir / "db.sqlite"
 
+    # load dialect from metadata
+    try:
+        dialect = argparse.Namespace(
+            **dataset.tablegroup.common_props["special:fromexcel"]
+        )
+    except KeyError:
+        logger.warning(
+            "Dialect not found or dialect was missing a key, "
+            "falling back to default parser"
+        )
+        dialect = None
+
     if lexicon:
         try:
-            EP = excel_parser_from_dialect(dialect, cognate=False)
+            EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
         except KeyError:
             logger.warning(
                 "Dialect not found or dialect was missing a key, "
@@ -626,7 +641,7 @@ def load_dataset(
     if cognate_lexicon:
         try:
             ECP = excel_parser_from_dialect(
-                argparse.Namespace(**dialect.cognates), cognate=True
+                dataset, argparse.Namespace(**dialect.cognates), cognate=True
             )
         except KeyError:
             ECP = ExcelCognateParser(dataset, db_fname=db)
