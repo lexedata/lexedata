@@ -59,16 +59,6 @@ def test_cellparser_separate(parser):
     assert list(parser.separate("illic,")) == ["illic"]
 
 
-def test_cellparser_separate(parser):
-    assert list(parser.separate("hic, haec, hoc")) == ["hic", "haec", "hoc"]
-    assert list(parser.separate("hic (this, also: here); hoc")) == [
-        "hic (this, also: here)",
-        "hoc",
-    ]
-    assert list(parser.separate("hic (this, also: here")) == ["hic (this, also: here"]
-    assert list(parser.separate("illic,")) == ["illic"]
-
-
 def test_cellparser_empty(parser):
     # white spaces in excel cell
     assert parser.parse_form(" ", "language") is None
