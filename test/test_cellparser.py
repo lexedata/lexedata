@@ -16,6 +16,10 @@ def n(s: str):
 
 @pytest.fixture
 def naive_parser():
+    dataset = pycldf.Dataset.from_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    return c.NaiveCellParser(dataset)
     return c.NaiveCellParser()
 
 
