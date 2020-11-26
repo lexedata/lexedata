@@ -411,9 +411,9 @@ class CellParser(NaiveCellParser):
         if source and not isinstance(source, set):
             source, context = self.source_from_source_string(source, language_id)
             if context:
-                properties[c_f_source] = (source, context)
+                properties[c_f_source] = {(source, context)}
             else:
-                properties[c_f_source] = (source, None)
+                properties[c_f_source] = {(source, None)}
         else:
             if source is None:
                 pass

@@ -17,16 +17,16 @@ def n(s: str):
 
 @pytest.fixture
 def naive_parser():
-    dataset = pycldf.Dataset.from_metadata(
-        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
-    )
-    return c.NaiveCellParser(dataset)
+    return c.NaiveCellParser()
 
 
 def test_source_from_source_string(naive_parser):
-    assert naive_parser.source_from_source_string("{1}", "abui") == ('abui_s1', None)
-    assert naive_parser.source_from_source_string("", "abui") == ('abui_s', None)
-    assert naive_parser.source_from_source_string("{Gul2020: p. 4}", "abui") == ('abui_sgul2020', 'p. 4')
+    assert naive_parser.source_from_source_string("{1}", "abui") == ("abui_s1", None)
+    assert naive_parser.source_from_source_string("", "abui") == ("abui_s", None)
+    assert naive_parser.source_from_source_string("{Gul2020: p. 4}", "abui") == (
+        "abui_sgul2020",
+        "p. 4",
+    )
 
 
 def test_cellparser_error(naive_parser):
@@ -52,6 +52,16 @@ def test_cellparser_separate(parser):
     assert list(parser.separate("illic,")) == ['illic']
 
 
+def test_cellparser_separate(parser):
+    assert list(parser.separate("hic, haec, hoc")) == ["hic", "haec", "hoc"]
+    assert list(parser.separate("hic (this, also: here); hoc")) == [
+        "hic (this, also: here)",
+        "hoc",
+    ]
+    assert list(parser.separate("hic (this, also: here")) == ["hic (this, also: here"]
+    assert list(parser.separate("illic,")) == ["illic"]
+
+
 def test_cellparser_empty(parser):
     # white spaces in excel cell
     assert parser.parse_form(" ", "language") is None
@@ -60,7 +70,7 @@ def test_cellparser_empty(parser):
 
 def test_cellparser_1(parser):
     form = parser.parse_form("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]", "l1")
-    assert form["Source"] == {"l1_s1"}
+    assert form["Source"] == {("l1_s1", None)}
     assert n(form["Value"]) == n("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]")
     assert n(form["orthographic"]) == n("tɨ̈nɨmpɨ̈'ä")
     assert n(form["phonetic"]) == n("tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa")
@@ -71,7 +81,7 @@ def test_cellparser_2(parser):
     assert form == {
         "Comment": "cabello púbico",
         "Language_ID": "language",
-        "Source": {"language_s4"},
+        "Source": {("language_s4", None)},
         "Value": "/ta/ [ta.'ʔa] ['ta] (cabello púbico){4}",
         "phonemic": "ta",
         "phonetic": "ta.'ʔa",
@@ -84,7 +94,7 @@ def test_cellparser_3(parser):
     form = parser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
     assert form == {
         "Language_ID": "language",
-        "Source": {"language_s2"},
+        "Source": {("language_s2", None)},
         "Value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]", "{2}"],
@@ -97,7 +107,7 @@ def test_cellparser_4(parser):
     assert form == {
         "Comment": "cabello",
         "Language_ID": "language",
-        "Source": {"language_s4"},
+        "Source": {("language_s4", None)},
         "Value": " /a/ [a.'ʔa] (cabello){4} /aʔa/",
         "phonemic": "a",
         "phonetic": "a.'ʔa",
@@ -109,7 +119,7 @@ def test_cellparser_4(parser):
 def test_cellparser_5(parser):
     form = parser.parse_form("[iɾũndɨ] (H.F.) (parir)", "language")
     assert form["Comment"] == "H.F."
-    assert form["Source"] == {"language_s1"}
+    assert form["Source"] == {("language_s1", None)}
     assert n(form["Value"]) == n("[iɾũndɨ] (H.F.) (parir)")
     assert n(form["phonetic"]) == n("iɾũndɨ")
     assert form["variants"] == ["(parir)"]
@@ -120,7 +130,7 @@ def test_cellparser_6(parser):
     assert form == {
         "Comment": "GIVE BIRTH",
         "Language_ID": "language",
-        "Source": {"language_s1"},
+        "Source": {("language_s1", None)},
         "Value": "(GIVE BIRTH) [mbohaˈpɨ]",
         "phonetic": "mbohaˈpɨ",
         "Form": "mbohaˈpɨ",
@@ -131,7 +141,7 @@ def test_cellparser_7(parser):
     form = parser.parse_form("[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}", "language")
     assert form == {
         "Language_ID": "language",
-        "Source": {"language_s2"},
+        "Source": {("language_s2", None)},
         "Value": "[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]", "{2}"],
@@ -191,11 +201,11 @@ def mawetiparser():
     return initialized_cell_parser
 
 
-def test_mawetiparser_no_dublicate_sources(mawetiparser):
+def test_mawetiparser_no_duplicate_sources(mawetiparser):
     form = mawetiparser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
     assert form == {
         "Language_ID": "language",
-        "Source": {"language_s2"},
+        "Source": {("language_s2", None)},
         "Value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]"],
@@ -211,7 +221,7 @@ def test_mawetiparser_multiple_comments(mawetiparser):
     )
     assert form == {
         "Language_ID": "language",
-        "Source": {"language_s4"},
+        "Source": {("language_s4", None)},
         "Value": ""
         "/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
         "(test comment) (test comment 2){4}",
@@ -239,6 +249,6 @@ def test_mawetiparser_postprocessing(mawetiparser):
         "Comment": "from lexicon + edit + data\tanother comment",
         "procedural_comment": ""
         "GAK: We should pick one of those names, I'm 80% sure it should be the first",
-        "Source": {"abui1241_s1"},
+        "Source": {("abui1241_s1", None)},
         "Form": "lεksedata",
     }

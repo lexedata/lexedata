@@ -178,6 +178,35 @@ def test_form_association(minimal_parser_with_dialect):
     ]
 
 
+def test_source_context(minimal_parser_with_dialect):
+    """Check how the ‘context’ of a source is parsed
+
+    The ‘context’ of a source, ie. its page number etc., should be added to the
+    source column in square brackets after the source ID. It should be stripped
+    of leading and trailing whitespace.
+
+    """
+    lexicon_wb = MockWorkbook(
+        [
+            ["", "L1"],
+            ["C1", "<L1C1>{1:p. 34 }"],
+        ]
+    )
+    minimal_parser_with_dialect.parse_cells(lexicon_wb)
+
+    forms = list(minimal_parser_with_dialect.db.retrieve("FormTable"))
+    assert len(forms) == 1
+    assert forms[0] == {
+        "Language_ID": "l1",
+        "Value": "<L1C1>{1:p. 34 }",
+        "Form": "L1C1",
+        "variants": [],
+        "Source": {"l1_s1[p. 34]"},
+        "ID": "l1_c1",
+        "Parameter_ID": ["c1"],
+    }
+
+
 def test_form_association_identical(minimal_parser_with_dialect):
     lexicon_wb = MockWorkbook(
         [
