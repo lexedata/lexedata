@@ -173,7 +173,7 @@ def read_single_excel_sheet(
     if language_candidates:
         for language_id in language_candidates:
             language[c_l_id] = language_id
-            logger.warning(f"Language {language[c_l_name]} is already in the data set")
+            logger.warning(f"Language {language[c_l_name]} is already in the data set. Existing {c_l_id} is used.")
             break
     else:
         language = Language(
