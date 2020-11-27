@@ -392,7 +392,7 @@ class CellParser(NaiveCellParser):
         try:
             c_form = self.dataset["FormTable", "form"].name
         except KeyError:
-            c_form = ""
+            c_form = "Form"
         # remove delimiters from transcriptions
         transcriptions = [
             semantics[0]
@@ -441,7 +441,7 @@ class CellParser(NaiveCellParser):
                 }
 
         # add form to properties
-        if "Form" not in properties:
+        if c_form not in properties:
             properties[c_form] = self.create_cldf_form(properties, transcriptions)
 
 

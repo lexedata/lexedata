@@ -381,7 +381,7 @@ class ExcelCognateParser(ExcelParser):
         top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
         row_header=["set", "Name", None],
-        check_for_match: t.List[str] = ["ID"],
+        check_for_match: t.List[str] = ["Form"],
         check_for_row_match: t.List[str] = ["Name"],
         check_for_language_match: t.List[str] = ["Name"],
         on_language_not_found: err.MissingHandler = err.error,
