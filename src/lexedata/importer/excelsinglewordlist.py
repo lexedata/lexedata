@@ -154,7 +154,7 @@ def read_single_excel_sheet(
     # if sheet_form_header contains properties not in form header of data set, exit script
     diff_form = set(sheet_form_header) - set(form_header)
     if diff_form:
-        logging.warning(
+        logging.error(
             "Form headers mismatch in sheet %s: expected %s but found %s.\n"
             "The import of the excel file was aborted to preserve integrity of the cldf data set",
             language,
@@ -252,8 +252,16 @@ if __name__ == "__main__":
         help="The Excel file to parse"
     )
     parser.add_argument(
-        "metadata",
-        help="Title of the column linking rows to concepts"
+        "--metadata",
+        type=str,
+        default="",
+        help="Path to the metadata file"
+    )
+    parser.add_argument(
+        "--csv",
+        type=str,
+        default="",
+        help="Directory path containing the csv files of the data set"
     )
     parser.add_argument(
         "--concept-property",
@@ -291,8 +299,17 @@ if __name__ == "__main__":
         ]
         logging.warning("No sheets specified. Parsing sheets: %s", args.sheet)
     concept_property = [args.concept_property]
-    for sheet in args.sheet:
+    # initiate data set from meta data or csv depending on command line arguments
+    if args.metadata and not args.csv:
         dataset = pycldf.Dataset.from_metadata(args.metadata)
+    elif args.csv and not args.metadata:
+        dataset = pycldf.Dataset.from_data(args.csv)
+    else:
+        logger.error("excelsinglewordlist.py must either be initiated with argument metadata or csv.")
+        sys.exit()
+    # import all selected sheets
+    for sheet in args.sheet:
+
         read_single_excel_sheet(
             dataset,
             args.excel[sheet],
