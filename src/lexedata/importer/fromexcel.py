@@ -329,7 +329,6 @@ class ExcelParser:
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
-                    print(params)
                     # Cellparser adds comment of a excel cell to "Cell_Comment" if given
                     # TODO: Gereon, I don't think that params.pop(c_f_comment, None) is correct here. Is it?
                     maybe_comment: t.Optional[str] = params.pop(c_f_comment, None)
@@ -352,6 +351,7 @@ class ExcelParser:
                             form[c_f_id] = "{:}_{:}".format(
                                 form[c_f_language], row_object[c_r_id]
                             )
+                            form[c_f_value] = cell_with_forms.value
                             self.db.insert_into_db(form)
                             form_id = form[c_f_id]
                             self.db.associate(
@@ -616,7 +616,7 @@ def load_dataset(
     if cognate_lexicon:
         if dialect_cognate:
             ECP = excel_parser_from_dialect(
-                dataset, argparse.Namespace(**dialect.cognates), cognate=cognate
+                dataset, argparse.Namespace(**dialect.cognates), cognate=True
             )
         else:
             ECP = ExcelCognateParser
