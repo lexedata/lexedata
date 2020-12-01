@@ -427,18 +427,32 @@ if __name__ == "__main__":
             with languages in rows and features in columns.""",
     )
     parser.add_argument(
+        "-b",
+        action="store_const",
+        const="beast",
+        dest="format",
+        help="""Short form of --format=beast""",
+    )
+    parser.add_argument(
         "--metadata",
         help="Path to metadata file for dataset input",
         default="forms.csv",
     )
     parser.add_argument(
         "--output-file",
+        "-o",
         type=Path,
         help="""File to write output to. (If format=xml and output file exists, replace the
             first `data` tag in there.) Default: Write to stdout""",
     )
     parser.add_argument(
         "--code-column", help="Name of the code column for metadata-free wordlists"
+    )
+    parser.add_argument(
+        "--languages-list",
+        default=None,
+        type=Path,
+        help="File to load a list of languages from",
     )
     parser.add_argument(
         "--exclude-concept",
@@ -461,6 +475,7 @@ if __name__ == "__main__":
             each character describes, possibly including uniform ambiguities,
             the cognate class of a meaning.""",
     )
+    parser.add_argument("--stats-file", type=Path, help="A file to write stats to")
     args = parser.parse_args()
 
     if args.format == "beast":
@@ -482,18 +497,15 @@ if __name__ == "__main__":
         args.output_file = args.output_file.open("w")
 
     ds, language_map = read_cldf_dataset(args.metadata, code_column=args.code_column)
+    if args.languages_list:
+        languages = {lg.strip() for lg in args.languages_list.open().read().split("\n")}
+    else:
+        languages = set(language_map)
+
     ds = {
         language: {k: v for k, v in sequence.items() if k not in args.exclude_concept}
         for language, sequence in ds.items()
-        if language
-        not in [
-            "p-alor1249",
-            "p-east2519",
-            "p-timo1261",
-            "indo1316-lexi",
-            "tetu1246",
-            "tetu1245-suai",
-        ]
+        if language in languages
     }
 
     if args.coding == "rootpresence":
@@ -554,3 +566,15 @@ End;
                 value=f"{seq:}",
             ).tail = "\n"
         et.write(args.output_file, encoding="unicode")
+
+    if args.stats_file:
+        countlects = len(languages)
+        countconcepts = len(next(iter(ds.values())))
+        with args.stats_file.open("w") as s:
+            print(
+                f"""
+            \\newcommand{{\\countlects}}{{{countlects}}}
+            \\newcommand{{\\countconcepts}}{{{countconcepts}}}
+            """,
+                file=s,
+            )
