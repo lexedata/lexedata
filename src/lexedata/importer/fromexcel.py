@@ -4,7 +4,6 @@ import re
 import argparse
 import typing as t
 from pathlib import Path
-from tempfile import mkdtemp
 import logging
 
 from tqdm import tqdm
@@ -194,6 +193,7 @@ class ExcelParser:
         on_language_not_found: err.MissingHandler = err.create,
         on_row_not_found: err.MissingHandler = err.create,
         on_form_not_found: err.MissingHandler = err.create,
+        fuzzy=0,
     ) -> None:
         self.on_language_not_found = on_language_not_found
         self.on_row_not_found = on_row_not_found
@@ -210,6 +210,7 @@ class ExcelParser:
         self.check_for_row_match = check_for_row_match
         self.check_for_language_match = check_for_language_match
         self.db = DB(output_dataset, fname=db_fname)
+        self.fuzzy = fuzzy
 
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
         data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
@@ -265,7 +266,8 @@ class ExcelParser:
                 continue
             language = self.language_from_column(lan_col)
             candidates = self.db.find_db_candidates(
-                language, self.check_for_language_match
+                language,
+                self.check_for_language_match,
             )
             for language_id in candidates:
                 break
