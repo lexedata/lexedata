@@ -1,4 +1,3 @@
-import sys
 import logging
 import unicodedata
 import typing as t
@@ -60,8 +59,9 @@ def import_data_from_sheet(
     row_iter = sheet.iter_rows()
 
     # TODO?: compare header of this sheet to format of given data set process
-    # row. Maybe unnecessary.
-    header = next(row_iter)
+    # row. Maybe unnecessary. In any case, do not complain about the unused
+    # variable.
+    header = next(row_iter)  # noqa: F841
 
     for row in row_iter:
         data = Form({k: cell_value(cell) for k, cell in zip(sheet_header, row)})
