@@ -154,7 +154,7 @@ def read_single_excel_sheet(
                     if new_concept not in db.cache[form_id][c_f_concept]:
                         db.cache[form_id][c_f_concept].append(new_concept)
                         logger.info(
-                        f"Existing form {form_id} was added to concept form[c_f_concept]. If this was not intended (because it was a homophonous form, not a polysemy), you need to manually remove that concept from the old form and create a separate new form."
+                            f"Existing form {form_id} was added to concept form[c_f_concept]. If this was not intended (because it was a homophonous form, not a polysemy), you need to manually remove that concept from the old form and create a separate new form."
                         )
             break
         else:
