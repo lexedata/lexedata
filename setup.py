@@ -16,7 +16,7 @@ REQUIRES = [
     "pyconcepticon",
     "pyclts",
 ]
-if platform.system() != 'Windows':
+if platform.system() != "Windows":
     REQUIRES.append("readline")
 else:
     REQUIRES.append("pyreadline")

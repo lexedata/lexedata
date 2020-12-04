@@ -1,56 +1,37 @@
 import sys
+import logging
 import unicodedata
 import typing as t
-import logging
+from pathlib import Path
 
 import openpyxl
 import pycldf
 
 from lexedata.util import string_to_id
 from lexedata.importer.fromexcel import DB
-from lexedata.types import (
-    Language,
-    Form,
-    Concept,
-)
+from lexedata.types import Form
 
 logger = logging.getLogger(__file__)
 
-# TODO: Remark for Gereon: On purpose, I chose not to append new concepts and forms to the csv-files.
-# I  thought, it is rather redundant to initiate the DB and then not really use it.
-# Also, I thought that we need to ensure in any case that the different IDs match,
-# so this ist best done by using the DB and its create unique id function...
+
+class KeyKeyDict:
+    def __getitem__(self, key):
+        return key
 
 
-def normalize_header(
-    row: t.Iterable[openpyxl.cell.Cell], add_running_id: bool = False
-) -> t.Iterable[str]:
-    header = [
-        unicodedata.normalize("NFKD", (n.value or "").strip()) or ""
-        for c, n in enumerate(row)
-    ]
+def normalize_header(row: t.Iterable[openpyxl.cell.Cell]) -> t.Iterable[str]:
+    header = [unicodedata.normalize("NFKC", (n.value or "").strip()) for n in row]
     header = [h.replace(" ", "_") for h in header]
     header = [h.replace("(", "") for h in header]
     header = [h.replace(")", "") for h in header]
-    while "" in header:
-        header.remove("")
-    if add_running_id:
-        header.append("ID")
+
     return header
 
 
 def get_headers_from_excel(
-        sheet: openpyxl.worksheet.worksheet.Worksheet,
-        row_property: t.Iterable[str] = []
-) -> t.Tuple[t.List[str], t.List[str]]:
-
-    header = normalize_header(r for c, r in enumerate(next(sheet.iter_rows(1, 1))))
-    form_header = []
-    for h in header:
-        if h not in row_property:
-            form_header.append(h)
-
-    return list(header), form_header
+    sheet: openpyxl.worksheet.worksheet.Worksheet,
+) -> t.Iterable[str]:
+    return normalize_header(r for c, r in enumerate(next(sheet.iter_rows(1, 1))))
 
 
 def cell_value(cell):
@@ -69,177 +50,120 @@ def cell_value(cell):
         return str(v)
 
 
-# TODO: replace this function with a serious way of getting an id candidate
-def return_first_not_none_or_id(mydict: t.Dict[str, str]) -> str:
-    try:
-        return mydict["ID"]
-    except KeyError:
-        for k, v in mydict.items():
-            if v:
-                return v
-
-
-def import_language_from_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet,
-    sheet_header: t.Iterable[str],
-    row_property_columns: t.Iterable[str],
-    running_id: t.Optional[int] = False,
-) -> t.Dict[str, t.List[t.Tuple[t.Dict[str, str], t.Dict[str, str]]]]:
-    language = sheet.title
-    new_data = {language: []}
-    # skip first row
+def import_data_from_sheet(
+    sheet,
+    sheet_header,
+    implicit: t.Mapping[t.Literal["languageReference", "id", "value"], str] = {},
+    entries_to_concepts: t.Mapping[str, str] = KeyKeyDict(),
+    concept_column: t.Tuple[str, str] = ("Concept_ID", "Concept_ID"),
+) -> t.Iterable[Form]:
     row_iter = sheet.iter_rows()
-    next(row_iter)
-    # compare header of this sheet to format of given data set
-    # process row
-    for i, row in enumerate(row_iter):
-        data = {
-            k: cell.value
-            for k, (c, cell) in zip(sheet_header, enumerate(row))
-        }
-        # internal value will be handed over to cldf value
-        data["internal_value"] = " ".join(
-            [str(e) for e in [c.value or "" for j, c in enumerate(row)]]
-        )
-        if running_id:
-            data["ID"] = i + running_id
-        row_object = dict()
-        for c in row_property_columns:
-            try:
-                row_object[c] = data[c]
-                del data[c]
-            except KeyError:
-                pass
-        new_data[language].append((data, row_object))
-    return new_data
+
+    # TODO?: compare header of this sheet to format of given data set process
+    # row. Maybe unnecessary.
+    header = next(row_iter)
+
+    for row in row_iter:
+        data = Form({k: cell_value(cell) for k, cell in zip(sheet_header, row)})
+        if "value" in implicit:
+            data[implicit["value"]] = "\t".join(map(str, data.values()))
+        try:
+            concept_entry = data.pop(concept_column[1])
+            data[concept_column[0]] = entries_to_concepts[concept_entry]
+        except KeyError:
+            logger.warning(
+                f"Concept {concept_entry} was not found. Please add it to the concepts table manually."
+            )
+            data[concept_column[0]] = concept_entry
+        if "id" in implicit:
+            data[implicit["id"]] = None
+        if "languageReference" in implicit:
+            data[implicit["languageReference"]] = sheet.title
+        yield data
 
 
 def read_single_excel_sheet(
-    existing_dataset: pycldf.Dataset,
+    dataset: pycldf.Dataset,
     sheet: openpyxl.worksheet.worksheet.Worksheet,
-    match_form: t.List[str],
-    concept_property: t.Iterable[str],
-    running_id: t.Optional[int] = False,
+    match_form: t.Optional[t.List[str]] = None,
+    entries_to_concepts: t.Mapping[str, str] = KeyKeyDict(),
+    concept_column: t.Optional[str] = None,
 ):
-    parser = DB(existing_dataset)
-    parser.cache_dataset()
+    concept_columns: t.Tuple[str, str]
+    if concept_column is None:
+        concept_columns = (
+            dataset["FormTable", "parameterReference"].name,
+            dataset["FormTable", "parameterReference"].name,
+        )
+    else:
+        concept_columns = (
+            dataset["FormTable", "parameterReference"].name,
+            concept_column,
+        )
+
+    db = DB(dataset)
+    db.cache_dataset()
     # required cldf fields
-    c_l_name = parser.dataset["LanguageTable", "name"].name
-    c_l_id = parser.dataset["LanguageTable", "id"].name
-    c_c_id = parser.dataset["ParameterTable", "id"].name
-    c_c_name = parser.dataset["ParameterTable", "name"].name
-    c_f_id = parser.dataset["FormTable", "id"].name
-    c_f_language = parser.dataset["FormTable", "languageReference"].name
-    c_f_form = parser.dataset["FormTable", "form"].name
-    c_f_value = parser.dataset["FormTable", "value"].name
+    c_f_id = db.dataset["FormTable", "id"].name
+    c_f_language = db.dataset["FormTable", "languageReference"].name
+    c_f_form = db.dataset["FormTable", "form"].name
+    c_f_value = db.dataset["FormTable", "value"].name
+    c_f_concept = db.dataset["FormTable", "parameterReference"].name
     if not match_form:
         match_form = [c_f_form, c_f_language]
-    # TODO: set here concept_property and match for concept if not provided
-    # header from data set
-    form_header = list(parser.dataset["FormTable"].tableSchema.columndict.keys())
-    # header from sheet
-    sheet_header, sheet_form_header = get_headers_from_excel(
-        sheet, concept_property
-    )
+    if not db.dataset["FormTable", c_f_concept].separator:
+        match_form.append(c_f_concept)
+
+    sheet_header = get_headers_from_excel(sheet)
+    form_header = list(db.dataset["FormTable"].tableSchema.columndict.keys())
+
+    # These columns don't need to be given, we can infer them from the sheet title and from the other data:
+    implicit: t.Dict[t.Literal["languageReference", "id", "value"], str] = {}
+    if c_f_language not in sheet_header:
+        implicit["languageReference"] = c_f_language
+    if c_f_id not in sheet_header:
+        implicit["id"] = c_f_id
+    if c_f_value not in sheet_header:
+        implicit["value"] = c_f_value
+
+    assert set(sheet_header) - {concept_column} - set(implicit.values()) == set(
+        form_header
+    ) - {c_f_concept} - set(
+        implicit.values()
+    ), f"The column headers in your Excel file sheet {sheet.title} ({sheet_header}) do not match the column headers from the database ({form_header})."
+
     # read new data from sheet
-    new_data = import_language_from_sheet(
+    for form in import_data_from_sheet(
         sheet,
         sheet_header=sheet_header,
-        row_property_columns=concept_property,
-        running_id=running_id,
-    )
-    language = list(new_data.keys())[0]
-    new_data = new_data[language]
-    # compare headers from sheet and headers from data set
-    # if sheet_form_header contains properties not in form header of data set, exit script
-    diff_form = set(sheet_form_header) - set(form_header)
-    if diff_form:
-        logging.error(
-            "Form headers mismatch in sheet %s: expected %s but found %s.\n"
-            "The import of the excel file was aborted to preserve integrity of the cldf data set",
-            language,
-            form_header,
-            sheet_form_header,
-        )
-        sys.exit()
-    # add status column to parameterTable if doesn't exist
-    try:
-        parser.dataset["ParameterTable", "Status"].name
-    except KeyError:
-        parser.dataset.add_columns("ParameterTable", "Status")
-    # check for existing concept and forms by matching with intersection of data set and sheet header
-    language = Language({c_l_name: language})
-    language_candidates = parser.find_db_candidates(language, [c_l_name])
-    if language_candidates:
-        for language_id in language_candidates:
-            language[c_l_id] = language_id
-            logger.warning(f"Language {language[c_l_name]} is already in the data set. Existing {c_l_id} is used.")
+        implicit=implicit,
+        entries_to_concepts=entries_to_concepts,
+        concept_column=concept_columns,
+    ):
+        for item, value in form.items():
+            sep = db.dataset["FormTable", item].separator
+            if sep is None:
+                continue
+            form[item] = value.split(sep)
+        form_candidates = db.find_db_candidates(form, match_form)
+        for form_id in form_candidates:
+            logger.info(f"Form {form[c_f_value]} was already in data set.")
+
+            if db.dataset["FormTable", c_f_concept].separator:
+                if form[c_f_concept] not in db.cache[form_id][c_f_concept]:
+                    db.cache[form_id][c_f_concept].append().form[c_f_concept]
+                    logger.info(
+                        f"Existing form {form_id} was added to concept form[c_f_concept]."
+                    )
             break
-    else:
-        language = Language(
-            {
-                c_l_id: string_to_id(language[c_l_name]),
-                c_l_name: language[c_l_name],
-            }
-        )
-        parser.make_id_unique(language)
-        parser.insert_into_db(language)
-
-    for form, concept in new_data:
-        concept = Concept({
-            c_c_id: string_to_id(concept[concept_property[0]]),
-            c_c_name: concept[concept_property[0]]
-        })
-        concept_candidates = parser.find_db_candidates(concept, [c_c_name])
-        if concept_candidates:
-            for concept_id in concept_candidates:
-                concept[c_c_id] = concept_id
-                concept[c_c_name] = parser.cache["ParameterTable"][concept_id][c_c_name]
-                # TODO check here whether concept was linked to form '?'
-                break
         else:
-            concept[c_c_id] = string_to_id(concept[c_c_name])
-            concept["Status"] = "auto from new forms"
-            parser.make_id_unique(concept)
-            parser.insert_into_db(concept)
-
-        # add or overwrite required properties if not present
-        form[c_f_language] = language[c_l_id]
-        if c_f_value not in form:
-            form[c_f_value] = form["internal_value"]
-            del form["internal_value"]
-        else:
-            del form["internal_value"]
-        form = Form(**form)
-        form_candidates = parser.find_db_candidates(form, match_form)
-        # for partial matching
-        # candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
-        #                        any(properties[p] == object[p] for p in properties)]
-        if form_candidates:
-            for form_id in form_candidates:
-                form[c_f_id] = form_id
-                logger.warning(
-                    f"Form {form[c_f_id]} for language {language[c_l_id]} was"
-                    f" already in data set for concepts "
-                    f"{parser.cache['FormTable'][form_id][parser.dataset['FormTable', 'parameterReference'].name]}."
-                    f" We added additional concept {concept[c_c_id]} (polysemy)."
-                    f" If you want these to be  considered different forms, create a new row "
-                    f"for form {form[c_f_id]}_2 in"
-                    f" forms.csv and delete concept "
-                    f"{parser.cache['FormTable'][form_id][parser.dataset['FormTable', 'parameterReference'].name]}"
-                    f" from form {form[c_f_id]}_1."
-                )
-                # or to copy existing form form = parser.cache["FormTable"][form_id]
-                break
-        else:
-            if c_f_id not in form:
-                # TODO: maybe check for type of form id column
-                form[c_f_id] = f"{language[c_l_id]}_{concept[c_c_id]}"
-            parser.make_id_unique(form)
-            parser.insert_into_db(form)
-        parser.associate(form[c_f_id], concept)
+            if "id" in implicit:
+                # TODO: check for type of form id column
+                form[c_f_id] = string_to_id(f"{form[c_f_language]}_{form[c_f_concept]}")
+            db.make_id_unique(form)
+            db.insert_into_db(form)
     # write to cldf
-    parser.write_dataset_from_cache()
+    db.write_dataset_from_cache()
 
 
 if __name__ == "__main__":
@@ -247,36 +171,25 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Parse Excel file into CSV")
     parser.add_argument(
-        "excel",
-        type=openpyxl.load_workbook,
-        help="The Excel file to parse"
+        "excel", type=openpyxl.load_workbook, help="The Excel file to parse"
     )
     parser.add_argument(
-        "--metadata",
-        type=str,
-        default="",
-        help="Path to the metadata file"
+        "--metadata", type=Path, default="", help="Path to the metadata file"
     )
     parser.add_argument(
-        "--csv",
+        "--concept-name",
         type=str,
-        default="",
-        help="Directory path containing the csv files of the data set"
-    )
-    parser.add_argument(
-        "--concept-property",
-        type=str,
-        help="Additional columns titles that describe concept properties, not form properties",
-    )
-    parser.add_argument(
-        "--match-form",
-        nargs="*",
-        type=str,
-        default=[],
-        help="Additional columns titles that describe concept properties, not form properties",
+        help="Column to interpret as concept names (default: assume the #parameterReference column, usually named 'Concept_ID' or similar, matches the IDs of the concept. Use this switch if you have concept Names in the wordlist instead.)",
     )
     parser.add_argument(
         "--sheet", type=str, action="append", help="Sheets to parse (default: all)"
+    )
+    parser.add_argument(
+        "--match-form",
+        type=str,
+        nargs="*",
+        default=[],
+        help="Columns to match forms by",
     )
     parser.add_argument(
         "--exclude-sheet",
@@ -298,22 +211,32 @@ if __name__ == "__main__":
             sheet for sheet in args.excel.sheetnames if sheet not in args.exclude_sheet
         ]
         logging.warning("No sheets specified. Parsing sheets: %s", args.sheet)
-    concept_property = [args.concept_property]
     # initiate data set from meta data or csv depending on command line arguments
-    if args.metadata and not args.csv:
-        dataset = pycldf.Dataset.from_metadata(args.metadata)
-    elif args.csv and not args.metadata:
-        dataset = pycldf.Dataset.from_data(args.csv)
-    else:
-        logger.error("excelsinglewordlist.py must either be initiated with argument metadata or csv.")
-        sys.exit()
+    if args.metadata:
+        if args.metadata.name == "forms.csv":
+            dataset = pycldf.Dataset.from_data(args.metadata)
+        else:
+            dataset = pycldf.Dataset.from_metadata(args.metadata)
+
+    try:
+        cid = dataset["ParameterTable", "id"].name
+        if args.concept_name is None:
+            concepts = {c[cid]: c[cid] for c in dataset["ParameterTable"]}
+            concept_column = dataset["FormTable", "parameterReference"].name
+        else:
+            name = dataset["ParameterTable", "name"].name
+            concepts = {c[name]: c[cid] for c in dataset["ParameterTable"]}
+            concept_column = args.concept_name
+    except KeyError:
+        concepts = KeyKeyDict()
+        concept_column = dataset["FormTable", "parameterReference"].name
+
     # import all selected sheets
     for sheet in args.sheet:
-
         read_single_excel_sheet(
-            dataset,
-            args.excel[sheet],
-            args.match_form,
-            concept_property,
-            running_id=args.add_running_id,
+            dataset=dataset,
+            sheet=args.excel[sheet],
+            match_form=args.match_form,
+            entries_to_concepts=concepts,
+            concept_column=concept_column,
         )
