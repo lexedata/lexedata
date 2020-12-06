@@ -146,8 +146,7 @@ class NaiveCellParser:
     def source_from_source_string(
         self, source_string: str, language_id: t.Optional[str]
     ) -> t.Tuple[str, t.Optional[str]]:
-        """Parse a string referencing a language-specific source
-        """
+        """Parse a string referencing a language-specific source"""
         context: t.Optional[str]
         if ":" in source_string:
             source_part, context = source_string.split(":", maxsplit=1)

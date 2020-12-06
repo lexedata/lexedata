@@ -15,6 +15,7 @@ if platform.system() != "Windows":
     import readline
 else:
     from pyreadline import Readline
+
     readline = Readline()
 
 if os.name == "nt":

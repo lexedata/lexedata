@@ -150,15 +150,17 @@ class DB:
 
             def match(x, y):
                 return x == y
-        #candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
-                      # all(match(properties[p], object[p]) for p in properties)]
+
+        # candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
+        # all(match(properties[p], object[p]) for p in properties)]
         candidates = []
         for candidate, properties in self.cache[object.__table__].items():
-            properties_in_object = [p for p in properties_for_match if p in object and p in properties]
+            properties_in_object = [
+                p for p in properties_for_match if p in object and p in properties
+            ]
             if all(match(properties[p], object[p]) for p in properties_in_object):
                 candidates.append(candidate)
         return candidates
-
 
     def commit(self):
         pass
@@ -336,7 +338,9 @@ class ExcelParser:
                         form[c_f_id] = "{:}_{:}".format(
                             form[c_f_language], row_object[c_r_id]
                         )
-                    candidate_forms = iter(self.db.find_db_candidates(form, self.check_for_match))
+                    candidate_forms = iter(
+                        self.db.find_db_candidates(form, self.check_for_match)
+                    )
                     try:
                         # if a candidate for form already exists, don't add the form
                         form_id = next(candidate_forms)
@@ -441,8 +445,8 @@ class ExcelCognateParser(ExcelParser):
         return self.db.insert_into_db(judgement)
 
 
-def excel_parser_from_dialect(output_dataset,
-    dialect: argparse.Namespace, cognate: bool
+def excel_parser_from_dialect(
+    output_dataset, dialect: argparse.Namespace, cognate: bool
 ) -> t.Type[ExcelParser]:
     if cognate:
         Row: t.Type[RowObject] = CogSet
