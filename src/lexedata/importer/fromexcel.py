@@ -45,12 +45,14 @@ def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
 
 class DB:
     cache: t.Dict[str, t.Dict[t.Hashable, t.Dict[str, t.Any]]]
+    source_ids: t.Set[str]
 
     def __init__(self, output_dataset: pycldf.Wordlist, fname=None):
         if fname is not None:
             logger.info("Warning: dbase fname set, but ignored")
         self.dataset = output_dataset
         self.cache = {}
+        self.source_ids = set()
 
     def cache_dataset(self):
         for table in self.dataset.tables:
@@ -60,6 +62,11 @@ class DB:
             )
             (id,) = table.tableSchema.primaryKey
             self.cache[table_type] = {row[id]: row for row in table}
+            for source in self.dataset.sources:
+                self.source_ids.add(source.id)
+
+    def add_source(self, source_id):
+        self.source_ids.add(source_id)
 
     def drop_from_cache(self, table: str):
         self.cache[table] = {}
@@ -83,6 +90,10 @@ class DB:
                 table_type
             ].write(self.retrieve(table_type))
         self.dataset.write_metadata()
+        # TODO: Write BIB file, without pycldf
+        with open(self.dataset.bibpath, "w") as bibfile:
+            for source in self.source_ids:
+                print("@misc{" + source + ", title={" + source + "} }", file=bibfile)
 
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None
@@ -144,6 +155,8 @@ class DB:
         if edit_dist_threshold:
 
             def match(x, y):
+                if (not x and y) or (x and not y):
+                    return False
                 return edit_distance(x, y) <= edit_dist_threshold
 
         else:
@@ -185,6 +198,7 @@ class ExcelParser:
         on_language_not_found: err.MissingHandler = err.create,
         on_row_not_found: err.MissingHandler = err.create,
         on_form_not_found: err.MissingHandler = err.create,
+        fuzzy=0
     ) -> None:
         self.on_language_not_found = on_language_not_found
         self.on_row_not_found = on_row_not_found
@@ -201,6 +215,7 @@ class ExcelParser:
         self.check_for_row_match = check_for_row_match
         self.check_for_language_match = check_for_language_match
         self.db = DB(output_dataset, fname=db_fname)
+        self.fuzzy = fuzzy
 
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
         data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
@@ -257,7 +272,8 @@ class ExcelParser:
                 continue
             language = self.language_from_column(lan_col)
             candidates = self.db.find_db_candidates(
-                language, self.check_for_language_match
+                language,
+                self.check_for_language_match
             )
             for language_id in candidates:
                 break
@@ -280,6 +296,7 @@ class ExcelParser:
         c_f_language = self.db.dataset["FormTable", "languageReference"].name
         c_f_value = self.db.dataset["FormTable", "value"].name
         c_f_comment = self.db.dataset["FormTable", "comment"].name
+        c_f_source = self.db.dataset["FormTable", "source"].name
         for row in tqdm(
             sheet.iter_rows(min_row=self.top), total=sheet.max_row - self.top
         ):
@@ -329,6 +346,16 @@ class ExcelParser:
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
+                    # add source if given in sheet
+                    if c_f_source in params:
+                        # Add all sources to sources set
+                        for source, _ in params[c_f_source]:
+                            self.db.add_source(source)
+                        # Glue contex to source
+                        params[c_f_source] = {
+                            f"{source:}[{context:}]" if context else source
+                            for source, context in params[c_f_source]
+                        }
                     # Cellparser adds comment of a excel cell to "Cell_Comment" if given
                     # TODO: Gereon, I don't think that params.pop(c_f_comment, None) is correct here. Is it?
                     maybe_comment: t.Optional[str] = params.pop(c_f_comment, None)
@@ -365,7 +392,9 @@ class ExcelParser:
                             )
                             # TODO: Fill data with a fuzzy search
                             for row in self.db.find_db_candidates(
-                                form, self.check_for_match, edit_dist_threshold=4
+                                form,
+                                    self.check_for_match,
+                                    edit_dist_threshold=self.fuzzy
                             ):
                                 logger.info(f"Did you mean {row} ?")
                             continue
@@ -446,7 +475,9 @@ class ExcelCognateParser(ExcelParser):
 
 
 def excel_parser_from_dialect(
-    output_dataset, dialect: argparse.Namespace, cognate: bool
+        output_dataset: pycldf.Wordlist,
+        dialect: argparse.Namespace,
+        cognate: bool
 ) -> t.Type[ExcelParser]:
     if cognate:
         Row: t.Type[RowObject] = CogSet
@@ -581,7 +612,10 @@ def excel_parser_from_dialect(
 
 
 def load_dataset(
-    metadata: Path, lexicon: str, db: Path, cognate_lexicon: t.Optional[str]
+    metadata: Path,
+        lexicon: str,
+        db: Path,
+        cognate_lexicon: t.Optional[str]
 ):
     # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
