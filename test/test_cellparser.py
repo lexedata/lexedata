@@ -24,9 +24,12 @@ def naive_parser():
 
 
 def test_source_from_source_string(naive_parser):
-    assert naive_parser.source_from_source_string("{1}", "abui") == ('abui_s1', None)
-    assert naive_parser.source_from_source_string("", "abui") == ('abui_s', None)
-    assert naive_parser.source_from_source_string("{Gul2020: p. 4}", "abui") == ('abui_sgul2020', 'p. 4')
+    assert naive_parser.source_from_source_string("{1}", "abui") == ("abui_s1", None)
+    assert naive_parser.source_from_source_string("", "abui") == ("abui_s", None)
+    assert naive_parser.source_from_source_string("{Gul2020: p. 4}", "abui") == (
+        "abui_sgul2020",
+        "p. 4",
+    )
 
 
 def test_cellparser_error(naive_parser):
@@ -46,10 +49,13 @@ def parser():
 
 
 def test_cellparser_separate(parser):
-    assert list(parser.separate("hic, haec, hoc")) == ['hic', 'haec', 'hoc']
-    assert list(parser.separate("hic (this, also: here); hoc")) == ['hic (this, also: here)', 'hoc']
-    assert list(parser.separate("hic (this, also: here")) == ['hic (this, also: here']
-    assert list(parser.separate("illic,")) == ['illic']
+    assert list(parser.separate("hic, haec, hoc")) == ["hic", "haec", "hoc"]
+    assert list(parser.separate("hic (this, also: here); hoc")) == [
+        "hic (this, also: here)",
+        "hoc",
+    ]
+    assert list(parser.separate("hic (this, also: here")) == ["hic (this, also: here"]
+    assert list(parser.separate("illic,")) == ["illic"]
 
 
 def test_cellparser_empty(parser):
