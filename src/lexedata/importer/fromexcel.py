@@ -186,7 +186,7 @@ class ExcelParser:
         db_fname: str,
         row_object: Object = Concept,
         top: int = 2,
-        cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
+        cellparser: cell_parsers.NaiveCellParser = cell_parsers.NaiveCellParser,
         # The following column names should be generated from CLDF terms. This
         # will likely mean that the __init__ method would have to get a
         # slightly different signature, to take that dependency on the output
@@ -408,7 +408,7 @@ class ExcelCognateParser(ExcelParser):
         db_fname: str,
         row_object: Object = CogSet,
         top: int = 2,
-        cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
+        cellparser: cell_parsers.NaiveCellParser = cell_parsers.NaiveCellParser,
         row_header=["set", "Name", None],
         check_for_match: t.List[str] = ["Form"],
         check_for_row_match: t.List[str] = ["Name"],

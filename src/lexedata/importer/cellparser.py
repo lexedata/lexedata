@@ -270,19 +270,9 @@ class CellParser(NaiveCellParser):
         """
         c_l_id = self.dataset["FormTable", "languageReference"].name
         c_value = self.dataset["FormTable", "value"].name
-        # not required fields
-        try:
-            c_comment = self.dataset["FormTable", "comment"].name
-        except KeyError:
-            c_comment = ""
-        try:
-            c_source = self.dataset["FormTable", "source"].name
-        except KeyError:
-            c_source = ""
-        try:
-            c_variants = self.dataset["FormTable", "variants"].name
-        except KeyError:
-            c_variants = ""
+        c_comment = self.dataset["FormTable", "comment"].name
+        c_source = self.dataset["FormTable", "source"].name
+        c_variants = self.dataset["FormTable", "variants"].name
         # if string is only whitespaces, there is no form.
         if not form_string.strip():
             return None
@@ -381,18 +371,9 @@ class CellParser(NaiveCellParser):
         sources, cut of delimiters, split unmarked variants, etc.
 
         """
-        try:
-            c_comment = self.dataset["FormTable", "comment"].name
-        except KeyError:
-            c_comment = ""
-        try:
-            c_f_source = self.dataset["FormTable", "source"].name
-        except KeyError:
-            c_f_source = ""
-        try:
-            c_form = self.dataset["FormTable", "form"].name
-        except KeyError:
-            c_form = "Form"
+        c_comment = self.dataset["FormTable", "comment"].name
+        c_f_source = self.dataset["FormTable", "source"].name
+        c_form = self.dataset["FormTable", "form"].name
         # remove delimiters from transcriptions
         transcriptions = [
             semantics[0]
