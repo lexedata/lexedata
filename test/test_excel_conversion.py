@@ -282,5 +282,5 @@ def test_cell_comments_export():
         -1
     ].comment.content, "Last row of last column should contain a judgement, with a comment attached to it."
     assert (
-        col[-1].comment.content == "A judgement comment"
+        col[-1].comment.content == "emphatic"
     ), "Comment should match the comment from the cognate table"
