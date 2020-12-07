@@ -198,7 +198,7 @@ class ExcelParser:
         on_language_not_found: err.MissingHandler = err.create,
         on_row_not_found: err.MissingHandler = err.create,
         on_form_not_found: err.MissingHandler = err.create,
-        fuzzy=0
+        fuzzy=0,
     ) -> None:
         self.on_language_not_found = on_language_not_found
         self.on_row_not_found = on_row_not_found
@@ -272,8 +272,7 @@ class ExcelParser:
                 continue
             language = self.language_from_column(lan_col)
             candidates = self.db.find_db_candidates(
-                language,
-                self.check_for_language_match
+                language, self.check_for_language_match
             )
             for language_id in candidates:
                 break
@@ -393,8 +392,8 @@ class ExcelParser:
                             # TODO: Fill data with a fuzzy search
                             for row in self.db.find_db_candidates(
                                 form,
-                                    self.check_for_match,
-                                    edit_dist_threshold=self.fuzzy
+                                self.check_for_match,
+                                edit_dist_threshold=self.fuzzy,
                             ):
                                 logger.info(f"Did you mean {row} ?")
                             continue
@@ -475,9 +474,7 @@ class ExcelCognateParser(ExcelParser):
 
 
 def excel_parser_from_dialect(
-        output_dataset: pycldf.Wordlist,
-        dialect: argparse.Namespace,
-        cognate: bool
+    output_dataset: pycldf.Wordlist, dialect: argparse.Namespace, cognate: bool
 ) -> t.Type[ExcelParser]:
     if cognate:
         Row: t.Type[RowObject] = CogSet
@@ -612,10 +609,7 @@ def excel_parser_from_dialect(
 
 
 def load_dataset(
-    metadata: Path,
-        lexicon: str,
-        db: Path,
-        cognate_lexicon: t.Optional[str]
+    metadata: Path, lexicon: str, db: Path, cognate_lexicon: t.Optional[str]
 ):
     # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
@@ -626,7 +620,9 @@ def load_dataset(
     # check for dialect.cognate in metadata
     dialect_cognate = False
     try:
-        dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
+        dialect = argparse.Namespace(
+            **dataset.tablegroup.common_props["special:fromexcel"]
+        )
         dialect_cognate = True if dialect.cognates else False
     except KeyError:
         logger.warning(
