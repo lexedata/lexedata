@@ -55,7 +55,7 @@ def read_cldf_dataset(
     >>> mapping
     {}
     >>> dict(data)
-    {'Autaa': defaultdict(<class 'set'>, {'Woman': {'WOMAN1'}, 'Person': {'PERSON1'}})}
+    {'Autaa': defaultdict(<class 'set'>, {'Woman': {'WOMAN1'}, 'Person': set()})}
 
     This function also works with cross-semantic cognate codes. For example, in
     the Maweti-Guaraní example dataset, the Aché forms meaning “two” are
