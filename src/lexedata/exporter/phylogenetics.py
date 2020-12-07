@@ -1,5 +1,4 @@
 import re
-import sys
 import typing as t
 import sys
 if not sys.version.startswith("3.8"):
