@@ -1,6 +1,11 @@
 import re
 import sys
 import typing as t
+import sys
+if not sys.version.startswith("3.8"):
+    from typing_extensions import Literal
+else:
+    from typing import Literal
 import collections
 from pathlib import Path
 import warnings
@@ -248,7 +253,7 @@ def build_lang_ids(dataset, col_map):
 
 def root_meaning_code(
     dataset: t.Dict[t.Hashable, t.Mapping[t.Hashable, t.Set[t.Hashable]]]
-) -> t.Mapping[t.Hashable, t.List[t.Literal["0", "1", "?"]]]:
+) -> t.Mapping[t.Hashable, t.List[Literal["0", "1", "?"]]]:
     """Create a root-meaning coding from cognate codes in a dataset
 
     Take the cognate code information from a wordlist, i.e. a mapping of the
@@ -270,7 +275,7 @@ def root_meaning_code(
     for language, lexicon in dataset.items():
         for concept, cognatesets in lexicon.items():
             roots.setdefault(concept, set()).update(cognatesets)
-    alignment: t.Dict[t.Hashable, t.List[t.Literal["0", "1", "?"]]] = {}
+    alignment: t.Dict[t.Hashable, t.List[Literal["0", "1", "?"]]] = {}
     for language, lexicon in dataset.items():
         alignment[language] = ["0"]
         for concept, possible_roots in sorted(roots.items()):
@@ -287,7 +292,7 @@ def root_meaning_code(
 def root_presence_code(
     dataset: t.Dict[t.Hashable, t.Mapping[t.Hashable, t.Set[t.Hashable]]],
     important: t.Callable[[t.Set[t.Hashable]], t.Set[t.Hashable]] = lambda x: x,
-) -> t.Mapping[t.Hashable, t.List[t.Literal["0", "1", "?"]]]:
+) -> t.Mapping[t.Hashable, t.List[Literal["0", "1", "?"]]]:
     """Create a root-presence/absence coding from cognate codes in a dataset
 
     Take the cognate code information from a wordlist, i.e. a mapping of the
@@ -337,7 +342,7 @@ def root_presence_code(
 
     all_roots_sorted = sorted(all_roots)
 
-    alignment: t.Dict[t.Hashable, t.List[t.Literal["0", "1", "?"]]] = {}
+    alignment: t.Dict[t.Hashable, t.List[Literal["0", "1", "?"]]] = {}
     for language, lexicon in dataset.items():
         alignment[language] = ["0"]
         for root in all_roots_sorted:
