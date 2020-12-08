@@ -10,6 +10,11 @@ from lexedata.util import string_to_id
 from lexedata.importer.fromexcel import DB
 from lexedata.types import Form
 
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
+
 logger = logging.getLogger(__file__)
 
 
@@ -52,7 +57,7 @@ def cell_value(cell):
 def import_data_from_sheet(
     sheet,
     sheet_header,
-    implicit: t.Mapping[t.Literal["languageReference", "id", "value"], str] = {},
+    implicit: t.Mapping[Literal["languageReference", "id", "value"], str] = {},
     entries_to_concepts: t.Mapping[str, str] = KeyKeyDict(),
     concept_column: t.Tuple[str, str] = ("Concept_ID", "Concept_ID"),
 ) -> t.Iterable[Form]:
@@ -120,7 +125,7 @@ def read_single_excel_sheet(
     form_header = list(db.dataset["FormTable"].tableSchema.columndict.keys())
 
     # These columns don't need to be given, we can infer them from the sheet title and from the other data:
-    implicit: t.Dict[t.Literal["languageReference", "id", "value"], str] = {}
+    implicit: t.Dict[Literal["languageReference", "id", "value"], str] = {}
     if c_f_language not in sheet_header:
         implicit["languageReference"] = c_f_language
     if c_f_id not in sheet_header:
