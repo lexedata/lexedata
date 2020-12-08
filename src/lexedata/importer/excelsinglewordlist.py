@@ -135,13 +135,13 @@ def read_single_excel_sheet(
 
     found_columns = set(sheet_header) - {concept_column} - set(implicit.values())
     expected_columns = set(form_header) - {c_f_concept} - set(implicit.values())
-    if found_columns < expected_columns:
+    if not found_columns >= expected_columns:
         message = f"Your Excel sheet {sheet.title} is missing columns {expected_columns - found_columns}."
         if ignore_missing:
             logger.warning(message)
         else:
             raise ValueError(message)
-    if found_columns > expected_columns:
+    if not found_columns <= expected_columns:
         message = f"Your Excel sheet {sheet.title} contained unexpected columns {found_columns - expected_columns}."
         if ignore_superfluous:
             logger.warning(message)
@@ -157,7 +157,10 @@ def read_single_excel_sheet(
         concept_column=concept_columns,
     ):
         for item, value in form.items():
-            sep = db.dataset["FormTable", item].separator
+            try:
+                sep = db.dataset["FormTable", item].separator
+            except KeyError:
+                continue
             if sep is None:
                 continue
             form[item] = value.split(sep)
