@@ -88,9 +88,6 @@ def minimal_parser_with_dialect():
             }
         )
     )
-    dataset["FormTable"].tableSchema.columns.append(
-        pycldf.dataset.Column({"name": "variants", "separator": ","})
-    )
     dataset["FormTable", "parameterReference"].separator = ";"
     dataset.add_component("ParameterTable")
     dataset.add_component("LanguageTable")
@@ -110,10 +107,10 @@ def minimal_parser_with_dialect():
             cell_parser={
                 "form_separator": ",",
                 "variant_separator": "~",
-                "name": "MawetiCellParser",
+                "name": "CellParser",
                 "cell_parser_semantics": [
-                    ["Form", "<", ">", True],
-                    ["Source", "{", "}", False],
+                    ["<", ">", "Form", True],
+                    ["{", "}", "Source", False],
                 ],
             },
             check_for_match=["Form"],
@@ -143,7 +140,6 @@ def test_form_association(minimal_parser_with_dialect):
             "Language_ID": "l1",
             "Value": "<L1C1>{1}",
             "Form": "L1C1",
-            "variants": [],
             "Source": {"l1_s1"},
             "ID": "l1_c1",
             "Parameter_ID": ["c1"],
@@ -152,7 +148,6 @@ def test_form_association(minimal_parser_with_dialect):
             "Language_ID": "l2",
             "Value": "<L2C1>{1}",
             "Form": "L2C1",
-            "variants": [],
             "Source": {"l2_s1"},
             "ID": "l2_c1",
             "Parameter_ID": ["c1"],
@@ -161,7 +156,6 @@ def test_form_association(minimal_parser_with_dialect):
             "Language_ID": "l1",
             "Value": "<L1C2>{1}",
             "Form": "L1C2",
-            "variants": [],
             "Source": {"l1_s1"},
             "ID": "l1_c2",
             "Parameter_ID": ["c2"],
@@ -170,7 +164,6 @@ def test_form_association(minimal_parser_with_dialect):
             "Language_ID": "l2",
             "Value": "<L2C2>{1}",
             "Form": "L2C2",
-            "variants": [],
             "Source": {"l2_s1"},
             "ID": "l2_c2",
             "Parameter_ID": ["c2"],
@@ -193,7 +186,6 @@ def test_form_association_identical(minimal_parser_with_dialect):
             "Language_ID": "l1",
             "Value": "<L1C1>{1}",
             "Form": "L1C1",
-            "variants": [],
             "Source": {"l1_s1"},
             "ID": "l1_c1",
             "Parameter_ID": ["c1", "c2"],
@@ -202,7 +194,6 @@ def test_form_association_identical(minimal_parser_with_dialect):
             "Language_ID": "l2",
             "Value": "<L2C1>{1}",
             "Form": "L2C1",
-            "variants": [],
             "Source": {"l2_s1"},
             "ID": "l2_c1",
             "Parameter_ID": ["c1"],
@@ -211,7 +202,6 @@ def test_form_association_identical(minimal_parser_with_dialect):
             "Language_ID": "l2",
             "Value": "<L2C2>{1}",
             "Form": "L2C2",
-            "variants": [],
             "Source": {"l2_s1"},
             "ID": "l2_c2",
             "Parameter_ID": ["c2"],
@@ -248,7 +238,7 @@ def test_form_association_id_after_normalization(minimal_parser_with_dialect):
 
 def test_all_ipa_symbols(minimal_parser_with_dialect, bipa):
     lexicon_wb = MockWorkbook(
-        [["", "L1"]] + [[s, f"<{s:}>"] for s in bipa.sounds.keys()]
+        [["", "L1"]] + [[s, f"<{s:}>{{bipa}}"] for s in bipa.sounds.keys()]
     )
     minimal_parser_with_dialect.parse_cells(lexicon_wb)
 

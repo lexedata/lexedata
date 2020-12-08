@@ -54,33 +54,33 @@
             "add_default_source": "{1}",
             "cell_parser_semantics": [
                 [
-                    "Comment",
                     "(",
                     ")",
+                    "comment",
                     false
                 ],
                 [
-                    "Source",
                     "{",
                     "}",
+                    "source",
                     false
                 ],
                 [
-                    "phonetic",
                     "[",
                     "]",
+                    "phonetic",
                     true
                 ],
                 [
+                    "/",
+                    "/",
                     "phonemic",
-                    "/",
-                    "/",
                     true
                 ],
                 [
-                    "orthographic",
                     "<",
                     ">",
+                    "orthographic",
                     true
                 ]
             ]
@@ -136,33 +136,33 @@
                 "add_default_source": "{1}",
                 "cell_parser_semantics": [
                     [
-                        "Comment",
                         "(",
                         ")",
+                        "comment",
                         false
                     ],
                     [
-                        "Source",
                         "{",
                         "}",
+                        "source",
                         false
                     ],
                     [
-                        "phonetic",
                         "[",
                         "]",
+                        "phonetic",
                         true
                     ],
                     [
+                        "/",
+                        "/",
                         "phonemic",
-                        "/",
-                        "/",
                         true
                     ],
                     [
-                        "orthographic",
                         "<",
                         ">",
+                        "orthographic",
                         true
                     ]
                 ]
