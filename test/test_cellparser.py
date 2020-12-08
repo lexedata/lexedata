@@ -4,7 +4,6 @@ import unicodedata
 import argparse
 from pathlib import Path
 import json
-from collections import OrderedDict
 
 import pycldf
 
@@ -23,12 +22,12 @@ def naive_parser():
     return c.NaiveCellParser(dataset)
 
 
-def test_source_from_source_string(naive_parser):
-    assert naive_parser.source_from_source_string("{1}", "abui") == ("abui_s1", None)
-    assert naive_parser.source_from_source_string("", "abui") == ("abui_s", None)
-    assert naive_parser.source_from_source_string("{Gul2020: p. 4}", "abui") == (
-        "abui_sgul2020",
-        "p. 4",
+def test_source_from_source_string(parser):
+    assert parser.source_from_source_string("{1}", "abui") == "abui_s1"
+    assert parser.source_from_source_string("", "abui") == "abui_s"
+    assert (
+        parser.source_from_source_string("{Gul2020: p. 4}", "abui")
+        == "abui_sgul2020:p. 4"
     )
 
 
@@ -45,7 +44,16 @@ def parser():
     dataset = pycldf.Dataset.from_metadata(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
-    return c.CellParser(dataset)
+    return c.CellParser(
+        dataset,
+        element_semantics=[
+            ("/", "/", "phonemic", True),
+            ("[", "]", "phonetic", True),
+            ("<", ">", "orthographic", True),
+            ("{", "}", "source", False),
+            ("(", ")", "comment", False),
+        ],
+    )
 
 
 def test_cellparser_separate(parser):
@@ -82,7 +90,7 @@ def test_cellparser_2(parser):
         "phonemic": "ta",
         "phonetic": "ta.'ʔa",
         "variants": ["['ta]"],
-        "Form": "ta.'ʔa",
+        "Form": "ta",
     }
 
 
@@ -108,7 +116,7 @@ def test_cellparser_4(parser):
         "phonemic": "a",
         "phonetic": "a.'ʔa",
         "variants": ["/aʔa/"],
-        "Form": "a.'ʔa",
+        "Form": "a",
     }
 
 
@@ -180,16 +188,9 @@ def mawetiparser():
     dialect = argparse.Namespace(
         **json.load(metadata.open("r", encoding="utf8"))["special:fromexcel"]
     )
-    element_semantics = OrderedDict()
-    bracket_pairs = OrderedDict()
-    for value in dialect.cell_parser["cell_parser_semantics"]:
-        name, opening, closing, my_bool = value
-        bracket_pairs[opening] = closing
-        element_semantics[opening] = (name, my_bool)
     initialized_cell_parser = getattr(c, dialect.cell_parser["name"])(
         dataset,
-        bracket_pairs=bracket_pairs,
-        element_semantics=element_semantics,
+        element_semantics=dialect.cell_parser["cell_parser_semantics"],
         separation_pattern=fr"([{''.join(dialect.cell_parser['form_separator'])}])",
         variant_separator=dialect.cell_parser["variant_separator"],
         add_default_source=dialect.cell_parser["add_default_source"],

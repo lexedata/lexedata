@@ -88,6 +88,8 @@ def read_single_excel_sheet(
     match_form: t.Optional[t.List[str]] = None,
     entries_to_concepts: t.Mapping[str, str] = KeyKeyDict(),
     concept_column: t.Optional[str] = None,
+    ignore_missing: bool = False,
+    ignore_superfluous: bool = False,
 ):
     concept_columns: t.Tuple[str, str]
     if concept_column is None:
@@ -126,11 +128,20 @@ def read_single_excel_sheet(
     if c_f_value not in sheet_header:
         implicit["value"] = c_f_value
 
-    assert set(sheet_header) - {concept_column} - set(implicit.values()) == set(
-        form_header
-    ) - {c_f_concept} - set(
-        implicit.values()
-    ), f"The column headers in your Excel file sheet {sheet.title} ({sheet_header}) do not match the column headers from the database ({form_header})."
+    found_columns = set(sheet_header) - {concept_column} - set(implicit.values())
+    expected_columns = set(form_header) - {c_f_concept} - set(implicit.values())
+    if found_columns < expected_columns:
+        message = f"Your Excel sheet {sheet.title} is missing columns {expected_columns - found_columns}."
+        if ignore_missing:
+            logger.warning(message)
+        else:
+            raise ValueError(message)
+    if found_columns > expected_columns:
+        message = f"Your Excel sheet {sheet.title} contained unexpected columns {found_columns - expected_columns}."
+        if ignore_superfluous:
+            logger.warning(message)
+        else:
+            raise ValueError(message)
 
     # read new data from sheet
     for form in import_data_from_sheet(
@@ -193,6 +204,20 @@ if __name__ == "__main__":
         help="Columns to match forms by",
     )
     parser.add_argument(
+        "--ignore-superfluous-excel-columns",
+        "->",
+        action="store_true",
+        default=False,
+        help="Ignore columns in the Excel table which are not in the dataset",
+    )
+    parser.add_argument(
+        "--ignore-missing-excel-columns",
+        "-<",
+        action="store_true",
+        default=False,
+        help="Ignore columns missing from in the Excel table compared to the dataset",
+    )
+    parser.add_argument(
         "--exclude-sheet",
         "-x",
         type=str,
@@ -240,4 +265,6 @@ if __name__ == "__main__":
             match_form=args.match_form,
             entries_to_concepts=concepts,
             concept_column=concept_column,
+            ignore_missing=args.ignore_missing_excel_columns,
+            ignore_superfluous=args.ignore_superfluous_excel_columns,
         )

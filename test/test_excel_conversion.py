@@ -40,17 +40,23 @@ def empty_copy_of_cldf_wordlist(cldf_wordlist):
 
 @pytest.fixture(
     params=[
-        ("data/excel/small.xlsx", "data/excel/small_cog.xlsx", "data/cldf/smallmawetiguarani/cldf-metadata.json"),
-        ("data/excel/minimal.xlsx", "data/excel/minimal_cog.xlsx", "data/cldf/minimal/cldf-metadata.json")
+        (
+            "data/excel/small.xlsx",
+            "data/excel/small_cog.xlsx",
+            "data/cldf/smallmawetiguarani/cldf-metadata.json",
+        ),
+        (
+            "data/excel/minimal.xlsx",
+            "data/excel/minimal_cog.xlsx",
+            "data/cldf/minimal/cldf-metadata.json",
+        ),
     ]
 )
 def excel_wordlist(request):
     return (
         Path(__file__).parent / request.param[0],
         Path(__file__).parent / request.param[1],
-        empty_copy_of_cldf_wordlist(
-            Path(__file__).parent / request.param[2]
-        ),
+        empty_copy_of_cldf_wordlist(Path(__file__).parent / request.param[2]),
     )
 
 
@@ -247,11 +253,11 @@ def test_cell_comments():
     excel_parser_cognate.parse_cells(ws_test)
 
     assert excel_parser_cognate.db.cache["CognateTable"] == {
-        'autaa_Woman-cogset': {
-            'Cognateset': 'cogset',
-            'Comment': 'Comment on judgement',
-            'Form_ID': 'autaa_Woman',
-            'ID': 'autaa_Woman-cogset'
+        "autaa_Woman-cogset": {
+            "Cognateset": "cogset",
+            "Comment": "Comment on judgement",
+            "Form_ID": "autaa_Woman",
+            "ID": "autaa_Woman-cogset",
         }
     }
     assert excel_parser_cognate.db.cache["CognatesetTable"] == {

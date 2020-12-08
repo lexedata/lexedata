@@ -6,7 +6,6 @@ import typing as t
 from pathlib import Path
 from tempfile import mkdtemp
 import logging
-from collections import OrderedDict
 
 from tqdm import tqdm
 
@@ -216,8 +215,7 @@ class ExcelParser:
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
-        row_object = self.row_object
-        row_object = row_object()
+        row_object = self.row_object()
         c_id = self.db.dataset[row_object.__table__, "id"].name
         c_comment = self.db.dataset[row_object.__table__, "comment"].name
         c_name = self.db.dataset[row_object.__table__, "name"].name
@@ -276,10 +274,6 @@ class ExcelParser:
     def parse_cells(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
         languages = self.parse_all_languages(sheet)
         row_object = None
-        c_f_id = self.db.dataset["FormTable", "id"].name
-        c_f_language = self.db.dataset["FormTable", "languageReference"].name
-        c_f_value = self.db.dataset["FormTable", "value"].name
-        c_f_comment = self.db.dataset["FormTable", "comment"].name
         for row in tqdm(
             sheet.iter_rows(min_row=self.top), total=sheet.max_row - self.top
         ):
@@ -329,47 +323,44 @@ class ExcelParser:
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
-                    # Cellparser adds comment of a excel cell to "Cell_Comment" if given
-                    # TODO: Gereon, I don't think that params.pop(c_f_comment, None) is correct here. Is it?
-                    maybe_comment: t.Optional[str] = params.pop(c_f_comment, None)
-                    form = Form(params)
-                    if c_f_id not in form:
-                        # create candidate for form[id]
-                        form[c_f_id] = "{:}_{:}".format(
-                            form[c_f_language], row_object[c_r_id]
-                        )
-                    candidate_forms = iter(
-                        self.db.find_db_candidates(form, self.check_for_match)
-                    )
-                    try:
-                        # if a candidate for form already exists, don't add the form
-                        form_id = next(candidate_forms)
-                        self.db.associate(form_id, row_object, maybe_comment)
-                    except StopIteration:
-                        # no candidates. form is created or not.
-                        if self.on_form_not_found(form, cell_with_forms):
-                            form[c_f_id] = "{:}_{:}".format(
-                                form[c_f_language], row_object[c_r_id]
-                            )
-                            form[c_f_value] = cell_with_forms.value
-                            self.db.insert_into_db(form)
-                            form_id = form[c_f_id]
-                            self.db.associate(
-                                form_id, row_object, comment=maybe_comment
-                            )
-                        else:
-                            logger.error(
-                                "The missing form was {:} in {:}, given as {:}.".format(
-                                    row_object[c_r_id], this_lan, form[c_f_value]
-                                )
-                            )
-                            # TODO: Fill data with a fuzzy search
-                            for row in self.db.find_db_candidates(
-                                form, self.check_for_match, edit_dist_threshold=4
-                            ):
-                                logger.info(f"Did you mean {row} ?")
-                            continue
+                    self.handle_form(params, row_object, cell_with_forms, this_lan)
         self.db.commit()
+
+    def handle_form(self, params, row_object: RowObject, cell_with_forms, this_lan):
+        form = Form(params)
+        c_f_id = self.db.dataset["FormTable", "id"].name
+        c_f_language = self.db.dataset["FormTable", "languageReference"].name
+        c_f_value = self.db.dataset["FormTable", "value"].name
+        c_r_id = self.db.dataset[row_object.__table__, "id"].name
+
+        if c_f_id not in form:
+            # create candidate for form[id]
+            form[c_f_id] = "{:}_{:}".format(form[c_f_language], row_object[c_r_id])
+        candidate_forms = iter(self.db.find_db_candidates(form, self.check_for_match))
+        try:
+            # if a candidate for form already exists, don't add the form
+            form_id = next(candidate_forms)
+            self.db.associate(form_id, row_object)
+        except StopIteration:
+            # no candidates. form is created or not.
+            if self.on_form_not_found(form, cell_with_forms):
+                form[c_f_id] = "{:}_{:}".format(form[c_f_language], row_object[c_r_id])
+                form[c_f_value] = cell_with_forms.value
+                self.db.insert_into_db(form)
+                form_id = form[c_f_id]
+                self.db.associate(form_id, row_object)
+            else:
+                logger.error(
+                    "The missing form was {:} in {:}, given as {:}.".format(
+                        row_object[c_r_id], this_lan, form[c_f_value]
+                    )
+                )
+                # TODO: Fill data with a fuzzy search
+                for row in self.db.find_db_candidates(
+                    form, self.check_for_match, edit_dist_threshold=4
+                ):
+                    logger.info(f"Did you mean {row} ?")
+                return
 
 
 class ExcelCognateParser(ExcelParser):
@@ -444,6 +435,44 @@ class ExcelCognateParser(ExcelParser):
         self.db.make_id_unique(judgement)
         return self.db.insert_into_db(judgement)
 
+    def handle_form(self, params, row_object: RowObject, cell_with_forms, this_lan):
+        try:
+            if params.__table__ == "CognateTable":
+                row_id = row_object[self.db.dataset["CognatesetTable", "id"].name]
+                params[
+                    self.db.dataset["CognateTable", "cognatesetReference"].name
+                ] = row_id
+                c_j_id = self.db.dataset["CognateTable", "id"].name
+                if c_j_id not in params:
+                    form_id = params[
+                        self.db.dataset["CognateTable", "formReference"].name
+                    ]
+                    params[c_j_id] = f"{form_id}-{row_id}"
+                    self.db.make_id_unique(params)
+                self.db.insert_into_db(params)
+                return
+        except AttributeError:
+            pass
+
+        # Deal with the more complex case where we are given a form and need
+        # to discern what to do with it.
+        form = Form(params)
+        c_f_id = self.db.dataset["FormTable", "id"].name
+
+        if c_f_id in form:
+            self.db.associate(form[c_f_id], row_object)
+        else:
+            try:
+                form_id = next(
+                    iter(self.db.find_db_candidates(form, self.check_for_match))
+                )
+                self.db.associate(form_id, row_object)
+            except StopIteration:
+                if self.on_form_not_found(form, cell_with_forms):
+                    raise RuntimeError(
+                        "I don't know how to add a non-existent form, referenced in a cognateset, to the dataset. This refers to form {form} in cell {cell_with_forms.coordinate}."
+                    )
+
 
 def excel_parser_from_dialect(
     output_dataset, dialect: argparse.Namespace, cognate: bool
@@ -460,16 +489,9 @@ def excel_parser_from_dialect(
     for row_regex in dialect.row_cell_regexes:
         match = re.fullmatch(row_regex, "", re.DOTALL)
         row_header += list(match.groupdict().keys()) or [None]
-    element_semantics = OrderedDict()
-    bracket_pairs = OrderedDict()
-    for value in dialect.cell_parser["cell_parser_semantics"]:
-        name, opening, closing, my_bool = value
-        bracket_pairs[opening] = closing
-        element_semantics[opening] = (name, my_bool)
     initialized_cell_parser = getattr(cell_parsers, dialect.cell_parser["name"])(
         output_dataset,
-        bracket_pairs=bracket_pairs,
-        element_semantics=element_semantics,
+        element_semantics=dialect.cell_parser["cell_parser_semantics"],
         separation_pattern=fr"([{''.join(dialect.cell_parser['form_separator'])}])",
         variant_separator=dialect.cell_parser["variant_separator"],
         add_default_source=dialect.cell_parser.get("add_default_source"),
