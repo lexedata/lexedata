@@ -68,6 +68,10 @@ def import_data_from_sheet(
     # variable.
     header = next(row_iter)  # noqa: F841
 
+    assert (
+        concept_column[0] in sheet_header
+    ), f"Could not find concept column {concept_column[0]} in your excel sheet {sheet.title}."
+
     for row in row_iter:
         data = Form({k: cell_value(cell) for k, cell in zip(sheet_header, row)})
         if "value" in implicit:
@@ -77,9 +81,10 @@ def import_data_from_sheet(
             data[concept_column[0]] = entries_to_concepts[concept_entry]
         except KeyError:
             logger.warning(
-                f"Concept {concept_entry} was not found. Please add it to the concepts table manually."
+                f"Concept {concept_entry} was not found. Please add it to the concepts table manually. The corresponding form was ignored and not added to the dataset."
             )
             data[concept_column[0]] = concept_entry
+            continue
         if "id" in implicit:
             data[implicit["id"]] = None
         if "languageReference" in implicit:
@@ -239,7 +244,16 @@ if __name__ == "__main__":
         default=False,
         help="Add an automatic integer 'ID' column",
     )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        default=False,
+        help="Report existing forms",
+    )
     args = parser.parse_args()
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
     if not args.sheet:
         args.sheet = [
             sheet for sheet in args.excel.sheetnames if sheet not in args.exclude_sheet
