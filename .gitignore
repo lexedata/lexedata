@@ -6,3 +6,5 @@ dist
 venv
 .mypy*
 .tox
+
+src/lexedata/data/clics-clics3-97832b5/clics3-network.gml.zip
