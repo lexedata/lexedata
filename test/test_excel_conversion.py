@@ -83,9 +83,7 @@ def copy_to_temp(cldf_wordlist):
 
 def test_fromexcel_runs(excel_wordlist):
     lexicon, cogsets, (empty_dataset, original) = excel_wordlist
-    f.load_dataset(
-        Path(empty_dataset.tablegroup._fname), str(lexicon), "", str(cogsets)
-    )
+    f.load_dataset(Path(empty_dataset.tablegroup._fname), str(lexicon), str(cogsets))
 
 
 def test_fromexcel_correct(excel_wordlist):
@@ -93,9 +91,7 @@ def test_fromexcel_correct(excel_wordlist):
     original = pycldf.Wordlist.from_metadata(original_md)
     # TODO: parameterize original, like the other parameters, over possible
     # test datasets.
-    f.load_dataset(
-        Path(empty_dataset.tablegroup._fname), str(lexicon), "", str(cogsets)
-    )
+    f.load_dataset(Path(empty_dataset.tablegroup._fname), str(lexicon), str(cogsets))
     form_ids_from_excel = {form["ID"] for form in empty_dataset["FormTable"]}
     form_ids_original = {form["ID"] for form in original["FormTable"]}
     cognate_ids_from_excel = {

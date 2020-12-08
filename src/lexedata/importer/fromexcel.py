@@ -178,7 +178,6 @@ class ExcelParser:
     def __init__(
         self,
         output_dataset: pycldf.Dataset,
-        db_fname: str,
         row_object: Object = Concept,
         top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
@@ -209,7 +208,7 @@ class ExcelParser:
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
         self.check_for_language_match = check_for_language_match
-        self.db = DB(output_dataset, fname=db_fname)
+        self.db = DB(output_dataset)
         self.fuzzy = fuzzy
 
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
@@ -379,7 +378,6 @@ class ExcelCognateParser(ExcelParser):
     def __init__(
         self,
         output_dataset: pycldf.Dataset,
-        db_fname: str,
         row_object: Object = CogSet,
         top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
@@ -393,7 +391,6 @@ class ExcelCognateParser(ExcelParser):
     ) -> None:
         super().__init__(
             output_dataset=output_dataset,
-            db_fname=db_fname,
             row_object=row_object,
             top=top,
             cellparser=cellparser,
@@ -513,11 +510,9 @@ def excel_parser_from_dialect(
         def __init__(
             self,
             output_dataset: pycldf.Dataset,
-            db_fname: str,
         ) -> None:
             super().__init__(
                 output_dataset=output_dataset,
-                db_fname=db_fname,
                 top=top,
                 row_object=Row,
                 row_header=row_header,
@@ -617,14 +612,11 @@ def excel_parser_from_dialect(
 def load_dataset(
     metadata: Path,
     lexicon: t.Optional[str],
-    db: Path,
     cognate_lexicon: t.Optional[str] = None,
 ):
 
     # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
-    if db == "":
-        tmpdir = Path(mkdtemp("", "fromexcel"))
     # load dialect from metadata
     try:
         dialect = argparse.Namespace(
@@ -641,14 +633,14 @@ def load_dataset(
         # load dialect from metadata
         try:
             EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
-        except KeyError:
+        except (AttributeError, KeyError):
             logger.warning(
                 "Dialect not found or dialect was missing a key, "
                 "falling back to default parser"
             )
             EP = ExcelParser
             # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-        EP = EP(dataset, db_fname=db)
+        EP = EP(dataset)
 
         EP.db.empty_cache()
 
@@ -662,9 +654,9 @@ def load_dataset(
             ECP = excel_parser_from_dialect(
                 dataset, argparse.Namespace(**dialect.cognates), cognate=True
             )
-        except KeyError:
-            ECP = ExcelCognateParser(dataset, db_fname=db)
-        ECP = ECP(dataset, db)
+        except (AttributeError, KeyError):
+            ECP = ExcelCognateParser
+        ECP = ECP(dataset)
         ECP.db.cache_dataset()
         for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
             ECP.parse_cells(sheet)

@@ -28,7 +28,7 @@ def test_source_from_source_string(parser):
     assert parser.source_from_source_string("", "abui") == "abui_s"
     assert (
         parser.source_from_source_string("{Gul2020: p. 4}", "abui")
-        == "abui_sgul2020:p. 4"
+        == "abui_sgul2020[p. 4]"
     )
 
 
@@ -75,7 +75,7 @@ def test_cellparser_empty(parser):
 
 def test_cellparser_1(parser):
     form = parser.parse_form("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]", "l1")
-    assert form["Source"] == {("l1_s1", None)}
+    assert form["Source"] == {"l1_s1"}
     assert n(form["Value"]) == n("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]")
     assert n(form["orthographic"]) == n("tɨ̈nɨmpɨ̈'ä")
     assert n(form["phonetic"]) == n("tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa")
@@ -86,7 +86,7 @@ def test_cellparser_2(parser):
     assert form == {
         "Comment": "cabello púbico",
         "Language_ID": "language",
-        "Source": {("language_s4", None)},
+        "Source": {"language_s4"},
         "Value": "/ta/ [ta.'ʔa] ['ta] (cabello púbico){4}",
         "phonemic": "ta",
         "phonetic": "ta.'ʔa",
@@ -99,7 +99,7 @@ def test_cellparser_3(parser):
     form = parser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
     assert form == {
         "Language_ID": "language",
-        "Source": {("language_s2", None)},
+        "Source": {"language_s2"},
         "Value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]", "{2}"],
@@ -112,7 +112,7 @@ def test_cellparser_4(parser):
     assert form == {
         "Comment": "cabello",
         "Language_ID": "language",
-        "Source": {("language_s4", None)},
+        "Source": {"language_s4"},
         "Value": " /a/ [a.'ʔa] (cabello){4} /aʔa/",
         "phonemic": "a",
         "phonetic": "a.'ʔa",
@@ -124,7 +124,7 @@ def test_cellparser_4(parser):
 def test_cellparser_5(parser):
     form = parser.parse_form("[iɾũndɨ] (H.F.) (parir)", "language")
     assert form["Comment"] == "H.F."
-    assert form["Source"] == {("language_s1", None)}
+    assert form["Source"] == {"language_s1"}
     assert n(form["Value"]) == n("[iɾũndɨ] (H.F.) (parir)")
     assert n(form["phonetic"]) == n("iɾũndɨ")
     assert form["variants"] == ["(parir)"]
@@ -135,7 +135,7 @@ def test_cellparser_6(parser):
     assert form == {
         "Comment": "GIVE BIRTH",
         "Language_ID": "language",
-        "Source": {("language_s1", None)},
+        "Source": {"language_s1"},
         "Value": "(GIVE BIRTH) [mbohaˈpɨ]",
         "phonetic": "mbohaˈpɨ",
         "Form": "mbohaˈpɨ",
@@ -146,7 +146,7 @@ def test_cellparser_7(parser):
     form = parser.parse_form("[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}", "language")
     assert form == {
         "Language_ID": "language",
-        "Source": {("language_s2", None)},
+        "Source": {"language_s2"},
         "Value": "[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]", "{2}"],
@@ -203,7 +203,7 @@ def test_mawetiparser_no_duplicate_sources(mawetiparser):
     form = mawetiparser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
     assert form == {
         "Language_ID": "language",
-        "Source": {("language_s2", None)},
+        "Source": {"language_s2"},
         "Value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]"],
@@ -219,7 +219,7 @@ def test_mawetiparser_multiple_comments(mawetiparser):
     )
     assert form == {
         "Language_ID": "language",
-        "Source": {("language_s4", None)},
+        "Source": {"language_s4"},
         "Value": ""
         "/etakɾã/ [e.ta.'kɾã] ~[test_variant with various comments] (uno; solo) "
         "(test comment) (test comment 2){4}",
@@ -247,6 +247,6 @@ def test_mawetiparser_postprocessing(mawetiparser):
         "Comment": "from lexicon + edit + data\tanother comment",
         "procedural_comment": ""
         "GAK: We should pick one of those names, I'm 80% sure it should be the first",
-        "Source": {("abui1241_s1", None)},
+        "Source": {"abui1241_s1"},
         "Form": "lεksedata",
     }

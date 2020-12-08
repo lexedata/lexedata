@@ -95,8 +95,6 @@ def minimal_parser_with_dialect():
     dataset.write_metadata()
     dataset = pycldf.Wordlist.from_metadata(dataset._fname)
 
-    db = tmpdir / "db.sqlite"
-
     EP = excel_parser_from_dialect(
         dataset,
         argparse.Namespace(
@@ -120,7 +118,7 @@ def minimal_parser_with_dialect():
         cognate=False,
     )
 
-    EP = EP(dataset, db_fname=db)
+    EP = EP(dataset)
     EP.db.write_dataset_from_cache()
     return EP
 
@@ -193,7 +191,6 @@ def test_source_context(minimal_parser_with_dialect):
         "Language_ID": "l1",
         "Value": "<L1C1>{1:p. 34 }",
         "Form": "L1C1",
-        "variants": [],
         "Source": {"l1_s1[p. 34]"},
         "ID": "l1_c1",
         "Parameter_ID": ["c1"],
