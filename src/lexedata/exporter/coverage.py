@@ -55,7 +55,7 @@ if __name__ == "__main__":
     except KeyError:
         pass
 
-    concepts: t.DefaultDict[str, t.Set[str]] = t.DefaultDict(set)
+    concepts: t.DefaultDict[str, t.Counter[str]] = t.DefaultDict(t.Counter)
     multiple_concepts = bool(dataset["FormTable", "parameterReference"].separator)
     c_concept = dataset["FormTable", "parameterReference"].name
     c_language = dataset["FormTable", "languageReference"].name
@@ -66,12 +66,13 @@ if __name__ == "__main__":
             continue
         if multiple_concepts:
             for c in form[c_concept]:
-                concepts[form[c_language]].add(c)
+                concepts[form[c_language]][c] += 1
         else:
-            concepts[form[c_language]].add(form[c_concept])
+            concepts[form[c_language]][form[c_concept]] += 1
 
     for language, metadata in languages.items():
         conceptlist = concepts[language]
+        synonyms = sum(conceptlist.values()) / len(conceptlist)
         include = True
         if len(conceptlist) < args.min_concepts:
             include = False
@@ -83,4 +84,4 @@ if __name__ == "__main__":
         if args.l:
             print(language)
         else:
-            print(metadata, len(conceptlist))
+            print(metadata, len(conceptlist), synonyms)
