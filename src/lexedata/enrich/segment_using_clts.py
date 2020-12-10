@@ -28,7 +28,7 @@ def cleanup(form: str) -> str:
 
 def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
     if "." in form:
-        return sum([segment_form(f) for f in form.split(".")], [])
+        return "".join(segment_form(f) for f in form.split("."))
     segments = [
         bipa[c] for c in tokenizer(bipa.normalize(cleanup(form)), ipa=True).split()
     ]
