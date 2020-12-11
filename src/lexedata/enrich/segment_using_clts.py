@@ -28,7 +28,7 @@ def cleanup(form: str) -> str:
 
 def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
     if "." in form:
-        return sum([segment_form(f) for f in form.split(".")], [])
+        return "".join(segment_form(f) for f in form.split("."))
     segments = [
         bipa[c] for c in tokenizer(bipa.normalize(cleanup(form)), ipa=True).split()
     ]
@@ -37,7 +37,7 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
             logging.warning(
                 "Unknown sound '%s' in form '%s' (segment #%d)", segment, form, s + 1
             )
-    segments = list(str(s) for s in segments)
+    segments = ".".join(str(s) for s in segments)
     return segments
 
 
