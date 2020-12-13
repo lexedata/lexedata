@@ -140,6 +140,11 @@ def read_single_excel_sheet(
         entries_to_concepts=entries_to_concepts,
         concept_column=concept_columns,
     ):
+        # if concept not in datasete, don't add form
+        try:
+            entries_to_concepts[form[c_f_concept]]
+        except KeyError:
+            continue
         # else, look for candidates, link to existing form or add new form
         for item, value in form.items():
             sep = db.dataset["FormTable", item].separator
