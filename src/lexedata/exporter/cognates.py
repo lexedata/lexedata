@@ -75,9 +75,6 @@ class ExcelWriter:
             LanguageTable
 
         """
-        if not add_central_concepts == singleton_cognate:
-            raise ValueError("parameters add_central_concepts and singleton"
-                             " cognate maste either be both True or both False.")
         if add_central_concepts:
             concept_guesser = ConceptGuesser(self.dataset, True)
             concept_guesser.add_central_concepts_to_cognateset_table()

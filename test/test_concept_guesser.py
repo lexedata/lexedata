@@ -41,7 +41,7 @@ def test_value_error_no_parameterReference_for_cognateset(copy_wordlist_add_conc
     with pytest.raises(ValueError):
         concept_guesser.add_central_concepts_to_cognateset_table()
 
-        
+
 def test_add_concepts_to_cognatesets_of_minimal_correct(copy_wordlist_add_concepticons):
     target, dataset = copy_wordlist_add_concepticons
     concept_guesser = ConceptGuesser(dataset)
