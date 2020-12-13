@@ -19,6 +19,11 @@ class ConceptGuesser:
 
     def __init__(self, dataset: pycldf.Dataset, add_column: bool=True):
         self.dataset = self.reshape_dataset(dataset, add_column=add_column)
+        if self.dataset.column_names.parameters.concepticonReference is None:
+            raise ValueError(
+                f"Dataset {self.dataset:} had no ConcepticonReference column in ParamterTable"
+                "and is thus not compatible with ConceptGuesser."
+            )
         self.concept_to_concepticon = {
             row[self.dataset.column_names.parameters.id]: row[
                 self.dataset.column_names.parameters.concepticonReference
@@ -100,10 +105,15 @@ class ConceptGuesser:
 
         if c_cognateset is None:
             raise ValueError(
-                f"Dataset {self.self.dataset:} had no cognatesetReference column in a CognateTable"
+                f"Dataset {self.dataset:} had no cognatesetReference column in a CognateTable"
                 " or a FormTable and is thus not compatible with this script."
             )
-
+        c_core_concept = self.dataset["CognatesetTable", "parameterReference"].name
+        if c_core_concept is None:
+            raise ValueError(
+                f"Dataset {self.dataset:} had no parameterReference column in a CognatesetTable"
+                " and is thus not compatible with this script."
+            )
         # check all cognatesets in table
         write_back = []
         cognatesets = set()
@@ -128,12 +138,6 @@ class ConceptGuesser:
             concepts_by_cogset[cognateset] = self.get_central_concept_by_form_id(form)
         # write cognatesets with central concepts
         write_back = []
-        c_core_concept = self.dataset["CognatesetTable", "parameterReference"].name
-        if c_core_concept is None:
-            raise ValueError(
-                f"Dataset {self.dataset:} had no parameterReference column in a CognatesetTable"
-                " and is thus not compatible with this script."
-            )
         for row in tqdm(self.dataset["CognatesetTable"]):
             if row[self.dataset.column_names.cognatesets.id] not in concepts_by_cogset:
                 continue
