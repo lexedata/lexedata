@@ -160,6 +160,7 @@ class ExcelWriter:
 
             row_index = new_row_index
         c_cogset_name = self.dataset["CognatesetTable", "name"].name
+        c_cogset_concept = self.dataset["CognatesetTable", "parameterReference"].name
         if not singleton_cognate:
             # create for remaining forms singleton cognatesets and write to file
             for i, form_id in enumerate(all_forms):
@@ -180,6 +181,8 @@ class ExcelWriter:
                         value = f"SingletonCognateset_{i+1}_{form[c_language]}"
                     elif db_name == c_cogset_name:
                         value = concept_value
+                    elif db_name == c_cogset_concept:
+                        value = concept_guesser.get_central_concept_by_form_id(form_id)
                     else:
                         value = ""
                     ws.cell(row=row_index, column=col, value=value)
