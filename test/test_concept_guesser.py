@@ -29,7 +29,7 @@ def test_value_error_no_concepticonReferenc_for_concepts():
     with pytest.raises(ValueError):
         ConceptGuesser(
             pycldf.Dataset.from_metadata(
-                "data/cldf/smallmawetiguarani/cldf-metadata.json"
+                Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
             ),
             add_column=False,
         )
