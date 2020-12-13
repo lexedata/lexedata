@@ -5,11 +5,11 @@ from pathlib import Path
 
 import unicodedata
 import unidecode as uni
-
 import pycldf
 import openpyxl as op
-
+import networkx
 from lingpy.compare.strings import ldn_swap
+
 
 
 invalid_id_elements = re.compile(r"\W+")
@@ -109,3 +109,22 @@ def edit_distance(text1: str, text2: str) -> float:
     text2 = uni.unidecode(text2 or "").lower()
     length = max(len(text1), len(text2))
     return ldn_swap(text1, text2, normalized=False) / length
+
+
+def load_clics():
+    gml_file = (
+        Path(__file__).parent / "data/clics-clics3-97832b5/clics3-network.gml.zip"
+    )
+    if not gml_file.exists():
+        import urllib.request
+
+        file_name, headers = urllib.request.urlretrieve(
+            "https://zenodo.org/record/3687530/files/clics/clics3-v1.1.zip?download=1"
+        )
+        zfobj = zipfile.ZipFile(file_name)
+        zfobj.extract(
+            "clics-clics3-97832b5/clics3-network.gml.zip",
+            Path(__file__).parent / "data/",
+        )
+    gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "r")
+    return networkx.parse_gml(line.decode("utf-8") for line in gml)
