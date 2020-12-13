@@ -116,6 +116,25 @@ def add_concepticon_references(
     dataset.write(ParameterTable=write_back)
 
 
+def create_concepticon_for_concepts(
+        dataset: pycldf.Dataset,
+        overwrite: bool = True
+):
+    if dataset.column_names.parameters.concepticonReference is None:
+        # Create a concepticonReference column
+        dataset.add_columns("ParameterTable", "Concepticon_ID")
+        c = dataset["ParameterTable"].tableSchema.columns[-1]
+        c.valueUrl = "http://concepticon.clld.org/parameters/{Concepticon_ID}"
+        c.propertyUrl = URITemplate(
+            "http://cldf.clld.org/v1.0/terms.rdf#concepticonReference"
+        )
+        dataset.write_metadata()
+
+    language = [(dataset.column_names.parameters.id, "en")]
+    gloss_languages: t.Dict[str, str] = dict(language)
+    add_concepticon_references(dataset, gloss_languages, overwrite)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
