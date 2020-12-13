@@ -62,15 +62,13 @@ def get_cell_comment(cell: op.cell.Cell) -> t.Optional[str]:
     return cell.comment.text.strip() if cell.comment else ""
 
 
-if __name__ == "__main__":
-    import argparse
+def normalize_header(row: t.Iterable[op.cell.Cell]) -> t.Iterable[str]:
+    header = [unicodedata.normalize("NFKC", (n.value or "").strip()) for n in row]
+    header = [h.replace(" ", "_") for h in header]
+    header = [h.replace("(", "") for h in header]
+    header = [h.replace(")", "") for h in header]
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("file", nargs="+", type=Path)
-    args = parser.parse_args()
-    for file in args.file:
-        content = file.open().read()
-        file.open("w").write(unicodedata.normalize("NFKD", content))
+    return header
 
 
 def get_dataset(fname: Path) -> pycldf.Dataset:
@@ -109,3 +107,15 @@ def edit_distance(text1: str, text2: str) -> float:
     text2 = uni.unidecode(text2 or "").lower()
     length = max(len(text1), len(text2))
     return ldn_swap(text1, text2, normalized=False) / length
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file", nargs="+", type=Path)
+    args = parser.parse_args()
+    for file in args.file:
+        content = file.open().read()
+        file.open("w").write(unicodedata.normalize("NFKD", content))
+
