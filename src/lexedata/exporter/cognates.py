@@ -7,6 +7,7 @@ import pycldf
 import openpyxl as op
 
 from lexedata import types
+from lexedata.enrich.guess_concept_for_cognateset import ConceptGuesser
 
 WARNING = "\u26A0"
 
@@ -25,6 +26,7 @@ class ExcelWriter:
         self, dataset: pycldf.Dataset, url_base: t.Optional[str] = None, **kwargs
     ):
         self.dataset = dataset
+        self.set_header()
         if url_base:
             self.URL_BASE = url_base
         else:
@@ -72,9 +74,9 @@ class ExcelWriter:
             LanguageTable
 
         """
-        # TODO: Check whether openpyxl.worksheet._write_only.WriteOnlyWorksheet
-        # will be useful (maybe it's faster or prevents us from some mistakes)?
-        # https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode
+        concept_guesser = ConceptGuesser(self.dataset, True)
+        concept_guesser.add_central_concepts_to_cognateset_table()
+        self.dataset = concept_guesser.dataset
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
 
