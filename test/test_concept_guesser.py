@@ -44,6 +44,13 @@ def test_value_error_no_parameterReference_for_cognateset(
         concept_guesser.add_central_concepts_to_cognateset_table()
 
 
+def test_concepticon_id_of_concepts_correct(copy_wordlist_add_concepticons):
+    target, dataset = copy_wordlist_add_concepticons
+    c_concepticon = dataset["ParameterTable", "concepticonReference"].name
+    concepticon_for_concepts = [str(row[c_concepticon]) for row in dataset["ParameterTable"]]
+    assert concepticon_for_concepts == "1493,None,1498,None,492,None,1500,None,493".split(",")
+
+
 def test_add_concepts_to_cognatesets_of_minimal_correct(copy_wordlist_add_concepticons):
     target, dataset = copy_wordlist_add_concepticons
     concept_guesser = ConceptGuesser(dataset)
