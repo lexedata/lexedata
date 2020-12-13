@@ -8,7 +8,7 @@ from lexedata.enrich.guess_concept_for_cognateset import ConceptGuesser
 from lexedata.enrich.guess_concepticon import create_concepticon_for_concepts
 
 
-@pytest.fixture(params=["data\cldf\smallmawetiguarani\cldf-metadata.json"])
+@pytest.fixture(params=["data/cldf/smallmawetiguarani/cldf-metadata.json"])
 def copy_wordlist_add_concepticons(request):
     original = Path(__file__).parent / request.param
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
@@ -47,8 +47,13 @@ def test_value_error_no_parameterReference_for_cognateset(
 def test_concepticon_id_of_concepts_correct(copy_wordlist_add_concepticons):
     target, dataset = copy_wordlist_add_concepticons
     c_concepticon = dataset["ParameterTable", "concepticonReference"].name
-    concepticon_for_concepts = [str(row[c_concepticon]) for row in dataset["ParameterTable"]]
-    assert concepticon_for_concepts == "1493,None,1498,None,492,None,1500,None,493".split(",")
+    concepticon_for_concepts = [
+        str(row[c_concepticon]) for row in dataset["ParameterTable"]
+    ]
+    assert (
+        concepticon_for_concepts
+        == "1493,None,1498,None,492,None,1500,None,493".split(",")
+    )
 
 
 def test_add_concepts_to_cognatesets_of_minimal_correct(copy_wordlist_add_concepticons):
