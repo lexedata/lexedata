@@ -53,7 +53,7 @@ class ExcelWriter:
         size_sort: bool = False,
         language_order="name",
         add_central_concepts: bool = False,
-        singleton_cognate: bool = False
+        singleton_cognate: bool = False,
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -141,7 +141,11 @@ class ExcelWriter:
 
             # Put the cognateset's tags in column B.
             new_row_index = self.create_formcells_for_cogset(
-                all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index, singleton_cognate
+                all_judgements[cogset[c_cogset_id]],
+                ws,
+                all_forms,
+                row_index,
+                singleton_cognate,
             )
             if singleton_cognate:
                 del all_judgements[cogset[c_cogset_id]]
@@ -163,14 +167,20 @@ class ExcelWriter:
             row_index = new_row_index
         if singleton_cognate:
             c_cogset_name = self.dataset["CognatesetTable", "name"].name
-            c_cogset_concept = self.dataset["CognatesetTable", "parameterReference"].name
+            c_cogset_concept = self.dataset[
+                "CognatesetTable", "parameterReference"
+            ].name
             # create for remaining forms singleton cognatesets and write to file
             for i, form_id in enumerate(all_forms):
                 # write form to file
                 form = all_forms[form_id]
-                self.create_formcell((form, dict()), ws, self.lan_dict[form[c_language]], row_index)
+                self.create_formcell(
+                    (form, dict()), ws, self.lan_dict[form[c_language]], row_index
+                )
                 # write singleton cognateset to excel
-                concept_to_this_form = form[self.dataset["FormTable", "parameterReference"].name]
+                concept_to_this_form = form[
+                    self.dataset["FormTable", "parameterReference"].name
+                ]
                 concept_value = []
                 if isinstance(concept_to_this_form, list):
                     for e in concept_to_this_form:
@@ -197,7 +207,7 @@ class ExcelWriter:
         ws: op.worksheet.worksheet.Worksheet,
         all_forms: t.Dict[str, types.Form],
         row_index: int,
-        singleton_cognate: bool
+        singleton_cognate: bool,
     ) -> int:
         """Writes all forms for given cognate set to Excel.
 
@@ -287,7 +297,9 @@ class ExcelWriter:
                 # for split morphemes.
                 transcription += " }"
                 old_end = end
-            transcription += "".join(s[0] for s in segments[old_end : len(segments) + 1])
+            transcription += "".join(
+                s[0] for s in segments[old_end : len(segments) + 1]
+            )
             transcription = transcription.strip()
         translations = []
 

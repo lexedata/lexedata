@@ -12,7 +12,6 @@ import zipfile
 from lingpy.compare.strings import ldn_swap
 
 
-
 invalid_id_elements = re.compile(r"\W+")
 
 
@@ -118,6 +117,7 @@ def load_clics():
     )
     if not gml_file.exists():
         import urllib.request
+
         print("Installing clics")
         file_name, headers = urllib.request.urlretrieve(
             "https://zenodo.org/record/3687530/files/clics/clics3-v1.1.zip?download=1"

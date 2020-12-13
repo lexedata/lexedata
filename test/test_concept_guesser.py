@@ -8,9 +8,7 @@ from lexedata.enrich.guess_concept_for_cognateset import ConceptGuesser
 from lexedata.enrich.guess_concepticon import create_concepticon_for_concepts
 
 
-@pytest.fixture(
-    params=["data/cldf/smallmawetiguarani/cldf-metadata.json"]
-)
+@pytest.fixture(params=["data\cldf\smallmawetiguarani\cldf-metadata.json"])
 def copy_wordlist_add_concepticons(request):
     original = Path(__file__).parent / request.param
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
@@ -30,12 +28,16 @@ def copy_wordlist_add_concepticons(request):
 def test_value_error_no_concepticonReferenc_for_concepts():
     with pytest.raises(ValueError):
         ConceptGuesser(
-            pycldf.Dataset.from_metadata("data/cldf/smallmawetiguarani/cldf-metadata.json"),
-            add_column=False
+            pycldf.Dataset.from_metadata(
+                "data/cldf/smallmawetiguarani/cldf-metadata.json"
+            ),
+            add_column=False,
         )
 
 
-def test_value_error_no_parameterReference_for_cognateset(copy_wordlist_add_concepticons):
+def test_value_error_no_parameterReference_for_cognateset(
+    copy_wordlist_add_concepticons,
+):
     target, dataset = copy_wordlist_add_concepticons
     concept_guesser = ConceptGuesser(dataset, add_column=False)
     with pytest.raises(ValueError):
@@ -48,7 +50,10 @@ def test_add_concepts_to_cognatesets_of_minimal_correct(copy_wordlist_add_concep
     concept_guesser.add_central_concepts_to_cognateset_table()
     dataset = concept_guesser.dataset
     c_core_concept = dataset["CognatesetTable", "parameterReference"].name
-    concepts_for_cognatesets = [row[c_core_concept] for row in dataset["CognatesetTable"]]
-    assert concepts_for_cognatesets == "one,one,one,two,three,two,three,four,four,one,five".split(",")
-
-
+    concepts_for_cognatesets = [
+        row[c_core_concept] for row in dataset["CognatesetTable"]
+    ]
+    assert (
+        concepts_for_cognatesets
+        == "one,one,one,two,three,two,three,four,four,one,five".split(",")
+    )

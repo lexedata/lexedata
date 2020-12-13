@@ -116,10 +116,7 @@ def add_concepticon_references(
     dataset.write(ParameterTable=write_back)
 
 
-def create_concepticon_for_concepts(
-        dataset: pycldf.Dataset,
-        overwrite: bool = True
-):
+def create_concepticon_for_concepts(dataset: pycldf.Dataset, overwrite: bool = True):
     if dataset.column_names.parameters.concepticonReference is None:
         # Create a concepticonReference column
         dataset.add_columns("ParameterTable", "Concepticon_ID")
