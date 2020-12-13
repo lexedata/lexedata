@@ -52,6 +52,7 @@ class ExcelWriter:
         out: Path,
         size_sort: bool = False,
         language_order="name",
+        add_central_concepts: bool = False,
         singleton_cognate: bool = False
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
@@ -74,9 +75,13 @@ class ExcelWriter:
             LanguageTable
 
         """
-        concept_guesser = ConceptGuesser(self.dataset, True)
-        concept_guesser.add_central_concepts_to_cognateset_table()
-        self.dataset = concept_guesser.dataset
+        if not add_central_concepts == singleton_cognate:
+            raise ValueError("parameters add_central_concepts and singleton"
+                             " cognate maste either be both True or both False.")
+        if add_central_concepts:
+            concept_guesser = ConceptGuesser(self.dataset, True)
+            concept_guesser.add_central_concepts_to_cognateset_table()
+            self.dataset = concept_guesser.dataset
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
 
@@ -159,9 +164,9 @@ class ExcelWriter:
                         )
 
             row_index = new_row_index
-        c_cogset_name = self.dataset["CognatesetTable", "name"].name
-        c_cogset_concept = self.dataset["CognatesetTable", "parameterReference"].name
-        if not singleton_cognate:
+        if singleton_cognate:
+            c_cogset_name = self.dataset["CognatesetTable", "name"].name
+            c_cogset_concept = self.dataset["CognatesetTable", "parameterReference"].name
             # create for remaining forms singleton cognatesets and write to file
             for i, form_id in enumerate(all_forms):
                 # write form to file
