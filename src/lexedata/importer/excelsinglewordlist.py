@@ -124,7 +124,9 @@ def read_single_excel_sheet(
     # check if language exist, add if not add language to cache
     c_l_name = db.dataset["LanguageTable", "name"].name
     c_l_id = db.dataset["LanguageTable", "id"].name
-    language_name_to_language_id = {row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()}
+    language_name_to_language_id = {
+        row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()
+    }
     language_name = sheet.title
     if language_name in language_name_to_language_id:
         language_id = language_name_to_language_id[language_name]
@@ -169,7 +171,9 @@ def read_single_excel_sheet(
             if "id" in implicit:
                 # TODO: check for type of form id column
                 form_concept = form[c_f_concept]
-                concept_reference = form_concept[0] if isinstance(form_concept, list) else form_concept
+                concept_reference = (
+                    form_concept[0] if isinstance(form_concept, list) else form_concept
+                )
                 form[c_f_id] = string_to_id(f"{form[c_f_language]}_{concept_reference}")
             db.make_id_unique(form)
             db.insert_into_db(form)
@@ -191,9 +195,9 @@ if __name__ == "__main__":
         "--concept-name",
         type=str,
         help="Column to interpret as concept names "
-             "(default: assume the #parameterReference column, usually named 'Concept_ID' "
-             "or similar, matches the IDs of the concept. Use this "
-             "switch if you have concept Names in the wordlist instead.)",
+        "(default: assume the #parameterReference column, usually named 'Concept_ID' "
+        "or similar, matches the IDs of the concept. Use this "
+        "switch if you have concept Names in the wordlist instead.)",
     )
     parser.add_argument(
         "--sheet", type=str, action="append", help="Sheets to parse (default: all)"
