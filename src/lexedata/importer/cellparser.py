@@ -268,7 +268,7 @@ class CellParser(NaiveCellParser):
         source_id = source_id.replace(":", "").replace(",", "")
 
         if context:
-            return ":".join((source_id, context))
+            return f"{source_id}[{context}]"
         else:
             return source_id
 

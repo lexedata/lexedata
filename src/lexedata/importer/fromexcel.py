@@ -4,7 +4,6 @@ import re
 import argparse
 import typing as t
 from pathlib import Path
-from tempfile import mkdtemp
 import logging
 
 from tqdm import tqdm
@@ -44,12 +43,14 @@ def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
 
 class DB:
     cache: t.Dict[str, t.Dict[t.Hashable, t.Dict[str, t.Any]]]
+    source_ids: t.Set[str]
 
     def __init__(self, output_dataset: pycldf.Wordlist, fname=None):
         if fname is not None:
             logger.info("Warning: dbase fname set, but ignored")
         self.dataset = output_dataset
         self.cache = {}
+        self.source_ids = set()
 
     def cache_dataset(self):
         for table in self.dataset.tables:
@@ -59,12 +60,17 @@ class DB:
             )
             (id,) = table.tableSchema.primaryKey
             self.cache[table_type] = {row[id]: row for row in table}
+        for source in self.dataset.sources:
+            self.source_ids.add(source.id)
 
     def drop_from_cache(self, table: str):
         self.cache[table] = {}
 
     def retrieve(self, table_type: str):
         return self.cache[table_type].values()
+
+    def add_source(self, source_id):
+        self.source_ids.add(source_id)
 
     def empty_cache(self):
         self.cache = {
@@ -82,6 +88,10 @@ class DB:
                 table_type
             ].write(self.retrieve(table_type))
         self.dataset.write_metadata()
+        # TODO: Write BIB file, without pycldf
+        with open(self.dataset.bibpath, "w") as bibfile:
+            for source in self.source_ids:
+                print("@misc{" + source + ", title={" + source + "} }", file=bibfile)
 
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None
@@ -143,6 +153,8 @@ class DB:
         if edit_dist_threshold:
 
             def match(x, y):
+                if (not x and y) or (x and not y):
+                    return False
                 return edit_distance(x, y) <= edit_dist_threshold
 
         else:
@@ -150,16 +162,13 @@ class DB:
             def match(x, y):
                 return x == y
 
-        # candidates = [candidate for candidate, properties in self.cache[object.__table__].items() if
-        # all(match(properties[p], object[p]) for p in properties)]
-        candidates = []
-        for candidate, properties in self.cache[object.__table__].items():
-            properties_in_object = [
-                p for p in properties_for_match if p in object and p in properties
-            ]
-            if all(match(properties[p], object[p]) for p in properties_in_object):
-                candidates.append(candidate)
-        return candidates
+        return [
+            candidate
+            for candidate, properties in self.cache[object.__table__].items()
+            if all(
+                match(properties.get(p), object.get(p)) for p in properties_for_match
+            )
+        ]
 
     def commit(self):
         pass
@@ -169,7 +178,6 @@ class ExcelParser:
     def __init__(
         self,
         output_dataset: pycldf.Dataset,
-        db_fname: str,
         row_object: Object = Concept,
         top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
@@ -184,6 +192,7 @@ class ExcelParser:
         on_language_not_found: err.MissingHandler = err.create,
         on_row_not_found: err.MissingHandler = err.create,
         on_form_not_found: err.MissingHandler = err.create,
+        fuzzy=0,
     ) -> None:
         self.on_language_not_found = on_language_not_found
         self.on_row_not_found = on_row_not_found
@@ -199,7 +208,8 @@ class ExcelParser:
         self.check_for_match = check_for_match
         self.check_for_row_match = check_for_row_match
         self.check_for_language_match = check_for_language_match
-        self.db = DB(output_dataset, fname=db_fname)
+        self.db = DB(output_dataset)
+        self.fuzzy = fuzzy
 
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
         data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
@@ -255,7 +265,8 @@ class ExcelParser:
                 continue
             language = self.language_from_column(lan_col)
             candidates = self.db.find_db_candidates(
-                language, self.check_for_language_match
+                language,
+                self.check_for_language_match,
             )
             for language_id in candidates:
                 break
@@ -367,7 +378,6 @@ class ExcelCognateParser(ExcelParser):
     def __init__(
         self,
         output_dataset: pycldf.Dataset,
-        db_fname: str,
         row_object: Object = CogSet,
         top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
@@ -381,7 +391,6 @@ class ExcelCognateParser(ExcelParser):
     ) -> None:
         super().__init__(
             output_dataset=output_dataset,
-            db_fname=db_fname,
             row_object=row_object,
             top=top,
             cellparser=cellparser,
@@ -475,7 +484,7 @@ class ExcelCognateParser(ExcelParser):
 
 
 def excel_parser_from_dialect(
-    output_dataset, dialect: argparse.Namespace, cognate: bool
+    output_dataset: pycldf.Wordlist, dialect: argparse.Namespace, cognate: bool
 ) -> t.Type[ExcelParser]:
     if cognate:
         Row: t.Type[RowObject] = CogSet
@@ -501,11 +510,9 @@ def excel_parser_from_dialect(
         def __init__(
             self,
             output_dataset: pycldf.Dataset,
-            db_fname: str,
         ) -> None:
             super().__init__(
                 output_dataset=output_dataset,
-                db_fname=db_fname,
                 top=top,
                 row_object=Row,
                 row_header=row_header,
@@ -603,51 +610,61 @@ def excel_parser_from_dialect(
 
 
 def load_dataset(
-    metadata: Path, lexicon: str, db: Path, cognate_lexicon: t.Optional[str]
+    metadata: Path,
+    lexicon: t.Optional[str],
+    cognate_lexicon: t.Optional[str] = None,
 ):
+
     # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
-    if db == "":
-        tmpdir = Path(mkdtemp("", "fromexcel"))
-        db = tmpdir / "db.sqlite"
-    lexicon_wb = openpyxl.load_workbook(lexicon).active
-    # check for dialect.cognate in metadata
-    dialect_cognate = False
+    # load dialect from metadata
     try:
         dialect = argparse.Namespace(
             **dataset.tablegroup.common_props["special:fromexcel"]
         )
-        dialect_cognate = True if dialect.cognates else False
     except KeyError:
         logger.warning(
             "Dialect not found or dialect was missing a key, "
             "falling back to default parser"
         )
         dialect = None
-    # load lexical data set
-    if dialect:
-        EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
-    else:
-        EP = ExcelParser
-    # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
-    EP = EP(dataset, db_fname=db)
-    EP.db.empty_cache()
-    EP.parse_cells(lexicon_wb)
+
+    if not lexicon and not cognate_lexicon:
+        raise argparse.ArgumentError(
+            "At least one of LEXICON and COGSETS must be specified"
+        )
+    if lexicon:
+        # load dialect from metadata
+        try:
+            EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
+        except (AttributeError, KeyError):
+            logger.warning(
+                "Dialect not found or dialect was missing a key, "
+                "falling back to default parser"
+            )
+            EP = ExcelParser
+            # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
+        EP = EP(dataset)
+
+        EP.db.empty_cache()
+
+        lexicon_wb = openpyxl.load_workbook(lexicon).active
+        EP.parse_cells(lexicon_wb)
+        EP.db.write_dataset_from_cache()
+
     # load cognate data set if provided by metadata
-    # in case no cognate file given, nothing happens
     if cognate_lexicon:
-        if dialect_cognate:
+        try:
             ECP = excel_parser_from_dialect(
                 dataset, argparse.Namespace(**dialect.cognates), cognate=True
             )
-        else:
+        except (AttributeError, KeyError):
             ECP = ExcelCognateParser
-        ECP = ECP(dataset, db)
-        ECP.db = EP.db
+        ECP = ECP(dataset)
+        ECP.db.cache_dataset()
         for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
             ECP.parse_cells(sheet)
-        EP.db = ECP.db
-    EP.db.write_dataset_from_cache()
+        ECP.db.write_dataset_from_cache()
 
 
 if __name__ == "__main__":
@@ -660,7 +677,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "lexicon",
         nargs="?",
-        default="TG_comparative_lexical_online_MASTER.xlsx",
+        default=None,
         help="Path to an Excel file containing the dataset",
     )
     parser.add_argument(
