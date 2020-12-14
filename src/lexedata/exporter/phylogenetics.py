@@ -34,7 +34,7 @@ def sanitise_name(name: str) -> str:
 
 
 def read_cldf_dataset(
-    filename, code_column=None
+    filename, code_column=None, use_ids=False
 ) -> t.Tuple[t.Mapping[str, t.Mapping[str, t.Set[str]]], t.Mapping[str, str]]:
     """Load a CLDF dataset.
 
@@ -45,6 +45,10 @@ def read_cldf_dataset(
     loaded as metadata descriptions, all other files are matched against the
     CLDF module specifications. Directories are checked for the presence of
     any CLDF datasets in undefined order of the dataset types.
+
+    If use_ids == False (the default), the reader is free to choose language
+    names or language glottocodes for the output if they are unique. With
+    use_ids=True you can force the reader to use the data set's language ids.
 
     Examples
     --------
@@ -96,7 +100,7 @@ def read_cldf_dataset(
 
     # Build dictionaries of nice IDs for languages and features
     col_map = dataset.column_names
-    lang_ids, language_code_map = build_lang_ids(dataset, col_map)
+    lang_ids, language_code_map = build_lang_ids(dataset, col_map, use_ids=use_ids)
     feature_ids = {}
     if col_map.parameters:
         for row in dataset["ParameterTable"]:
@@ -193,7 +197,7 @@ def read_cldf_dataset(
         raise ValueError("Module {:} not supported".format(dataset.module))
 
 
-def build_lang_ids(dataset, col_map):
+def build_lang_ids(dataset, col_map, use_ids=False):
     """Create a language ID translation table.
 
     In the early days of CLDF, language tables often contained numerical IDs.
@@ -235,7 +239,9 @@ def build_lang_ids(dataset, col_map):
     )
 
     for row in langs:
-        if unique_names:
+        if use_ids:
+            lang_ids[row[col_map.id]] = row[col_map.id]
+        elif unique_names:
             # Use names if they're unique, for human-friendliness
             lang_ids[row[col_map.id]] = sanitise_name(row[col_map.name])
         elif unique_gcs:
@@ -442,7 +448,7 @@ if __name__ == "__main__":
         "--output-file",
         "-o",
         type=Path,
-        help="""File to write output to. (If format=xml and output file exists, replace the
+        help="""File to write output to. (If format=beast and output file exists, replace the
             first `data` tag in there.) Default: Write to stdout""",
     )
     parser.add_argument(
@@ -453,6 +459,12 @@ if __name__ == "__main__":
         default=None,
         type=Path,
         help="File to load a list of languages from",
+    )
+    parser.add_argument(
+        "--use-ids",
+        action="store_true",
+        default=False,
+        help="Use dataset's language IDs, instead of guessing whether names or glottocodes might be better.",
     )
     parser.add_argument(
         "--exclude-concept",
@@ -496,16 +508,21 @@ if __name__ == "__main__":
     else:
         args.output_file = args.output_file.open("w")
 
-    ds, language_map = read_cldf_dataset(args.metadata, code_column=args.code_column)
+    languages: t.Optional[t.Set[str]]
+    ds, language_map = read_cldf_dataset(
+        args.metadata, code_column=args.code_column, use_ids=args.use_ids
+    )
     if args.languages_list:
         languages = {lg.strip() for lg in args.languages_list.open().read().split("\n")}
-    else:
+    elif language_map:
         languages = set(language_map)
+    else:
+        languages = None
 
     ds = {
         language: {k: v for k, v in sequence.items() if k not in args.exclude_concept}
         for language, sequence in ds.items()
-        if language in languages
+        if (languages is None) or (language in languages)
     }
 
     if args.coding == "rootpresence":
@@ -568,7 +585,7 @@ End;
         et.write(args.output_file, encoding="unicode")
 
     if args.stats_file:
-        countlects = len(languages)
+        countlects = len(ds)
         countconcepts = len(next(iter(ds.values())))
         with args.stats_file.open("w") as s:
             print(
