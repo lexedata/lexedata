@@ -629,6 +629,10 @@ def load_dataset(
         )
         dialect = None
 
+    if not lexicon and not cognate_lexicon:
+        raise argparse.ArgumentError(
+            "At least one of LEXICON and COGSETS must be specified"
+        )
     if lexicon:
         # load dialect from metadata
         try:

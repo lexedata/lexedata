@@ -6,7 +6,6 @@ from pathlib import Path
 
 import unicodedata
 import unidecode as uni
-
 import pycldf
 import openpyxl as op
 
