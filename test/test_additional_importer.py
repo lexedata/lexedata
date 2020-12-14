@@ -45,14 +45,11 @@ def single_import_parameters(request):
 
 def test_add_forms_maweti(single_import_parameters):
     dataset, original, excel, concept_name = single_import_parameters
-    excel = openpyxl.load_workbook(
-        Path(__file__).parent / "data/excel/test_single_excel_maweti.xlsx"
-    )
+    excel = openpyxl.load_workbook(excel)
     c_f_id = dataset["FormTable", "id"].name
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
-    print(concepts.items())
     old_form_ids = {row[c_f_id] for row in dataset["FormTable"]}
     sheet = [sheet for sheet in excel.sheetnames]
     for sheet in sheet:
@@ -63,5 +60,4 @@ def test_add_forms_maweti(single_import_parameters):
             concept_column=concept_name,
         )
     new_form_ids = {row[c_f_id] for row in dataset["FormTable"]}
-    print(new_form_ids)
     assert new_form_ids - old_form_ids == {"ache_one_1", "ache_one_2"}
