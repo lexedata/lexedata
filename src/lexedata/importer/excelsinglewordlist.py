@@ -1,5 +1,4 @@
 import logging
-import unicodedata
 import typing as t
 from pathlib import Path
 
@@ -169,7 +168,9 @@ def read_single_excel_sheet(
             form[c_f_language] = language_id
             if "id" in implicit:
                 # TODO: check for type of form id column
-                form[c_f_id] = string_to_id(f"{form[c_f_language]}_{form[c_f_concept]}")
+                form_concept = form[c_f_concept]
+                concept_reference = form_concept[0] if isinstance(form_concept, list) else form_concept
+                form[c_f_id] = string_to_id(f"{form[c_f_language]}_{concept_reference}")
             db.make_id_unique(form)
             db.insert_into_db(form)
     # write to cldf
