@@ -20,6 +20,7 @@ def naive_parser():
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
     return c.NaiveCellParser(dataset)
+    return c.NaiveCellParser()
 
 
 def test_source_from_source_string(parser):
@@ -27,7 +28,7 @@ def test_source_from_source_string(parser):
     assert parser.source_from_source_string("", "abui") == "abui_s"
     assert (
         parser.source_from_source_string("{Gul2020: p. 4}", "abui")
-        == "abui_sgul2020:p. 4"
+        == "abui_sgul2020[p. 4]"
     )
 
 
@@ -198,7 +199,7 @@ def mawetiparser():
     return initialized_cell_parser
 
 
-def test_mawetiparser_no_dublicate_sources(mawetiparser):
+def test_mawetiparser_no_duplicate_sources(mawetiparser):
     form = mawetiparser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
     assert form == {
         "Language_ID": "language",
