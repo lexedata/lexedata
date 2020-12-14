@@ -7,6 +7,7 @@ import pycldf
 import openpyxl as op
 
 from lexedata import types
+from lexedata.enrich.guess_concept_for_cognateset import ConceptGuesser
 
 WARNING = "\u26A0"
 
@@ -14,11 +15,6 @@ WARNING = "\u26A0"
 
 # TODO: Make comments on Languages, Cognatesets, and Judgements appear as notes
 # in Excel.
-
-# TODO: cProfile – where's the bottleneck that makes this run so slow? It looks
-# like it is the actual saving of the dataset. Check again whether we can use
-# https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode and
-# whether it's nicely faster.
 
 
 class ExcelWriter:
@@ -30,6 +26,7 @@ class ExcelWriter:
         self, dataset: pycldf.Dataset, url_base: t.Optional[str] = None, **kwargs
     ):
         self.dataset = dataset
+        self.set_header()
         if url_base:
             self.URL_BASE = url_base
         else:
@@ -51,7 +48,12 @@ class ExcelWriter:
                 self.header.append((column.name, column.name))
 
     def create_excel(
-        self, out: Path, size_sort: bool = False, language_order="name"
+        self,
+        out: Path,
+        size_sort: bool = False,
+        language_order="name",
+        add_central_concepts: bool = False,
+        singleton_cognate: bool = False,
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -73,9 +75,10 @@ class ExcelWriter:
             LanguageTable
 
         """
-        # TODO: Check whether openpyxl.worksheet._write_only.WriteOnlyWorksheet
-        # will be useful (maybe it's faster or prevents us from some mistakes)?
-        # https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode
+        if add_central_concepts:
+            concept_guesser = ConceptGuesser(self.dataset, True)
+            concept_guesser.add_central_concepts_to_cognateset_table()
+            self.dataset = concept_guesser.dataset
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
 
@@ -99,6 +102,7 @@ class ExcelWriter:
         ws.append(excel_header)
 
         c_form_id = self.dataset["FormTable", "id"].name
+        c_language = self.dataset["FormTable", "languageReference"].name
         all_forms = {f[c_form_id]: f for f in self.dataset["FormTable"]}
         all_judgements = {}
 
@@ -127,7 +131,7 @@ class ExcelWriter:
             cogsets = self.dataset["CognatesetTable"]
 
         for cogset in cogsets:
-            # possible a cogset can appear without any judgment, if so ignore it
+            # possibly a cogset can appear without any judgment, if so ignore it
             if cogset[c_cogset_id] not in all_judgements:
                 continue
             # In a write-only workbook, rows can only be added with append().
@@ -137,8 +141,14 @@ class ExcelWriter:
 
             # Put the cognateset's tags in column B.
             new_row_index = self.create_formcells_for_cogset(
-                all_judgements[cogset[c_cogset_id]], ws, all_forms, row_index
+                all_judgements[cogset[c_cogset_id]],
+                ws,
+                all_forms,
+                row_index,
+                singleton_cognate,
             )
+            if singleton_cognate:
+                del all_judgements[cogset[c_cogset_id]]
 
             for row in range(row_index, new_row_index):
                 for col, (db_name, header) in enumerate(self.header, 1):
@@ -155,6 +165,40 @@ class ExcelWriter:
                         )
 
             row_index = new_row_index
+        if singleton_cognate:
+            c_cogset_name = self.dataset["CognatesetTable", "name"].name
+            c_cogset_concept = self.dataset[
+                "CognatesetTable", "parameterReference"
+            ].name
+            # create for remaining forms singleton cognatesets and write to file
+            for i, form_id in enumerate(all_forms):
+                # write form to file
+                form = all_forms[form_id]
+                self.create_formcell(
+                    (form, dict()), ws, self.lan_dict[form[c_language]], row_index
+                )
+                # write singleton cognateset to excel
+                concept_to_this_form = form[
+                    self.dataset["FormTable", "parameterReference"].name
+                ]
+                concept_value = []
+                if isinstance(concept_to_this_form, list):
+                    for e in concept_to_this_form:
+                        concept_value.append(e)
+                else:
+                    concept_value.append(concept_to_this_form)
+                concept_value = ", ".join(concept_value)
+                for col, (db_name, header) in enumerate(self.header, 1):
+                    if db_name == c_cogset_id:
+                        value = f"SingletonCognateset_{i+1}_{form[c_language]}"
+                    elif db_name == c_cogset_name:
+                        value = concept_value
+                    elif db_name == c_cogset_concept:
+                        value = concept_guesser.get_central_concept_by_form_id(form_id)
+                    else:
+                        value = ""
+                    ws.cell(row=row_index, column=col, value=value)
+                row_index += 1
         wb.save(filename=out)
 
     def create_formcells_for_cogset(
@@ -163,6 +207,7 @@ class ExcelWriter:
         ws: op.worksheet.worksheet.Worksheet,
         all_forms: t.Dict[str, types.Form],
         row_index: int,
+        singleton_cognate: bool,
     ) -> int:
         """Writes all forms for given cognate set to Excel.
 
@@ -181,6 +226,9 @@ class ExcelWriter:
         for judgement in cogset:
             form_id = judgement[c_form]
             form = all_forms[form_id]
+            # remove form
+            if singleton_cognate:
+                del all_forms[form_id]
             forms[self.lan_dict[form[c_language]]].append((form, judgement))
 
         if not forms:
@@ -206,7 +254,6 @@ class ExcelWriter:
         if there is one.
 
         """
-        # TODO: Use CLDF terms instead of column names, like the c_ elsewhere
         cell_value = self.form_to_cell_value(judgement[0], judgement[1])
         form_cell = ws.cell(row=row, column=column, value=cell_value)
         c_id = self.dataset["FormTable", "id"].name
@@ -232,25 +279,28 @@ class ExcelWriter:
         """
         segments = self.get_segments(form)
         if segments is None:
-            return form["Form"]
-        transcription = ""
-        old_end = 0
-        if not meta.get("Segment_Slice"):
-            meta["Segment_Slice"] = ["0:{:d}".format(len(segments))]
-        for startend in meta["Segment_Slice"]:
-            start, end = startend.split(":")
-            start = int(start)
-            end = int(end)
-            transcription += "".join(s[0] for s in segments[old_end:start])
-            transcription += "{ "
-            transcription += " ".join(segments[start:end])
-            # TODO: Find a sensible way to split the alignments instead – this
-            # is trivial for a single segment slice, but requires some fiddling
-            # for split morphemes.
-            transcription += " }"
-            old_end = end
-        transcription += "".join(s[0] for s in segments[old_end : len(segments) + 1])
-        transcription = transcription.strip()
+            transcription = form["Form"]
+        else:
+            transcription = ""
+            old_end = 0
+            if not meta.get("Segment_Slice"):
+                meta["Segment_Slice"] = ["0:{:d}".format(len(segments))]
+            for startend in meta["Segment_Slice"]:
+                start, end = startend.split(":")
+                start = int(start)
+                end = int(end)
+                transcription += "".join(s[0] for s in segments[old_end:start])
+                transcription += "{ "
+                transcription += " ".join(segments[start:end])
+                # TODO: Find a sensible way to split the alignments instead – this
+                # is trivial for a single segment slice, but requires some fiddling
+                # for split morphemes.
+                transcription += " }"
+                old_end = end
+            transcription += "".join(
+                s[0] for s in segments[old_end : len(segments) + 1]
+            )
+            transcription = transcription.strip()
         translations = []
 
         suffix = ""
