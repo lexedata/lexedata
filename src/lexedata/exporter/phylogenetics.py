@@ -73,7 +73,7 @@ def read_cldf_dataset(
     >>> mapping
     {}
     >>> data["Aché"]["two"]
-    {'three8'}
+    {'two8'}
 
     Parameters
     ----------
