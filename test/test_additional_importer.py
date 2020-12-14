@@ -9,11 +9,6 @@ import openpyxl
 from lexedata.importer.excelsinglewordlist import read_single_excel_sheet
 
 
-@pytest.fixture
-def cldf_wordlist():
-    return Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
-
-
 def writable_copy_of_cldf_wordlist(cldf_wordlist):
     # Copy the dataset metadata file to a temporary directory.
     original = Path(__file__).parent / cldf_wordlist
@@ -31,13 +26,25 @@ def writable_copy_of_cldf_wordlist(cldf_wordlist):
     return dataset, original
 
 
-@pytest.fixture
-def concept_name():
-    return "English"
+@pytest.fixture(
+    params=[
+        (
+        "data/cldf/smallmawetiguarani/cldf-metadata.json",
+        "data/excel/test_single_excel_maweti.xlsx",
+        "English"
+        )
+    ]
+)
+def single_import_parameters(request):
+    original = Path(__file__).parent / request.params[0]
+    dataset, original = writable_copy_of_cldf_wordlist(original)
+    excel = Path(__file__).parent / request.params[1]
+    concept_name = request.params[2]
+    return dataset, original, excel, concept_name
 
 
-def test_add_forms(cldf_wordlist, concept_name):
-    dataset, original = writable_copy_of_cldf_wordlist(cldf_wordlist)
+def test_add_forms_maweti(single_import_parameters):
+    dataset, original, excel, concept_name = single_import_parameters
     excel = openpyxl.load_workbook(
         Path(__file__).parent / "data/excel/test_single_excel_maweti.xlsx"
     )
