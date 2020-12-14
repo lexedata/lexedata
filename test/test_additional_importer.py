@@ -29,9 +29,9 @@ def writable_copy_of_cldf_wordlist(cldf_wordlist):
 @pytest.fixture(
     params=[
         (
-        "data/cldf/smallmawetiguarani/cldf-metadata.json",
-        "data/excel/test_single_excel_maweti.xlsx",
-        "English"
+            "data/cldf/smallmawetiguarani/cldf-metadata.json",
+            "data/excel/test_single_excel_maweti.xlsx",
+            "English",
         )
     ]
 )
