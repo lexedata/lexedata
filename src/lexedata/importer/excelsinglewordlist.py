@@ -130,7 +130,7 @@ def read_single_excel_sheet(
     if language_name in language_name_to_language_id:
         language_id = language_name_to_language_id[language_name]
     else:
-        language_id = string_to_id(language_name)
+        language_id = language_name
         db.cache["LanguageTable"][language_id] = {c_l_id: language_id, c_l_name: language_name}
     # read new data from sheet
     for form in import_data_from_sheet(
