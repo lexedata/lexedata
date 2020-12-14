@@ -29,7 +29,8 @@ def test_value_error_no_concepticonReferenc_for_concepts():
     with pytest.raises(ValueError):
         ConceptGuesser(
             pycldf.Dataset.from_metadata(
-                Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+                Path(__file__).parent
+                / "data/cldf/smallmawetiguarani/cldf-metadata.json"
             ),
             add_column=False,
         )
@@ -62,10 +63,9 @@ def test_add_concepts_to_cognatesets_of_minimal_correct(copy_wordlist_add_concep
     concept_guesser.add_central_concepts_to_cognateset_table()
     dataset = concept_guesser.dataset
     c_core_concept = dataset["CognatesetTable", "parameterReference"].name
+    # IDs contain the true concept, followed by a single-digit number
+    c_id = dataset["CognatesetTable", "id"].name
     concepts_for_cognatesets = [
-        row[c_core_concept] for row in dataset["CognatesetTable"]
+        (row[c_core_concept], row[c_id]) for row in dataset["CognatesetTable"]
     ]
-    assert (
-        concepts_for_cognatesets
-        == "one,one,one,two,three,two,three,four,four,one,five".split(",")
-    )
+    assert all(c[0] in c[1] for c in concepts_for_cognatesets)

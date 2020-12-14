@@ -8,13 +8,12 @@ REQUIRES = [
     "pycldf",
     "sqlalchemy",
     "segments",
-    "pyclts",
     "lingpy",
     "unidecode",
     "cldfbench",
     "pyglottolog",
     "pyconcepticon",
-    "pyclts",
+    "pyclts~=2.1.3",
 ]
 if platform.system() != "Windows":
     REQUIRES.append("readline")

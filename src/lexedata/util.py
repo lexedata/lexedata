@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import zipfile
 import typing as t
 from pathlib import Path
 
@@ -7,8 +8,9 @@ import unicodedata
 import unidecode as uni
 import pycldf
 import openpyxl as op
+
 import networkx
-import zipfile
+
 from lingpy.compare.strings import ldn_swap
 
 
@@ -118,7 +120,6 @@ def load_clics():
     if not gml_file.exists():
         import urllib.request
 
-        print("Installing clics")
         file_name, headers = urllib.request.urlretrieve(
             "https://zenodo.org/record/3687530/files/clics/clics3-v1.1.zip?download=1"
         )

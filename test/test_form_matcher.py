@@ -95,8 +95,6 @@ def minimal_parser_with_dialect():
     dataset.write_metadata()
     dataset = pycldf.Wordlist.from_metadata(dataset._fname)
 
-    db = tmpdir / "db.sqlite"
-
     EP = excel_parser_from_dialect(
         dataset,
         argparse.Namespace(
@@ -120,7 +118,7 @@ def minimal_parser_with_dialect():
         cognate=False,
     )
 
-    EP = EP(dataset, db_fname=db)
+    EP = EP(dataset)
     EP.db.write_dataset_from_cache()
     return EP
 
@@ -169,6 +167,34 @@ def test_form_association(minimal_parser_with_dialect):
             "Parameter_ID": ["c2"],
         },
     ]
+
+
+def test_source_context(minimal_parser_with_dialect):
+    """Check how the ‘context’ of a source is parsed
+
+    The ‘context’ of a source, ie. its page number etc., should be added to the
+    source column in square brackets after the source ID. It should be stripped
+    of leading and trailing whitespace.
+
+    """
+    lexicon_wb = MockWorkbook(
+        [
+            ["", "L1"],
+            ["C1", "<L1C1>{1:p. 34 }"],
+        ]
+    )
+    minimal_parser_with_dialect.parse_cells(lexicon_wb)
+
+    forms = list(minimal_parser_with_dialect.db.retrieve("FormTable"))
+    assert len(forms) == 1
+    assert forms[0] == {
+        "Language_ID": "l1",
+        "Value": "<L1C1>{1:p. 34 }",
+        "Form": "L1C1",
+        "Source": {"l1_s1[p. 34]"},
+        "ID": "l1_c1",
+        "Parameter_ID": ["c1"],
+    }
 
 
 def test_form_association_identical(minimal_parser_with_dialect):
