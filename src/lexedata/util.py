@@ -118,4 +118,3 @@ if __name__ == "__main__":
     for file in args.file:
         content = file.open().read()
         file.open("w").write(unicodedata.normalize("NFKD", content))
-
