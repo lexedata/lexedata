@@ -36,10 +36,10 @@ def writable_copy_of_cldf_wordlist(cldf_wordlist):
     ]
 )
 def single_import_parameters(request):
-    original = Path(__file__).parent / request.params[0]
+    original = Path(__file__).parent / request.param[0]
     dataset, original = writable_copy_of_cldf_wordlist(original)
-    excel = Path(__file__).parent / request.params[1]
-    concept_name = request.params[2]
+    excel = Path(__file__).parent / request.param[1]
+    concept_name = request.param[2]
     return dataset, original, excel, concept_name
 
 
