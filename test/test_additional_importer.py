@@ -9,11 +9,6 @@ import openpyxl
 from lexedata.importer.excelsinglewordlist import read_single_excel_sheet
 
 
-@pytest.fixture
-def cldf_wordlist():
-    return Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
-
-
 def writable_copy_of_cldf_wordlist(cldf_wordlist):
     # Copy the dataset metadata file to a temporary directory.
     original = Path(__file__).parent / cldf_wordlist
@@ -31,28 +26,38 @@ def writable_copy_of_cldf_wordlist(cldf_wordlist):
     return dataset, original
 
 
-@pytest.fixture
-def concept_name():
-    return "English"
+@pytest.fixture(
+    params=[
+        (
+            "data/cldf/smallmawetiguarani/cldf-metadata.json",
+            "data/excel/test_single_excel_maweti.xlsx",
+            "English",
+        )
+    ]
+)
+def single_import_parameters(request):
+    original = Path(__file__).parent / request.param[0]
+    dataset, original = writable_copy_of_cldf_wordlist(original)
+    excel = Path(__file__).parent / request.param[1]
+    concept_name = request.param[2]
+    return dataset, original, excel, concept_name
 
 
-def test_add_forms(cldf_wordlist, concept_name):
-    dataset, original = writable_copy_of_cldf_wordlist(cldf_wordlist)
-    excel = openpyxl.load_workbook(
-        Path(__file__).parent / "data/excel/test_single_excel_maweti.xlsx"
-    )
-
-    cid = dataset["ParameterTable", "id"].name
-    concepts = {c[concept_name]: c[cid] for c in dataset["ParameterTable"]}
-    concept_column = concept_name
-
+def test_add_forms_maweti(single_import_parameters):
+    dataset, original, excel, concept_name = single_import_parameters
+    excel = openpyxl.load_workbook(excel)
+    c_f_id = dataset["FormTable", "id"].name
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    old_form_ids = {row[c_f_id] for row in dataset["FormTable"]}
     sheet = [sheet for sheet in excel.sheetnames]
     for sheet in sheet:
         read_single_excel_sheet(
             dataset=dataset,
             sheet=excel[sheet],
             entries_to_concepts=concepts,
-            concept_column=concept_column,
+            concept_column=concept_name,
         )
-
-    # TODO: Compare results and expected
+    new_form_ids = {row[c_f_id] for row in dataset["FormTable"]}
+    assert new_form_ids - old_form_ids == {"ache_one_1", "ache_one_2"}
