@@ -119,7 +119,6 @@ def test_toexcel_runs(cldf_wordlist):
     writer = ExcelWriter(
         dataset=filled_cldf_wordlist[0],
         database_url=filled_cldf_wordlist[1],
-        override_database=True,
     )
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
