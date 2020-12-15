@@ -7,7 +7,6 @@ import pycldf
 import openpyxl as op
 
 from lexedata import types
-from lexedata.enrich.guess_concept_for_cognateset import ConceptGuesser
 
 WARNING = "\u26A0"
 
@@ -23,10 +22,24 @@ class ExcelWriter:
     header = [("ID", "CogSet")]  # Add columns here for other datasets.
 
     def __init__(
-        self, dataset: pycldf.Dataset, url_base: t.Optional[str] = None, **kwargs
+        self,
+        dataset: pycldf.Dataset,
+        url_base: t.Optional[str] = None,
+        add_central_concepts: bool = False,
+        singleton_cognate: bool = False,
     ):
         self.dataset = dataset
+        self.add_concept = add_central_concepts
+        self.singleton = singleton_cognate
         self.set_header()
+        # set column for concept reference
+        if self.add_concept:
+            try:
+                c_cogset_concept = self.dataset["CognatesetTable", "parameterReference"].name
+                self.header.insert(1, (c_cogset_concept, "Central_Concept"))
+            except KeyError:
+                self.header.insert(1, ("", "Central_Concept"))
+        print(self.header)
         if url_base:
             self.URL_BASE = url_base
         else:
@@ -52,8 +65,6 @@ class ExcelWriter:
         out: Path,
         size_sort: bool = False,
         language_order="name",
-        add_central_concepts: bool = False,
-        singleton_cognate: bool = False,
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -75,17 +86,14 @@ class ExcelWriter:
             LanguageTable
 
         """
-        if add_central_concepts:
-            concept_guesser = ConceptGuesser(self.dataset, True)
-            concept_guesser.add_central_concepts_to_cognateset_table()
-            self.dataset = concept_guesser.dataset
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
 
-        # Define the columns
+        # Define the columns, i.e. languages
         self.lan_dict: t.Dict[str, int] = {}
+        print(self.header)
         excel_header = [name for cldf, name in self.header]
-
+        print(excel_header)
         c_name = self.dataset["LanguageTable", "name"].name
         c_id = self.dataset["LanguageTable", "id"].name
         if language_order:
@@ -104,14 +112,24 @@ class ExcelWriter:
         c_form_id = self.dataset["FormTable", "id"].name
         c_language = self.dataset["FormTable", "languageReference"].name
         all_forms = {f[c_form_id]: f for f in self.dataset["FormTable"]}
-        all_judgements = {}
+        c_concept_name = self.dataset["ParameterTable", "name"].name
+        c_concept_id = self.dataset["ParameterTable", "id"].name
+        c_form_concept_reference = self.dataset["FormTable", "parameterReference"].name
+        concept_name_by_concept_id = {c[c_concept_id]: c[c_concept_name] for c in self.dataset["ParameterTable"]}
+        concept_name_by_form_id = dict()
+        for f in self.dataset["FormTable"]:
+            concept = f[c_form_concept_reference]
+            if isinstance(concept, str):
+                concept_name_by_form_id[f[c_form_id]] = concept_name_by_concept_id[concept]
+            else:
+                concept_name_by_form_id[f[c_form_id]] = concept_name_by_concept_id[concept[0]]
+        del concept_name_by_concept_id
 
-        c_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
+        all_judgements = {}
+        c_cognate_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
+        c_cognate_form = self.dataset["CognateTable", "formReference"].name
         for j in self.dataset["CognateTable"]:
-            all_judgements.setdefault(j[c_cognateset], []).append(j)
-        # TODO: If there is no cognateset table, add one – actually, that
-        # should happen in the importer, the export should not modify the
-        # dataset!!
+            all_judgements.setdefault(j[c_cognate_cognateset], []).append(j)
         try:
             c_comment = self.dataset["CognatesetTable", "comment"].name
         except KeyError:
@@ -145,18 +163,22 @@ class ExcelWriter:
                 ws,
                 all_forms,
                 row_index,
-                singleton_cognate,
             )
-            if singleton_cognate:
-                del all_judgements[cogset[c_cogset_id]]
-
+            # write rows for cognatesets
             for row in range(row_index, new_row_index):
                 for col, (db_name, header) in enumerate(self.header, 1):
-                    column = self.dataset["CognatesetTable", db_name]
-                    if column.separator is None:
-                        value = cogset[db_name]
+                    # db_name is '' when add_central_concepts is activated
+                    # and there is no concept column in cognateset table
+                    # else read value from cognateset table
+                    if header == "Central_Concept" and db_name == "":
+                        # this is the concept associated to the first cognate in this cognateset
+                        value = concept_name_by_form_id[all_judgements[cogset[c_cogset_id]][0][c_cognate_form]]
                     else:
-                        value = column.separator.join([str(v) for v in cogset[db_name]])
+                        column = self.dataset["CognatesetTable", db_name]
+                        if column.separator is None:
+                            value = cogset[db_name]
+                        else:
+                            value = column.separator.join([str(v) for v in cogset[db_name]])
                     cell = ws.cell(row=row, column=col, value=value)
                     # Transfer the cognateset comment to the first Excel cell.
                     if c_comment and col == 1 and cogset.get(c_comment):
@@ -165,12 +187,17 @@ class ExcelWriter:
                         )
 
             row_index = new_row_index
-        if singleton_cognate:
-            c_cogset_name = self.dataset["CognatesetTable", "name"].name
-            c_cogset_concept = self.dataset[
-                "CognatesetTable", "parameterReference"
-            ].name
+        if self.singleton:
+            # remove all forms that appear in judgements
+            for k in all_judgements:
+                for judgement in all_judgements[k]:
+                    form_id = judgement[c_cognate_form]
+                    try:
+                        del all_forms[form_id]
+                    except KeyError:
+                        continue
             # create for remaining forms singleton cognatesets and write to file
+            c_cogset_name = self.dataset["CognatesetTable", "name"].name
             for i, form_id in enumerate(all_forms):
                 # write form to file
                 form = all_forms[form_id]
@@ -178,23 +205,13 @@ class ExcelWriter:
                     (form, dict()), ws, self.lan_dict[form[c_language]], row_index
                 )
                 # write singleton cognateset to excel
-                concept_to_this_form = form[
-                    self.dataset["FormTable", "parameterReference"].name
-                ]
-                concept_value = []
-                if isinstance(concept_to_this_form, list):
-                    for e in concept_to_this_form:
-                        concept_value.append(e)
-                else:
-                    concept_value.append(concept_to_this_form)
-                concept_value = ", ".join(concept_value)
                 for col, (db_name, header) in enumerate(self.header, 1):
                     if db_name == c_cogset_id:
                         value = f"SingletonCognateset_{i+1}_{form[c_language]}"
                     elif db_name == c_cogset_name:
-                        value = concept_value
-                    elif db_name == c_cogset_concept:
-                        value = concept_guesser.get_central_concept_by_form_id(form_id)
+                        value = concept_name_by_form_id[form_id]
+                    elif header == "Central_Concept":
+                        value = concept_name_by_form_id[form_id]
                     else:
                         value = ""
                     ws.cell(row=row_index, column=col, value=value)
@@ -207,7 +224,6 @@ class ExcelWriter:
         ws: op.worksheet.worksheet.Worksheet,
         all_forms: t.Dict[str, types.Form],
         row_index: int,
-        singleton_cognate: bool,
     ) -> int:
         """Writes all forms for given cognate set to Excel.
 
@@ -226,9 +242,6 @@ class ExcelWriter:
         for judgement in cogset:
             form_id = judgement[c_form]
             form = all_forms[form_id]
-            # remove form
-            if singleton_cognate:
-                del all_forms[form_id]
             forms[self.lan_dict[form[c_language]]].append((form, judgement))
 
         if not forms:
@@ -357,13 +370,29 @@ if __name__ == "__main__":
         " point to lexibank, you would use https://lexibank.clld.org/values/{:}."
         " (default: https://example.org/lexicon/{:})",
     )
+    parser.add_argument(
+        "--add-concepts",
+        action="store_true",
+        default=False,
+        help="Activate to output the centrale concept associated with each cognateset",
+    )
+    parser.add_argument(
+        "--add-singletons",
+        action="store_true",
+        default=False,
+        help="Activate to output all forms that don't belong to a cognateset. "
+             "For each form, a singleton cognateset is created.",
+    )
     # TODO: Derive URL template from the "special:domain" property of the
     # wordlist, where it exists? So something like
     # 'https://{special:domain}/values/{{:}}'? It would work for Lexibank and
     # for LexiRumah, is it robust enough?
     args = parser.parse_args()
-    E = ExcelWriter(pycldf.Wordlist.from_metadata(args.metadata))
-    E.set_header()
+    E = ExcelWriter(
+        pycldf.Wordlist.from_metadata(args.metadata),
+        add_central_concepts=args.add_concepts,
+        singleton_cognate=args.add_singletons
+    )
     E.create_excel(
         args.excel, size_sort=args.size_sort, language_order=args.language_sort_column
     )
