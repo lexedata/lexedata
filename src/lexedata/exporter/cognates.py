@@ -91,9 +91,7 @@ class ExcelWriter:
 
         # Define the columns, i.e. languages
         self.lan_dict: t.Dict[str, int] = {}
-        print(self.header)
         excel_header = [name for cldf, name in self.header]
-        print(excel_header)
         c_name = self.dataset["LanguageTable", "name"].name
         c_id = self.dataset["LanguageTable", "id"].name
         if language_order:
