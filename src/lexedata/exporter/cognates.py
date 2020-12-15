@@ -24,7 +24,7 @@ class ExcelWriter:
     def __init__(
         self,
         dataset: pycldf.Dataset,
-        url_base: t.Optional[str] = None,
+        database_url: t.Optional[str] = None,
         add_central_concepts: bool = False,
         singleton_cognate: bool = False,
     ):
@@ -40,8 +40,8 @@ class ExcelWriter:
             except KeyError:
                 self.header.insert(1, ("", "Central_Concept"))
         print(self.header)
-        if url_base:
-            self.URL_BASE = url_base
+        if database_url:
+            self.URL_BASE = database_url
         else:
             self.URL_BASE = "https://example.org/{:s}"
 
