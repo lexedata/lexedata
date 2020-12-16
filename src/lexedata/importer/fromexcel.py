@@ -712,4 +712,4 @@ if __name__ == "__main__":
     if args.db == ":memory:":
         args.db = ""
 
-    load_dataset(args.metadata, args.lexicon, args.db, args.cogsets)
+    load_dataset(args.metadata, args.lexicon, args.cogsets)

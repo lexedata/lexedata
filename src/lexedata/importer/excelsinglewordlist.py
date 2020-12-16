@@ -1,12 +1,11 @@
 import logging
-import unicodedata
 import typing as t
 from pathlib import Path
 
 import openpyxl
 import pycldf
 
-from lexedata.util import string_to_id
+from lexedata.util import string_to_id, clean_cell_value, normalize_header
 from lexedata.importer.fromexcel import DB
 from lexedata.types import Form
 
@@ -23,35 +22,10 @@ class KeyKeyDict:
         return key
 
 
-def normalize_header(row: t.Iterable[openpyxl.cell.Cell]) -> t.Iterable[str]:
-    header = [unicodedata.normalize("NFKC", (n.value or "").strip()) for n in row]
-    header = [h.replace(" ", "_") for h in header]
-    header = [h.replace("(", "") for h in header]
-    header = [h.replace(")", "") for h in header]
-
-    return header
-
-
 def get_headers_from_excel(
     sheet: openpyxl.worksheet.worksheet.Worksheet,
 ) -> t.Iterable[str]:
     return normalize_header(r for c, r in enumerate(next(sheet.iter_rows(1, 1))))
-
-
-def cell_value(cell):
-    if cell.value is None:
-        return ""
-    v = unicodedata.normalize("NFKD", (str(cell.value) or "").strip())
-    if type(v) == float:
-        if v == int(v):
-            return int(v)
-        return v
-    if type(v) == int:
-        return v
-    try:
-        return v.replace("\n", ";\t")
-    except TypeError:
-        return str(v)
 
 
 def import_data_from_sheet(
@@ -73,7 +47,7 @@ def import_data_from_sheet(
     ), f"Could not find concept column {concept_column[0]} in your excel sheet {sheet.title}."
 
     for row in row_iter:
-        data = Form({k: cell_value(cell) for k, cell in zip(sheet_header, row)})
+        data = Form({k: clean_cell_value(cell) for k, cell in zip(sheet_header, row)})
         if "value" in implicit:
             data[implicit["value"]] = "\t".join(map(str, data.values()))
         try:
@@ -115,7 +89,7 @@ def read_single_excel_sheet(
 
     db = DB(dataset)
     db.cache_dataset()
-    # required cldf fields
+    # required cldf fields of a form
     c_f_id = db.dataset["FormTable", "id"].name
     c_f_language = db.dataset["FormTable", "languageReference"].name
     c_f_form = db.dataset["FormTable", "form"].name
@@ -152,7 +126,17 @@ def read_single_excel_sheet(
             logger.warning(message)
         else:
             raise ValueError(message)
-
+    # check if language exist, add if not add language to cache
+    c_l_name = db.dataset["LanguageTable", "name"].name
+    c_l_id = db.dataset["LanguageTable", "id"].name
+    language_name_to_language_id = {
+        row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()
+    }
+    language_name = sheet.title
+    if language_name in language_name_to_language_id:
+        language_id = language_name_to_language_id[language_name]
+    else:
+        language_id = language_name
     # read new data from sheet
     for form in import_data_from_sheet(
         sheet,
@@ -161,6 +145,12 @@ def read_single_excel_sheet(
         entries_to_concepts=entries_to_concepts,
         concept_column=concept_columns,
     ):
+        # if concept not in datasete, don't add form
+        try:
+            entries_to_concepts[form[c_f_concept]]
+        except KeyError:
+            continue
+        # else, look for candidates, link to existing form or add new form
         for item, value in form.items():
             try:
                 sep = db.dataset["FormTable", item].separator
@@ -178,13 +168,21 @@ def read_single_excel_sheet(
                     if new_concept not in db.cache[form_id][c_f_concept]:
                         db.cache[form_id][c_f_concept].append(new_concept)
                         logger.info(
-                            f"Existing form {form_id} was added to concept form[c_f_concept]. If this was not intended (because it was a homophonous form, not a polysemy), you need to manually remove that concept from the old form and create a separate new form."
+                            f"Existing form {form_id} was added to concept {form[c_f_concept]}. "
+                            f"If this was not intended (because it was a homophonous form, not a polysemy), "
+                            f"you need to manually remove that concept "
+                            f"from the old form and create a separate new form."
                         )
             break
         else:
+            form[c_f_language] = language_id
             if "id" in implicit:
                 # TODO: check for type of form id column
-                form[c_f_id] = string_to_id(f"{form[c_f_language]}_{form[c_f_concept]}")
+                form_concept = form[c_f_concept]
+                concept_reference = (
+                    form_concept[0] if isinstance(form_concept, list) else form_concept
+                )
+                form[c_f_id] = string_to_id(f"{form[c_f_language]}_{concept_reference}")
             db.make_id_unique(form)
             db.insert_into_db(form)
     # write to cldf
@@ -204,7 +202,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--concept-name",
         type=str,
-        help="Column to interpret as concept names (default: assume the #parameterReference column, usually named 'Concept_ID' or similar, matches the IDs of the concept. Use this switch if you have concept Names in the wordlist instead.)",
+        help="Column to interpret as concept names "
+        "(default: assume the #parameterReference column, usually named 'Concept_ID' "
+        "or similar, matches the IDs of the concept. Use this "
+        "switch if you have concept Names in the wordlist instead.)",
     )
     parser.add_argument(
         "--sheet", type=str, action="append", help="Sheets to parse (default: all)"
