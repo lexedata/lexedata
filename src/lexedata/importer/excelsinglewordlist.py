@@ -43,7 +43,7 @@ def import_data_from_sheet(
     header = next(row_iter)  # noqa: F841
 
     assert (
-        concept_column[0] in sheet_header
+        concept_column[1] in sheet_header
     ), f"Could not find concept column {concept_column[0]} in your excel sheet {sheet.title}."
 
     for row in row_iter:
