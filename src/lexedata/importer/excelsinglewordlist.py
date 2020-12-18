@@ -42,6 +42,10 @@ def import_data_from_sheet(
     # variable.
     header = next(row_iter)  # noqa: F841
 
+    assert (
+        concept_column[1] in sheet_header
+    ), f"Could not find concept column {concept_column[0]} in your excel sheet {sheet.title}."
+
     for row in row_iter:
         data = Form({k: clean_cell_value(cell) for k, cell in zip(sheet_header, row)})
         if "value" in implicit:
@@ -51,9 +55,10 @@ def import_data_from_sheet(
             data[concept_column[0]] = entries_to_concepts[concept_entry]
         except KeyError:
             logger.warning(
-                f"Concept {concept_entry} was not found. Please add it to the concepts table manually."
+                f"Concept {concept_entry} was not found. Please add it to the concepts table manually. The corresponding form was ignored and not added to the dataset."
             )
             data[concept_column[0]] = concept_entry
+            continue
         if "id" in implicit:
             data[implicit["id"]] = None
         if "languageReference" in implicit:
@@ -109,13 +114,13 @@ def read_single_excel_sheet(
 
     found_columns = set(sheet_header) - {concept_column} - set(implicit.values())
     expected_columns = set(form_header) - {c_f_concept} - set(implicit.values())
-    if found_columns < expected_columns:
+    if not found_columns >= expected_columns:
         message = f"Your Excel sheet {sheet.title} is missing columns {expected_columns - found_columns}."
         if ignore_missing:
             logger.warning(message)
         else:
             raise ValueError(message)
-    if found_columns > expected_columns:
+    if not found_columns <= expected_columns:
         message = f"Your Excel sheet {sheet.title} contained unexpected columns {found_columns - expected_columns}."
         if ignore_superfluous:
             logger.warning(message)
@@ -147,7 +152,10 @@ def read_single_excel_sheet(
             continue
         # else, look for candidates, link to existing form or add new form
         for item, value in form.items():
-            sep = db.dataset["FormTable", item].separator
+            try:
+                sep = db.dataset["FormTable", item].separator
+            except KeyError:
+                continue
             if sep is None:
                 continue
             form[item] = value.split(sep)
@@ -237,7 +245,16 @@ if __name__ == "__main__":
         default=False,
         help="Add an automatic integer 'ID' column",
     )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        default=False,
+        help="Report existing forms",
+    )
     args = parser.parse_args()
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
     if not args.sheet:
         args.sheet = [
             sheet for sheet in args.excel.sheetnames if sheet not in args.exclude_sheet
