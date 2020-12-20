@@ -32,9 +32,9 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
     :param form:
     :return:
     ----------
-    >>> segment_form("iɾũndɨ") == "[iɾũndɨ]"
+    >>> segment_form("iɾũndɨ") == ["i", "ɾ", "ũ", "n", "d", "ɨ"]
     True
-    >>> segment_form("mokõi") == "[mokõi]"
+    >>> segment_form("mokõi") == ["m", "o", "k", "õ", "i"]
     True
     """
     if "." in form:
