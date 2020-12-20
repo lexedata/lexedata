@@ -176,7 +176,7 @@ if __name__ == "__main__":
     if not args.no_add_column:
         dataset.add_columns("CognatesetTable", "Core_Concept_ID")
         c = dataset["CognatesetTable"].tableSchema.columns[-1]
-        c.datatype = dataset["ParameterTable", "ID"].datatype
+        c.datatype = dataset["ParameterTable", "id"].datatype
         c.propertyUrl = URITemplate(
             "http://cldf.clld.org/v1.0/terms.rdf#parameterReference"
         )
@@ -253,9 +253,7 @@ if __name__ == "__main__":
         form = row[c_form]
         concepts_by_cogset[cognateset].update(concepts_by_form[form])
 
-    clics = networkx.parse_gml(
-        (Path(__file__).parent / "../../../network-3-families.gml").open()
-    )
+    clics = load_clics()
     central_concepts = {}
     print("Finding central concepts…")
     for cognateset, concepts in tqdm(concepts_by_cogset.items()):
