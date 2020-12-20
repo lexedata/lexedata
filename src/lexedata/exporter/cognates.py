@@ -35,7 +35,9 @@ class ExcelWriter:
         # set column for concept reference
         if self.add_concept:
             try:
-                c_cogset_concept = self.dataset["CognatesetTable", "parameterReference"].name
+                c_cogset_concept = self.dataset[
+                    "CognatesetTable", "parameterReference"
+                ].name
                 self.header.insert(1, (c_cogset_concept, "Central_Concept"))
             except KeyError:
                 self.header.insert(1, ("", "Central_Concept"))
@@ -113,14 +115,20 @@ class ExcelWriter:
         c_concept_name = self.dataset["ParameterTable", "name"].name
         c_concept_id = self.dataset["ParameterTable", "id"].name
         c_form_concept_reference = self.dataset["FormTable", "parameterReference"].name
-        concept_name_by_concept_id = {c[c_concept_id]: c[c_concept_name] for c in self.dataset["ParameterTable"]}
+        concept_name_by_concept_id = {
+            c[c_concept_id]: c[c_concept_name] for c in self.dataset["ParameterTable"]
+        }
         concept_name_by_form_id = dict()
         for f in self.dataset["FormTable"]:
             concept = f[c_form_concept_reference]
             if isinstance(concept, str):
-                concept_name_by_form_id[f[c_form_id]] = concept_name_by_concept_id[concept]
+                concept_name_by_form_id[f[c_form_id]] = concept_name_by_concept_id.get(
+                    concept, ""
+                )
             else:
-                concept_name_by_form_id[f[c_form_id]] = concept_name_by_concept_id[concept[0]]
+                concept_name_by_form_id[f[c_form_id]] = concept_name_by_concept_id.get(
+                    concept[0], ""
+                )
         del concept_name_by_concept_id
 
         all_judgements = {}
@@ -170,13 +178,17 @@ class ExcelWriter:
                     # else read value from cognateset table
                     if header == "Central_Concept" and db_name == "":
                         # this is the concept associated to the first cognate in this cognateset
-                        value = concept_name_by_form_id[all_judgements[cogset[c_cogset_id]][0][c_cognate_form]]
+                        value = concept_name_by_form_id[
+                            all_judgements[cogset[c_cogset_id]][0][c_cognate_form]
+                        ]
                     else:
                         column = self.dataset["CognatesetTable", db_name]
                         if column.separator is None:
                             value = cogset[db_name]
                         else:
-                            value = column.separator.join([str(v) for v in cogset[db_name]])
+                            value = column.separator.join(
+                                [str(v) for v in cogset[db_name]]
+                            )
                     cell = ws.cell(row=row, column=col, value=value)
                     # Transfer the cognateset comment to the first Excel cell.
                     if c_comment and col == 1 and cogset.get(c_comment):
@@ -196,6 +208,12 @@ class ExcelWriter:
                         continue
             # create for remaining forms singleton cognatesets and write to file
             c_cogset_name = self.dataset["CognatesetTable", "name"].name
+            try:
+                c_cogset_concept = self.dataset[
+                    "CognatesetTable", "parameterReference"
+                ].name
+            except KeyError:
+                c_cogset_concept = "Central_Concept"
             for i, form_id in enumerate(all_forms):
                 # write form to file
                 form = all_forms[form_id]
@@ -205,10 +223,10 @@ class ExcelWriter:
                 # write singleton cognateset to excel
                 for col, (db_name, header) in enumerate(self.header, 1):
                     if db_name == c_cogset_id:
-                        value = f"SingletonCognateset_{i+1}_{form[c_language]}"
+                        value = f"X{i+1}_{form[c_language]}"
                     elif db_name == c_cogset_name:
                         value = concept_name_by_form_id[form_id]
-                    elif header == "Central_Concept":
+                    elif header == c_cogset_concept:
                         value = concept_name_by_form_id[form_id]
                     else:
                         value = ""
@@ -379,7 +397,7 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="Activate to output all forms that don't belong to a cognateset. "
-             "For each form, a singleton cognateset is created.",
+        "For each form, a singleton cognateset is created.",
     )
     # TODO: Derive URL template from the "special:domain" property of the
     # wordlist, where it exists? So something like
@@ -389,7 +407,7 @@ if __name__ == "__main__":
     E = ExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
         add_central_concepts=args.add_concepts,
-        singleton_cognate=args.add_singletons
+        singleton_cognate=args.add_singletons,
     )
     E.create_excel(
         args.excel, size_sort=args.size_sort, language_order=args.language_sort_column
