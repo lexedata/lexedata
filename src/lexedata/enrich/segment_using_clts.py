@@ -86,9 +86,7 @@ if __name__ == "__main__":
         c.separator = " "
         c.propertyUrl = URITemplate("http://cldf.clld.org/v1.0/terms.rdf#segments")
         dataset.write_metadata()
-
-    print(dataset.column_names.forms.segments)
-
+        
     write_back = []
     c_f_segments = dataset["FormTable", "Segments"].name
     for row in dataset["FormTable"]:
