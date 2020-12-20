@@ -37,7 +37,7 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
             logging.warning(
                 "Unknown sound '%s' in form '%s' (segment #%d)", segment, form, s + 1
             )
-    segments = ".".join(str(s) for s in segments)
+    segments = "".join(str(s) for s in segments)
     return segments
 
 
