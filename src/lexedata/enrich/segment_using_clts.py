@@ -27,6 +27,16 @@ def cleanup(form: str) -> str:
 
 
 def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
+    """
+
+    :param form:
+    :return:
+    ----------
+    >>> segment_form("iɾũndɨ")
+    >>> "iɾũndɨ"
+    >>> segment_form("mokõi")
+    >>> "mokõi"
+    """
     if "." in form:
         return "".join(segment_form(f) for f in form.split("."))
     segments = [
@@ -58,7 +68,6 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--overwrite-existing",
-        "-<",
         action="store_true",
         default=False,
         help="Overwrite segments already given in the dataset",
