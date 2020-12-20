@@ -56,6 +56,13 @@ if __name__ == "__main__":
         help="Column containing the IPA transcriptions."
         "(Default: The CLDF #form column)",
     )
+    parser.add_argument(
+        "--overwrite-existing",
+        "-<",
+        action="store_true",
+        default=False,
+        help="Overwrite segments already given in the dataset",
+    )
     args = parser.parse_args()
 
     dataset = pycldf.Wordlist.from_metadata(args.wordlist)
@@ -74,9 +81,13 @@ if __name__ == "__main__":
     print(dataset.column_names.forms.segments)
 
     write_back = []
+    c_f_segments = dataset["FormTable", "Segments"].name
     for row in dataset["FormTable"]:
-        if row[args.transcription]:
-            form = row[args.transcription].strip()
-            row[dataset.column_names.forms.segments] = segment_form(form)
-        write_back.append(row)
+        if row[c_f_segments] and args.overwrite_existing:
+            continue
+        else:
+            if row[args.transcription]:
+                form = row[args.transcription].strip()
+                row[dataset.column_names.forms.segments] = segment_form(form)
+            write_back.append(row)
     dataset.write(FormTable=write_back)
