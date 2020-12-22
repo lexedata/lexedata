@@ -32,13 +32,13 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
     :param form:
     :return:
     ----------
-    >>> segment_form("iɾũndɨ") == "iɾũndɨ"
+    >>> segment_form("iɾũndɨ") == ["i", "ɾ", "ũ", "n", "d", "ɨ"]
     True
-    >>> segment_form("mokõi") == "mokõi"
+    >>> segment_form("mokõi") == ["m", "o", "k", "õ", "i"]
     True
     """
     if "." in form:
-        return "".join(segment_form(f) for f in form.split("."))
+        return [s for f in form.split(".") for s in segment_form(f)]
     segments = [
         bipa[c] for c in tokenizer(bipa.normalize(cleanup(form)), ipa=True).split()
     ]
@@ -47,7 +47,7 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
             logging.warning(
                 "Unknown sound '%s' in form '%s' (segment #%d)", segment, form, s + 1
             )
-    segments = "".join(str(s) for s in segments)
+    segments = [str(s) for s in segments]
     return segments
 
 

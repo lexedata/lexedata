@@ -80,9 +80,8 @@ if __name__ == "__main__":
         assert args.smush or len(mapping) == len(
             set(mapping.values())
         ), "Would collapse some concepts that were distinct before! Add '--smush' if that is intended."
-        breakpoint()
-        dataset["ParameterTable"].tableSchema.columns["c_id"]
-        rename(dataset, {args.original: args.replacement})
+        # dataset["ParameterTable"].tableSchema.columns["c_id"]
+        rename(dataset, mapping)
     else:
         concepts = dataset["ParameterTable"]
 
