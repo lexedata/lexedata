@@ -90,7 +90,7 @@ if __name__ == "__main__":
     write_back = []
     c_f_segments = dataset["FormTable", "Segments"].name
     for row in dataset["FormTable"]:
-        if row[c_f_segments] and args.overwrite_existing:
+        if row[c_f_segments] and not args.overwrite_existing:
             continue
         else:
             if row[args.transcription]:
