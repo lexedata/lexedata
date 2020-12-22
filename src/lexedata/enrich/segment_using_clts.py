@@ -52,6 +52,28 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
     return segments
 
 
+def add_segments_to_dataset(dataset: pycldf.Dataset, transcription: str, overwrite_existing: bool):
+    if dataset.column_names.forms.segments is None:
+        # Create a Segments column in FormTable
+        dataset.add_columns("FormTable", "Segments")
+        c = dataset["FormTable"].tableSchema.columns[-1]
+        c.separator = " "
+        c.propertyUrl = URITemplate("http://cldf.clld.org/v1.0/terms.rdf#segments")
+        dataset.write_metadata()
+
+    write_back = []
+    c_f_segments = dataset["FormTable", "Segments"].name
+    for row in dataset["FormTable"]:
+        if row[c_f_segments] and not overwrite_existing:
+            continue
+        else:
+            if row[transcription]:
+                form = row[transcription].strip()
+                row[dataset.column_names.forms.segments] = segment_form(form)
+            write_back.append(row)
+    dataset.write(FormTable=write_back)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -79,23 +101,6 @@ if __name__ == "__main__":
 
     if args.transcription is None:
         args.transcription = dataset.column_names.forms.form
+    # add segments to FormTable
+    add_segments_to_dataset(dataset, args.transcription, args.overwrite_existing)
 
-    if dataset.column_names.forms.segments is None:
-        # Create a concepticonReference column
-        dataset.add_columns("FormTable", "Segments")
-        c = dataset["FormTable"].tableSchema.columns[-1]
-        c.separator = " "
-        c.propertyUrl = URITemplate("http://cldf.clld.org/v1.0/terms.rdf#segments")
-        dataset.write_metadata()
-        
-    write_back = []
-    c_f_segments = dataset["FormTable", "Segments"].name
-    for row in dataset["FormTable"]:
-        if row[c_f_segments] and not args.overwrite_existing:
-            continue
-        else:
-            if row[args.transcription]:
-                form = row[args.transcription].strip()
-                row[dataset.column_names.forms.segments] = segment_form(form)
-            write_back.append(row)
-    dataset.write(FormTable=write_back)
