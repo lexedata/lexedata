@@ -41,7 +41,6 @@ class ExcelWriter:
                 self.header.insert(1, (c_cogset_concept, "Central_Concept"))
             except KeyError:
                 self.header.insert(1, ("", "Central_Concept"))
-        print(self.header)
         if database_url:
             self.URL_BASE = database_url
         else:
@@ -91,7 +90,7 @@ class ExcelWriter:
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
 
-        # Define the columns, i.e. languages
+        # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
         c_name = self.dataset["LanguageTable", "name"].name
@@ -106,31 +105,24 @@ class ExcelWriter:
         for col, lan in enumerate(languages, len(excel_header) + 1):
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
-
         ws.append(excel_header)
 
+        # load all forms
         c_form_id = self.dataset["FormTable", "id"].name
         c_language = self.dataset["FormTable", "languageReference"].name
         all_forms = {f[c_form_id]: f for f in self.dataset["FormTable"]}
-        c_concept_name = self.dataset["ParameterTable", "name"].name
-        c_concept_id = self.dataset["ParameterTable", "id"].name
+
+        # map form_id to id of associated concept
         c_form_concept_reference = self.dataset["FormTable", "parameterReference"].name
-        concept_name_by_concept_id = {
-            c[c_concept_id]: c[c_concept_name] for c in self.dataset["ParameterTable"]
-        }
-        concept_name_by_form_id = dict()
+        concept_id_by_form_id = dict()
         for f in self.dataset["FormTable"]:
             concept = f[c_form_concept_reference]
             if isinstance(concept, str):
-                concept_name_by_form_id[f[c_form_id]] = concept_name_by_concept_id.get(
-                    concept, ""
-                )
+                concept_id_by_form_id[f[c_form_id]] = concept
             else:
-                concept_name_by_form_id[f[c_form_id]] = concept_name_by_concept_id.get(
-                    concept[0], ""
-                )
-        del concept_name_by_concept_id
+                concept_id_by_form_id[f[c_form_id]] = concept[0]
 
+        # load all cognates by cognateset id
         all_judgements = {}
         c_cognate_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
         c_cognate_form = self.dataset["CognateTable", "formReference"].name
@@ -141,10 +133,9 @@ class ExcelWriter:
         except KeyError:
             c_comment = None
         c_cogset_id = self.dataset["CognatesetTable", "id"].name
-        # Iterate over all cognate sets, and prepare the rows.
-        # Again, row_index 2 is indeed row 2
-        row_index = 1 + 1
 
+        # Again, row_index 2 is indeed row 2, row 1 is header
+        row_index = 1 + 1
         if size_sort:
             cogsets = sorted(
                 self.dataset["CognatesetTable"],
@@ -154,16 +145,12 @@ class ExcelWriter:
         else:
             cogsets = self.dataset["CognatesetTable"]
 
+        # iterate over all cogsets
         for cogset in cogsets:
             # possibly a cogset can appear without any judgment, if so ignore it
             if cogset[c_cogset_id] not in all_judgements:
                 continue
-            # In a write-only workbook, rows can only be added with append().
-            # It is not possible to write (or read) cells at arbitrary
-            # locations with cell() or iter_rows(). -> We want to use the speed
-            # of a writeonly workbook, so we should build the sheet row-by-row.
-
-            # Put the cognateset's tags in column B.
+            # write all forms of this cognateset to excel
             new_row_index = self.create_formcells_for_cogset(
                 all_judgements[cogset[c_cogset_id]],
                 ws,
@@ -178,9 +165,7 @@ class ExcelWriter:
                     # else read value from cognateset table
                     if header == "Central_Concept" and db_name == "":
                         # this is the concept associated to the first cognate in this cognateset
-                        value = concept_name_by_form_id[
-                            all_judgements[cogset[c_cogset_id]][0][c_cognate_form]
-                        ]
+                        value = concept_id_by_form_id[all_judgements[cogset[c_cogset_id]][0][c_cognate_form]]
                     else:
                         column = self.dataset["CognatesetTable", db_name]
                         if column.separator is None:
@@ -197,6 +182,7 @@ class ExcelWriter:
                         )
 
             row_index = new_row_index
+        # write remaining forms to singleton congatesets if switch is activated
         if self.singleton:
             # remove all forms that appear in judgements
             for k in all_judgements:
@@ -213,7 +199,7 @@ class ExcelWriter:
                     "CognatesetTable", "parameterReference"
                 ].name
             except KeyError:
-                c_cogset_concept = "Central_Concept"
+                c_cogset_concept = None
             for i, form_id in enumerate(all_forms):
                 # write form to file
                 form = all_forms[form_id]
@@ -225,9 +211,13 @@ class ExcelWriter:
                     if db_name == c_cogset_id:
                         value = f"X{i+1}_{form[c_language]}"
                     elif db_name == c_cogset_name:
-                        value = concept_name_by_form_id[form_id]
-                    elif header == c_cogset_concept:
-                        value = concept_name_by_form_id[form_id]
+                        value = concept_id_by_form_id[form_id]
+                    # or the header was set to Central_Concept by switch add_concepts
+                    # or cognateset dataset contains concept reference
+                    elif header == "Central_Concept":
+                        value = concept_id_by_form_id[form_id]
+                    elif db_name == c_cogset_concept:
+                        value = concept_id_by_form_id[form_id]
                     else:
                         value = ""
                     ws.cell(row=row_index, column=col, value=value)
@@ -355,8 +345,6 @@ class ExcelWriter:
         return form[c_segments]
 
 
-# TODO: Somehow, this script tends to run very slowly. Find the bottleneck, and
-# see whether we can get it to speed up to seconds, not minutes!
 if __name__ == "__main__":
     import argparse
 
