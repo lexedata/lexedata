@@ -45,7 +45,8 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
     for s, segment in enumerate(segments):
         if segment.type == "unknownsound":
             logging.warning(
-                "Unknown sound '%s' in form '%s' (segment #%d)", segment, form, s + 1
+                "Unknown sound '%s' in form '%s' (segment #%d). "
+                "Sound was added unchanged to segments.", segment, form, s + 1
             )
     segments = [str(s) for s in segments]
     return segments
