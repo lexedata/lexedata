@@ -57,6 +57,7 @@ def test_concepticon_id_of_concepts_correct(copy_wordlist_add_concepticons):
     )
 
 
+# TODO: this test needs a better approach to actually assert that the correct concept is added to each cognateset
 def test_add_concepts_to_cognatesets_of_minimal_correct(copy_wordlist_add_concepticons):
     target, dataset = copy_wordlist_add_concepticons
     concept_guesser = ConceptGuesser(dataset)

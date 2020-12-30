@@ -18,51 +18,55 @@ concepticon = cldfbench.catalogs.Concepticon(concepticon_path)
 class ConceptGuesser:
     def __init__(self, dataset: pycldf.Dataset, add_column: bool = True):
         self.dataset = self.reshape_dataset(dataset, add_column=add_column)
-        if self.dataset.column_names.parameters.concepticonReference is None:
-            raise ValueError(
-                f"Dataset {self.dataset:} had no ConcepticonReference column in ParamterTable"
-                "and is thus not compatible with ConceptGuesser."
+        self.concept_by_form_id = dict()
+        if self.dataset.column_names.parameters.concepticonReference:
+            concept_to_concepticon = {
+                row[self.dataset.column_names.parameters.id]: row[
+                    self.dataset.column_names.parameters.concepticonReference
+                ]
+                for row in self.dataset["ParameterTable"]
+            }
+            concepticon_to_concept = {
+                row[self.dataset.column_names.parameters.concepticonReference]: row[
+                    self.dataset.column_names.parameters.id
+                ]
+                for row in self.dataset["ParameterTable"]
+            }
+            concepticon_concepts_by_form_id: t.Dict[
+                t.Hashable, t.List[t.Optional[t.Hashable]]
+            ] = {}
+            concepts = dataset["FormTable"].get_column(
+                dataset.column_names.forms.parameterReference
             )
-        self.concept_to_concepticon = {
-            row[self.dataset.column_names.parameters.id]: row[
-                self.dataset.column_names.parameters.concepticonReference
-            ]
-            for row in self.dataset["ParameterTable"]
-        }
-        self.concepticon_to_concept = {
-            row[self.dataset.column_names.parameters.concepticonReference]: row[
-                self.dataset.column_names.parameters.id
-            ]
-            for row in self.dataset["ParameterTable"]
-        }
+            multi = bool(concepts.separator)
+            for form in tqdm(self.dataset["FormTable"]):
+                if multi:
+                   concepticon_concepts_by_form_id[
+                        form[self.dataset.column_names.forms.id]
+                    ] = [concept_to_concepticon.get(c) for c in form[concepts.name]]
+                else:
+                   concepticon_concepts_by_form_id[
+                        form[self.dataset.column_names.forms.id]
+                    ] = [concept_to_concepticon.get(form[concepts.name])]
 
-        self.concepticon_concepts_by_form_id: t.Dict[
-            t.Hashable, t.List[t.Optional[t.Hashable]]
-        ] = {}
-        concepts = dataset["FormTable"].get_column(
-            dataset.column_names.forms.parameterReference
-        )
-        multi = bool(concepts.separator)
-        for form in tqdm(self.dataset["FormTable"]):
-            if multi:
-                self.concepticon_concepts_by_form_id[
-                    form[self.dataset.column_names.forms.id]
-                ] = [self.concept_to_concepticon.get(c) for c in form[concepts.name]]
-            else:
-                self.concepticon_concepts_by_form_id[
-                    form[self.dataset.column_names.forms.id]
-                ] = [self.concept_to_concepticon.get(form[concepts.name])]
-
-        clics = load_clics()
-        central_concepts = {}
-        for form_id, concepts in tqdm(self.concepticon_concepts_by_form_id.items()):
-            centrality = networkx.algorithms.centrality.betweenness_centrality(
-                clics.subgraph([c for c in concepts if c])
-            )
-            central_concepts[form_id] = max(
-                centrality or concepts, key=lambda k: centrality.get(k, -1)
-            )
-        self.central_concepticion_concepts_by_form_id = central_concepts
+            clics = load_clics()
+            central_concepts = {}
+            for form_id, concepts in tqdm(concepticon_concepts_by_form_id.items()):
+                centrality = networkx.algorithms.centrality.betweenness_centrality(
+                    clics.subgraph([c for c in concepts if c])
+                )
+                central_concepts[form_id] = concepticon_to_concept.get(
+                    max(
+                        centrality or concepts, key=lambda k: centrality.get(k, -1)
+                    )
+                )
+            self.central_concepts_by_form_id = central_concepts
+        else:
+            c_f_id = self.dataset.column_names.forms.id
+            c_f_concept = self.dataset.column_names.forms.parameterReference
+            for form in self.dataset["FormTable"]:
+                concept = form.get(c_f_concept)
+                self.central_concepts_by_form_id[form[c_f_id]] = concept if type(concept) == str else concept[0]
 
     @staticmethod
     def reshape_dataset(
@@ -89,12 +93,7 @@ class ConceptGuesser:
         return dataset
 
     def get_central_concept_by_form_id(self, form_id: str):
-        try:
-            return self.concepticon_to_concept[
-                self.central_concepticion_concepts_by_form_id[form_id]
-            ]
-        except KeyError:
-            return None
+        return self.central_concepts_by_form_id.get(form_id)
 
     def add_central_concepts_to_cognateset_table(self):
         # Check whether cognate judgements live in the FormTable …
