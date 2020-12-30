@@ -4,7 +4,7 @@ import shutil
 import pytest
 import pycldf
 
-from lexedata.enrich.guess_concept_for_cognateset import ConceptGuesser
+from lexedata.enrich.guess_concept_for_cognateset import add_central_concepts_to_cognateset_table
 from lexedata.enrich.guess_concepticon import create_concepticon_for_concepts
 
 
@@ -27,7 +27,7 @@ def copy_wordlist_add_concepticons(request):
 
 def test_value_error_no_concepticonReferenc_for_concepts():
     with pytest.raises(ValueError):
-        ConceptGuesser(
+        dataset = add_central_concepts_to_cognateset_table(
             pycldf.Dataset.from_metadata(
                 Path(__file__).parent
                 / "data/cldf/smallmawetiguarani/cldf-metadata.json"
@@ -40,9 +40,8 @@ def test_value_error_no_parameterReference_for_cognateset(
     copy_wordlist_add_concepticons,
 ):
     target, dataset = copy_wordlist_add_concepticons
-    concept_guesser = ConceptGuesser(dataset, add_column=False)
     with pytest.raises(ValueError):
-        concept_guesser.add_central_concepts_to_cognateset_table()
+        dataset = add_central_concepts_to_cognateset_table(dataset, add_column=False)
 
 
 def test_concepticon_id_of_concepts_correct(copy_wordlist_add_concepticons):
@@ -60,9 +59,7 @@ def test_concepticon_id_of_concepts_correct(copy_wordlist_add_concepticons):
 # TODO: this test needs a better approach to actually assert that the correct concept is added to each cognateset
 def test_add_concepts_to_cognatesets_of_minimal_correct(copy_wordlist_add_concepticons):
     target, dataset = copy_wordlist_add_concepticons
-    concept_guesser = ConceptGuesser(dataset)
-    concept_guesser.add_central_concepts_to_cognateset_table()
-    dataset = concept_guesser.dataset
+    dataset = add_central_concepts_to_cognateset_table(dataset)
     c_core_concept = dataset["CognatesetTable", "parameterReference"].name
     # IDs contain the true concept, followed by a single-digit number
     c_id = dataset["CognatesetTable", "id"].name
