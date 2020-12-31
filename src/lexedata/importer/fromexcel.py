@@ -670,7 +670,8 @@ if __name__ == "__main__":
     import pycldf
 
     parser = argparse.ArgumentParser(
-        description="Load a Maweti-Guarani-style dataset into CLDF"
+        description="Imports a dataset from an excel file into CLDF. "
+                    "The metadata file contains information about the structure of the dataset."
     )
     parser.add_argument(
         "lexicon",
@@ -682,20 +683,14 @@ if __name__ == "__main__":
         "--cogsets",
         nargs="?",
         default="",
-        help="Path to an Excel file containing cogsets and cognatejudgements",
+        help="Path to an optional second Excel file containing cogsets and cognatejudgements",
     )
     parser.add_argument(
         "--metadata",
         nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json",
-    )
-    parser.add_argument(
-        "--debug-level",
-        type=int,
-        default=0,
-        help="Debug level: Higher numbers are less forgiving",
+        help="Path to the metadata.json. The metadata file describes the dataset.",
     )
     args = parser.parse_args()
     load_dataset(args.metadata, args.lexicon, args.cogsets)
