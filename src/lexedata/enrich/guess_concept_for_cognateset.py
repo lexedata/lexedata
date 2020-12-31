@@ -30,20 +30,23 @@ def load_concepts_by_form(dataset: pycldf.Dataset) -> t.Dict[str, str]:
         concepticon_concepts_by_form_id: t.Dict[
             t.Hashable, t.List[t.Optional[t.Hashable]]
         ] = {}
-        concepts = dataset["FormTable"].get_column(
-            dataset.column_names.forms.parameterReference
+        multi = bool(
+            dataset["FormTable"]
+            .get_column(dataset.column_names.forms.parameterReference)
+            .separator
         )
-        multi = bool(concepts.separator)
         for form in tqdm(dataset["FormTable"]):
             if multi:
                 concepticon_concepts_by_form_id[form[dataset.column_names.forms.id]] = [
-                    concept_to_concepticon.get(c) for c in form[concepts.name]
+                    concept_to_concepticon.get(c)
+                    for c in form[dataset.column_names.forms.parameterReference]
                 ]
             else:
                 concepticon_concepts_by_form_id[form[dataset.column_names.forms.id]] = [
-                    concept_to_concepticon.get(form[concepts.name])
+                    concept_to_concepticon.get(
+                        form[dataset.column_names.forms.parameterReference]
+                    )
                 ]
-
         central_concepts = {}
         for form_id, concepts in tqdm(concepticon_concepts_by_form_id.items()):
             centrality = networkx.algorithms.centrality.betweenness_centrality(
@@ -60,7 +63,7 @@ def load_concepts_by_form(dataset: pycldf.Dataset) -> t.Dict[str, str]:
     for form in dataset["FormTable"]:
         concept = form.get(c_f_concept, "")
         central_concepts_by_form_id[form[c_f_id]] = (
-            concept if type(concept) == str else concept[0]
+            concept[0] if isinstance(concept, list) == str else concept
         )
     return central_concepts_by_form_id
 
