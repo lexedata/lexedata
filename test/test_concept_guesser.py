@@ -56,14 +56,23 @@ def test_concepticon_id_of_concepts_correct(copy_wordlist_add_concepticons):
     )
 
 
-# TODO: this test needs a better approach to actually assert that the correct concept is added to each cognateset
-def test_add_concepts_to_cognatesets_of_minimal_correct(copy_wordlist_add_concepticons):
+def test_add_concepts_to_maweti_cognatesets(copy_wordlist_add_concepticons):
     target, dataset = copy_wordlist_add_concepticons
     dataset = add_central_concepts_to_cognateset_table(dataset)
     c_core_concept = dataset["CognatesetTable", "parameterReference"].name
-    # IDs contain the true concept, followed by a single-digit number
     c_id = dataset["CognatesetTable", "id"].name
     concepts_for_cognatesets = [
         (row[c_core_concept], row[c_id]) for row in dataset["CognatesetTable"]
     ]
-    assert all(c[0] in c[1] for c in concepts_for_cognatesets)
+    assert concepts_for_cognatesets == [
+        (None, 'one'), ('one', 'one1'),
+        ('one', 'one2'), (None, 'one3'),
+        ('one', 'one6'), (None, 'two'),
+        ('two', 'two1'), (None, 'three'),
+        ('three', 'three1'), ('two', 'two8'),
+        ('three', 'three9'), (None, 'four'),
+        ('four', 'four1'), ('four', 'four8'),
+        (None, 'five'), (None, 'five2'),
+        ('five', 'five5'),
+        (None, 'five1'), (None, 'five8')
+    ]

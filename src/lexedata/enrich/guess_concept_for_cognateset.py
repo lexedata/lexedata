@@ -65,6 +65,7 @@ def load_concepts_by_form(dataset: pycldf.Dataset)-> t.Dict[str, str]:
                     centrality or concepts, key=lambda k: centrality.get(k, -1)
                 )
             )
+        print(central_concepts)
         return central_concepts
     # if no concepticon references are given or clicks is not available
     central_concepts_by_form_id = dict()
@@ -149,11 +150,13 @@ def add_central_concepts_to_cognateset_table(
     for row in tqdm(table):
         cognateset = row[c_cognateset]
         form = row[c_form]
-        concepts_by_cogset[cognateset] = central_concept_by_form_id(form)
+        concepts_by_cogset[cognateset] = central_concept_by_form_id[form]
+    print(concepts_by_cogset)
     # write cognatesets with central concepts
     write_back = []
     for row in tqdm(dataset["CognatesetTable"]):
         if row[dataset.column_names.cognatesets.id] not in concepts_by_cogset:
+            print(row)
             write_back.append(row)
             continue
         if row[c_core_concept] and not overwrite_existing:
@@ -163,6 +166,7 @@ def add_central_concepts_to_cognateset_table(
             row[dataset.column_names.cognatesets.id]
         ]
         write_back.append(row)
+    print(write_back)
     dataset.write(CognatesetTable=write_back)
     return dataset
 
