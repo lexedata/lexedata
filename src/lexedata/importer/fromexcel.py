@@ -45,9 +45,7 @@ class DB:
     cache: t.Dict[str, t.Dict[t.Hashable, t.Dict[str, t.Any]]]
     source_ids: t.Set[str]
 
-    def __init__(self, output_dataset: pycldf.Wordlist, fname=None):
-        if fname is not None:
-            logger.info("Warning: dbase fname set, but ignored")
+    def __init__(self, output_dataset: pycldf.Wordlist):
         self.dataset = output_dataset
         self.cache = {}
         self.source_ids = set()
@@ -687,12 +685,6 @@ if __name__ == "__main__":
         help="Path to an Excel file containing cogsets and cognatejudgements",
     )
     parser.add_argument(
-        "--db",
-        nargs="?",
-        default="",
-        help="Where to store the temp from reading the word list",
-    )
-    parser.add_argument(
         "--metadata",
         nargs="?",
         type=Path,
@@ -706,10 +698,4 @@ if __name__ == "__main__":
         help="Debug level: Higher numbers are less forgiving",
     )
     args = parser.parse_args()
-
-    if args.db.startswith("sqlite:///"):
-        args.db = args.db[len("sqlite:///") :]
-    if args.db == ":memory:":
-        args.db = ""
-
     load_dataset(args.metadata, args.lexicon, args.cogsets)
