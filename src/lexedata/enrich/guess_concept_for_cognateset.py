@@ -4,14 +4,8 @@ from pathlib import Path
 from tqdm import tqdm
 from csvw.metadata import URITemplate
 import pycldf
-import cldfcatalog
-import cldfbench
 import networkx
-
 from lexedata.util import load_clics
-
-concepticon_path = cldfcatalog.Config.from_file().get_clone("concepticon")
-concepticon = cldfbench.catalogs.Concepticon(concepticon_path)
 
 
 def load_concepts_by_form(dataset: pycldf.Dataset) -> t.Dict[str, str]:
