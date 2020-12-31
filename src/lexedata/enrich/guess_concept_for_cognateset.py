@@ -2,11 +2,6 @@ import argparse
 import typing as t
 from pathlib import Path
 from tqdm import tqdm
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
-
 from csvw.metadata import URITemplate
 import pycldf
 import cldfcatalog
@@ -19,7 +14,7 @@ concepticon_path = cldfcatalog.Config.from_file().get_clone("concepticon")
 concepticon = cldfbench.catalogs.Concepticon(concepticon_path)
 
 
-def load_concepts_by_form(dataset: pycldf.Dataset)-> t.Dict[str, str]:
+def load_concepts_by_form(dataset: pycldf.Dataset) -> t.Dict[str, str]:
     try:
         clics = load_clics()
     except FileNotFoundError:
@@ -47,13 +42,13 @@ def load_concepts_by_form(dataset: pycldf.Dataset)-> t.Dict[str, str]:
         multi = bool(concepts.separator)
         for form in tqdm(dataset["FormTable"]):
             if multi:
-                concepticon_concepts_by_form_id[
-                    form[dataset.column_names.forms.id]
-                ] = [concept_to_concepticon.get(c) for c in form[concepts.name]]
+                concepticon_concepts_by_form_id[form[dataset.column_names.forms.id]] = [
+                    concept_to_concepticon.get(c) for c in form[concepts.name]
+                ]
             else:
-                concepticon_concepts_by_form_id[
-                    form[dataset.column_names.forms.id]
-                ] = [concept_to_concepticon.get(form[concepts.name])]
+                concepticon_concepts_by_form_id[form[dataset.column_names.forms.id]] = [
+                    concept_to_concepticon.get(form[concepts.name])
+                ]
 
         central_concepts = {}
         for form_id, concepts in tqdm(concepticon_concepts_by_form_id.items()):
@@ -61,9 +56,7 @@ def load_concepts_by_form(dataset: pycldf.Dataset)-> t.Dict[str, str]:
                 clics.subgraph([c for c in concepts if c])
             )
             central_concepts[form_id] = concepticon_to_concept.get(
-                max(
-                    centrality or concepts, key=lambda k: centrality.get(k, -1)
-                )
+                max(centrality or concepts, key=lambda k: centrality.get(k, -1))
             )
         print(central_concepts)
         return central_concepts
@@ -73,13 +66,13 @@ def load_concepts_by_form(dataset: pycldf.Dataset)-> t.Dict[str, str]:
     c_f_concept = dataset.column_names.forms.parameterReference
     for form in dataset["FormTable"]:
         concept = form.get(c_f_concept, "")
-        central_concepts_by_form_id[form[c_f_id]] = concept if type(concept) == str else concept[0]
+        central_concepts_by_form_id[form[c_f_id]] = (
+            concept if type(concept) == str else concept[0]
+        )
     return central_concepts_by_form_id
 
 
-def reshape_dataset(
-    dataset: pycldf.Dataset, add_column: bool = True
-) -> pycldf.Dataset:
+def reshape_dataset(dataset: pycldf.Dataset, add_column: bool = True) -> pycldf.Dataset:
 
     # check for existing cognateset table
     if dataset.column_names.cognatesets is None:
@@ -102,10 +95,8 @@ def reshape_dataset(
 
 
 def add_central_concepts_to_cognateset_table(
-        dataset: pycldf.Dataset,
-        add_column: bool = True,
-        overwrite_existing: bool = True
-)->pycldf.Dataset:
+    dataset: pycldf.Dataset, add_column: bool = True, overwrite_existing: bool = True
+) -> pycldf.Dataset:
     central_concept_by_form_id = load_concepts_by_form(dataset)
     dataset = reshape_dataset(dataset, add_column=add_column)
     # Check whether cognate judgements live in the FormTable …
@@ -138,9 +129,7 @@ def add_central_concepts_to_cognateset_table(
     # Load judgements, making sure all cognatesets exist
     for row in tqdm(table):
         if row[c_cognateset] not in cognatesets:
-            write_back.append(
-                {dataset.column_names.cognatesets.id: row[c_cognateset]}
-            )
+            write_back.append({dataset.column_names.cognatesets.id: row[c_cognateset]})
     dataset.write(CognatesetTable=write_back)
     cognatesets = set()
     for row in tqdm(dataset["CognatesetTable"]):
@@ -180,21 +169,20 @@ if __name__ == "__main__":
         help="The wordlist to add Concepticon links to",
     )
     parser.add_argument(
-        "add-column", default=False, action="store_true",
-        help="Activate to add a new column Core_Concept_ID to cognatesetTable"
+        "add-column",
+        default=False,
+        action="store_true",
+        help="Activate to add a new column Core_Concept_ID to cognatesetTable",
     )
     parser.add_argument(
         "--overwrite_existing",
         action="store_true",
         default=False,
-        help="Activate to overwrite existing Core_Concept_ID of cognatesets"
+        help="Activate to overwrite existing Core_Concept_ID of cognatesets",
     )
     args = parser.parse_args()
 
     dataset = pycldf.Wordlist.from_metadata(args.wordlist)
     dataset = add_central_concepts_to_cognateset_table(
-        dataset,
-        add_column=args.add_column,
-        overwrite_existing=args.overwrite_existing
+        dataset, add_column=args.add_column, overwrite_existing=args.overwrite_existing
     )
-

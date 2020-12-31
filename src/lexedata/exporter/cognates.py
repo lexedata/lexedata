@@ -165,7 +165,9 @@ class ExcelWriter:
                     # else read value from cognateset table
                     if header == "Central_Concept" and db_name == "":
                         # this is the concept associated to the first cognate in this cognateset
-                        value = concept_id_by_form_id[all_judgements[cogset[c_cogset_id]][0][c_cognate_form]]
+                        value = concept_id_by_form_id[
+                            all_judgements[cogset[c_cogset_id]][0][c_cognate_form]
+                        ]
                     else:
                         column = self.dataset["CognatesetTable", db_name]
                         if column.separator is None:

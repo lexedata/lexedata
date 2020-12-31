@@ -4,7 +4,9 @@ import shutil
 import pytest
 import pycldf
 
-from lexedata.enrich.guess_concept_for_cognateset import add_central_concepts_to_cognateset_table
+from lexedata.enrich.guess_concept_for_cognateset import (
+    add_central_concepts_to_cognateset_table,
+)
 from lexedata.enrich.guess_concepticon import create_concepticon_for_concepts
 
 
@@ -27,7 +29,7 @@ def copy_wordlist_add_concepticons(request):
 
 def test_value_error_no_concepticonReferenc_for_concepts():
     with pytest.raises(ValueError):
-        dataset = add_central_concepts_to_cognateset_table(
+        add_central_concepts_to_cognateset_table(
             pycldf.Dataset.from_metadata(
                 Path(__file__).parent
                 / "data/cldf/smallmawetiguarani/cldf-metadata.json"
@@ -41,7 +43,7 @@ def test_value_error_no_parameterReference_for_cognateset(
 ):
     target, dataset = copy_wordlist_add_concepticons
     with pytest.raises(ValueError):
-        dataset = add_central_concepts_to_cognateset_table(dataset, add_column=False)
+        add_central_concepts_to_cognateset_table(dataset, add_column=False)
 
 
 def test_concepticon_id_of_concepts_correct(copy_wordlist_add_concepticons):
@@ -65,14 +67,23 @@ def test_add_concepts_to_maweti_cognatesets(copy_wordlist_add_concepticons):
         (row[c_core_concept], row[c_id]) for row in dataset["CognatesetTable"]
     ]
     assert concepts_for_cognatesets == [
-        (None, 'one'), ('one', 'one1'),
-        ('one', 'one2'), (None, 'one3'),
-        ('one', 'one6'), (None, 'two'),
-        ('two', 'two1'), (None, 'three'),
-        ('three', 'three1'), ('two', 'two8'),
-        ('three', 'three9'), (None, 'four'),
-        ('four', 'four1'), ('four', 'four8'),
-        (None, 'five'), (None, 'five2'),
-        ('five', 'five5'),
-        (None, 'five1'), (None, 'five8')
+        (None, "one"),
+        ("one", "one1"),
+        ("one", "one2"),
+        (None, "one3"),
+        ("one", "one6"),
+        (None, "two"),
+        ("two", "two1"),
+        (None, "three"),
+        ("three", "three1"),
+        ("two", "two8"),
+        ("three", "three9"),
+        (None, "four"),
+        ("four", "four1"),
+        ("four", "four8"),
+        (None, "five"),
+        (None, "five2"),
+        ("five", "five5"),
+        (None, "five1"),
+        (None, "five8"),
     ]
