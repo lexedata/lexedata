@@ -63,14 +63,9 @@ if __name__ == "__main__":
         nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json file (default: ./Wordlist-metadata.json)",
+        help="Path to the metadata.json file. Default: ./Wordlist-metadata.json",
     )
-    parser.add_argument(
-        "--debug-level",
-        type=int,
-        default=0,
-        help="Debug level: Higher numbers are less forgiving",
-    )
+    
     args = parser.parse_args()
 
     ws = openpyxl.load_workbook(args.cogsets).active

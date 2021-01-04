@@ -690,7 +690,7 @@ if __name__ == "__main__":
         nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json. The metadata file describes the dataset.",
+        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
     )
     args = parser.parse_args()
     load_dataset(args.metadata, args.lexicon, args.cogsets)
