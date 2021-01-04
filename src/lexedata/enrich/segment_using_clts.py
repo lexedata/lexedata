@@ -44,17 +44,18 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "wordlist",
-        default="cldf-metadata.json",
+        "--metadata",
+        nargs="?",
         type=Path,
-        help="The wordlist to add Concepticon links to",
+        default="Wordlist-metadata.json",
+        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json. "
+             "Segments will be added to the segments column of the formTable of this dataset.",
     )
     parser.add_argument(
         "transcription",
         nargs="?",
         default=None,
-        help="Column containing the IPA transcriptions."
-        "(Default: The CLDF #form column)",
+        help="Column containing the IPA transcriptions. Default: The CLDF #form column",
     )
     args = parser.parse_args()
 
