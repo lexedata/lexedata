@@ -57,15 +57,15 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "wordlist",
-        default="cldf-metadata.json",
+        "--metadata",
+        nargs="?",
         type=Path,
-        help="The wordlist to add Concepticon links to",
+        default="Wordlist-metadata.json",
+        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
     )
     parser.add_argument(
         "output",
         nargs="?",
-        # type=argparse.FileType('w'),
         default="aligned",
         help="Output file to write segmented data to,"
         " without extension .tsv (automatically added)",
@@ -74,13 +74,13 @@ if __name__ == "__main__":
         "--soundclass",
         default="sca",
         choices=["sca", "dolgo", "asjp", "art"],
-        help="Sound class model to use. (default: sca)",
+        help="Sound class model to use. Default: sca",
     )
     parser.add_argument(
         "--threshold",
         default=0.55,
         type=float,
-        help="Cognate clustering threshold value. (default:" " 0.55)",
+        help="Cognate clustering threshold value. Default: 0.55",
     )
     parser.add_argument(
         "--cluster-method",
