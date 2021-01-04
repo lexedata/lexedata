@@ -1,16 +1,16 @@
-import argparse
 import typing as t
 from pathlib import Path
-from tqdm import tqdm
 from csvw.metadata import URITemplate
 import pycldf
 import networkx
 from lexedata.util import load_clics
 
 
-def load_concepts_by_form(
-    dataset: pycldf.Dataset, tqdm=lambda x: x
-) -> t.Dict[str, str]:
+def tqdm(iter, total=0):
+    return iter
+
+
+def load_concepts_by_form(dataset: pycldf.Dataset) -> t.Dict[str, str]:
     try:
         clics = load_clics()
     except FileNotFoundError:
@@ -37,7 +37,10 @@ def load_concepts_by_form(
             .get_column(dataset.column_names.forms.parameterReference)
             .separator
         )
-        for form in tqdm(dataset["FormTable"]):
+        for form in tqdm(
+            dataset["FormTable"],
+            total=dataset["FormTable"].common_props.get("dc:extent"),
+        ):
             if multi:
                 concepticon_concepts_by_form_id[form[dataset.column_names.forms.id]] = [
                     concept_to_concepticon.get(c)
@@ -58,7 +61,7 @@ def load_concepts_by_form(
                 max(centrality or concepts, key=lambda k: centrality.get(k, -1))
             )
         return central_concepts
-    # if no concepticon references are given or clicks is not available
+    # if no concepticon references are given or clics is not available
     central_concepts_by_form_id = dict()
     c_f_id = dataset.column_names.forms.id
     c_f_concept = dataset.column_names.forms.parameterReference
@@ -96,6 +99,7 @@ def add_central_concepts_to_cognateset_table(
     dataset: pycldf.Dataset, add_column: bool = True, overwrite_existing: bool = True
 ) -> pycldf.Dataset:
     central_concept_by_form_id = load_concepts_by_form(dataset)
+    breakpoint()
     dataset = reshape_dataset(dataset, add_column=add_column)
     # Check whether cognate judgements live in the FormTable …
     c_cognateset = dataset.column_names.forms.cognatesetReference
@@ -156,6 +160,9 @@ def add_central_concepts_to_cognateset_table(
 
 
 if __name__ == "__main__":
+    import argparse
+    from tqdm import tqdm
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "wordlist",
