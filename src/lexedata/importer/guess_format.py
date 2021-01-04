@@ -377,13 +377,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Generate a custom lexical dataset parser and dataset metadata for a particular dataset"
     )
-    parser.add_argument("excel", type=Path, help="The Excel file to inspect")
     parser.add_argument(
-        "json",
+        "excel",
         type=Path,
+        help="The Excel file to inspect")
+    parser.add_argument(
+        "--metadata",
         nargs="?",
+        type=Path,
         default="Wordlist-metadata.json",
-        help="The json metadata file to write",
+        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
     )
     args = parser.parse_args()
 
