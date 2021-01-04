@@ -20,10 +20,11 @@ if __name__ == "__main__":
         help="Only list matching languages, don't report statistics",
     )
     parser.add_argument(
-        "--dataset",
-        default="Wordlist-metadata.json",
+        "--metadata",
+        nargs="?",
         type=Path,
-        help="Metadata file or forms.csv file (i.e. metadata-free wordlist) to inspect",
+        default="Wordlist-metadata.json",
+        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
     )
     parser.add_argument(
         "--with-concept",
