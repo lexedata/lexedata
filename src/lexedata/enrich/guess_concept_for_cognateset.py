@@ -8,7 +8,9 @@ import networkx
 from lexedata.util import load_clics
 
 
-def load_concepts_by_form(dataset: pycldf.Dataset) -> t.Dict[str, str]:
+def load_concepts_by_form(
+    dataset: pycldf.Dataset, tqdm=lambda x: x
+) -> t.Dict[str, str]:
     try:
         clics = load_clics()
     except FileNotFoundError:
@@ -162,7 +164,7 @@ if __name__ == "__main__":
         help="The wordlist to add Concepticon links to",
     )
     parser.add_argument(
-        "add-column",
+        "add_column",
         default=False,
         action="store_true",
         help="Activate to add a new column Core_Concept_ID to cognatesetTable",
