@@ -49,7 +49,7 @@ if __name__ == "__main__":
         type=Path,
         default="Wordlist-metadata.json",
         help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json. "
-             "Segments will be added to the segments column of the formTable of this dataset.",
+        "Segments will be added to the segments column of the formTable of this dataset.",
     )
     parser.add_argument(
         "transcription",

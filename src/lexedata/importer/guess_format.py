@@ -377,10 +377,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Generate a custom lexical dataset parser and dataset metadata for a particular dataset"
     )
-    parser.add_argument(
-        "excel",
-        type=Path,
-        help="The Excel file to inspect")
+    parser.add_argument("excel", type=Path, help="The Excel file to inspect")
     parser.add_argument(
         "--metadata",
         nargs="?",

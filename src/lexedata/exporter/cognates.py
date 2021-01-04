@@ -165,7 +165,9 @@ class ExcelWriter:
                     # else read value from cognateset table
                     if header == "Central_Concept" and db_name == "":
                         # this is the concept associated to the first cognate in this cognateset
-                        value = concept_id_by_form_id[all_judgements[cogset[c_cogset_id]][0][c_cognate_form]]
+                        value = concept_id_by_form_id[
+                            all_judgements[cogset[c_cogset_id]][0][c_cognate_form]
+                        ]
                     else:
                         column = self.dataset["CognatesetTable", db_name]
                         if column.separator is None:
@@ -371,14 +373,13 @@ if __name__ == "__main__":
         help="Activate to list the biggest cognatesets first",
     )
     parser.add_argument(
-        "--language-sort-column",
-        help="A column name to sort languages by"
+        "--language-sort-column", help="A column name to sort languages by"
     )
     parser.add_argument(
         "--url-template",
         help="A template string for URLs pointing to individual forms. For example, to"
-             " point to lexibank, you would use https://lexibank.clld.org/values/{:}."
-             " (default: https://example.org/lexicon/{:})",
+        " point to lexibank, you would use https://lexibank.clld.org/values/{:}."
+        " (default: https://example.org/lexicon/{:})",
     )
     parser.add_argument(
         "--add-concepts",
@@ -391,7 +392,7 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="Activate to output all forms that don't belong to a cognateset. "
-             "For each form, a singleton cognateset is created.",
+        "For each form, a singleton cognateset is created.",
     )
     # TODO: Derive URL template from the "special:domain" property of the
     # wordlist, where it exists? So something like

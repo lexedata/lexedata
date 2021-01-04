@@ -140,7 +140,7 @@ if __name__ == "__main__":
         type=Path,
         default="Wordlist-metadata.json",
         help="Path to the metadata.json. Concepticon Concepts are added to 'parameterTable'"
-             " of this dataset. Default: ./Wordlist-metadata.json",
+        " of this dataset. Default: ./Wordlist-metadata.json",
     )
     parser.add_argument(
         "--overwrite",
@@ -161,7 +161,7 @@ if __name__ == "__main__":
         default=[],
         type=equal_separated,
         help="Maps from column names to language codes, eg. '-l GLOSS=en'. "
-             "If no language mappings are given, try to understand the #id column in English.",
+        "If no language mappings are given, try to understand the #id column in English.",
     )
     args = parser.parse_args()
 

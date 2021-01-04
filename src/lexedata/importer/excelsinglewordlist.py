@@ -194,15 +194,13 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Parse Excel file into CSV")
     parser.add_argument(
-        "excel",
-        type=openpyxl.load_workbook,
-        help="The Excel file to parse"
+        "excel", type=openpyxl.load_workbook, help="The Excel file to parse"
     )
     parser.add_argument(
         "--metadata",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json"
+        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
     )
     parser.add_argument(
         "--concept-name",
@@ -213,10 +211,7 @@ if __name__ == "__main__":
         "switch if you have concept Names in the wordlist instead.",
     )
     parser.add_argument(
-        "--sheet",
-        type=str,
-        action="append",
-        help="Sheets to parse. Default: all"
+        "--sheet", type=str, action="append", help="Sheets to parse. Default: all"
     )
     parser.add_argument(
         "--match-form",

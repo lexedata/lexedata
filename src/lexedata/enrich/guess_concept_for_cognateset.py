@@ -160,13 +160,13 @@ if __name__ == "__main__":
         type=Path,
         default="Wordlist-metadata.json",
         help="Path to the metadata.json. Concepts are added to cognatesets"
-             " of this dataset. Default: ./Wordlist-metadata.json",
+        " of this dataset. Default: ./Wordlist-metadata.json",
     )
     parser.add_argument(
         "--add-column",
         default=False,
         action="store_true",
-        help="Adds column 'Core_Concept_ID' to 'cognatesetTable'"
+        help="Adds column 'Core_Concept_ID' to 'cognatesetTable'",
     )
     args = parser.parse_args()
 

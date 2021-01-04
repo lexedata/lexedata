@@ -7,7 +7,7 @@ import csv
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Transfer metadata of existing cognate sets to new cognatesets that may "
-                    "have different IDs, but the same composition in terms of contained forms."
+        "have different IDs, but the same composition in terms of contained forms."
     )
     parser.add_argument(
         "judgements",

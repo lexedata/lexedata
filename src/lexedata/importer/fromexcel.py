@@ -671,7 +671,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="Imports a dataset from an excel file into CLDF. "
-                    "The metadata file contains information about the structure of the dataset."
+        "The metadata file contains information about the structure of the dataset."
     )
     parser.add_argument(
         "lexicon",
