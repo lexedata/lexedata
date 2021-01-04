@@ -135,22 +135,24 @@ def create_concepticon_for_concepts(dataset: pycldf.Dataset, overwrite: bool = T
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "wordlist",
-        default="cldf-metadata.json",
+        "--metadata",
+        nargs="?",
         type=Path,
-        help="The wordlist to add Concepticon links to",
+        default="Wordlist-metadata.json",
+        help="Path to the metadata.json. Concepticon Concepts are added to 'parameterTable'"
+             " of this dataset. Default: ./Wordlist-metadata.json",
     )
     parser.add_argument(
         "--overwrite",
         action="store_true",
         default=False,
-        help="Set concepticon reference even if one exists already",
+        help="Activate to set concepticon reference even if one exists already",
     )
     parser.add_argument(
         "--concepticon-glosses",
         action="store_true",
         default=False,
-        help="Add a column containing Concepticon's concept names (glosses)",
+        help="Activate to add a column containing Concepticon's concept names (glosses)",
     )
     parser.add_argument(
         "--language",
@@ -158,7 +160,8 @@ if __name__ == "__main__":
         action="append",
         default=[],
         type=equal_separated,
-        help="Maps from column names to language codes, eg. '-l GLOSS=en'. If no language mappings are given, try to understand the #id column in English.",
+        help="Maps from column names to language codes, eg. '-l GLOSS=en'. "
+             "If no language mappings are given, try to understand the #id column in English.",
     )
     args = parser.parse_args()
 
