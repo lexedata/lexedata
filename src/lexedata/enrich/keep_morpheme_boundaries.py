@@ -11,11 +11,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "judgements",
-        type=Path
+        type=Path,
+        help="Path to the csv file containing the cognate judgements.",
     )
     parser.add_argument(
         "alignments",
-        type=Path
+        type=Path,
+        help="Path to the file containing the alignments.",
     )
     parser.add_argument(
         "--output-file",
