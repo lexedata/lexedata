@@ -64,11 +64,10 @@ if __name__ == "__main__":
         help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
     )
     parser.add_argument(
-        "output",
-        nargs="?",
-        default="aligned",
-        help="Output file to write segmented data to,"
-        " without extension .tsv (automatically added)",
+        "--output-file",
+        "-o",
+        type=Path,
+        help="File path for the generated output file.",
     )
     parser.add_argument(
         "--soundclass",

@@ -359,9 +359,10 @@ if __name__ == "__main__":
         help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
     )
     parser.add_argument(
-        "--excel",
-        help="Excel output file path. Default: ./Cognates.xlsx",
-        default="Cognates.xlsx"
+        "--output-file",
+        "-o",
+        type=Path,
+        help="File path for the generated cognate excel file.",
     )
     parser.add_argument(
         "--size-sort",
