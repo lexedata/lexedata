@@ -194,21 +194,29 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Parse Excel file into CSV")
     parser.add_argument(
-        "excel", type=openpyxl.load_workbook, help="The Excel file to parse"
+        "excel",
+        type=openpyxl.load_workbook,
+        help="The Excel file to parse"
     )
     parser.add_argument(
-        "--metadata", type=Path, default="", help="Path to the metadata file"
+        "--metadata",
+        type=Path,
+        default="Wordlist-metadata.json",
+        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json"
     )
     parser.add_argument(
         "--concept-name",
         type=str,
         help="Column to interpret as concept names "
-        "(default: assume the #parameterReference column, usually named 'Concept_ID' "
+        "Default: assume the #parameterReference column, usually named 'Concept_ID' "
         "or similar, matches the IDs of the concept. Use this "
-        "switch if you have concept Names in the wordlist instead.)",
+        "switch if you have concept Names in the wordlist instead.",
     )
     parser.add_argument(
-        "--sheet", type=str, action="append", help="Sheets to parse (default: all)"
+        "--sheet",
+        type=str,
+        action="append",
+        help="Sheets to parse. Default: all"
     )
     parser.add_argument(
         "--match-form",
@@ -229,7 +237,7 @@ if __name__ == "__main__":
         "-<",
         action="store_true",
         default=False,
-        help="Ignore columns missing from in the Excel table compared to the dataset",
+        help="Ignore columns missing from the Excel table compared to the dataset",
     )
     parser.add_argument(
         "--exclude-sheet",

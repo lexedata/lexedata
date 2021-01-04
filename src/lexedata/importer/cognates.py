@@ -65,7 +65,7 @@ if __name__ == "__main__":
         default="Wordlist-metadata.json",
         help="Path to the metadata.json file. Default: ./Wordlist-metadata.json",
     )
-    
+
     args = parser.parse_args()
 
     ws = openpyxl.load_workbook(args.cogsets).active
