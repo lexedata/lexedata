@@ -441,8 +441,10 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--metadata",
-        help="Path to metadata file for dataset input",
-        default="forms.csv",
+        nargs="?",
+        type=Path,
+        default="Wordlist-metadata.json",
+        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
     )
     parser.add_argument(
         "--output-file",
