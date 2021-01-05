@@ -48,7 +48,6 @@ def concepts_to_concepticon(dataset: pycldf.Wordlist) -> t.Mapping[ConceptID, in
 def central_concept(
     concepts: t.Counter[ConceptID], concepts_to_concepticon: t.Mapping[ConceptID, int]
 ):
-    central_concepts = {}
     centralities = networkx.algorithms.centrality.betweenness_centrality(
         clics.subgraph({concepts_to_concepticon.get(c) for c in concepts} - {None})
     )
@@ -155,7 +154,7 @@ def connected_concepts(
 
 if __name__ == "__main__":
     import argparse
-    from tqdm import tqdm
+    from tqdm import tqdm  # noqa
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
