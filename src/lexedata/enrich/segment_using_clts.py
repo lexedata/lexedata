@@ -90,7 +90,7 @@ if __name__ == "__main__":
         help="Column containing the IPA transcriptions. Default: The CLDF #form column",
     )
     parser.add_argument(
-        "--overwrite-existing",
+        "--overwrite",
         action="store_true",
         default=False,
         help="Overwrite segments already given in the dataset",
