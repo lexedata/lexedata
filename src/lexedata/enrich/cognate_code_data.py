@@ -74,13 +74,13 @@ if __name__ == "__main__":
         "--soundclass",
         default="sca",
         choices=["sca", "dolgo", "asjp", "art"],
-        help="Sound class model to use. Default: sca",
+        help="Sound class model to use. (default: sca)",
     )
     parser.add_argument(
         "--threshold",
         default=0.55,
         type=float,
-        help="Cognate clustering threshold value. Default: 0.55",
+        help="Cognate clustering threshold value. (default: 0.55)",
     )
     parser.add_argument(
         "--cluster-method",
