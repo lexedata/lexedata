@@ -58,16 +58,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--metadata",
-        nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "--output-file",
         "-o",
         type=Path,
-        help="File path for the generated output file.",
+        default="aligned",
+        help="Output file to write segmented data to,"
+             " without extension .tsv (automatically added) (default: aligned)",
     )
     parser.add_argument(
         "--soundclass",
@@ -206,7 +207,7 @@ if __name__ == "__main__":
     lex.output("tsv", filename="auto-clusters")
     alm = lingpy.Alignments(lex, ref="partialcognateids", fuzzy=True)
     alm.align(method="progressive")
-    alm.output("tsv", filename=args.output, ignore="all", prettify=False)
+    alm.output("tsv", filename=args.output_file, ignore="all", prettify=False)
 
     try:
         dataset.add_component("CognateTable")
@@ -217,7 +218,7 @@ if __name__ == "__main__":
     except ValueError:
         ...
 
-    read_back = csv.DictReader(open(args.output + ".tsv"), delimiter="\t")
+    read_back = csv.DictReader(open(args.output_file + ".tsv"), delimiter="\t")
     cognatesets = {}
     judgements = []
     i = 1
