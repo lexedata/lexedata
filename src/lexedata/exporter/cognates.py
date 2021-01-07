@@ -355,14 +355,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--metadata",
-        nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
-        "--output-file",
-        "-o",
+        "excel",
         type=Path,
         help="File path for the generated cognate excel file.",
     )
@@ -370,10 +368,11 @@ if __name__ == "__main__":
         "--size-sort",
         action="store_true",
         default=False,
-        help="Activate to list the biggest cognatesets first",
+        help="List the biggest cognatesets first",
     )
     parser.add_argument(
-        "--language-sort-column", help="A column name to sort languages by"
+        "--language-sort-column",
+        help="A column name to sort languages by"
     )
     parser.add_argument(
         "--url-template",
@@ -385,13 +384,13 @@ if __name__ == "__main__":
         "--add-concepts",
         action="store_true",
         default=False,
-        help="Activate to output the central concept associated with each cognateset",
+        help="Output the central concept associated with each cognateset",
     )
     parser.add_argument(
         "--add-singletons",
         action="store_true",
         default=False,
-        help="Activate to output all forms that don't belong to a cognateset. "
+        help="Output all forms that don't belong to a cognateset. "
         "For each form, a singleton cognateset is created.",
     )
     # TODO: Derive URL template from the "special:domain" property of the
