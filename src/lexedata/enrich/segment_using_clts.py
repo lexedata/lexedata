@@ -102,4 +102,4 @@ if __name__ == "__main__":
     if args.transcription is None:
         args.transcription = dataset.column_names.forms.form
     # add segments to FormTable
-    add_segments_to_dataset(dataset, args.transcription, args.overwrite_existing)
+    add_segments_to_dataset(dataset, args.transcription, args.overwrite)
