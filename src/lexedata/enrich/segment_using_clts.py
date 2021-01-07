@@ -42,7 +42,9 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Adds #segments to the #formTable and segment column if not existing."
+    )
     parser.add_argument(
         "--metadata",
         type=Path,
