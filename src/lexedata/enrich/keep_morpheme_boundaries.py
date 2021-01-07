@@ -12,12 +12,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "judgements",
         type=Path,
-        help="Path to the csv file containing the cognate judgements.",
+        help="Path to the csv file containing the cognate judgements",
     )
     parser.add_argument(
         "alignments",
         type=Path,
-        help="Path to the file containing the alignments.",
+        help="Path to the file containing the alignments",
     )
     # TODO: set appropriate default
     parser.add_argument(
@@ -25,7 +25,7 @@ if __name__ == "__main__":
         "-o",
         type=Path,
         default="cognate.csv",
-        help="Path to the output file.",
+        help="Path to the output file",
     )
     args = parser.parse_args()
 
