@@ -45,17 +45,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--metadata",
-        nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json. "
-        "Segments will be added to the segments column of the formTable of this dataset.",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "transcription",
         nargs="?",
         default=None,
-        help="Column containing the IPA transcriptions. Default: The CLDF #form column",
+        help="Column containing the IPA transcriptions (default: The CLDF #form column)",
     )
     args = parser.parse_args()
 
