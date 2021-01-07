@@ -668,10 +668,10 @@ def load_dataset(
 if __name__ == "__main__":
     import argparse
     import pycldf
-
+    # TODO: add link to example
     parser = argparse.ArgumentParser(
         description="Imports a dataset from an excel file into CLDF. "
-        "The metadata file contains information about the structure of the dataset."
+        "The import is configured by a special key in the metadata file, check <link to example> for examples."
     )
     parser.add_argument(
         "lexicon",
@@ -681,16 +681,15 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--cogsets",
-        nargs="?",
+        type=Path,
         default="",
         help="Path to an optional second Excel file containing cogsets and cognatejudgements",
     )
     parser.add_argument(
         "--metadata",
-        nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     args = parser.parse_args()
     load_dataset(args.metadata, args.lexicon, args.cogsets)
