@@ -74,13 +74,13 @@ if __name__ == "__main__":
         "--soundclass",
         default="sca",
         choices=["sca", "dolgo", "asjp", "art"],
-        help="Sound class model to use. (default: sca)",
+        help="Sound class model to use (default: sca)",
     )
     parser.add_argument(
         "--threshold",
         default=0.55,
         type=float,
-        help="Cognate clustering threshold value. (default: 0.55)",
+        help="Cognate clustering threshold value (default: 0.55)",
     )
     parser.add_argument(
         "--cluster-method",
@@ -94,27 +94,27 @@ if __name__ == "__main__":
         "--gop",
         default=-2,
         type=float,
-        help="Gap opening penalty for the clustering" "procedure. (default: -2)",
+        help="Gap opening penalty for the clustering procedure (default: -2)",
     )
     parser.add_argument(
         "--mode",
         default="overlap",
         choices=["global", "local", "overlap", "dialign"],
-        help="Select the mode for the alignment analysis." "(default: overlap)",
+        help="Select the mode for the alignment analysis (default: overlap)",
     )
     parser.add_argument(
         "--ratio",
         default=1.5,
         type=float,
         help="Ratio of language-pair specific vs. general"
-        " scores in the LexStat algorithm. (default: 1.5)",
+        " scores in the LexStat algorithm (default: 1.5)",
     )
     parser.add_argument(
         "--initial-threshold",
         default=0.7,
         type=float,
         help="Threshold value for the initial pairs used to"
-        "bootstrap the calculation. (default: 0.7)",
+        "bootstrap the calculation (default: 0.7)",
     )
     args = parser.parse_args()
 
