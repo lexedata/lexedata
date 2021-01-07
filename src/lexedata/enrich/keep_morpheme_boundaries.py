@@ -19,10 +19,12 @@ if __name__ == "__main__":
         type=Path,
         help="Path to the file containing the alignments.",
     )
+    # TODO: set appropriate default
     parser.add_argument(
         "--output-file",
         "-o",
         type=Path,
+        default="cognate.csv",
         help="Path to the output file.",
     )
     args = parser.parse_args()
