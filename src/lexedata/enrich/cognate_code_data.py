@@ -118,7 +118,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    dataset = pycldf.Wordlist.from_metadata(args.wordlist)
+    dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
     def filter(row: t.Dict[str, t.Any]) -> bool:
         row["tokens"] = [
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     ), "Dataset must have a CLDF #segments column."
 
     lex = lingpy.compare.partial.Partial.from_cldf(
-        args.wordlist,
+        args.metadata,
         filter=filter,
         columns=["doculect", "concept", "tokens"],
         model=lingpy.data.model.Model(args.soundclass),
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     try:
         scorers_etc = lingpy.compare.lexstat.LexStat(
             filename="lexstats-{:}-{:s}{:s}.tsv".format(
-                sha1(args.wordlist), args.soundclass, ratio_str
+                sha1(args.metadata), args.soundclass, ratio_str
             )
         )
         lex.scorer = scorers_etc.scorer
@@ -178,7 +178,7 @@ if __name__ == "__main__":
         lex.output(
             "tsv",
             filename="lexstats-{:}-{:s}{:s}".format(
-                sha1(args.wordlist), args.soundclass, ratio_str
+                sha1(args.metadata), args.soundclass, ratio_str
             ),
             ignore=[],
         )
