@@ -376,6 +376,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--url-template",
+        type=str,
+        default="https://example.org/lexicon/{:})",
         help="A template string for URLs pointing to individual forms. For example, to"
         " point to lexibank, you would use https://lexibank.clld.org/values/{:}."
         " (default: https://example.org/lexicon/{:})",
@@ -400,6 +402,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     E = ExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
+        database_url=args.url_template,
         add_central_concepts=args.add_concepts,
         singleton_cognate=args.add_singletons,
     )
