@@ -243,12 +243,6 @@ if __name__ == "__main__":
         help="Sheets not to parse",
     )
     parser.add_argument(
-        "--add-running-id",
-        action="store_true",
-        default=False,
-        help="Add an automatic integer 'ID' column",
-    )
-    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
