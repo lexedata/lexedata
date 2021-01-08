@@ -46,7 +46,7 @@ if __name__ == "__main__":
     with args.judgements.open() as judgements_file:
         judgements = csv.DictReader(judgements_file)
         out = csv.DictWriter(
-            args.out.open("w"), judgements.fieldnames, dialect=judgements.dialect
+            args.output_file.open("w"), judgements.fieldnames, dialect=judgements.dialect
         )
         out.writeheader()
         for line in judgements:
