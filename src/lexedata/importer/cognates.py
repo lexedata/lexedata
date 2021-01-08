@@ -50,7 +50,7 @@ class CognateEditParser(ExcelCognateParser):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description="Load a Maweti-Guarani-style dataset into CLDF"
+        description="Load #cognate and #cognatesets from excel file into CLDF"
     )
     parser.add_argument(
         "cogsets",
@@ -60,10 +60,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--metadata",
-        nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json file. Default: ./Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
 
     args = parser.parse_args()
