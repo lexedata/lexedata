@@ -45,13 +45,18 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
         if segment.type == "unknownsound":
             logging.warning(
                 "Unknown sound '%s' in form '%s' (segment #%d). "
-                "Sound was added unchanged to segments.", segment, form, s + 1
+                "Sound was added unchanged to segments.",
+                segment,
+                form,
+                s + 1,
             )
     segments = [str(s) for s in segments]
     return segments
 
 
-def add_segments_to_dataset(dataset: pycldf.Dataset, transcription: str, overwrite_existing: bool):
+def add_segments_to_dataset(
+    dataset: pycldf.Dataset, transcription: str, overwrite_existing: bool
+):
     if dataset.column_names.forms.segments is None:
         # Create a Segments column in FormTable
         dataset.add_columns("FormTable", "Segments")

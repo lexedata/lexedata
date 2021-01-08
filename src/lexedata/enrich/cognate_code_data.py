@@ -68,7 +68,7 @@ if __name__ == "__main__":
         type=Path,
         default="aligned",
         help="Output file to write segmented data to,"
-             " without extension .tsv (automatically added) (default: aligned)",
+        " without extension .tsv (automatically added) (default: aligned)",
     )
     parser.add_argument(
         "--soundclass",

@@ -30,7 +30,7 @@ if __name__ == "__main__":
         type=Path,
         default="forms.csv",
         help="Path to the JSON metadata or forms.csv file, i.e. metadata-free wordlist "
-             "(default: ./forms.csv)",
+        "(default: ./forms.csv)",
     )
     parser.add_argument(
         "--with-concept",

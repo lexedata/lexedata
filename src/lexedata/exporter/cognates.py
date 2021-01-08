@@ -371,8 +371,7 @@ if __name__ == "__main__":
         help="List the biggest cognatesets first",
     )
     parser.add_argument(
-        "--language-sort-column",
-        help="A column name to sort languages by"
+        "--language-sort-column", help="A column name to sort languages by"
     )
     parser.add_argument(
         "--url-template",

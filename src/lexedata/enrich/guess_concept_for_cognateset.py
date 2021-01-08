@@ -153,10 +153,12 @@ class ConceptGuesser:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="""
+    parser = argparse.ArgumentParser(
+        description="""
     Writes a concept reference column to #cognatesetTable based on the concepts linked to the cognateset
     through the cognate judgement.
-    """)
+    """
+    )
     parser.add_argument(
         "--metadata",
         type=Path,

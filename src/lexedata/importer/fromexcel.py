@@ -668,10 +668,11 @@ def load_dataset(
 if __name__ == "__main__":
     import argparse
     import pycldf
+
     parser = argparse.ArgumentParser(
         description="Imports a dataset from an excel file into CLDF. "
-                    "The import is configured by a special key in the metadata file, check "
-                    "./test/data/cldf/smallmawetiguarani/Wordlist-metadata.json for examples."
+        "The import is configured by a special key in the metadata file, check "
+        "./test/data/cldf/smallmawetiguarani/Wordlist-metadata.json for examples."
     )
     parser.add_argument(
         "lexicon",

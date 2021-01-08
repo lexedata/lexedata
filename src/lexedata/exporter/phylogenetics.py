@@ -455,7 +455,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--code-column",
         type=str,
-        help="Name of the code column for metadata-free wordlists"
+        help="Name of the code column for metadata-free wordlists",
     )
     parser.add_argument(
         "--languages-list",
