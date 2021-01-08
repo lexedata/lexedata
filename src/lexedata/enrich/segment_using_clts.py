@@ -97,7 +97,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    dataset = pycldf.Wordlist.from_metadata(args.wordlist)
+    dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
     if args.transcription is None:
         args.transcription = dataset.column_names.forms.form
