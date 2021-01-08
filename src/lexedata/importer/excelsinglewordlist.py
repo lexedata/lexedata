@@ -192,7 +192,7 @@ def read_single_excel_sheet(
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Parse Excel file into CSV")
+    parser = argparse.ArgumentParser(description="Add forms from Excel file to dataset")
     parser.add_argument(
         "excel", type=openpyxl.load_workbook, help="The Excel file to parse"
     )
@@ -200,7 +200,7 @@ if __name__ == "__main__":
         "--metadata",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "--concept-name",
@@ -211,7 +211,7 @@ if __name__ == "__main__":
         "switch if you have concept Names in the wordlist instead.",
     )
     parser.add_argument(
-        "--sheet", type=str, action="append", help="Sheets to parse. Default: all"
+        "--sheet", type=str, action="append", help="Sheets to parse. (default: all)"
     )
     parser.add_argument(
         "--match-form",
