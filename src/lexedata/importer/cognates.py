@@ -55,8 +55,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "cogsets",
         nargs="?",
-        default="Cognates.xlsx",
-        help="Path to an Excel file containing cogsets and cognatejudgements",
+        default="cognates.xlsx",
+        help="Path to an Excel file containing cogsets and cognatejudgements (default: cognates.xlsx)",
     )
     parser.add_argument(
         "--metadata",
