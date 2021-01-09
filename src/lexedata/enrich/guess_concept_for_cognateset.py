@@ -83,34 +83,6 @@ def reshape_dataset(
     return dataset
 
 
-def add_central_concepts_to_cognateset_table(
-    dataset: pycldf.Dataset,
-    central_concept: t.Mapping[CognatesetID, ConceptID],
-    add_column: bool = True,
-    overwrite_existing: bool = True,
-) -> pycldf.Dataset:
-    dataset = reshape_dataset(dataset, add_column=add_column)
-    c_core_concept = dataset.column_names.cognatesets.parameterReference
-    if c_core_concept is None:
-        raise ValueError(
-            f"Dataset {dataset:} had no parameterReference column in a CognatesetTable"
-            " and is thus not compatible with this script."
-        )
-
-    # write cognatesets with central concepts
-    write_back = []
-    for row in tqdm(
-        dataset["CognatesetTable"],
-        total=dataset["CognatesetTable"].common_props.get("dc:extent"),
-    ):
-        row[c_core_concept] = central_concept.get(
-            row[dataset.column_names.cognatesets.id]
-        )
-        write_back.append(row)
-    dataset.write(CognatesetTable=write_back)
-    return dataset
-
-
 def connected_concepts(
     dataset: pycldf.Wordlist,
 ) -> t.Mapping[CognatesetID, t.Counter[ConceptID]]:
@@ -152,6 +124,53 @@ def connected_concepts(
     }
 
 
+
+def add_central_concepts_to_cognateset_table(
+    dataset: pycldf.Dataset,
+    add_column: bool = True,
+    overwrite_existing: bool = True,
+) -> pycldf.Dataset:
+    # create mapping cognateset to central concept
+    try:
+        clics: t.Optional[networkx.Graph] = load_clics()
+    except FileNotFoundError:
+        clics = None
+    concepts_of_cognateset: t.Mapping[
+        CognatesetID, t.Counter[ConceptID]
+    ] = connected_concepts(dataset)
+    central: t.Mapping[str, str] = {}
+    if clics and dataset.column_names.parameters.concepticonReference:
+        concept_to_concepticon = concepts_to_concepticon(dataset)
+        for cognateset, concepts in concepts_of_cognateset.items():
+            central[cognateset] = central_concept(concepts, concept_to_concepticon)
+    else:
+        for cognateset, concepts in concepts_of_cognateset.items():
+            central[cognateset] = central_concept(concepts, {})
+
+    dataset = reshape_dataset(dataset, add_column=add_column)
+    c_core_concept = dataset.column_names.cognatesets.parameterReference
+    if c_core_concept is None:
+        raise ValueError(
+            f"Dataset {dataset:} had no parameterReference column in a CognatesetTable"
+            " and is thus not compatible with this script."
+        )
+
+    # write cognatesets with central concepts
+    write_back = []
+    for row in tqdm(
+        dataset["CognatesetTable"],
+        total=dataset["CognatesetTable"].common_props.get("dc:extent"),
+    ):
+        if not overwrite_existing and row[c_core_concept]:
+            continue
+        row[c_core_concept] = central.get(
+            row[dataset.column_names.cognatesets.id]
+        )
+        write_back.append(row)
+    dataset.write(CognatesetTable=write_back)
+    return dataset
+
+
 if __name__ == "__main__":
     import argparse
     from tqdm import tqdm  # noqa
@@ -176,28 +195,11 @@ if __name__ == "__main__":
         help="Activate to overwrite existing Core_Concept_ID of cognatesets",
     )
     args = parser.parse_args()
-    try:
-        clics: t.Optional[networkx.Graph] = load_clics()
-    except FileNotFoundError:
-        clics = None
 
     dataset = pycldf.Wordlist.from_metadata(args.wordlist)
 
-    concepts_of_cognateset: t.Mapping[
-        CognatesetID, t.Counter[ConceptID]
-    ] = connected_concepts(dataset)
-    central: t.Mapping[str, str] = {}
-    if clics and dataset.column_names.parameters.concepticonReference:
-        concept_to_concepticon = concepts_to_concepticon(dataset)
-        for cognateset, concepts in concepts_of_cognateset.items():
-            central[cognateset] = central_concept(concepts, concept_to_concepticon)
-    else:
-        for cognateset, concepts in concepts_of_cognateset.items():
-            central[cognateset] = central_concept(concepts, {})
-
     add_central_concepts_to_cognateset_table(
         dataset,
-        central,
         add_column=args.add_column,
         overwrite_existing=args.overwrite_existing,
     )
