@@ -46,7 +46,7 @@ def concepts_to_concepticon(dataset: pycldf.Wordlist) -> t.Mapping[ConceptID, in
 
 
 def central_concept(
-    concepts: t.Counter[ConceptID], concepts_to_concepticon: t.Mapping[ConceptID, int]
+    concepts: t.Counter[ConceptID], concepts_to_concepticon: t.Mapping[ConceptID, int], clics
 ):
     centralities = networkx.algorithms.centrality.betweenness_centrality(
         clics.subgraph({concepts_to_concepticon.get(c) for c in concepts} - {None})
@@ -142,8 +142,9 @@ def add_central_concepts_to_cognateset_table(
     if clics and dataset.column_names.parameters.concepticonReference:
         concept_to_concepticon = concepts_to_concepticon(dataset)
         for cognateset, concepts in concepts_of_cognateset.items():
-            central[cognateset] = central_concept(concepts, concept_to_concepticon)
+            central[cognateset] = central_concept(concepts, concept_to_concepticon, clics)
     else:
+        # TODO: @Gereon, this part will not work, central_concept requires clics which is not given
         for cognateset, concepts in concepts_of_cognateset.items():
             central[cognateset] = central_concept(concepts, {})
 
