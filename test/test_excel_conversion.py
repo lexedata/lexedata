@@ -18,6 +18,7 @@ from lexedata.importer.cognates import CognateEditParser
     params=[
         "data/cldf/minimal/cldf-metadata.json",
         "data/cldf/smallmawetiguarani/cldf-metadata.json",
+        "data/cldf/smallarawak/arawak-metadata.json",
     ]
 )
 def cldf_wordlist(request):
