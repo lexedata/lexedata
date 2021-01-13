@@ -51,6 +51,34 @@ def central_concept(
     concepts_to_concepticon: t.Mapping[ConceptID, int],
     clics: t.Optional[networkx.Graph],
 ):
+    """Find the most central concept among a weighted set.
+
+    If the concepts are not linked to Concepticon/CLICS, we can only take the
+    simple majority among the given concepts.
+
+    >>> concepts = {"woman": 3, "mother": 4, "aunt": 3}
+    >>> central_concept(concepts, {}, None)
+    "mother"
+
+    However, if the concepts can be linked to the CLICS graph, centrality
+    actually can be defined using that graph.
+
+    >>> concepticon_mapping = {"arm": 1673, "five": 493, "hand": 1277, "leaf": 628}
+    >>> central_concept(
+    ...   collections.Counter(["arm", "hand", "five", "leaf"]),
+    ...   concepticon_mapping,
+    ...   load_clics()
+    ... )
+    "hand"
+
+    When counts and concepticon references are both given, the value with the
+    maximum product of CLICS centrality and count is returned. If the concepts
+    do not form a connected subgraph in CLICS (eg. 'five', 'hand', 'lower arm',
+    'palm of hand' – with no attested form meaning 'arm' to link them), only
+    centrality within the disjoint subgraphs is considered, so in this example,
+    'hand' would be considered the most central concept.
+
+    """
     centralities: t.Mapping[ConceptID, float]
     if clics is None:
         centralities = {}
