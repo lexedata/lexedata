@@ -153,15 +153,23 @@ class ConceptGuesser:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "wordlist",
-        default="cldf-metadata.json",
-        type=Path,
-        help="The wordlist to add Concepticon links to",
+    parser = argparse.ArgumentParser(
+        description="""
+    Writes a concept reference column to #cognatesetTable based on the concepts linked to the cognateset
+    through the cognate judgement.
+    """
     )
     parser.add_argument(
-        "--no-add-column", default=False, action="store_true", help="Add the column?"
+        "--metadata",
+        type=Path,
+        default="Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
+    )
+    parser.add_argument(
+        "--no-add-column",
+        default=False,
+        action="store_true",
+        help="Adds column 'Core_Concept_ID' to #cognatesetTable",
     )
     args = parser.parse_args()
 

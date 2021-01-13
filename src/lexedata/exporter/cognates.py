@@ -165,7 +165,9 @@ class ExcelWriter:
                     # else read value from cognateset table
                     if header == "Central_Concept" and db_name == "":
                         # this is the concept associated to the first cognate in this cognateset
-                        value = concept_id_by_form_id[all_judgements[cogset[c_cogset_id]][0][c_cognate_form]]
+                        value = concept_id_by_form_id[
+                            all_judgements[cogset[c_cogset_id]][0][c_cognate_form]
+                        ]
                     else:
                         column = self.dataset["CognatesetTable", db_name]
                         if column.separator is None:
@@ -353,11 +355,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--metadata",
-        help="Path to metadata file for dataset input",
+        type=Path,
         default="Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
-        "--excel", help="Excel output file path", default="Cognates.xlsx"
+        "excel",
+        type=Path,
+        help="File path for the generated cognate excel file.",
     )
     parser.add_argument(
         "--size-sort",
@@ -370,6 +375,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--url-template",
+        type=str,
+        default="https://example.org/lexicon/{:})",
         help="A template string for URLs pointing to individual forms. For example, to"
         " point to lexibank, you would use https://lexibank.clld.org/values/{:}."
         " (default: https://example.org/lexicon/{:})",
@@ -378,13 +385,13 @@ if __name__ == "__main__":
         "--add-concepts",
         action="store_true",
         default=False,
-        help="Activate to output the centrale concept associated with each cognateset",
+        help="Output the central concept associated with each cognateset",
     )
     parser.add_argument(
         "--add-singletons",
         action="store_true",
         default=False,
-        help="Activate to output all forms that don't belong to a cognateset. "
+        help="Output all forms that don't belong to a cognateset. "
         "For each form, a singleton cognateset is created.",
     )
     # TODO: Derive URL template from the "special:domain" property of the
@@ -394,6 +401,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     E = ExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
+        database_url=args.url_template,
         add_central_concepts=args.add_concepts,
         singleton_cognate=args.add_singletons,
     )
