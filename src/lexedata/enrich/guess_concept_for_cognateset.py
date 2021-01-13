@@ -211,24 +211,42 @@ if __name__ == "__main__":
     import argparse
     from tqdm import tqdm  # noqa
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="""Add central concepts to cognatesets.
+
+        Write a concept reference column to #CognatesetTable based on the
+        concepts linked to the cognateset through the cognate judgement, using
+        the central concepts according to CLICS if links to Concepticon are
+        available.
+
+        You probably want to run this with `--add-column` (the default) the
+        first time you run it, and with `--no-add-column --overwrite-existing`
+        after you heavily edited the cognate sets afterwards."""
+    )
+
     parser.add_argument(
-        "wordlist",
-        default="cldf-metadata.json",
+        "--metadata",
         type=Path,
-        help="The wordlist to add Concepticon links to",
+        default="Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
-        "add_column",
-        default=False,
+        "--add-column",
+        default=True,
         action="store_true",
-        help="Activate to add a new column Core_Concept_ID to cognatesetTable",
+        help="Add column 'Core_Concept_ID' as new #parameterReference to #CognatesetTable (default)",
     )
     parser.add_argument(
-        "--overwrite_existing",
+        "--no-add-column",
+        default=False,
+        action="store_true",
+        help="Do not add a new #parameterReference to #CognatesetTable, but instead use the existing one",
+    )
+    parser.add_argument(
+        "--overwrite",
         action="store_true",
         default=False,
-        help="Activate to overwrite existing Core_Concept_ID of cognatesets",
+        help="Overwrite #parameterReference values of cognate sets already given in the dataset",
     )
     args = parser.parse_args()
 

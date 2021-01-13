@@ -31,10 +31,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--metadata",
-        nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     args = parser.parse_args()
 

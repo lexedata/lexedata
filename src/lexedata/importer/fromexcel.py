@@ -45,9 +45,7 @@ class DB:
     cache: t.Dict[str, t.Dict[t.Hashable, t.Dict[str, t.Any]]]
     source_ids: t.Set[str]
 
-    def __init__(self, output_dataset: pycldf.Wordlist, fname=None):
-        if fname is not None:
-            logger.info("Warning: dbase fname set, but ignored")
+    def __init__(self, output_dataset: pycldf.Wordlist):
         self.dataset = output_dataset
         self.cache = {}
         self.source_ids = set()
@@ -672,7 +670,9 @@ if __name__ == "__main__":
     import pycldf
 
     parser = argparse.ArgumentParser(
-        description="Load a Maweti-Guarani-style dataset into CLDF"
+        description="Imports a dataset from an excel file into CLDF. "
+        "The import is configured by a special key in the metadata file, check "
+        "./test/data/cldf/smallmawetiguarani/Wordlist-metadata.json for examples."
     )
     parser.add_argument(
         "lexicon",
@@ -682,34 +682,15 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--cogsets",
-        nargs="?",
+        type=Path,
         default="",
-        help="Path to an Excel file containing cogsets and cognatejudgements",
-    )
-    parser.add_argument(
-        "--db",
-        nargs="?",
-        default="",
-        help="Where to store the temp from reading the word list",
+        help="Path to an optional second Excel file containing cogsets and cognatejudgements",
     )
     parser.add_argument(
         "--metadata",
-        nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the metadata.json",
-    )
-    parser.add_argument(
-        "--debug-level",
-        type=int,
-        default=0,
-        help="Debug level: Higher numbers are less forgiving",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     args = parser.parse_args()
-
-    if args.db.startswith("sqlite:///"):
-        args.db = args.db[len("sqlite:///") :]
-    if args.db == ":memory:":
-        args.db = ""
-
     load_dataset(args.metadata, args.lexicon, args.cogsets)
