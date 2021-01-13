@@ -24,8 +24,14 @@ class CognateEditParser(ExcelCognateParser):
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
+        self.row_prop_separators = [
+            self.db.dataset["CognatesetTable", k].separator for k in self.row_header
+        ]
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
-        properties: t.Dict[t.Optional[str], t.Any] = dict(zip(self.row_header, data))
+        properties: t.Dict[t.Optional[str], t.Any] = {
+            n: (v if sep is None else v.split(sep))
+            for n, sep, v in zip(self.row_header, self.row_prop_separators, data)
+        }
         if not any(properties.values()):
             return None
 
@@ -76,6 +82,7 @@ if __name__ == "__main__":
     # both use cases?
 
     row_header = []
+    separators = []
     for (header,) in ws.iter_cols(
         min_row=1,
         max_row=1,
@@ -91,10 +98,10 @@ if __name__ == "__main__":
         except KeyError:
             break
         row_header.append(column_name)
+        separators.append(dataset["CognatesetTable", column_name].separator)
 
     excel_parser_cognate = CognateEditParser(
         dataset,
-        None,
         top=2,
         # When the dataset has cognateset comments, that column is not a header
         # column, so this value is one higher than the actual number of header
