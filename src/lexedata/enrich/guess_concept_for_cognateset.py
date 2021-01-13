@@ -19,7 +19,7 @@ def load_concepts_by_form(
     dataset: pycldf.Dataset,
 ) -> t.Dict[FormID, t.Sequence[ConceptID]]:
     """Look up all concepts for each form, and return them as dictionary."""
-    concepts_by_form_id = dict()
+    concepts_by_form_id: t.Dict[FormID, t.Sequence[ConceptID]] = {}
     c_f_id = dataset.column_names.forms.id
     c_f_concept = dataset.column_names.forms.parameterReference
     for form in tqdm(
@@ -28,7 +28,7 @@ def load_concepts_by_form(
     ):
         concept = form.get(c_f_concept, [])
         concepts_by_form_id[form[c_f_id]] = (
-            concept if isinstance(concept, list) == str else [concept]
+            concept if isinstance(concept, list) else [concept]
         )
     return concepts_by_form_id
 
@@ -58,7 +58,7 @@ def central_concept(
 
     >>> concepts = {"woman": 3, "mother": 4, "aunt": 3}
     >>> central_concept(concepts, {}, None)
-    "mother"
+    'mother'
 
     However, if the concepts can be linked to the CLICS graph, centrality
     actually can be defined using that graph.
@@ -69,7 +69,7 @@ def central_concept(
     ...   concepticon_mapping,
     ...   load_clics()
     ... )
-    "hand"
+    'hand'
 
     When counts and concepticon references are both given, the value with the
     maximum product of CLICS centrality and count is returned. If the concepts
