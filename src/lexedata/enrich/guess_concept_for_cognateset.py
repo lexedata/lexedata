@@ -84,12 +84,14 @@ def central_concept(
         centralities = {}
     else:
         centralities = networkx.algorithms.centrality.betweenness_centrality(
-            clics.subgraph({concepts_to_concepticon.get(c) for c in concepts} - {None})
+            clics.subgraph(
+                {str(concepts_to_concepticon.get(c)) for c in concepts} - {"None"}
+            )
         )
 
     def effective_centrality(cc):
         concept, count = cc
-        return count * centralities.get(concepts_to_concepticon.get(concept), 1)
+        return count * centralities.get(str(concepts_to_concepticon.get(concept)), 1)
 
     concept, count = max(concepts.items(), key=effective_centrality)
     return concept
