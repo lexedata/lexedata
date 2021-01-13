@@ -1,4 +1,5 @@
 import typing as t
+import collections
 from pathlib import Path
 from csvw.metadata import URITemplate
 import pycldf
@@ -46,11 +47,17 @@ def concepts_to_concepticon(dataset: pycldf.Wordlist) -> t.Mapping[ConceptID, in
 
 
 def central_concept(
-    concepts: t.Counter[ConceptID], concepts_to_concepticon: t.Mapping[ConceptID, int], clics
+    concepts: t.Counter[ConceptID],
+    concepts_to_concepticon: t.Mapping[ConceptID, int],
+    clics: t.Optional[networkx.Graph],
 ):
-    centralities = networkx.algorithms.centrality.betweenness_centrality(
-        clics.subgraph({concepts_to_concepticon.get(c) for c in concepts} - {None})
-    )
+    centralities: t.Mapping[ConceptID, float]
+    if clics is None:
+        centralities = {}
+    else:
+        centralities = networkx.algorithms.centrality.betweenness_centrality(
+            clics.subgraph({concepts_to_concepticon.get(c) for c in concepts} - {None})
+        )
 
     def effective_centrality(cc):
         concept, count = cc
@@ -119,10 +126,9 @@ def connected_concepts(
             concepts_by_form[judgement[c_form]]
         )
     return {
-        cogset: t.Counter(concepts)
+        cogset: collections.Counter(concepts)
         for cogset, concepts in cognatesets_to_concepts.items()
     }
-
 
 
 def add_central_concepts_to_cognateset_table(
@@ -138,15 +144,16 @@ def add_central_concepts_to_cognateset_table(
     concepts_of_cognateset: t.Mapping[
         CognatesetID, t.Counter[ConceptID]
     ] = connected_concepts(dataset)
-    central: t.Mapping[str, str] = {}
+    central: t.MutableMapping[str, str] = {}
     if clics and dataset.column_names.parameters.concepticonReference:
         concept_to_concepticon = concepts_to_concepticon(dataset)
         for cognateset, concepts in concepts_of_cognateset.items():
-            central[cognateset] = central_concept(concepts, concept_to_concepticon, clics)
+            central[cognateset] = central_concept(
+                concepts, concept_to_concepticon, clics
+            )
     else:
-        # TODO: @Gereon, this part will not work, central_concept requires clics which is not given
         for cognateset, concepts in concepts_of_cognateset.items():
-            central[cognateset] = central_concept(concepts, {})
+            central[cognateset] = central_concept(concepts, {}, None)
 
     dataset = reshape_dataset(dataset, add_column=add_column)
     c_core_concept = dataset.column_names.cognatesets.parameterReference
@@ -164,9 +171,7 @@ def add_central_concepts_to_cognateset_table(
     ):
         if not overwrite_existing and row[c_core_concept]:
             continue
-        row[c_core_concept] = central.get(
-            row[dataset.column_names.cognatesets.id]
-        )
+        row[c_core_concept] = central.get(row[dataset.column_names.cognatesets.id])
         write_back.append(row)
     dataset.write(CognatesetTable=write_back)
     return dataset
