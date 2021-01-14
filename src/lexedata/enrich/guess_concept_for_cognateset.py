@@ -83,6 +83,10 @@ def central_concept(
     if clics is None:
         centralities = {}
     else:
+        # In the extreme case, there is one concept in CLICS and one concept
+        # without CLICS connection. Then there is no path, and the centralities
+        # are 0 – including `endpoints=True` in `betweenness_centrality` does
+        # not help with that, either.
         centralities = networkx.algorithms.centrality.betweenness_centrality(
             clics.subgraph(
                 {str(concepts_to_concepticon.get(c)) for c in concepts} - {"None"}
@@ -91,7 +95,16 @@ def central_concept(
 
     def effective_centrality(cc):
         concept, count = cc
-        return count * centralities.get(str(concepts_to_concepticon.get(concept)), 1)
+        return count * (
+            # So, the minimal betwenness centrality is 0. To not give concepts
+            # outside CLICS an advantage, we need to assume a centrality of 0
+            # when we don't know better – this is consistent with a
+            # disconnected graph. To make different counts distinguishable, we
+            # then need to 1 to the centrality, otherwise we end up with a lot
+            # of concepts of effective count 0.
+            centralities.get(str(concepts_to_concepticon.get(concept)), 0)
+            + 1
+        )
 
     concept, count = max(concepts.items(), key=effective_centrality)
     return concept
