@@ -26,32 +26,107 @@ def cleanup(form: str) -> str:
     return form
 
 
-def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
+pre_replace = {
+    "l̴": "ɬ",
+    ".": ".",
+    "˺": "̚",
+    "ˑ": ".",
+    "oː́": "oó",
+    "Ɂ": "ʔ",
+    "?": "ʔ",
+    "'": "ˈ",
+    "͡ts": "t͡s",
+    "ts͡": "t͡s",
+    "tʃ͡": "t͡ʃ",
+    "͡tʃ": "t͡ʃ",
+    "t͡ç": "c͡ç",
+}
+
+
+def segment_form(
+    formstring: str, system=bipa, pre_replace=pre_replace, split_diphthongs: bool = True
+) -> t.Iterable[pyclts.models.Symbol]:
+    """Segment the form.
+
+    First, apply some pre-processing replacements. Forms supplied contain all
+    sorts of noise and lookalike symbols. This function comes with reasonable
+    defaults, but if you encounter other problems, or you actually want to be
+    strict about IPA transcriptions, pass a dictionary of your choice as
+    `pre_replace`.
+
+    Then, naïvely segment the form using the IPA tokenizer from the `segments`
+    package. Check each returned segment to see whether it is valid according
+    to CLTS's BIPA, and if not, try to fix some issues (in particular
+    pre-aspirated or pre-nasalized consonants showing up as post-aspirated
+    resp. post-nasalized vowels, which BIPA does not accept).
+
+    >>> [str(x) for x in segment_form("iɾũndɨ")]
+    ['i', 'ɾ', 'ũ', 'n', 'd', 'ɨ']
+    >>> [str(x) for x in segment_form("mokõi")]
+    ['m', 'o', 'k', 'õ', 'i']
+    >>> segment_form("pan̥onoː́t͡síkoːʔú")
+    [<pyclts.models.Consonant: voiceless bilabial stop consonant>, <pyclts.models.Vowel: unrounded open front vowel>, <pyclts.models.Consonant: devoiced voiced alveolar nasal consonant>, <pyclts.models.Vowel: rounded close-mid back vowel>, <pyclts.models.Consonant: voiced alveolar nasal consonant>, <pyclts.models.Vowel: rounded close-mid back vowel>, <pyclts.models.Vowel: rounded close-mid back with-high_tone vowel>, <pyclts.models.Consonant: voiceless alveolar sibilant affricate consonant>, <pyclts.models.Vowel: unrounded close front with-high_tone vowel>, <pyclts.models.Consonant: voiceless velar stop consonant>, <pyclts.models.Vowel: long rounded close-mid back vowel>, <pyclts.models.Consonant: voiceless glottal stop consonant>, <pyclts.models.Vowel: rounded close back with-high_tone vowel>]
+
     """
-    :param form:
-    :return:
-    ----------
-    >>> segment_form("iɾũndɨ") == ["i", "ɾ", "ũ", "n", "d", "ɨ"]
-    True
-    >>> segment_form("mokõi") == ["m", "o", "k", "õ", "i"]
-    True
-    """
-    if "." in form:
-        return [s for f in form.split(".") for s in segment_form(f)]
-    segments = [
-        bipa[c] for c in tokenizer(bipa.normalize(cleanup(form)), ipa=True).split()
-    ]
-    for s, segment in enumerate(segments):
-        if segment.type == "unknownsound":
-            logging.warning(
-                "Unknown sound '%s' in form '%s' (segment #%d). "
-                "Sound was added unchanged to segments.",
-                segment,
-                form,
-                s + 1,
-            )
-    segments = [str(s) for s in segments]
-    return segments
+    # and with the syllable boundary marker '.', so we wrap it with special cases for those.
+    for wrong, right in pre_replace.items():
+        formstring = formstring.replace(wrong, right)
+    raw_tokens = [system[s] for s in tokenizer(formstring, ipa=True).split()]
+    if system != bipa:
+        if any(r.type == "unknownsound" for r in raw_tokens):
+            logging.warning(f"Unknown sound encountered in {formstring:}")
+        return raw_tokens
+    i = len(raw_tokens) - 1
+    while i >= 0:
+        if split_diphthongs and raw_tokens[i].type == "diphthong":
+            raw_tokens[i : i + 1] = [raw_tokens[i].from_sound, raw_tokens[i].to_sound]
+            i += 1
+            continue
+        if raw_tokens[i].type != "unknownsound":
+            i -= 1
+            continue
+        grapheme = raw_tokens[i].grapheme
+        if grapheme in {".", "-"}:
+            del raw_tokens[i]
+            i -= 1
+            continue
+        if grapheme == "ː":
+            del raw_tokens[i]
+            try:
+                raw_tokens[i - 1] = bipa["long " + raw_tokens[i - 1].name]
+            except TypeError:
+                raw_tokens[i - 1].grapheme += "ː"
+            i -= 1
+            continue
+        if grapheme.endswith("ⁿ") or grapheme.endswith("ᵐ") or grapheme.endswith("ᵑ"):
+            if raw_tokens[i + 1].preceding is not None:
+                logging.warning(
+                    "Unknown sound {:} encountered in {:}".format(
+                        raw_tokens[i], formstring
+                    )
+                )
+                i -= 1
+                continue
+            raw_tokens[i + 1] = bipa["pre-nasalized " + raw_tokens[i + 1].name]
+            raw_tokens[i] = bipa[grapheme[:-1]]
+            continue
+        if grapheme.endswith("ʰ"):
+            if raw_tokens[i + 1].preceding is not None:
+                logging.warning(
+                    "Unknown sound {:} encountered in {:}".format(
+                        raw_tokens[i], formstring
+                    )
+                )
+                i -= 1
+                continue
+            raw_tokens[i + 1] = bipa["pre-aspirated " + raw_tokens[i + 1].name]
+            raw_tokens[i] = bipa[grapheme[:-1]]
+            continue
+        logging.warning(
+            "Unknown sound {:} encountered in {:}".format(raw_tokens[i], formstring)
+        )
+        i -= 1
+    return raw_tokens
 
 
 def add_segments_to_dataset(
