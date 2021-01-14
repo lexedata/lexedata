@@ -68,4 +68,15 @@ def test_add_concepts_to_cognatesets_of_minimal_correct(copy_wordlist_add_concep
     concepts_for_cognatesets = [
         (row[c_core_concept], row[c_id]) for row in dataset["CognatesetTable"]
     ]
-    assert all(c[0] in c[1] for c in concepts_for_cognatesets)
+    assert concepts_for_cognatesets == [
+        ("one_1", "one1"),
+        ("one", "one2"),
+        ("one", "one6"),
+        ("two", "two1"),
+        ("three", "three1"),
+        ("two", "two8"),
+        ("three", "three9"),
+        ("four_1", "four1"),
+        ("four", "four8"),
+        ("five", "five5"),
+    ]
