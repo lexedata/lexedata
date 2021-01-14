@@ -1,4 +1,5 @@
 import argparse
+import collections
 import typing as t
 from pathlib import Path
 
@@ -99,7 +100,7 @@ def add_concepticon_references(
             matches = [(m.get(i, ([], 10)), t) for m, t in cmaps]
             best_sim = min(x[0][1] for x in matches)
             best_matches = [t[m] for (ms, s), t in matches for m in ms if s <= best_sim]
-            c: t.Counter[str] = t.Counter(id for id, string in best_matches)
+            c: t.Counter[str] = collections.Counter(id for id, string in best_matches)
             if len(c) > 1:
                 print(row, best_sim, c.most_common())
                 row[

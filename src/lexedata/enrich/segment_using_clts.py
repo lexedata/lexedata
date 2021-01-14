@@ -98,7 +98,7 @@ if __name__ == "__main__":
         "--overwrite",
         action="store_true",
         default=False,
-        help="Overwrite segments already given in the dataset",
+        help="Overwrite #segments values already given in the dataset",
     )
     args = parser.parse_args()
 
