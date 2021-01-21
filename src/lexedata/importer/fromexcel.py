@@ -355,6 +355,7 @@ class ExcelParser:
             if self.on_form_not_found(form, cell_with_forms):
                 form[c_f_id] = "{:}_{:}".format(form[c_f_language], row_object[c_r_id])
                 form[c_f_value] = cell_with_forms.value
+                self.db.make_id_unique(form)
                 self.db.insert_into_db(form)
                 form_id = form[c_f_id]
                 self.db.associate(form_id, row_object)

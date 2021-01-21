@@ -86,7 +86,7 @@ def check_brackets(string, bracket_pairs):
     return not any(waiting_for)
 
 
-def components_in_brackets(form_string, bracket_pairs):
+def components_in_brackets(form_string, bracket_pairs, context=""):
     """Find all elements delimited by complete pairs of matching brackets.
 
     >>> b = {"!/": "", "(": ")", "[": "]", "{": "}", "/": "/"}
@@ -124,8 +124,8 @@ def components_in_brackets(form_string, bracket_pairs):
                     i += len(q)
                     break
                 elif p and remainder[i:].startswith(p):
-                    logger.warning(
-                        f"In form {form_string}: Encountered mismatched closing delimiter {p}"
+                    logger.info(
+                        f"{context:}In form {form_string}: Encountered mismatched closing delimiter {p}. This is *probably* fine."
                     )
             else:
                 i += 1
@@ -150,7 +150,7 @@ class NaiveCellParser:
                 f"Your metadata are missing a #{long[1]} column in {long[0]}, which is required by your chosen cell parser {self.__class__.__name__}"
             )
 
-    def separate(self, values: str) -> t.Iterable[str]:
+    def separate(self, values: str, context: str = "") -> t.Iterable[str]:
         """Separate different form descriptions in one string.
 
         Separate forms separated by comma.
@@ -176,7 +176,9 @@ class NaiveCellParser:
         if not text:
             return []
 
-        for element in self.separate(text):
+        for element in self.separate(
+            text, context=cell_identifier and f"{cell_identifier}: "
+        ):
             try:
                 form = self.parse_form(element, language_id, cell_identifier)
             except KeyError:
@@ -282,7 +284,7 @@ class CellParser(NaiveCellParser):
             ]
             return self._transcriptions
 
-    def separate(self, values: str) -> t.Iterable[str]:
+    def separate(self, values: str, context: str = "") -> t.Iterable[str]:
         """Separate different form descriptions in one string.
 
         Separate forms separated by comma or semicolon, unless the comma or
@@ -294,6 +296,11 @@ class CellParser(NaiveCellParser):
         an exception.
         """
         raw_split = re.split(self.separation_pattern, values)
+        if len(raw_split) <= 1:
+            for form in raw_split:
+                yield form
+            return
+
         while len(raw_split) > 1:
             if check_brackets(raw_split[0], self.bracket_pairs):
                 form = raw_split.pop(0).strip()
@@ -302,6 +309,11 @@ class CellParser(NaiveCellParser):
                 raw_split.pop(0)
             else:
                 raw_split[:2] = ["".join(raw_split[:2])]
+        if not check_brackets(raw_split[0], self.bracket_pairs):
+            logger.warning(
+                f"{context:}In values {values:}: Encountered mismatched closing delimiters. Please check that the separation into different forms was correct."
+            )
+
         form = raw_split.pop(0).strip()
         if form:
             yield form
@@ -339,7 +351,9 @@ class CellParser(NaiveCellParser):
         # '%', see below.
         expect_variant: t.Optional[str] = None
         # Iterate over the delimiter-separated elements of the form.
-        for element in components_in_brackets(form_string, self.bracket_pairs):
+        for element in components_in_brackets(
+            form_string, self.bracket_pairs, context=cell_identifier
+        ):
             element = element.strip()
 
             if not element:
