@@ -9,8 +9,7 @@ import openpyxl
 
 import lexedata.importer.fromexcel as f
 from lexedata.exporter.cognates import ExcelWriter
-import lexedata.importer.cellparser as cell_parsers
-from lexedata.importer.cognates import CognateEditParser, import_cognates_from_excel
+from lexedata.importer.cognates import import_cognates_from_excel
 
 # todo: these test must be adapted to new interface of fromexcel.py
 
@@ -193,7 +192,9 @@ def test_cell_comments():
     ws_test = Path(__file__).parent / "data/excel/judgement_cell_with_note.xlsx"
 
     import_cognates_from_excel(ws_test, dataset)
-    cognates = {cog["ID"]: {k: v for k,v in cog.items()} for cog in dataset["CognateTable"]}
+    cognates = {
+        cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognateTable"]
+    }
     assert cognates == {
         "autaa_Woman-cogset": {
             "Cognateset": "cogset",
@@ -204,7 +205,9 @@ def test_cell_comments():
             "Alignment": None,
         }
     }
-    cognatesets = {cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognatesetTable"]}
+    cognatesets = {
+        cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognatesetTable"]
+    }
     assert cognatesets == {
         "cogset": {"Name": "cogset", "Comment": "Cognateset-comment", "ID": "cogset"}
     }

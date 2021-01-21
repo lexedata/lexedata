@@ -53,13 +53,15 @@ class CognateEditParser(ExcelCognateParser):
         return CogSet(cogset)
 
 
-def header_from_cognate_excel(ws: openpyxl.worksheet.worksheet.Worksheet, dataset: pycldf.Dataset):
+def header_from_cognate_excel(
+    ws: openpyxl.worksheet.worksheet.Worksheet, dataset: pycldf.Dataset
+):
     row_header = []
     separators = []
     for (header,) in ws.iter_cols(
-            min_row=1,
-            max_row=1,
-            max_col=len(dataset["CognatesetTable"].tableSchema.columns),
+        min_row=1,
+        max_row=1,
+        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
     ):
         column_name = header.value
         if column_name is None:
@@ -77,7 +79,7 @@ def header_from_cognate_excel(ws: openpyxl.worksheet.worksheet.Worksheet, datase
     return row_header, separators
 
 
-def import_cognates_from_excel(excel: str, dataset: pycldf.Dataset)->None:
+def import_cognates_from_excel(excel: str, dataset: pycldf.Dataset) -> None:
     ws = openpyxl.load_workbook(excel).active
 
     row_header, _ = header_from_cognate_excel(ws, dataset)
@@ -126,4 +128,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    import_cognates_from_excel(args.cogsets, pycldf.Dataset.from_metadata(args.metadata))
+    import_cognates_from_excel(
+        args.cogsets, pycldf.Dataset.from_metadata(args.metadata)
+    )
