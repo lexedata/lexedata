@@ -24,14 +24,8 @@ class CognateEditParser(ExcelCognateParser):
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
-        self.row_prop_separators = [
-            self.db.dataset["CognatesetTable", k].separator for k in self.row_header
-        ]
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
-        properties: t.Dict[t.Optional[str], t.Any] = {
-            n: (v if sep is None else v.split(sep))
-            for n, sep, v in zip(self.row_header, self.row_prop_separators, data)
-        }
+        properties: t.Dict[t.Optional[str], t.Any] = dict(zip(self.row_header, data))
         if not any(properties.values()):
             return None
 
@@ -56,21 +50,27 @@ class CognateEditParser(ExcelCognateParser):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description="Load #cognate and #cognatesets from excel file into CLDF"
+        description="Load a Maweti-Guarani-style dataset into CLDF"
     )
     parser.add_argument(
         "cogsets",
         nargs="?",
-        default="cognates.xlsx",
-        help="Path to an Excel file containing cogsets and cognatejudgements (default: cognates.xlsx)",
+        default="Cognates.xlsx",
+        help="Path to an Excel file containing cogsets and cognatejudgements",
     )
     parser.add_argument(
         "--metadata",
+        nargs="?",
         type=Path,
         default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
+        help="Path to the metadata.json file (default: ./Wordlist-metadata.json)",
     )
-
+    parser.add_argument(
+        "--debug-level",
+        type=int,
+        default=0,
+        help="Debug level: Higher numbers are less forgiving",
+    )
     args = parser.parse_args()
 
     ws = openpyxl.load_workbook(args.cogsets).active
@@ -82,7 +82,6 @@ if __name__ == "__main__":
     # both use cases?
 
     row_header = []
-    separators = []
     for (header,) in ws.iter_cols(
         min_row=1,
         max_row=1,
@@ -98,10 +97,10 @@ if __name__ == "__main__":
         except KeyError:
             break
         row_header.append(column_name)
-        separators.append(dataset["CognatesetTable", column_name].separator)
 
     excel_parser_cognate = CognateEditParser(
         dataset,
+        None,
         top=2,
         # When the dataset has cognateset comments, that column is not a header
         # column, so this value is one higher than the actual number of header
