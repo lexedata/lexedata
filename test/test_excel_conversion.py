@@ -1,6 +1,7 @@
 import pytest
 import shutil
 import tempfile
+import itertools
 from pathlib import Path
 
 import pycldf
@@ -196,6 +197,84 @@ def test_roundtrip(cldf_wordlist):
     }
 
     assert new_judgements == old_judgements
+
+
+def test_roundtrip_separator_column(cldf_wordlist):
+    """Test whether a CognatesetTable column with separator survives a roundtrip."""
+    dataset, target = copy_to_temp(cldf_wordlist)
+    dataset.add_columns("CognatesetTable", "CommaSeparatedTags")
+    dataset["CognatesetTable", "CommaSeparatedTags"].separator = ","
+    c_id = dataset["CognatesetTable", "id"].name
+
+    write_back = list(dataset["CognatesetTable"])
+    tags = []
+    for tag, row in zip(
+        itertools.cycle(
+            [["two", "tags"], ["single-tag"], [], ["tag;containing;other;separator"]]
+        ),
+        write_back,
+    ):
+        tags.append((row[c_id], tag))
+        row["CommaSeparatedTags"] = tag
+    dataset.write(CognatesetTable=write_back)
+
+    writer = ExcelWriter(dataset)
+    _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
+    writer.create_excel(out_filename)
+
+    ws_out = openpyxl.load_workbook(out_filename).active
+
+    row_header = []
+    for (header,) in ws_out.iter_cols(
+        min_row=1,
+        max_row=1,
+        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
+    ):
+        column_name = header.value
+        if column_name is None:
+            column_name = dataset["CognatesetTable", "id"].name
+        elif column_name == "CogSet":
+            column_name = dataset["CognatesetTable", "id"].name
+        try:
+            column_name = dataset["CognatesetTable", column_name].name
+        except KeyError:
+            break
+        row_header.append(column_name)
+
+    excel_parser_cognate = CognateEditParser(
+        dataset,
+        None,
+        top=2,
+        # When the dataset has cognateset comments, that column is not a header
+        # column, so this value is one higher than the actual number of header
+        # columns, so actually correct for the 1-based indices. When there is
+        # no comment column, we need to compensate for the 1-based Excel
+        # indices.
+        cellparser=cell_parsers.CellParserHyperlink(dataset),
+        row_header=row_header,
+        check_for_language_match=[dataset["LanguageTable", "name"].name],
+        check_for_match=[dataset["FormTable", "id"].name],
+        check_for_row_match=[dataset["CognatesetTable", "id"].name],
+    )
+
+    # TODO: This often doesn't work if the dataset is not perfect before this
+    # program is called. In particular, it doesn't work if there are errors in
+    # the cognate sets or judgements, which will be reset in just a moment. How
+    # else should we solve this?
+    excel_parser_cognate.db.cache_dataset()
+    excel_parser_cognate.db.drop_from_cache("CognatesetTable")
+    excel_parser_cognate.db.drop_from_cache("CognateTable")
+    excel_parser_cognate.parse_cells(ws_out)
+    excel_parser_cognate.db.write_dataset_from_cache(
+        ["CognateTable", "CognatesetTable"]
+    )
+
+    reread_tags = [
+        (c[c_id], c["CommaSeparatedTags"]) for c in dataset["CognatesetTable"]
+    ]
+    reread_tags.sort(key=lambda x: x[0])
+    tags.sort(key=lambda x: x[0])
+    assert reread_tags == tags
 
 
 def test_cell_comments():

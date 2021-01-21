@@ -6,12 +6,27 @@ import csv
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Transfer metadata of existing cognate sets to new cognatesets that may"
-        " have different IDs, but the same composition in terms of contained forms."
+        description="Transfer metadata of existing cognate sets to new cognatesets that may "
+        "have different IDs, but the same composition in terms of contained forms."
     )
-    parser.add_argument("judgements", type=Path)
-    parser.add_argument("alignments", type=Path)
-    parser.add_argument("out", type=Path)
+    parser.add_argument(
+        "judgements",
+        type=Path,
+        help="Path to the csv file containing the cognate judgements",
+    )
+    parser.add_argument(
+        "alignments",
+        type=Path,
+        help="Path to the file containing the alignments",
+    )
+    # TODO: set appropriate default
+    parser.add_argument(
+        "--output-file",
+        "-o",
+        type=Path,
+        default="cognate.csv",
+        help="Path to the output file",
+    )
     args = parser.parse_args()
 
     cognatesets_new = {}
@@ -31,7 +46,9 @@ if __name__ == "__main__":
     with args.judgements.open() as judgements_file:
         judgements = csv.DictReader(judgements_file)
         out = csv.DictWriter(
-            args.out.open("w"), judgements.fieldnames, dialect=judgements.dialect
+            args.output_file.open("w"),
+            judgements.fieldnames,
+            dialect=judgements.dialect,
         )
         out.writeheader()
         for line in judgements:

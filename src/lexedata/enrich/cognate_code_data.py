@@ -57,30 +57,30 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "wordlist",
-        default="cldf-metadata.json",
+        "--metadata",
         type=Path,
-        help="The wordlist to add Concepticon links to",
+        default="Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
-        "output",
-        nargs="?",
-        # type=argparse.FileType('w'),
+        "--output-file",
+        "-o",
+        type=Path,
         default="aligned",
         help="Output file to write segmented data to,"
-        " without extension .tsv (automatically added)",
+        " without extension .tsv (automatically added) (default: aligned)",
     )
     parser.add_argument(
         "--soundclass",
         default="sca",
         choices=["sca", "dolgo", "asjp", "art"],
-        help="Sound class model to use. (default: sca)",
+        help="Sound class model to use (default: sca)",
     )
     parser.add_argument(
         "--threshold",
         default=0.55,
         type=float,
-        help="Cognate clustering threshold value. (default:" " 0.55)",
+        help="Cognate clustering threshold value (default: 0.55)",
     )
     parser.add_argument(
         "--cluster-method",
@@ -94,31 +94,31 @@ if __name__ == "__main__":
         "--gop",
         default=-2,
         type=float,
-        help="Gap opening penalty for the clustering" "procedure. (default: -2)",
+        help="Gap opening penalty for the clustering procedure (default: -2)",
     )
     parser.add_argument(
         "--mode",
         default="overlap",
         choices=["global", "local", "overlap", "dialign"],
-        help="Select the mode for the alignment analysis." "(default: overlap)",
+        help="Select the mode for the alignment analysis (default: overlap)",
     )
     parser.add_argument(
         "--ratio",
         default=1.5,
         type=float,
         help="Ratio of language-pair specific vs. general"
-        " scores in the LexStat algorithm. (default: 1.5)",
+        " scores in the LexStat algorithm (default: 1.5)",
     )
     parser.add_argument(
         "--initial-threshold",
         default=0.7,
         type=float,
         help="Threshold value for the initial pairs used to"
-        "bootstrap the calculation. (default: 0.7)",
+        "bootstrap the calculation (default: 0.7)",
     )
     args = parser.parse_args()
 
-    dataset = pycldf.Wordlist.from_metadata(args.wordlist)
+    dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
     def filter(row: t.Dict[str, t.Any]) -> bool:
         row["tokens"] = [
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     ), "Dataset must have a CLDF #segments column."
 
     lex = lingpy.compare.partial.Partial.from_cldf(
-        args.wordlist,
+        args.metadata,
         filter=filter,
         columns=["doculect", "concept", "tokens"],
         model=lingpy.data.model.Model(args.soundclass),
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     try:
         scorers_etc = lingpy.compare.lexstat.LexStat(
             filename="lexstats-{:}-{:s}{:s}.tsv".format(
-                sha1(args.wordlist), args.soundclass, ratio_str
+                sha1(args.metadata), args.soundclass, ratio_str
             )
         )
         lex.scorer = scorers_etc.scorer
@@ -178,7 +178,7 @@ if __name__ == "__main__":
         lex.output(
             "tsv",
             filename="lexstats-{:}-{:s}{:s}".format(
-                sha1(args.wordlist), args.soundclass, ratio_str
+                sha1(args.metadata), args.soundclass, ratio_str
             ),
             ignore=[],
         )
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     lex.output("tsv", filename="auto-clusters")
     alm = lingpy.Alignments(lex, ref="partialcognateids", fuzzy=True)
     alm.align(method="progressive")
-    alm.output("tsv", filename=args.output, ignore="all", prettify=False)
+    alm.output("tsv", filename=args.output_file, ignore="all", prettify=False)
 
     try:
         dataset.add_component("CognateTable")
@@ -218,7 +218,7 @@ if __name__ == "__main__":
     except ValueError:
         ...
 
-    read_back = csv.DictReader(open(args.output + ".tsv"), delimiter="\t")
+    read_back = csv.DictReader(open(args.output_file + ".tsv"), delimiter="\t")
     cognatesets = {}
     judgements = []
     i = 1

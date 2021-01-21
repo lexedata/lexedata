@@ -379,11 +379,10 @@ def main() -> None:
     )
     parser.add_argument("excel", type=Path, help="The Excel file to inspect")
     parser.add_argument(
-        "json",
+        "--metadata",
         type=Path,
-        nargs="?",
         default="Wordlist-metadata.json",
-        help="The json metadata file to write",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     args = parser.parse_args()
 

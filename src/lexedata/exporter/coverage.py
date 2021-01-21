@@ -20,10 +20,17 @@ if __name__ == "__main__":
         help="Only list matching languages, don't report statistics",
     )
     parser.add_argument(
-        "--dataset",
-        default="Wordlist-metadata.json",
+        "--metadata",
         type=Path,
-        help="Metadata file or forms.csv file (i.e. metadata-free wordlist) to inspect",
+        default="Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
+    )
+    parser.add_argument(
+        "--metadata-or-forms",
+        type=Path,
+        default="forms.csv",
+        help="Path to the JSON metadata or forms.csv file, i.e. metadata-free wordlist "
+        "(default: ./forms.csv)",
     )
     parser.add_argument(
         "--with-concept",
@@ -42,10 +49,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.dataset.name == "forms.csv":
-        dataset = pycldf.Wordlist.from_data(args.dataset)
+    if args.metadata_or_forms.name == "forms.csv":
+        dataset = pycldf.Wordlist.from_data(args.metadata_or_forms)
     else:
-        dataset = pycldf.Wordlist.from_metadata(args.dataset)
+        dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
     languages = {}
     try:

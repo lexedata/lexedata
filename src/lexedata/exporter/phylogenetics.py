@@ -441,18 +441,21 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--metadata",
-        help="Path to metadata file for dataset input",
-        default="forms.csv",
+        type=Path,
+        default="Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "--output-file",
         "-o",
         type=Path,
         help="""File to write output to. (If format=beast and output file exists, replace the
-            first `data` tag in there.) Default: Write to stdout""",
+            first `data` tag in there.) (default: Write to stdout)""",
     )
     parser.add_argument(
-        "--code-column", help="Name of the code column for metadata-free wordlists"
+        "--code-column",
+        type=str,
+        help="Name of the code column for metadata-free wordlists",
     )
     parser.add_argument(
         "--languages-list",
