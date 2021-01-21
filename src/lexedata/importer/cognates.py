@@ -24,8 +24,14 @@ class CognateEditParser(ExcelCognateParser):
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
+        self.row_prop_separators = [
+            self.db.dataset["CognatesetTable", k].separator for k in self.row_header
+        ]
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
-        properties: t.Dict[t.Optional[str], t.Any] = dict(zip(self.row_header, data))
+        properties: t.Dict[t.Optional[str], t.Any] = {
+            n: (v if sep is None else v.split(sep))
+            for n, sep, v in zip(self.row_header, self.row_prop_separators, data)
+        }
         if not any(properties.values()):
             return None
 
@@ -47,45 +53,13 @@ class CognateEditParser(ExcelCognateParser):
         return CogSet(cogset)
 
 
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(
-        description="Load a Maweti-Guarani-style dataset into CLDF"
-    )
-    parser.add_argument(
-        "cogsets",
-        nargs="?",
-        default="Cognates.xlsx",
-        help="Path to an Excel file containing cogsets and cognatejudgements",
-    )
-    parser.add_argument(
-        "--metadata",
-        nargs="?",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the metadata.json file (default: ./Wordlist-metadata.json)",
-    )
-    parser.add_argument(
-        "--debug-level",
-        type=int,
-        default=0,
-        help="Debug level: Higher numbers are less forgiving",
-    )
-    args = parser.parse_args()
-
-    ws = openpyxl.load_workbook(args.cogsets).active
-
-    dataset = pycldf.Dataset.from_metadata(args.metadata)
-
-    # TODO the following lines of code would make a good template for the
-    # import of cognate sets in fromexcel. Can we write a single function for
-    # both use cases?
-
+def header_from_cognate_excel(ws: openpyxl.worksheet.worksheet.Worksheet, dataset: pycldf.Dataset):
     row_header = []
+    separators = []
     for (header,) in ws.iter_cols(
-        min_row=1,
-        max_row=1,
-        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
+            min_row=1,
+            max_row=1,
+            max_col=len(dataset["CognatesetTable"].tableSchema.columns),
     ):
         column_name = header.value
         if column_name is None:
@@ -94,14 +68,24 @@ if __name__ == "__main__":
             column_name = dataset["CognatesetTable", "id"].name
         try:
             column_name = dataset["CognatesetTable", column_name].name
+        # TODO: @Gereon is this break here intentional. So if one header does not match we stop reading headers?
+        # TODO: Not rather continue?
         except KeyError:
             break
         row_header.append(column_name)
+        separators.append(dataset["CognatesetTable", column_name].separator)
+    return row_header, separators
 
+
+def import_cognates_from_excel(excel: str, metadata: Path)->None:
+    ws = openpyxl.load_workbook(excel).active
+    dataset = pycldf.Dataset.from_metadata(metadata)
+
+    row_header, _ = header_from_cognate_excel(ws, dataset)
     excel_parser_cognate = CognateEditParser(
         dataset,
-        None,
         top=2,
+        # TODO: @Gereon: What to do about this comment?
         # When the dataset has cognateset comments, that column is not a header
         # column, so this value is one higher than the actual number of header
         # columns, so actually correct for the 1-based indices. When there is
@@ -114,10 +98,6 @@ if __name__ == "__main__":
         check_for_row_match=[dataset["CognatesetTable", "id"].name],
     )
 
-    # TODO: This often doesn't work if the dataset is not perfect before this
-    # program is called. In particular, it doesn't work if there are errors in
-    # the cognate sets or judgements, which will be reset in just a moment. How
-    # else should we solve this?
     excel_parser_cognate.db.cache_dataset()
     excel_parser_cognate.db.drop_from_cache("CognatesetTable")
     excel_parser_cognate.db.drop_from_cache("CognateTable")
@@ -125,3 +105,26 @@ if __name__ == "__main__":
     excel_parser_cognate.db.write_dataset_from_cache(
         ["CognateTable", "CognatesetTable"]
     )
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(
+        description="Load #cognate and #cognatesets from excel file into CLDF"
+    )
+    parser.add_argument(
+        "cogsets",
+        nargs="?",
+        default="cognates.xlsx",
+        help="Path to an Excel file containing cogsets and cognatejudgements (default: cognates.xlsx)",
+    )
+    parser.add_argument(
+        "--metadata",
+        type=Path,
+        default="Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
+    )
+
+    args = parser.parse_args()
+
+    import_cognates_from_excel(args.cogsets, args.metadata)
