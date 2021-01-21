@@ -194,7 +194,6 @@ def test_cell_comments():
 
     import_cognates_from_excel(ws_test, dataset)
     cognates = {cog["ID"]: {k: v for k,v in cog.items()} for cog in dataset["CognateTable"]}
-    print(cognates)
     assert cognates == {
         "autaa_Woman-cogset": {
             "Cognateset": "cogset",
@@ -206,7 +205,6 @@ def test_cell_comments():
         }
     }
     cognatesets = {cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognatesetTable"]}
-    print(cognatesets)
     assert cognatesets == {
         "cogset": {"Name": "cogset", "Comment": "Cognateset-comment", "ID": "cogset"}
     }
