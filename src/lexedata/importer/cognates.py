@@ -90,7 +90,7 @@ def import_cognates_from_excel(excel: str, dataset: pycldf.Dataset)->None:
         # columns, so actually correct for the 1-based indices. When there is
         # no comment column, we need to compensate for the 1-based Excel
         # indices.
-        cellparser=cell_parsers.CellParserHyperlink(),
+        cellparser=cell_parsers.CellParserHyperlink(dataset),
         row_header=row_header,
         check_for_language_match=[dataset["LanguageTable", "name"].name],
         check_for_match=[dataset["FormTable", "id"].name],
