@@ -77,9 +77,8 @@ def header_from_cognate_excel(ws: openpyxl.worksheet.worksheet.Worksheet, datase
     return row_header, separators
 
 
-def import_cognates_from_excel(excel: str, metadata: Path)->None:
+def import_cognates_from_excel(excel: str, dataset: pycldf.Dataset)->None:
     ws = openpyxl.load_workbook(excel).active
-    dataset = pycldf.Dataset.from_metadata(metadata)
 
     row_header, _ = header_from_cognate_excel(ws, dataset)
     excel_parser_cognate = CognateEditParser(
@@ -127,4 +126,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    import_cognates_from_excel(args.cogsets, args.metadata)
+    import_cognates_from_excel(args.cogsets, pycldf.Dataset.from_metadata(args.metadata))
