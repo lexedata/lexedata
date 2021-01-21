@@ -193,16 +193,21 @@ def test_cell_comments():
     ws_test = Path(__file__).parent / "data/excel/judgement_cell_with_note.xlsx"
 
     import_cognates_from_excel(ws_test, dataset)
-
-    assert excel_parser_cognate.db.cache["CognateTable"] == {
+    cognates = {cog["ID"]: {k: v for k,v in cog.items()} for cog in dataset["CognateTable"]}
+    print(cognates)
+    assert cognates == {
         "autaa_Woman-cogset": {
             "Cognateset": "cogset",
             "Comment": "Comment on judgement",
             "Form_ID": "autaa_Woman",
             "ID": "autaa_Woman-cogset",
+            "Segment_Slice": None,
+            "Alignment": None,
         }
     }
-    assert excel_parser_cognate.db.cache["CognatesetTable"] == {
+    cognatesets = {cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognatesetTable"]}
+    print(cognatesets)
+    assert cognatesets == {
         "cogset": {"Name": "cogset", "Comment": "Cognateset-comment", "ID": "cogset"}
     }
 
