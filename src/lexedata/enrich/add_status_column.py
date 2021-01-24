@@ -5,7 +5,7 @@ import pycldf
 
 
 def add_status_column_to_table(dataset: pycldf.Dataset, table_name: str)->None:
-    if "Status_Column" not in dataset[table_name].tableSchema.columns:
+    if "Status_Column" not in dataset[table_name].tableSchema.columndict.keys():
         dataset.add_columns(table_name, "Status_Column")
 
 
