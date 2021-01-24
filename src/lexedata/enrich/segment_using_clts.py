@@ -11,6 +11,8 @@ import segments
 import cldfbench
 import cldfcatalog
 
+from lexedata.enrich.add_status_column import add_status_column_to_table
+
 clts_path = cldfcatalog.Config.from_file().get_clone("clts")
 clts = cldfbench.catalogs.CLTS(clts_path)
 bipa = clts.api.bipa
@@ -55,8 +57,10 @@ def segment_form(form: str) -> t.Iterable[pyclts.models.Symbol]:
 
 
 def add_segments_to_dataset(
-    dataset: pycldf.Dataset, transcription: str, overwrite_existing: bool
+    dataset: pycldf.Dataset, transcription: str, overwrite_existing: bool, status_update: t.Optional[str]
 ):
+    if status_update:
+        add_status_column_to_table(dataset=dataset, table_name="FormTable")
     if dataset.column_names.forms.segments is None:
         # Create a Segments column in FormTable
         dataset.add_columns("FormTable", "Segments")
@@ -74,6 +78,8 @@ def add_segments_to_dataset(
             if row[transcription]:
                 form = row[transcription].strip()
                 row[dataset.column_names.forms.segments] = segment_form(form)
+                if status_update:
+                    row["Status_Column"] = status_update
             write_back.append(row)
     dataset.write(FormTable=write_back)
 
@@ -100,11 +106,20 @@ if __name__ == "__main__":
         default=False,
         help="Overwrite #segments values already given in the dataset",
     )
+    parser.add_argument(
+        "--status-update",
+        type=str,
+        default="Segmented",
+        help="Text written to Status_Column. Set to 'None' for no status update. "
+             "(default: Segmented)",
+    )
     args = parser.parse_args()
+    if args.status_update == "None":
+        args.status_update = None
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
     if args.transcription is None:
         args.transcription = dataset.column_names.forms.form
     # add segments to FormTable
-    add_segments_to_dataset(dataset, args.transcription, args.overwrite)
+    add_segments_to_dataset(dataset, args.transcription, args.overwrite, args.status_update)
