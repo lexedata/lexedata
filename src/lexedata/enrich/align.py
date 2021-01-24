@@ -31,7 +31,8 @@ def aligne_cognate_table(dataset: pycldf.Dataset, status_update: t.Optional[str]
     f_segments = dataset["FormTable", "segments"].name
     f_language = dataset["FormTable", "languageReference"].name
     # add Status_Column if not existing
-    add_status_column_to_table(dataset=dataset, table_name="CognateTable")
+    if status_update:
+        add_status_column_to_table(dataset=dataset, table_name="CognateTable")
 
     forms = {}
     for form in dataset["FormTable"]:

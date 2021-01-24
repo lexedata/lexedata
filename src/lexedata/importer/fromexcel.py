@@ -664,7 +664,8 @@ def load_dataset(
             EP = ExcelParser
             # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
         # add Status_Column if not existing
-        add_status_column_to_table(dataset=dataset, table_name="FormTable")
+        if status_update:
+            add_status_column_to_table(dataset=dataset, table_name="FormTable")
         EP = EP(dataset)
 
         EP.db.empty_cache()
@@ -682,7 +683,8 @@ def load_dataset(
         except (AttributeError, KeyError):
             ECP = ExcelCognateParser
         # add Status_Column if not existing
-        add_status_column_to_table(dataset=dataset, table_name="CognateTable")
+        if status_update:
+            add_status_column_to_table(dataset=dataset, table_name="CognateTable")
         ECP = ECP(dataset)
         ECP.db.cache_dataset()
         for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
