@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pycldf
 
+from lexedata.enrich.add_status_column import add_status_column_to_table
 
 def align(forms):
     """‘Align’ forms by adding gap characters to the end.
@@ -25,23 +26,12 @@ def align(forms):
         yield segments + ["-"] * (length - len(segments)), metadata
 
 
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
-    args = parser.parse_args()
-
-    dataset = pycldf.Wordlist.from_metadata(args.metadata)
-
+def aligne_cognate_table(dataset: pycldf.Dataset, status_update: t.Optional[str] = None):
     f_id = dataset["FormTable", "id"].name
     f_segments = dataset["FormTable", "segments"].name
     f_language = dataset["FormTable", "languageReference"].name
+    # add Status_Column if not existing
+    add_status_column_to_table(dataset=dataset, table_name="CognateTable")
 
     forms = {}
     for form in dataset["FormTable"]:
@@ -76,5 +66,31 @@ if __name__ == "__main__":
     for cognateset, morphemes in cognatesets.items():
         for alignment, id in align(morphemes):
             judgements[id][c_alignment] = alignment
-
+            if status_update:
+                judgement["Status_Column"] = status_update
     dataset["CognateTable"].write(judgements.values())
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--metadata",
+        type=Path,
+        default="Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
+    )
+    parser.add_argument(
+        "--status-update",
+        type=str,
+        default="Morphemes aligned",
+        help="Text written to Status_Column. Set to 'None' for no status update. "
+             "(default: Morphemes aligned)",
+    )
+    args = parser.parse_args()
+    if args.status_update == "None":
+        args.status_update = None
+    aligne_cognate_table(pycldf.Wordlist.from_metadata(args.metadata), args.status_update)
+
+
