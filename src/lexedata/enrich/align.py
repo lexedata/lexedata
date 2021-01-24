@@ -40,6 +40,7 @@ def aligne_cognate_table(dataset: pycldf.Dataset, status_update: t.Optional[str]
     c_id = dataset["CognateTable", "id"].name
     c_form_id = dataset["CognateTable", "formReference"].name
     c_cognateset_id = dataset["CognateTable", "cognatesetReference"].name
+    # TODO: how dos CognateTable get a segmentSlice column?
     c_slice = dataset["CognateTable", "segmentSlice"].name
     c_alignment = dataset["CognateTable", "alignment"].name
 
