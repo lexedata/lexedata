@@ -721,9 +721,10 @@ if __name__ == "__main__":
         "--status-update",
         type=str,
         default="Initial import from excel",
-        help="Text written to Status_Column. Pass empty string for no status update. "
+        help="Text written to Status_Column. Set to 'None' for no status update. "
              "(default: Initial import from excel)",
     )
     args = parser.parse_args()
-    status = args.status_update or None
-    load_dataset(args.metadata, args.lexicon, args.cogsets, status)
+    if args.status_update == "None":
+        args.status_update = None
+    load_dataset(args.metadata, args.lexicon, args.cogsets, args.status_update)
