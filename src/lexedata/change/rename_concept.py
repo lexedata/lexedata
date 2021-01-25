@@ -85,11 +85,11 @@ def replace_column(
         print(f"Changing {c_id:} of ParameterTable…")
         dataset.write(
             ParameterTable=[
-                substitute_many(r, [c_id], {original: replacement}, status_update=status_update)
+                substitute_many(r, [c_id], {original: replacement}, status_update=None)
                 for r in concepts
             ]
         )
-        rename(dataset, {original: replacement}, status_update=None)
+        rename(dataset, {original: replacement}, status_update=status_update)
 
 
 if __name__ == "__main__":
