@@ -47,6 +47,7 @@ def add_concepticon_names(
 def add_concepticon_references(
     dataset: pycldf.Wordlist,
     gloss_languages: t.Mapping[str, str],
+    status_update: t.Optional[str],
     overwrite: bool = False,
 ) -> None:
     """Guess Concepticon links for a multilingual Concept table.
@@ -112,6 +113,9 @@ def add_concepticon_references(
                 row[
                     dataset.column_names.parameters.concepticonReference
                 ] = c.most_common(1)[0][0]
+        # add status update if given
+        if status_update:
+            row["Status_Column"] = status_update
         write_back.append(row)
 
     dataset.write(ParameterTable=write_back)
@@ -126,7 +130,7 @@ def create_concepticon_for_concepts(
 ):
     # add Status_Column if status update
     if status_update:
-        add_status_column_to_table(dataset=dataset, table_name="FormTable")
+        add_status_column_to_table(dataset=dataset, table_name="ParameterTable")
     # add Concepticon_ID column to ParameterTable
     if dataset.column_names.parameters.concepticonReference is None:
         # Create a concepticonReference column
@@ -141,7 +145,12 @@ def create_concepticon_for_concepts(
         language = [(dataset.column_names.parameters.id, "en")]
 
     gloss_languages: t.Dict[str, str] = dict(language)
-    add_concepticon_references(dataset, gloss_languages, overwrite=overwrite)
+    add_concepticon_references(
+        dataset,
+        gloss_languages=gloss_languages,
+        status_update=status_update,
+        overwrite=overwrite
+    )
 
     if concepticon_glosses:
         add_concepticon_names(dataset)
@@ -181,9 +190,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--status-update",
         type=str,
-        default="Morphemes aligned",
+        default="Added Concepticon_ID",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-             "(default: Morphemes aligned)",
+             "(default: Added Concepticon_ID)",
     )
     args = parser.parse_args()
     if args.status_update == "None":
