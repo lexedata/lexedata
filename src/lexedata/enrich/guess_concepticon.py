@@ -62,9 +62,11 @@ def add_concepticon_references(
     ==========
     dataset: A pycldf.Wordlist with a concepticonReference column in its
         ParameterTable
-    gloss_lang: A mapping from ParameterTable column names to ISO-639-1
+    gloss_languages: A mapping from ParameterTable column names to ISO-639-1
         language codes that Concepticon has concept lists for (eg. en, fr, de,
         es, zh, pt)
+    status_update: String written to Status_Column of #parameterTable if provided
+    overwrite: Overwrite existing Concepticon references
 
     """
     # TODO: If this function took only dataset["ParameterTable"] and the name
