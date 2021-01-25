@@ -65,37 +65,5 @@ if __name__ == "__main__":
         help="Path to the output file",
     )
     args = parser.parse_args()
+    morpheme_boundaries_to_csv(args.judgements, args.alignments, args.output_file)
 
-    cognatesets_new = {}
-    for line in csv.DictReader(args.judgements.open()):
-        cognatesets_new.setdefault(line["Cognateset_ID"], set()).add(line["Form_ID"])
-
-    cognatesets_old = {}
-    old_judgements = {}
-    for line in csv.DictReader(args.alignments.open()):
-        cognatesets_old.setdefault(line["Cognateset_ID"], set()).add(line["Form_ID"])
-        old_judgements[line["Form_ID"], line["Cognateset_ID"]] = line
-
-    cognatesets_old_reversed = {
-        frozenset(forms): id for id, forms in cognatesets_old.items()
-    }
-
-    with args.judgements.open() as judgements_file:
-        judgements = csv.DictReader(judgements_file)
-        out = csv.DictWriter(
-            args.output_file.open("w"),
-            judgements.fieldnames,
-            dialect=judgements.dialect,
-        )
-        out.writeheader()
-        for line in judgements:
-            cognates = frozenset(cognatesets_new[line["Cognateset_ID"]])
-            if cognates in cognatesets_old_reversed:
-                old_line = old_judgements[
-                    line["Form_ID"], cognatesets_old_reversed[cognates]
-                ]
-                line["Alignment"] = old_line["Alignment"]
-                line["Segment_Slice"] = old_line["Segment_Slice"]
-            else:
-                pass
-            out.writerow(line)
