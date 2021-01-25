@@ -10,6 +10,8 @@ import cldfcatalog
 import cldfbench
 from pyconcepticon.glosses import concept_map2
 
+from lexedata.enrich.add_status_column import add_status_column_to_table
+
 concepticon_path = cldfcatalog.Config.from_file().get_clone("concepticon")
 concepticon = cldfbench.catalogs.Concepticon(concepticon_path)
 
