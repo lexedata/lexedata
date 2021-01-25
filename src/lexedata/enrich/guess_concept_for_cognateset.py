@@ -272,9 +272,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--status-update",
         type=str,
-        default="Added Concepticon_ID",
+        default="Added Core_Concept_ID",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-             "(default: Added Concepticon_ID)",
+             "(default: Added Core_Concept_ID)",
     )
     args = parser.parse_args()
     if args.status_update == "None":
