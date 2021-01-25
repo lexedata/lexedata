@@ -54,6 +54,145 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
     return segments[1:-1]
 
 
+def cognate_code_to_file(
+        metadata: Path,
+        ratio: float,
+        soundclass: str,
+        cluster_method: str,
+        threshold: float,
+        initial_threshold: float,
+        gop: float,
+        mode: str,
+        output_file: Path
+)->None:
+    dataset = pycldf.Wordlist.from_metadata(args.metadata)
+    assert (
+        dataset.column_names.forms.segments is not None
+    ), "Dataset must have a CLDF #segments column."
+
+    def filter(row: t.Dict[str, t.Any]) -> bool:
+        row["tokens"] = [
+            str(x)
+            for x in clean_segments(row[dataset.column_names.forms.segments.lower()])
+        ]
+        row["tokens"] = ["+" if x == "_" else x for x in row["tokens"]]
+        # TODO: Find the official LingPy way to consider word boundaries to
+        # also be morpheme boundaries – just adding them in
+        # `partial_cluster(sep=...+'_')` did not work, and why isn't it the
+        # default anyway?
+        row["doculect"] = row[dataset.column_names.forms.languageReference.lower()]
+        row["concept"] = row[dataset.column_names.forms.parameterReference.lower()]
+        return row["segments"] and row["concept"]
+
+    lex = lingpy.compare.partial.Partial.from_cldf(
+        metadata,
+        filter=filter,
+        columns=["doculect", "concept", "tokens"],
+        model=lingpy.data.model.Model(soundclass),
+        check=True,
+    )
+
+    if ratio != 1.5:
+        if ratio == float("inf"):
+            ratio_pair = (1, 0)
+            ratio_str = "-inf"
+        if ratio == int(ratio) >= 0:
+            r = int(ratio)
+            ratio_pair = (r, 1)
+            ratio_str = "-{:d}".format(r)
+        elif ratio > 0:
+            ratio_pair = (ratio, 1)
+            ratio_str = "-" + str(ratio)
+        else:
+            raise ValueError("LexStat ratio must be in [0, ∞]")
+    else:
+        ratio_pair = (3, 2)
+        ratio_str = ""
+    if initial_threshold != 0.7:
+        ratio_str += "-t{:02d}".format(int(initial_threshold * 100))
+    try:
+        scorers_etc = lingpy.compare.lexstat.LexStat(
+            filename="lexstats-{:}-{:s}{:s}.tsv".format(
+                sha1(metadata), soundclass, ratio_str
+            )
+        )
+        lex.scorer = scorers_etc.scorer
+        lex.cscorer = scorers_etc.cscorer
+        lex.bscorer = scorers_etc.bscorer
+    except (OSError, ValueError):
+        lex.get_scorer(runs=10000, ratio=ratio_pair, threshold=initial_threshold)
+        lex.output(
+            "tsv",
+            filename="lexstats-{:}-{:s}{:s}".format(
+                sha1(metadata), soundclass, ratio_str
+            ),
+            ignore=[],
+        )
+    # For some purposes it is useful to have monolithic cognate classes.
+    lex.cluster(
+        method="lexstat",
+        threshold=args.threshold,
+        ref="cogid",
+        cluster_method=cluster_method,
+        verbose=True,
+        override=True,
+        gop=args.gop,
+        mode=mode,
+    )
+    # But actually, in most cases partial cognates are much more useful.
+    lex.partial_cluster(
+        method="lexstat",
+        threshold=threshold,
+        cluster_method=cluster_method,
+        ref="partialcognateids",
+        override=True,
+        verbose=True,
+        gop=gop,
+        mode=mode,
+    )
+    lex.output("tsv", filename="auto-clusters")
+    alm = lingpy.Alignments(lex, ref="partialcognateids", fuzzy=True)
+    alm.align(method="progressive")
+    alm.output("tsv", filename=output_file, ignore="all", prettify=False)
+
+    try:
+        dataset.add_component("CognateTable")
+    except ValueError:
+        ...
+    try:
+        dataset.add_component("CognatesetTable")
+    except ValueError:
+        ...
+
+    read_back = csv.DictReader(open(output_file + ".tsv"), delimiter="\t")
+    cognatesets = {}
+    judgements = []
+    i = 1
+    for line in read_back:
+        partial = line["PARTIALCOGNATEIDS"].split()
+        alignment = line["ALIGNMENT"].split(" + ")
+        slice_start = 0
+        for cs, alm in zip(partial, alignment):
+            cognatesets.setdefault(cs, {"ID": cs})
+            length = len(alm.split())
+            judgements.append(
+                {
+                    "ID": i,
+                    "Form_ID": line["ID"],
+                    "Cognateset_ID": cs,
+                    "Segment_Slice": [
+                        "{:d}:{:d}".format(slice_start, slice_start + length)
+                    ],
+                    "Alignment": alm.split(),
+                    "Source": ["LexStat"],
+                }
+            )
+            i += 1
+            slice_start += length
+    dataset.write(CognatesetTable=cognatesets.values())
+    dataset.write(CognateTable=judgements)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -117,131 +256,16 @@ if __name__ == "__main__":
         "bootstrap the calculation (default: 0.7)",
     )
     args = parser.parse_args()
-
-    dataset = pycldf.Wordlist.from_metadata(args.metadata)
-
-    def filter(row: t.Dict[str, t.Any]) -> bool:
-        row["tokens"] = [
-            str(x)
-            for x in clean_segments(row[dataset.column_names.forms.segments.lower()])
-        ]
-        row["tokens"] = ["+" if x == "_" else x for x in row["tokens"]]
-        # TODO: Find the official LingPy way to consider word boundaries to
-        # also be morpheme boundaries – just adding them in
-        # `partial_cluster(sep=...+'_')` did not work, and why isn't it the
-        # default anyway?
-        row["doculect"] = row[dataset.column_names.forms.languageReference.lower()]
-        row["concept"] = row[dataset.column_names.forms.parameterReference.lower()]
-        return row["segments"] and row["concept"]
-
-    assert (
-        dataset.column_names.forms.segments is not None
-    ), "Dataset must have a CLDF #segments column."
-
-    lex = lingpy.compare.partial.Partial.from_cldf(
-        args.metadata,
-        filter=filter,
-        columns=["doculect", "concept", "tokens"],
-        model=lingpy.data.model.Model(args.soundclass),
-        check=True,
-    )
-
-    if args.ratio != 1.5:
-        if args.ratio == float("inf"):
-            ratio_pair = (1, 0)
-            ratio_str = "-inf"
-        if args.ratio == int(args.ratio) >= 0:
-            r = int(args.ratio)
-            ratio_pair = (r, 1)
-            ratio_str = "-{:d}".format(r)
-        elif args.ratio > 0:
-            ratio_pair = (args.ratio, 1)
-            ratio_str = "-" + str(args.ratio)
-        else:
-            raise ValueError("LexStat ratio must be in [0, ∞]")
-    else:
-        ratio_pair = (3, 2)
-        ratio_str = ""
-    if args.initial_threshold != 0.7:
-        ratio_str += "-t{:02d}".format(int(args.initial_threshold * 100))
-    try:
-        scorers_etc = lingpy.compare.lexstat.LexStat(
-            filename="lexstats-{:}-{:s}{:s}.tsv".format(
-                sha1(args.metadata), args.soundclass, ratio_str
-            )
-        )
-        lex.scorer = scorers_etc.scorer
-        lex.cscorer = scorers_etc.cscorer
-        lex.bscorer = scorers_etc.bscorer
-    except (OSError, ValueError):
-        lex.get_scorer(runs=10000, ratio=ratio_pair, threshold=args.initial_threshold)
-        lex.output(
-            "tsv",
-            filename="lexstats-{:}-{:s}{:s}".format(
-                sha1(args.metadata), args.soundclass, ratio_str
-            ),
-            ignore=[],
-        )
-    # For some purposes it is useful to have monolithic cognate classes.
-    lex.cluster(
-        method="lexstat",
-        threshold=args.threshold,
-        ref="cogid",
+    cognate_code_to_file(
+        metadata=args.metadata,
+        ratio=args.ratio,
         cluster_method=args.cluster_method,
-        verbose=True,
-        override=True,
-        gop=args.gop,
+        soundclass=args.soundclass,
         mode=args.mode,
-    )
-    # But actually, in most cases partial cognates are much more useful.
-    lex.partial_cluster(
-        method="lexstat",
         threshold=args.threshold,
-        cluster_method=args.cluster_method,
-        ref="partialcognateids",
-        override=True,
-        verbose=True,
+        initial_threshold=args.initial_threshold,
         gop=args.gop,
-        mode=args.mode,
+        output_file=args.output_file
     )
-    lex.output("tsv", filename="auto-clusters")
-    alm = lingpy.Alignments(lex, ref="partialcognateids", fuzzy=True)
-    alm.align(method="progressive")
-    alm.output("tsv", filename=args.output_file, ignore="all", prettify=False)
 
-    try:
-        dataset.add_component("CognateTable")
-    except ValueError:
-        ...
-    try:
-        dataset.add_component("CognatesetTable")
-    except ValueError:
-        ...
 
-    read_back = csv.DictReader(open(args.output_file + ".tsv"), delimiter="\t")
-    cognatesets = {}
-    judgements = []
-    i = 1
-    for line in read_back:
-        partial = line["PARTIALCOGNATEIDS"].split()
-        alignment = line["ALIGNMENT"].split(" + ")
-        slice_start = 0
-        for cs, alm in zip(partial, alignment):
-            cognatesets.setdefault(cs, {"ID": cs})
-            length = len(alm.split())
-            judgements.append(
-                {
-                    "ID": i,
-                    "Form_ID": line["ID"],
-                    "Cognateset_ID": cs,
-                    "Segment_Slice": [
-                        "{:d}:{:d}".format(slice_start, slice_start + length)
-                    ],
-                    "Alignment": alm.split(),
-                    "Source": ["LexStat"],
-                }
-            )
-            i += 1
-            slice_start += length
-    dataset.write(CognatesetTable=cognatesets.values())
-    dataset.write(CognateTable=judgements)
