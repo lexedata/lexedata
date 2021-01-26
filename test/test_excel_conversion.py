@@ -9,8 +9,7 @@ import openpyxl
 
 import lexedata.importer.fromexcel as f
 from lexedata.exporter.cognates import ExcelWriter
-import lexedata.importer.cellparser as cell_parsers
-from lexedata.importer.cognates import CognateEditParser
+from lexedata.importer.cognates import import_cognates_from_excel
 
 # todo: these test must be adapted to new interface of fromexcel.py
 
@@ -144,52 +143,7 @@ def test_roundtrip(cldf_wordlist):
     dataset["CognateTable"].write([])
     dataset["CognatesetTable"].write([])
 
-    ws_out = openpyxl.load_workbook(out_filename).active
-
-    row_header = []
-    for (header,) in ws_out.iter_cols(
-        min_row=1,
-        max_row=1,
-        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
-    ):
-        column_name = header.value
-        if column_name is None:
-            column_name = dataset["CognatesetTable", "id"].name
-        elif column_name == "CogSet":
-            column_name = dataset["CognatesetTable", "id"].name
-        try:
-            column_name = dataset["CognatesetTable", column_name].name
-        except KeyError:
-            break
-        row_header.append(column_name)
-
-    excel_parser_cognate = CognateEditParser(
-        dataset,
-        None,
-        top=2,
-        # When the dataset has cognateset comments, that column is not a header
-        # column, so this value is one higher than the actual number of header
-        # columns, so actually correct for the 1-based indices. When there is
-        # no comment column, we need to compensate for the 1-based Excel
-        # indices.
-        cellparser=cell_parsers.CellParserHyperlink(dataset),
-        row_header=row_header,
-        check_for_language_match=[dataset["LanguageTable", "name"].name],
-        check_for_match=[dataset["FormTable", "id"].name],
-        check_for_row_match=[dataset["CognatesetTable", "id"].name],
-    )
-
-    # TODO: This often doesn't work if the dataset is not perfect before this
-    # program is called. In particular, it doesn't work if there are errors in
-    # the cognate sets or judgements, which will be reset in just a moment. How
-    # else should we solve this?
-    excel_parser_cognate.db.cache_dataset()
-    excel_parser_cognate.db.drop_from_cache("CognatesetTable")
-    excel_parser_cognate.db.drop_from_cache("CognateTable")
-    excel_parser_cognate.parse_cells(ws_out)
-    excel_parser_cognate.db.write_dataset_from_cache(
-        ["CognateTable", "CognatesetTable"]
-    )
+    import_cognates_from_excel(out_filename, dataset)
 
     new_judgements = {
         (row[c_formReference], row[c_cogsetReference])
@@ -222,52 +176,7 @@ def test_roundtrip_separator_column(cldf_wordlist):
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
 
-    ws_out = openpyxl.load_workbook(out_filename).active
-
-    row_header = []
-    for (header,) in ws_out.iter_cols(
-        min_row=1,
-        max_row=1,
-        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
-    ):
-        column_name = header.value
-        if column_name is None:
-            column_name = dataset["CognatesetTable", "id"].name
-        elif column_name == "CogSet":
-            column_name = dataset["CognatesetTable", "id"].name
-        try:
-            column_name = dataset["CognatesetTable", column_name].name
-        except KeyError:
-            break
-        row_header.append(column_name)
-
-    excel_parser_cognate = CognateEditParser(
-        dataset,
-        None,
-        top=2,
-        # When the dataset has cognateset comments, that column is not a header
-        # column, so this value is one higher than the actual number of header
-        # columns, so actually correct for the 1-based indices. When there is
-        # no comment column, we need to compensate for the 1-based Excel
-        # indices.
-        cellparser=cell_parsers.CellParserHyperlink(dataset),
-        row_header=row_header,
-        check_for_language_match=[dataset["LanguageTable", "name"].name],
-        check_for_match=[dataset["FormTable", "id"].name],
-        check_for_row_match=[dataset["CognatesetTable", "id"].name],
-    )
-
-    # TODO: This often doesn't work if the dataset is not perfect before this
-    # program is called. In particular, it doesn't work if there are errors in
-    # the cognate sets or judgements, which will be reset in just a moment. How
-    # else should we solve this?
-    excel_parser_cognate.db.cache_dataset()
-    excel_parser_cognate.db.drop_from_cache("CognatesetTable")
-    excel_parser_cognate.db.drop_from_cache("CognateTable")
-    excel_parser_cognate.parse_cells(ws_out)
-    excel_parser_cognate.db.write_dataset_from_cache(
-        ["CognateTable", "CognatesetTable"]
-    )
+    import_cognates_from_excel(out_filename, dataset)
 
     reread_tags = [
         (c[c_id], c["CommaSeparatedTags"]) for c in dataset["CognatesetTable"]
@@ -281,61 +190,26 @@ def test_cell_comments():
     dataset, _ = copy_to_temp(
         Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     )
-    ws_test = openpyxl.load_workbook(
-        Path(__file__).parent / "data/excel/judgement_cell_with_note.xlsx"
-    ).active
+    ws_test = Path(__file__).parent / "data/excel/judgement_cell_with_note.xlsx"
 
-    row_header = []
-    for (header,) in ws_test.iter_cols(
-        min_row=1,
-        max_row=1,
-        max_col=len(dataset["CognatesetTable"].tableSchema.columns),
-    ):
-        column_name = header.value
-        if column_name is None:
-            column_name = dataset["CognatesetTable", "id"].name
-        elif column_name == "CogSet":
-            column_name = dataset["CognatesetTable", "id"].name
-        try:
-            column_name = dataset["CognatesetTable", column_name].name
-        except KeyError:
-            break
-        row_header.append(column_name)
-
-    excel_parser_cognate = CognateEditParser(
-        dataset,
-        None,
-        top=2,
-        # When the dataset has cognateset comments, that column is not a header
-        # column, so this value is one higher than the actual number of header
-        # columns, so actually correct for the 1-based indices. When there is
-        # no comment column, we need to compensate for the 1-based Excel
-        # indices.
-        cellparser=cell_parsers.CellParserHyperlink(dataset),
-        row_header=row_header,
-        check_for_language_match=[dataset["LanguageTable", "name"].name],
-        check_for_match=[dataset["FormTable", "id"].name],
-        check_for_row_match=[dataset["CognatesetTable", "id"].name],
-    )
-
-    # TODO: This often doesn't work if the dataset is not perfect before this
-    # program is called. In particular, it doesn't work if there are errors in
-    # the cognate sets or judgements, which will be reset in just a moment. How
-    # else should we solve this?
-    excel_parser_cognate.db.cache_dataset()
-    excel_parser_cognate.db.drop_from_cache("CognatesetTable")
-    excel_parser_cognate.db.drop_from_cache("CognateTable")
-    excel_parser_cognate.parse_cells(ws_test)
-
-    assert excel_parser_cognate.db.cache["CognateTable"] == {
+    import_cognates_from_excel(ws_test, dataset)
+    cognates = {
+        cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognateTable"]
+    }
+    assert cognates == {
         "autaa_Woman-cogset": {
             "Cognateset": "cogset",
             "Comment": "Comment on judgement",
             "Form_ID": "autaa_Woman",
             "ID": "autaa_Woman-cogset",
+            "Segment_Slice": None,
+            "Alignment": None,
         }
     }
-    assert excel_parser_cognate.db.cache["CognatesetTable"] == {
+    cognatesets = {
+        cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognatesetTable"]
+    }
+    assert cognatesets == {
         "cogset": {"Name": "cogset", "Comment": "Cognateset-comment", "ID": "cogset"}
     }
 
