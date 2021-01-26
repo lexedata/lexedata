@@ -9,7 +9,6 @@ from lexedata.types import Language, RowObject, CogSet
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.importer.fromexcel import ExcelCognateParser
 from lexedata.util import clean_cell_value, get_cell_comment
-from lexedata.enrich.add_status_column import add_status_column_to_table
 
 
 class CognateEditParser(ExcelCognateParser):
@@ -78,7 +77,7 @@ def header_from_cognate_excel(
     return row_header, separators
 
 
-def import_cognates_from_excel(excel: str, dataset: pycldf.Dataset, status_update: t.Optional[str]) -> None:
+def import_cognates_from_excel(excel: str, dataset: pycldf.Dataset) -> None:
     ws = openpyxl.load_workbook(excel).active
 
     row_header, _ = header_from_cognate_excel(ws, dataset)
@@ -97,13 +96,10 @@ def import_cognates_from_excel(excel: str, dataset: pycldf.Dataset, status_updat
         check_for_match=[dataset["FormTable", "id"].name],
         check_for_row_match=[dataset["CognatesetTable", "id"].name],
     )
-    # create status_column if status update is given
-    if status_update:
-        add_status_column_to_table(dataset=dataset, table_name="CognateTable")
     excel_parser_cognate.db.cache_dataset()
     excel_parser_cognate.db.drop_from_cache("CognatesetTable")
     excel_parser_cognate.db.drop_from_cache("CognateTable")
-    excel_parser_cognate.parse_cells(ws, status_update=status_update)
+    excel_parser_cognate.parse_cells(ws, status_update=None)
     excel_parser_cognate.db.write_dataset_from_cache(
         ["CognateTable", "CognatesetTable"]
     )
@@ -126,17 +122,8 @@ if __name__ == "__main__":
         default="Wordlist-metadata.json",
         help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
-    parser.add_argument(
-        "--status-update",
-        type=str,
-        default="Imported from cognate excel",
-        help="Text written to Status_Column. Set to 'None' for no status update. "
-             "(default: Imported from cognate excel)",
-    )
 
     args = parser.parse_args()
-    if args.status_update == "None":
-        args.status_update = None
     import_cognates_from_excel(
-        args.cogsets, pycldf.Dataset.from_metadata(args.metadata), args.status_update
+        args.cogsets, pycldf.Dataset.from_metadata(args.metadata)
     )
