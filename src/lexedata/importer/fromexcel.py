@@ -280,10 +280,11 @@ class ExcelParser:
 
         return languages_by_column
 
-    def parse_cells(self,
-                    sheet: openpyxl.worksheet.worksheet.Worksheet,
-                    status_update: t.Optional[str] = None
-                    ) -> None:
+    def parse_cells(
+        self,
+        sheet: openpyxl.worksheet.worksheet.Worksheet,
+        status_update: t.Optional[str] = None,
+    ) -> None:
         languages = self.parse_all_languages(sheet)
         row_object = None
         for row in tqdm(
@@ -335,15 +336,19 @@ class ExcelParser:
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
-                    self.handle_form(params, row_object, cell_with_forms, this_lan, status_update)
+                    self.handle_form(
+                        params, row_object, cell_with_forms, this_lan, status_update
+                    )
         self.db.commit()
 
-    def handle_form(self, params,
-                    row_object: RowObject,
-                    cell_with_forms,
-                    this_lan: str,
-                    status_update: t.Optional[str]
-                    ):
+    def handle_form(
+        self,
+        params,
+        row_object: RowObject,
+        cell_with_forms,
+        this_lan: str,
+        status_update: t.Optional[str],
+    ):
         form = Form(params)
         c_f_id = self.db.dataset["FormTable", "id"].name
         c_f_language = self.db.dataset["FormTable", "languageReference"].name
@@ -454,12 +459,14 @@ class ExcelCognateParser(ExcelParser):
         self.db.make_id_unique(judgement)
         return self.db.insert_into_db(judgement)
 
-    def handle_form(self,
-                    params,
-                    row_object: RowObject,
-                    cell_with_forms,
-                    this_lan,
-                    status_update: t.Optional[str]):
+    def handle_form(
+        self,
+        params,
+        row_object: RowObject,
+        cell_with_forms,
+        this_lan,
+        status_update: t.Optional[str],
+    ):
         try:
             if params.__table__ == "CognateTable":
                 row_id = row_object[self.db.dataset["CognatesetTable", "id"].name]
@@ -724,7 +731,7 @@ if __name__ == "__main__":
         type=str,
         default="initial import",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-             "(default: initial import)",
+        "(default: initial import)",
     )
     args = parser.parse_args()
     if args.status_update == "None":

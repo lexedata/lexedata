@@ -11,6 +11,7 @@ import pycldf
 
 from lexedata.enrich.add_status_column import add_status_column_to_table
 
+
 def align(forms):
     """‘Align’ forms by adding gap characters to the end.
 
@@ -26,7 +27,9 @@ def align(forms):
         yield segments + ["-"] * (length - len(segments)), metadata
 
 
-def aligne_cognate_table(dataset: pycldf.Dataset, status_update: t.Optional[str] = None):
+def aligne_cognate_table(
+    dataset: pycldf.Dataset, status_update: t.Optional[str] = None
+):
     f_id = dataset["FormTable", "id"].name
     f_segments = dataset["FormTable", "segments"].name
     f_language = dataset["FormTable", "languageReference"].name
@@ -88,11 +91,11 @@ if __name__ == "__main__":
         type=str,
         default="Morphemes aligned",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-             "(default: Morphemes aligned)",
+        "(default: Morphemes aligned)",
     )
     args = parser.parse_args()
     if args.status_update == "None":
         args.status_update = None
-    aligne_cognate_table(pycldf.Wordlist.from_metadata(args.metadata), args.status_update)
-
-
+    aligne_cognate_table(
+        pycldf.Wordlist.from_metadata(args.metadata), args.status_update
+    )

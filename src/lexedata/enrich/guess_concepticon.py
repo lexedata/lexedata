@@ -101,7 +101,9 @@ def add_concepticon_references(
 
     write_back = []
     for i, row in enumerate(dataset["ParameterTable"]):
-        if overwrite or not row.get(dataset.column_names.parameters.concepticonReference):
+        if overwrite or not row.get(
+            dataset.column_names.parameters.concepticonReference
+        ):
             matches = [(m.get(i, ([], 10)), t) for m, t in cmaps]
             best_sim = min(x[0][1] for x in matches)
             best_matches = [t[m] for (ms, s), t in matches for m in ms if s <= best_sim]
@@ -126,11 +128,11 @@ def add_concepticon_references(
 
 
 def create_concepticon_for_concepts(
-        dataset: pycldf.Dataset,
-        language: t.Iterable,
-        concepticon_glosses: bool,
-        overwrite: bool,
-        status_update: t.Optional[str]
+    dataset: pycldf.Dataset,
+    language: t.Iterable,
+    concepticon_glosses: bool,
+    overwrite: bool,
+    status_update: t.Optional[str],
 ):
     # add Status_Column if status update
     if status_update:
@@ -153,7 +155,7 @@ def create_concepticon_for_concepts(
         dataset,
         gloss_languages=gloss_languages,
         status_update=status_update,
-        overwrite=overwrite
+        overwrite=overwrite,
     )
 
     if concepticon_glosses:
@@ -196,7 +198,7 @@ if __name__ == "__main__":
         type=str,
         default="automatic Concepticon link",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-             "(default: automatic Concepticon link)",
+        "(default: automatic Concepticon link)",
     )
     args = parser.parse_args()
     if args.status_update == "None":
@@ -208,6 +210,5 @@ if __name__ == "__main__":
         language=args.language,
         concepticon_glosses=args.concepticon_glosses,
         overwrite=args.overwrite,
-        status_update=args.status_update
+        status_update=args.status_update,
     )
-

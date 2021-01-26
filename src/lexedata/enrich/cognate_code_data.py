@@ -55,16 +55,16 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
 
 
 def cognate_code_to_file(
-        metadata: Path,
-        ratio: float,
-        soundclass: str,
-        cluster_method: str,
-        threshold: float,
-        initial_threshold: float,
-        gop: float,
-        mode: str,
-        output_file: Path
-)->None:
+    metadata: Path,
+    ratio: float,
+    soundclass: str,
+    cluster_method: str,
+    threshold: float,
+    initial_threshold: float,
+    gop: float,
+    mode: str,
+    output_file: Path,
+) -> None:
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
     assert (
         dataset.column_names.forms.segments is not None
@@ -265,7 +265,5 @@ if __name__ == "__main__":
         threshold=args.threshold,
         initial_threshold=args.initial_threshold,
         gop=args.gop,
-        output_file=args.output_file
+        output_file=args.output_file,
     )
-
-

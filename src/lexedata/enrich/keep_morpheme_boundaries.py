@@ -66,4 +66,3 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     morpheme_boundaries_to_csv(args.judgements, args.alignments, args.output_file)
-

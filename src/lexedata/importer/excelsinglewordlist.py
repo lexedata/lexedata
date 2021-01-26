@@ -192,7 +192,6 @@ def read_single_excel_sheet(
     db.write_dataset_from_cache()
 
 
-
 if __name__ == "__main__":
     import argparse
 
@@ -258,7 +257,7 @@ if __name__ == "__main__":
         type=str,
         default="new import",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-             "(default: new import)",
+        "(default: new import)",
     )
     args = parser.parse_args()
     if args.status_update == "None":

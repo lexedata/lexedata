@@ -66,7 +66,7 @@ class ExcelWriter:
         out: Path,
         size_sort: bool = False,
         language_order="name",
-        status_update: t.Optional[str] = None
+        status_update: t.Optional[str] = None,
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -406,7 +406,7 @@ if __name__ == "__main__":
         type=str,
         default="automatic singleton",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-             "(default: automatic singleton)",
+        "(default: automatic singleton)",
     )
     # TODO: Derive URL template from the "special:domain" property of the
     # wordlist, where it exists? So something like
@@ -425,5 +425,5 @@ if __name__ == "__main__":
         args.excel,
         size_sort=args.size_sort,
         language_order=args.language_sort_column,
-        status_update=args.status_update
+        status_update=args.status_update,
     )
