@@ -203,5 +203,10 @@ if __name__ == "__main__":
         args.status_update = None
 
     # TODO: @Gereon is pycldf.Wordlist instead of pycldf.Dataset correct?
-    add_concepticon_references(pycldf.Wordlist.from_metadata(args.metadata), args.language, overwrite=args.overwrite)
+    add_concepticon_references(
+        dataset=pycldf.Wordlist.from_metadata(args.metadata),
+        gloss_languages=args.language,
+        overwrite=args.overwrite,
+        status_update=args.status_update
+    )
 
