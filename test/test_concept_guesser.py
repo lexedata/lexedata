@@ -23,7 +23,13 @@ def copy_wordlist_add_concepticons(request):
         t = target.parent / link
         shutil.copyfile(o, t)
     dataset = pycldf.Dataset.from_metadata(target)
-    create_concepticon_for_concepts(dataset=dataset, glo)
+    create_concepticon_for_concepts(
+        dataset=dataset,
+        language=[],
+        overwrite=False,
+        concepticon_glosses=False,
+        status_update=None
+    )
     return target, dataset
 
 
