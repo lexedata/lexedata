@@ -101,7 +101,7 @@ def add_concepticon_references(
 
     write_back = []
     for i, row in enumerate(dataset["ParameterTable"]):
-        if overwrite or not row[dataset.column_names.parameters.concepticonReference]:
+        if overwrite or not row.get(dataset.column_names.parameters.concepticonReference):
             matches = [(m.get(i, ([], 10)), t) for m, t in cmaps]
             best_sim = min(x[0][1] for x in matches)
             best_matches = [t[m] for (ms, s), t in matches for m in ms if s <= best_sim]
