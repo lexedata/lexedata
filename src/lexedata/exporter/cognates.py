@@ -404,9 +404,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--status-update",
         type=str,
-        default="Created singleton cognatesets",
+        default="automatic singleton",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-             "(default: Created singleton cognatesets)",
+             "(default: automatic singleton)",
     )
     # TODO: Derive URL template from the "special:domain" property of the
     # wordlist, where it exists? So something like

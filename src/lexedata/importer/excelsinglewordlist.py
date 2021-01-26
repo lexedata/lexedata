@@ -256,9 +256,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--status-update",
         type=str,
-        default="Imported from single excel file",
+        default="new import",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-             "(default: Imported from single excel file)",
+             "(default: new import)",
     )
     args = parser.parse_args()
     if args.status_update == "None":
