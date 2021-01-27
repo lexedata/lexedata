@@ -88,7 +88,7 @@ def forms_to_tsv(
             form["Cogset_ID"] = 0
         # add integer form id
         form["ID"] = c
-
+        # TODO: join the segments by +
         out.writerow(form)
 
 
