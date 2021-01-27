@@ -11,7 +11,12 @@ import pycldf
 from lexedata.types import Form
 
 
-def prepare_forms(dataset: pycldf.Dataset, languages: t.Iterable[str], cognatesets: t.Iterable[str], output_file: Path):
+def prepare_forms(
+    dataset: pycldf.Dataset,
+    languages: t.Iterable[str],
+    cognatesets: t.Iterable[str],
+    output_file: Path,
+):
     # required fields
     c_cognate_cognateset = dataset["CognateTable", "cognatesetReference"].name
     c_cognate_form = dataset["CognateTable", "formReference"].name
@@ -49,17 +54,17 @@ def prepare_forms(dataset: pycldf.Dataset, languages: t.Iterable[str], cognatese
         tsv_header=tsv_header,
         cogset_by_form_id=cogset_by_form_id,
         cogset_to_id=cogset_to_id,
-        output_file=output_file
+        output_file=output_file,
     )
 
 
 def forms_to_tsv(
-        dataset: pycldf.Dataset,
-        forms: t.Iterable[Form],
-        tsv_header: t.List[str],
-        cogset_by_form_id: t.Dict[str: str],
-        cogset_to_id: t.Dict[str, int],
-        output_file: Path
+    dataset: pycldf.Dataset,
+    forms: t.Iterable[Form],
+    tsv_header: t.List[str],
+    cogset_by_form_id: t.Dict[str:str],
+    cogset_to_id: t.Dict[str, int],
+    output_file: Path,
 ):
     c_form_id = dataset["FormTable", "id"].name
     out = csv.DictWriter(
@@ -90,7 +95,9 @@ def forms_to_tsv(
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Export #FormTable to tsv format for import to edictor")
+    parser = argparse.ArgumentParser(
+        description="Export #FormTable to tsv format for import to edictor"
+    )
     parser.add_argument(
         "--metadata",
         type=Path,
@@ -131,6 +138,5 @@ if __name__ == "__main__":
         dataset=pycldf.Dataset.from_metadata(args.metadata),
         languages=args.languages,
         cognatesets=args.cognatesets,
-        output_file=args.output_file
+        output_file=args.output_file,
     )
-
