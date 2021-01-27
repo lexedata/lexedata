@@ -44,6 +44,7 @@ def prepare_forms(dataset: pycldf.Dataset, languages: t.Iterable[str], cognatese
     if "Cognateset_ID" not in tsv_header:
         tsv_header.append("Cognateset_ID")
     forms_to_tsv(
+        dataset=dataset,
         forms=forms,
         tsv_header=tsv_header,
         cogset_by_form_id=cogset_by_form_id,
@@ -51,13 +52,16 @@ def prepare_forms(dataset: pycldf.Dataset, languages: t.Iterable[str], cognatese
         output_file=output_file
     )
 
+
 def forms_to_tsv(
+        dataset: pycldf.Dataset,
         forms: t.Iterable[Form],
         tsv_header: t.List[str],
         cogset_by_form_id: t.Dict[str: str],
         cogset_to_id: t.Dict[str, int],
         output_file: Path
 ):
+    c_form_id = dataset["FormTable", "id"].name
     out = csv.DictWriter(
         output_file,
         fieldnames=tsv_header,
