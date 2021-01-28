@@ -39,12 +39,11 @@ def prepare_forms(
     # set header for tsv
     tsv_header = list(dataset["FormTable"].tableSchema.columndict.keys())
     # create new field ID or Original_ID if already exists
-    if c_form_id == "ID":
-        tsv_header.pop(c_form_id)
-        tsv_header.insert(0, c_form_id)
-        tsv_header.append("Original_ID")
-    else:
-        tsv_header.insert(0, "ID")
+    try:
+        id_column = tsv_header.index("ID")
+        tsv_header[id_column] = "Original_ID"
+    except ValueError:
+        pass
     # add Cognateset ID
     if "Cognateset_ID" not in tsv_header:
         tsv_header.append("Cognateset_ID")
@@ -62,25 +61,24 @@ def forms_to_tsv(
     dataset: pycldf.Dataset,
     forms: t.Iterable[Form],
     tsv_header: t.List[str],
-    cogset_by_form_id: t.Dict[str:str],
+    cogset_by_form_id: t.Dict[str, str],
     cogset_to_id: t.Dict[str, int],
     output_file: Path,
 ):
-    c_form_id = dataset["FormTable", "id"].name
     out = csv.DictWriter(
-        output_file,
+        output_file.open("w"),
         fieldnames=tsv_header,
         delimiter="\t",
-        newline="",
     )
     out.writeheader()
     for c, form in enumerate(forms, 1):
         # store original form id in other field and get cogset integer id
-        if "Original_ID" in tsv_header:
-            form["Original_ID"] = form[c_form_id]
+        cogset = cogset_by_form_id.get(form[c_form_id])
+        if "ID" in form:
+            form["Original_ID"] = form.pop("ID")
             cogset = cogset_by_form_id.get(form["Original_ID"])
         else:
-            cogset = cogset_by_form_id.get(form[c_form_id])
+            ...
         # if there is a cogset, add its integer id. otherwise set id to 0
         if cogset:
             form["Cogset_ID"] = cogset_to_id[cogset]
@@ -130,7 +128,7 @@ if __name__ == "__main__":
         "--output-file",
         "-o",
         type=Path,
-        default="cognate.csv",
+        default="cognate.tsv",
         help="Path to the output file",
     )
     args = parser.parse_args()
@@ -140,3 +138,78 @@ if __name__ == "__main__":
         cognatesets=args.cognatesets,
         output_file=args.output_file,
     )
+
+#### NON-RUNNING EXAMPLE NOTES FOLLOW
+"""
+FormTable
+himmelauge, h i m m e l a u g e
+himmelsauge, h i m m e l s a u g e
+tão, t ã o
+kitab, k i t a b
+
+CognateTable
+himmelauge,1:6,HIMMEL
+himmelauge,7:10,AUGE
+himmelsauge,1:6,HIMMEL
+himmelsauge,8:11,AUGE
+tão,1:2,TA
+tão,2:3,NO
+kitab,"1,3,5",KTB
+kitab,"2,4",IA
+
+CognatesetTable
+HIMMEL,1
+AUGE,2
+TA,3
+NO,4
+
+Edictor
+1	himmelsauge	h i m m e l + a u g e	1 2
+2	himmelsauge	h i m m e l + s + a u g e	1 0 2
+3	tão	t ã + o	3 4
+4	kitab	k + i + t + a + b	5 6 5 6 5
+
+
+which_segment_belongs_to_which_cognateset: Dict[FormID, List[Set[CognatesetID]]] = {}
+for j in ds["CognateTable"]:
+    if j["Form_ID"] not in which_segment_belongs_to_which_cognateset:
+        form = forms[j["Form_ID"]]
+        which_segment_belongs_to_which_cognateset[j["Form_ID"]] = [set() for _ in form["Segments"]]
+
+    segments_judged = lexedata.util.parse_segment_slice(j["Segment_Slice"])
+    for s in segments_judged:
+        which_segment_belongs_to_which_cognateset[j["Form_ID"]][s].add(j["Cognateset_ID"])
+
+
+
+{"himmelsauge": [{"HIMMEL"}, {"HIMMEL"}, {"HIMMEL"}, {"HIMMEL"}, {"HIMMEL"}, {"HIMMEL"}, set(), {"AUGE"}, {"AUGE"}, {"AUGE"}, {"AUGE"}]}
+
+all_cognatesets = {cognateset["ID"]: c for c, cognateset in enumerate(ds["CognatesetTable"], 1)}
+
+for form, judgements in which_segment_belongs_to_which_cognateset.items():
+    for s, segment_cognatesets in enumerate(judgements):
+        if s = 0:
+            if not segment_cognatesets:
+                out_segments = [forms[form]["Segments"][s]]
+                out_cognatesets = [0]
+            elif len(segment_cognatesets) >= 1:
+                out_segments = [forms[form]["Segments"][s]]
+                out_cognatesets = [all_cognatesets[segment_cognatesets.pop()]]
+        else:
+            if out_cognatesets[-1] in segment_cognatesets:
+                pass
+            elif out_cognatesets[-1] == 0 and not segment_cognatesets:
+                pass
+            elif not segment_cognatesets:
+                out_segments.append("+")
+                out_cognatesets.append(0)
+            else:
+                out_segments.append("+")
+                out_cognatesets.append(all_cognatesets[segment_cognatesets.pop()])
+            out_segments.append(forms[form]["Segments"][s])
+
+
+{"himmelsauge": [1, 1, 1, 1, 1, 1, +, 0, +, 2, 2, 2, 2]}
+{"himmelsauge": [h, i, m, m, e, l, +, s, +, a, u, g, e], [1, 0, 2]}
+himmelsauge	h i m m e l + s + a u g e	1 0 2
+"""
