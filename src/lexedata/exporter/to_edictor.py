@@ -67,18 +67,27 @@ def forms_to_tsv(
                 cognates.append(judgement)
     del form_ids
     # get cognateset integer IDs
-    all_cognatesets = {cognateset["ID"]: c for c, cognateset in enumerate(dataset["CognatesetTable"], 1)}
+    all_cognatesets = {
+        cognateset["ID"]: c
+        for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
+    }
 
     # match segements to cognatesets for given cognates
     which_segment_belongs_to_which_cognateset: t.Dict[str, t.List[t.Set[str]]] = {}
     for j in cognates:
         if j[c_form_id] not in which_segment_belongs_to_which_cognateset:
             form = forms[j[c_cognate_form]]
-            which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [set() for _ in form[c_form_segments]]
-        segments_judged = segment_slices_to_segment_list(segments=form[c_form_segments], judgement=j)
+            which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [
+                set() for _ in form[c_form_segments]
+            ]
+        segments_judged = segment_slices_to_segment_list(
+            segments=form[c_form_segments], judgement=j
+        )
         for s in segments_judged:
             try:
-                which_segment_belongs_to_which_cognateset[j["Form_ID"]][s].add(j["Cognateset_ID"])
+                which_segment_belongs_to_which_cognateset[j["Form_ID"]][s].add(
+                    j["Cognateset_ID"]
+                )
             except IndexError:
                 continue
     # write output to tsv
@@ -173,7 +182,7 @@ if __name__ == "__main__":
         output_file=args.output_file,
     )
 
-#### NON-RUNNING EXAMPLE NOTES FOLLOW
+# NON-RUNNING EXAMPLE NOTES FOLLOW
 """
 FormTable
 himmelauge, h i m m e l a u g e

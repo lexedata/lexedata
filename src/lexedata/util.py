@@ -130,7 +130,9 @@ def load_clics():
     return networkx.parse_gml(line.decode("utf-8") for line in gml)
 
 
-def segment_slices_to_segment_list(segments: t.Iterable[str], judgement: lexedata.types.Judgement):
+def segment_slices_to_segment_list(
+    segments: t.Iterable[str], judgement: lexedata.types.Judgement
+):
     segment_list = []
     if not judgement.get("Segment_Slice"):
         judgement["Segment_Slice"] = ["0:{:d}".format(len(segments))]
