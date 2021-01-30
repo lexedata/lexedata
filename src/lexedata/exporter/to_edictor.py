@@ -8,86 +8,119 @@ import typing as t
 
 import pycldf
 
-from lexedata.types import Form
+from lexedata.util import segment_slices_to_segment_list
 
 
-def prepare_forms(
+def forms_to_tsv(
     dataset: pycldf.Dataset,
     languages: t.Iterable[str],
+    concepts: t.Iterable[str],
     cognatesets: t.Iterable[str],
     output_file: Path,
 ):
     # required fields
     c_cognate_cognateset = dataset["CognateTable", "cognatesetReference"].name
     c_cognate_form = dataset["CognateTable", "formReference"].name
-    c_form_id = dataset["FormTable", "id"].name
     c_form_language = dataset["FormTable", "languageReference"].name
-    c_cogset_id = dataset["CognatesetTable", "id"].name
-    cogset_to_id = dict()
-    for c, cogset in enumerate(dataset["CognatesetTable"], 1):
-        if cogset[c_cogset_id] in cognatesets:
-            cogset_to_id[cogset[c_cogset_id]] = c
-    # load all cogsets associated with a form
-    cogset_by_form_id = dict()
-    for j in dataset["CognateTable"]:
-        cogset_by_form_id[j[c_cognate_form]] = j[c_cognate_cognateset]
-    # load all forms with given languages:
-    forms = []
-    for form in dataset["FormTable"]:
-        if form[c_form_language] in languages:
-            forms.append(form)
+    c_form_concept = dataset["FormTable", "parameterReference"].name
+    c_form_id = dataset["FormTable", "id"].name
+    c_form_segments = dataset["FormTable", "segments"].name
+
+    # prepare the header for the tsv output
+    # the first column must be named ID and contain 1-based integer IDs
     # set header for tsv
     tsv_header = list(dataset["FormTable"].tableSchema.columndict.keys())
-    # create new field ID or Original_ID if already exists
+    # replace ID column by Original_ID if already exists
     try:
         id_column = tsv_header.index("ID")
         tsv_header[id_column] = "Original_ID"
     except ValueError:
         pass
+    # ID column at first place
+    tsv_header.insert(0, "ID")
     # add Cognateset ID
     if "Cognateset_ID" not in tsv_header:
         tsv_header.append("Cognateset_ID")
-    forms_to_tsv(
-        dataset=dataset,
-        forms=forms,
-        tsv_header=tsv_header,
-        cogset_by_form_id=cogset_by_form_id,
-        cogset_to_id=cogset_to_id,
-        output_file=output_file,
-    )
 
+    # select forms and cognates given restriction of languages and concepts, cognatesets respectively
+    forms = {}
+    for form in dataset["FormTable"]:
+        if languages:
+            if form[c_form_language] in languages:
+                forms[form[c_form_id]] = form
+        else:
+            forms[form[c_form_id]] = form
+    for id, form in forms.items():
+        if concepts:
+            if form[c_form_concept] not in concepts:
+                del forms[id]
 
-def forms_to_tsv(
-    dataset: pycldf.Dataset,
-    forms: t.Iterable[Form],
-    tsv_header: t.List[str],
-    cogset_by_form_id: t.Dict[str, str],
-    cogset_to_id: t.Dict[str, int],
-    output_file: Path,
-):
+    # load all cognates corresponding to those forms
+    form_ids = list(forms.keys())
+    cognates = []
+    for judgement in dataset["CognateTable"]:
+        if judgement[c_cognate_form] in form_ids:
+            if cognatesets:
+                if judgement[c_cognate_cognateset] in cognatesets:
+                    cognates.append(judgement)
+            else:
+                cognates.append(judgement)
+    del form_ids
+    # get cognateset integer IDs
+    all_cognatesets = {cognateset["ID"]: c for c, cognateset in enumerate(dataset["CognatesetTable"], 1)}
+
+    # match segements to cognatesets for given cognates
+    which_segment_belongs_to_which_cognateset: t.Dict[str, t.List[t.Set[str]]] = {}
+    for j in cognates:
+        if j[c_form_id] not in which_segment_belongs_to_which_cognateset:
+            form = forms[j[c_cognate_form]]
+            which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [set() for _ in form[c_form_segments]]
+        segments_judged = segment_slices_to_segment_list(segments=form[c_form_segments], judgement=j)
+        for s in segments_judged:
+            try:
+                which_segment_belongs_to_which_cognateset[j["Form_ID"]][s].add(j["Cognateset_ID"])
+            except IndexError:
+                continue
+    # write output to tsv
     out = csv.DictWriter(
-        output_file.open("w"),
+        output_file.open("w", encoding="utf8"),
         fieldnames=tsv_header,
         delimiter="\t",
     )
     out.writeheader()
-    for c, form in enumerate(forms, 1):
+    for c, values in enumerate(which_segment_belongs_to_which_cognateset.items(), 1):
+        form, judgements = values
+        for s, segment_cognatesets in enumerate(judgements):
+            if s == 0:
+                if not segment_cognatesets:
+                    out_segments = [forms[form][c_form_segments][s]]
+                    out_cognatesets = [0]
+                elif len(segment_cognatesets) >= 1:
+                    out_segments = [forms[form][c_form_segments][s]]
+                    out_cognatesets = [all_cognatesets[segment_cognatesets.pop()]]
+            else:
+                if out_cognatesets[-1] in segment_cognatesets:
+                    pass
+                elif out_cognatesets[-1] == 0 and not segment_cognatesets:
+                    pass
+                elif not segment_cognatesets:
+                    out_segments.append("+")
+                    out_cognatesets.append(0)
+                else:
+                    out_segments.append("+")
+                    out_cognatesets.append(all_cognatesets[segment_cognatesets.pop()])
+                out_segments.append(forms[form][c_form_segments][s])
         # store original form id in other field and get cogset integer id
-        cogset = cogset_by_form_id.get(form[c_form_id])
-        if "ID" in form:
-            form["Original_ID"] = form.pop("ID")
-            cogset = cogset_by_form_id.get(form["Original_ID"])
-        else:
-            ...
+        this_form = forms[form]
+        if "ID" in this_form:
+            this_form["Original_ID"] = this_form.pop("ID")
         # if there is a cogset, add its integer id. otherwise set id to 0
-        if cogset:
-            form["Cogset_ID"] = cogset_to_id[cogset]
-        else:
-            form["Cogset_ID"] = 0
+        this_form["Cognateset_ID"] = " ".join(str(e) for e in out_cognatesets)
+        this_form[c_form_segments] = " ".join(out_segments)
+
         # add integer form id
-        form["ID"] = c
-        # TODO: join the segments by +
-        out.writerow(form)
+        this_form["ID"] = c
+        out.writerow(this_form)
 
 
 if __name__ == "__main__":
@@ -132,9 +165,10 @@ if __name__ == "__main__":
         help="Path to the output file",
     )
     args = parser.parse_args()
-    prepare_forms(
+    forms_to_tsv(
         dataset=pycldf.Dataset.from_metadata(args.metadata),
         languages=args.languages,
+        concepts=args.concepts,
         cognatesets=args.cognatesets,
         output_file=args.output_file,
     )
