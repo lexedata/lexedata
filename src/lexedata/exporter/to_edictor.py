@@ -11,10 +11,43 @@ import pycldf
 from lexedata.util import segment_slices_to_segment_list
 
 
+def rename(form_column, dataset):
+    try:
+        function = dataset["FormTable", form_column].propertyUrl.expand().split("#")[-1]
+    except (KeyError, AttributeError):
+        function = form_column
+    return {
+        "languageReference": "DOCULECT",
+        "parameterReference": "CONCEPT",
+        "form": "IPA",
+        "cognatesetReference": "COGID",
+        "alignment": "ALIGNMENT",
+        "segments": "TOKENS",
+        "id": "CLDF_id",
+        "LINGPY_ID": "ID",
+        "ID": "CLDF_ID",
+    }.get(function, form_column)
+
+
+class WorldSet:
+    def __contains__(self, thing: t.Any):
+        return True
+
+    def intersection(self, other: t.Iterable):
+        return other
+
+
+def ensure_list(maybe_string: t.Union[t.List[str], str]) -> t.List[str]:
+    if isinstance(maybe_string, list):
+        return maybe_string
+    else:
+        return [maybe_string]
+
+
 def forms_to_tsv(
     dataset: pycldf.Dataset,
     languages: t.Iterable[str],
-    concepts: t.Iterable[str],
+    concepts: t.Set[str],
     cognatesets: t.Iterable[str],
     output_file: Path,
 ):
@@ -30,101 +63,102 @@ def forms_to_tsv(
     # the first column must be named ID and contain 1-based integer IDs
     # set header for tsv
     tsv_header = list(dataset["FormTable"].tableSchema.columndict.keys())
-    # replace ID column by Original_ID if already exists
-    try:
-        id_column = tsv_header.index("ID")
-        tsv_header[id_column] = "Original_ID"
-    except ValueError:
-        pass
-    # ID column at first place
-    tsv_header.insert(0, "ID")
-    # add Cognateset ID
-    if "Cognateset_ID" not in tsv_header:
-        tsv_header.append("Cognateset_ID")
+
+    tsv_header.insert(0, "LINGPY_ID")
+    tsv_header.append("cognatesetReference")
+
+    delimiters = {
+        c.name: c.separator
+        for c in dataset["FormTable"].tableSchema.columns
+        if c.separator
+    }
 
     # select forms and cognates given restriction of languages and concepts, cognatesets respectively
     forms = {}
     for form in dataset["FormTable"]:
-        if languages:
-            if form[c_form_language] in languages:
+        if form[c_form_language] in languages:
+            if concepts.intersection(ensure_list(form[c_form_concept])):
+                # Normalize the form:
+                # 1. No list-valued entries
+                for c, d in delimiters.items():
+                    if c == c_form_segments:
+                        continue
+                    form[c] = d.join(form[c])
+                # 2. No tabs, newlines in entries
+                for c, v in form.items():
+                    if type(v) == str:
+                        form[c] = form[c].replace("\t", "!t").replace("\n", "!n")
                 forms[form[c_form_id]] = form
-        else:
-            forms[form[c_form_id]] = form
-    for id, form in forms.items():
-        if concepts:
-            if form[c_form_concept] not in concepts:
-                del forms[id]
 
-    # load all cognates corresponding to those forms
-    form_ids = list(forms.keys())
-    cognates = []
-    for judgement in dataset["CognateTable"]:
-        if judgement[c_cognate_form] in form_ids:
-            if cognatesets:
-                if judgement[c_cognate_cognateset] in cognatesets:
-                    cognates.append(judgement)
-            else:
-                cognates.append(judgement)
-    del form_ids
-    # get cognateset integer IDs
-    all_cognatesets = {
+    cognatesets: t.Dict[t.Optional[str], int] = {
         cognateset["ID"]: c
         for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
+        if cognateset["ID"] in cognatesets
     }
+    cognatesets[None] = 0
 
-    # match segements to cognatesets for given cognates
+    # load all cognates corresponding to those forms
     which_segment_belongs_to_which_cognateset: t.Dict[str, t.List[t.Set[str]]] = {}
-    for j in cognates:
-        if j[c_form_id] not in which_segment_belongs_to_which_cognateset:
+    for j in dataset["CognateTable"]:
+        if j[c_cognate_form] in forms and j[c_cognate_cognateset] in cognatesets:
             form = forms[j[c_cognate_form]]
-            which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [
-                set() for _ in form[c_form_segments]
-            ]
-        segments_judged = segment_slices_to_segment_list(
-            segments=form[c_form_segments], judgement=j
-        )
-        for s in segments_judged:
-            try:
-                which_segment_belongs_to_which_cognateset[j["Form_ID"]][s].add(
-                    j["Cognateset_ID"]
-                )
-            except IndexError:
-                continue
+            if j[c_cognate_form] not in which_segment_belongs_to_which_cognateset:
+                which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [
+                    set() for _ in form[c_form_segments]
+                ]
+            segments_judged = segment_slices_to_segment_list(
+                segments=form[c_form_segments], judgement=j
+            )
+            for s in segments_judged:
+                try:
+                    which_segment_belongs_to_which_cognateset[j[c_cognate_form]][s].add(
+                        j[c_cognate_cognateset]
+                    )
+                except IndexError:
+                    print(
+                        f"WARNING: In judgement {j}, segment slice point outside valid range 0:{len(form[c_form_segments])}."
+                    )
+                    continue
+
     # write output to tsv
     out = csv.DictWriter(
-        output_file.open("w", encoding="utf8"),
+        output_file.open("w", encoding="utf-8"),
         fieldnames=tsv_header,
         delimiter="\t",
     )
-    out.writeheader()
-    for c, values in enumerate(which_segment_belongs_to_which_cognateset.items(), 1):
-        form, judgements = values
+    out.writerow({column: rename(column, dataset) for column in tsv_header})
+    breakpoint()
+    out_cognatesets: t.List[t.Optional[str]]
+    for c, (form, judgements) in enumerate(
+        which_segment_belongs_to_which_cognateset.items(), 1
+    ):
         for s, segment_cognatesets in enumerate(judgements):
             if s == 0:
                 if not segment_cognatesets:
                     out_segments = [forms[form][c_form_segments][s]]
-                    out_cognatesets = [0]
-                elif len(segment_cognatesets) >= 1:
+                    out_cognatesets = [None]
+                else:
                     out_segments = [forms[form][c_form_segments][s]]
-                    out_cognatesets = [all_cognatesets[segment_cognatesets.pop()]]
+                    out_cognatesets = [segment_cognatesets.pop()]
             else:
                 if out_cognatesets[-1] in segment_cognatesets:
                     pass
-                elif out_cognatesets[-1] == 0 and not segment_cognatesets:
+                elif out_cognatesets[-1] is None and not segment_cognatesets:
                     pass
                 elif not segment_cognatesets:
                     out_segments.append("+")
-                    out_cognatesets.append(0)
+                    out_cognatesets.append(None)
                 else:
                     out_segments.append("+")
-                    out_cognatesets.append(all_cognatesets[segment_cognatesets.pop()])
+                    out_cognatesets.append(segment_cognatesets.pop())
                 out_segments.append(forms[form][c_form_segments][s])
         # store original form id in other field and get cogset integer id
         this_form = forms[form]
-        if "ID" in this_form:
-            this_form["Original_ID"] = this_form.pop("ID")
+        this_form["LINGPY_ID"] = c
         # if there is a cogset, add its integer id. otherwise set id to 0
-        this_form["Cognateset_ID"] = " ".join(str(e) for e in out_cognatesets)
+        this_form["cognatesetReference"] = " ".join(
+            str(cognatesets[e]) for e in out_cognatesets
+        )
         this_form[c_form_segments] = " ".join(out_segments)
 
         # add integer form id
@@ -176,9 +210,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     forms_to_tsv(
         dataset=pycldf.Dataset.from_metadata(args.metadata),
-        languages=args.languages,
-        concepts=args.concepts,
-        cognatesets=args.cognatesets,
+        languages=args.languages or WorldSet(),
+        concepts=args.concepts or WorldSet(),
+        cognatesets=args.cognatesets or WorldSet(),
         output_file=args.output_file,
     )
 
