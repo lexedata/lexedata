@@ -8,10 +8,10 @@ import unicodedata
 import unidecode as uni
 import pycldf
 import openpyxl as op
-
 import networkx
-
 from lingpy.compare.strings import ldn_swap
+
+import lexedata.types
 
 
 invalid_id_elements = re.compile(r"\W+")
@@ -128,6 +128,20 @@ def load_clics():
         )
     gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "r")
     return networkx.parse_gml(line.decode("utf-8") for line in gml)
+
+
+def segment_slices_to_segment_list(
+    segments: t.Iterable[str], judgement: lexedata.types.Judgement
+):
+    segment_list = []
+    if not judgement.get("Segment_Slice"):
+        judgement["Segment_Slice"] = ["0:{:d}".format(len(segments))]
+    for startend in judgement["Segment_Slice"]:
+        start, end = startend.split(":")
+        start = int(start)
+        end = int(end)
+        segment_list.extend(list(r for r in range(start, end)))
+    return segment_list
 
 
 if __name__ == "__main__":
