@@ -33,8 +33,8 @@ pre_replace = {
     "ˑ": ".",
     "oː́": "oó",
     "Ɂ": "ʔ",
-    "?": "ʔ",
-    "'": "ˈ",
+    # "?": "ʔ",  # But this could also be marking an unknown sound – maybe the recording is messy
+    # "'": "ˈ",  # But this could also be marking ejective consonants, so don't guess
     "͡ts": "t͡s",
     "ts͡": "t͡s",
     "tʃ͡": "t͡ʃ",
@@ -71,7 +71,13 @@ def segment_form(
     # and with the syllable boundary marker '.', so we wrap it with special cases for those.
     for wrong, right in pre_replace.items():
         formstring = formstring.replace(wrong, right)
-    raw_tokens = [system[s] for s in tokenizer(formstring, ipa=True).split()]
+    raw_tokens = [
+        system[s]
+        for s in tokenizer(
+            formstring,
+            ipa=True,
+        ).split()
+    ]
     if system != bipa:
         if any(r.type == "unknownsound" for r in raw_tokens):
             logging.warning(f"Unknown sound encountered in {formstring:}")
@@ -83,6 +89,15 @@ def segment_form(
             i += 1
             continue
         if raw_tokens[i].type != "unknownsound":
+            i -= 1
+            continue
+        if raw_tokens[i].source == "/":
+            del raw_tokens[i]
+            logging.warning(
+                "Impossible sound / encountered in {:} – You cannot use CLTS extended normalization with this script. The slash was not taken over into the segments.".format(
+                    formstring
+                )
+            )
             i -= 1
             continue
         grapheme = raw_tokens[i].grapheme
