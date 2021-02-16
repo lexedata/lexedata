@@ -229,14 +229,15 @@ def build_lang_ids(dataset, col_map, use_ids=False):
     unique_names = len(set(names)) == len(names)
     unique_gcs = len(set(gcs)) == len(gcs) == len(names)
 
-    # TODO: Use standard logging interface, this is an INFO.
-    print(
-        "{0} are used as language identifiers".format(
-            "Names"
-            if unique_names
-            else ("Glottocodes" if unique_gcs else "dataset-local IDs")
+    if not use_ids:
+        # TODO: Use standard logging interface, this is an INFO.
+        print(
+            "{0} are used as language identifiers".format(
+                "Names"
+                if unique_names
+                else ("Glottocodes" if unique_gcs else "dataset-local IDs")
+            )
         )
-    )
 
     for row in langs:
         if use_ids:
