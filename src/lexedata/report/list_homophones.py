@@ -21,8 +21,8 @@ def list_homophones(dataset: pycldf.Dataset)->None:
     clics = load_clics()
     # exit if clics cannot be loaded
     if not clics:
-        logger.error("Clics could not be loaded. Script is aborted.")
-        sys.exit()
+        logger.warning("Clics could not be loaded. Using an empty graph instead")
+        clics = nx.Graph()
 
     c_id = dataset["ParameterTable", "id"].name
     c_concepticon = dataset["ParameterTable", "concepticonReference"].name
