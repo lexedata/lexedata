@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def list_homophones(dataset: pycldf.Dataset)->None:
     clics = load_clics()
-    # exit if clics cannot be loaded
+    # warn if clics cannot be loaded
     if not clics:
         logger.warning("Clics could not be loaded. Using an empty graph instead")
         clics = nx.Graph()
