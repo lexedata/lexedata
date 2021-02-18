@@ -1,3 +1,3 @@
-ID,Language,Concept,Form
-l1-c1,l1,c1,form1
-l2-c2,l2,c2,form2
+ID,Language,Concept,Form,Segments
+l1-c1,l1,c1,form1,f o r m ¹
+l2-c2,l2,c2,form2,f o r m ²
