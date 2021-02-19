@@ -54,7 +54,6 @@ def forms_to_tsv(
     # required fields
     c_cognate_cognateset = dataset["CognateTable", "cognatesetReference"].name
     c_cognate_form = dataset["CognateTable", "formReference"].name
-    c_cognate_alignment = dataset["CognateTable", "alignment"].name
     c_form_language = dataset["FormTable", "languageReference"].name
     c_form_concept = dataset["FormTable", "parameterReference"].name
     c_form_id = dataset["FormTable", "id"].name

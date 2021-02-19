@@ -1,13 +1,9 @@
 from pathlib import Path
 import csv
-import typing as t
 from tqdm import tqdm
-import bisect
+import collections
 
 import pycldf
-
-from lexedata.util import segment_slices_to_segment_list
-import collections
 
 
 def load_forms_from_tsv(dataset: pycldf.Dataset, input_file: Path):
@@ -145,16 +141,18 @@ def match_cognatesets(new_cognatesets, reference_cognatesets):
         forms = {s[0] for s in new_cognateset}
         best_intersection = 0
         index, best_reference = None, None
-        for i, (l, r) in enumerate(unassigned_reference_cognateset_ids[cut:], cut):
-            if l <= best_intersection:
+        for i, (left, right) in enumerate(
+            unassigned_reference_cognateset_ids[cut:], cut
+        ):
+            if left <= best_intersection:
                 break
-            if l > 2 * len(forms):
+            if left > 2 * len(forms):
                 cut = i
                 continue
-            reference_cognateset = reference_cognatesets[r]
+            reference_cognateset = reference_cognatesets[right]
             intersection = len(forms & {s[0] for s in reference_cognateset})
             if intersection > best_intersection:
-                index, best_reference = (i, r)
+                index, best_reference = (i, right)
                 best_intersection = intersection
         matching[n] = best_reference
         if index is not None:

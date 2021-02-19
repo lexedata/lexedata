@@ -1,4 +1,5 @@
 import typing as t
+from pathlib import Path
 
 import pycldf
 
@@ -46,6 +47,7 @@ def segment_to_cognateset(dataset: pycldf.Dataset, cognatesets: t.Iterable):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(
         description="List segments that indicate non-concatenative morphology "
     )
@@ -63,4 +65,7 @@ if __name__ == "__main__":
         help="",
     )
     args = parser.parse_args()
-    segment_to_cognateset(dataset=pycldf.Dataset.from_metadata(args.metadata), cognatesets=args.cognatesets)
+    segment_to_cognateset(
+        dataset=pycldf.Dataset.from_metadata(args.metadata),
+        cognatesets=args.cognatesets,
+    )
