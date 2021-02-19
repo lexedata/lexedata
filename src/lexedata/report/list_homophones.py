@@ -9,7 +9,7 @@ accidental homophones
 from lexedata.util import load_clics
 import typing as t
 import logging
-import sys
+from pathlib import Path
 
 import networkx as nx
 import pycldf
