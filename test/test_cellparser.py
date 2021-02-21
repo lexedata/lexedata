@@ -4,15 +4,90 @@ import unicodedata
 import argparse
 from pathlib import Path
 import json
+import tempfile
+import shutil
 
 import pycldf
+
 
 from lexedata.importer import cellparser as c
 
 
+# test throwing errors with wrong dataset
+def test_fields_of_formtable():
+    # Copy the dataset metadata file to a temporary directory.
+    original = Path(__file__).parent / "data/cldf/defective_dataset/Wordlist-metadata.json"
+    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    target = dirname / original.name
+    shutil.copyfile(original, target)
+    dataset = pycldf.Dataset.from_metadata(target)
+    # missing field #value
+    with pytest.raises(ValueError) as err:
+        c.NaiveCellParser(dataset=dataset)
+    assert str(err.value) == \
+           "Your metadata are missing a #value column in FormTable," \
+           " which is required by your chosen cell parser NaiveCellParser"
+    dataset.add_columns("FormTable", "value")
+
+    # missing field #form
+    with pytest.raises(ValueError) as err:
+        c.NaiveCellParser(dataset=dataset)
+    assert str(err.value) == \
+           "Your metadata are missing a #form column in FormTable," \
+           " which is required by your chosen cell parser NaiveCellParser"
+    dataset.add_columns("FormTable", "form")
+
+    # missing field #languageReference
+    with pytest.raises(ValueError) as err:
+        c.NaiveCellParser(dataset=dataset)
+    assert str(err.value) == \
+           "Your metadata are missing a #languageReference column in FormTable," \
+           " which is required by your chosen cell parser NaiveCellParser"
+    dataset.add_columns("FormTable", "languageReference")
+
+    # test required fields of FormTable from CellParser
+
+    # missing field #comment
+    with pytest.raises(ValueError) as err:
+        c.CellParser(dataset=dataset)
+    assert str(err.value) == \
+           "Your metadata are missing a #comment column in FormTable," \
+           " which is required by your chosen cell parser CellParser"
+    dataset.add_columns("FormTable", "comment")
+
+    # missing field #source
+    with pytest.raises(ValueError) as err:
+        c.CellParser(dataset=dataset)
+    assert str(err.value) == \
+           "Your metadata are missing a #source column in FormTable," \
+           " which is required by your chosen cell parser CellParser"
+    dataset.add_columns("FormTable", "source")
+
+    # missing field #source
+    with pytest.raises(ValueError) as err:
+        c.CellParser(dataset=dataset)
+    assert str(err.value) == \
+           "Your metadata are missing a #source column in FormTable," \
+           " which is required by your chosen cell parser CellParser"
+    dataset.add_columns("FormTable", "source")
+
+    # missing transcription element
+    with pytest.raises(AssertionError) as err:
+        c.CellParser(
+            dataset=dataset,
+            element_semantics=[
+                # ("[", "]", "phonetic", True),
+                ("<", ">", "form", False),
+                # ("/", "/", "phonemic", True),
+                ("(", ")", "comment", False),
+                ("{", "}", "source", False),
+            ]
+        )
+    assert str(err.value) == "You must specify an element with transcription semantics"
+
+
 def n(s: str):
     return unicodedata.normalize("NFKC", s)
-
 
 @pytest.fixture
 def naive_parser():
