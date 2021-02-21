@@ -8,15 +8,21 @@ accidental homophones
 
 from lexedata.util import load_clics
 import typing as t
+import logging
+from pathlib import Path
 
 import networkx as nx
-
 import pycldf
 
-if __name__ == "__main__":
-    dataset = pycldf.Wordlist.from_metadata("Wordlist-metadata.json")
+logger = logging.getLogger(__name__)
 
+
+def list_homophones(dataset: pycldf.Dataset) -> None:
     clics = load_clics()
+    # warn if clics cannot be loaded
+    if not clics:
+        logger.warning("Clics could not be loaded. Using an empty graph instead")
+        clics = nx.Graph()
 
     c_id = dataset["ParameterTable", "id"].name
     c_concepticon = dataset["ParameterTable", "concepticonReference"].name
@@ -52,3 +58,17 @@ if __name__ == "__main__":
                 print("Connected:", x, lang, form, meanings)
             else:
                 print("Unconnected:", x, lang, form, meanings)
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--metadata",
+        type=Path,
+        default="Wordlist-metadata.json",
+        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
+    )
+    args = parser.parse_args()
+    list_homophones(dataset=pycldf.Dataset.from_metadata(args.metadata))
