@@ -66,6 +66,7 @@ class ExcelWriter:
         out: Path,
         size_sort: bool = False,
         language_order="name",
+        status_update: t.Optional[str] = None,
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -86,10 +87,14 @@ class ExcelWriter:
         language_order: column name, languages appear ordered by given column name from
             LanguageTable
 
+        status_update: string, writen to status_column of singleton cognates.
+
         """
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
-
+        # if status update, add column to self.header
+        if status_update and self.singleton:
+            self.header.append(("", "Status_Column"))
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
@@ -220,6 +225,8 @@ class ExcelWriter:
                         value = concept_id_by_form_id[form_id]
                     elif db_name == c_cogset_concept:
                         value = concept_id_by_form_id[form_id]
+                    elif header == "Status_Column":
+                        value = status_update
                     else:
                         value = ""
                     ws.cell(row=row_index, column=col, value=value)
@@ -394,11 +401,20 @@ if __name__ == "__main__":
         help="Output all forms that don't belong to a cognateset. "
         "For each form, a singleton cognateset is created.",
     )
+    parser.add_argument(
+        "--status-update",
+        type=str,
+        default="automatic singleton",
+        help="Text written to Status_Column. Set to 'None' for no status update. "
+        "(default: automatic singleton)",
+    )
     # TODO: Derive URL template from the "special:domain" property of the
     # wordlist, where it exists? So something like
     # 'https://{special:domain}/values/{{:}}'? It would work for Lexibank and
     # for LexiRumah, is it robust enough?
     args = parser.parse_args()
+    if args.status_update == "None":
+        args.status_update = None
     E = ExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
         database_url=args.url_template,
@@ -406,5 +422,8 @@ if __name__ == "__main__":
         singleton_cognate=args.add_singletons,
     )
     E.create_excel(
-        args.excel, size_sort=args.size_sort, language_order=args.language_sort_column
+        args.excel,
+        size_sort=args.size_sort,
+        language_order=args.language_sort_column,
+        status_update=args.status_update,
     )

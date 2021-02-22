@@ -28,7 +28,7 @@ from lexedata.util import (
 )
 import lexedata.importer.cellparser as cell_parsers
 import lexedata.error_handling as err
-
+from lexedata.enrich.add_status_column import add_status_column_to_table
 
 Ob = t.TypeVar("O", bound=Object)
 
@@ -258,6 +258,7 @@ class ExcelParser:
             sheet.iter_cols(min_row=1, max_row=self.top - 1, min_col=self.left),
             total=sheet.max_column - self.left,
         ):
+            c_l_id = self.db.dataset["LanguageTable", "id"].name
             if cells_are_empty(lan_col):
                 # Skip empty languages
                 continue
@@ -274,13 +275,16 @@ class ExcelParser:
                     and self.db.insert_into_db(language)
                 ):
                     continue
-                # TODO: use term→column name
-                language_id = language["ID"]
+                language_id = language[c_l_id]
             languages_by_column[lan_col[0].column] = language_id
 
         return languages_by_column
 
-    def parse_cells(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
+    def parse_cells(
+        self,
+        sheet: openpyxl.worksheet.worksheet.Worksheet,
+        status_update: t.Optional[str] = None,
+    ) -> None:
         languages = self.parse_all_languages(sheet)
         row_object = None
         for row in tqdm(
@@ -332,10 +336,19 @@ class ExcelParser:
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
-                    self.handle_form(params, row_object, cell_with_forms, this_lan)
+                    self.handle_form(
+                        params, row_object, cell_with_forms, this_lan, status_update
+                    )
         self.db.commit()
 
-    def handle_form(self, params, row_object: RowObject, cell_with_forms, this_lan):
+    def handle_form(
+        self,
+        params,
+        row_object: RowObject,
+        cell_with_forms,
+        this_lan: str,
+        status_update: t.Optional[str],
+    ):
         form = Form(params)
         c_f_id = self.db.dataset["FormTable", "id"].name
         c_f_language = self.db.dataset["FormTable", "languageReference"].name
@@ -355,6 +368,9 @@ class ExcelParser:
             if self.on_form_not_found(form, cell_with_forms):
                 form[c_f_id] = "{:}_{:}".format(form[c_f_language], row_object[c_r_id])
                 form[c_f_value] = cell_with_forms.value
+                # add status update if given
+                if status_update:
+                    form["Status_Column"] = status_update
                 self.db.make_id_unique(form)
                 self.db.insert_into_db(form)
                 form_id = form[c_f_id]
@@ -443,7 +459,14 @@ class ExcelCognateParser(ExcelParser):
         self.db.make_id_unique(judgement)
         return self.db.insert_into_db(judgement)
 
-    def handle_form(self, params, row_object: RowObject, cell_with_forms, this_lan):
+    def handle_form(
+        self,
+        params,
+        row_object: RowObject,
+        cell_with_forms,
+        this_lan,
+        status_update: t.Optional[str],
+    ):
         try:
             if params.__table__ == "CognateTable":
                 row_id = row_object[self.db.dataset["CognatesetTable", "id"].name]
@@ -457,6 +480,9 @@ class ExcelCognateParser(ExcelParser):
                     ]
                     params[c_j_id] = f"{form_id}-{row_id}"
                     self.db.make_id_unique(params)
+                # add status update if given
+                if status_update:
+                    params["Status_Column"] = status_update
                 self.db.insert_into_db(params)
                 return
         except AttributeError:
@@ -612,6 +638,7 @@ def load_dataset(
     metadata: Path,
     lexicon: t.Optional[str],
     cognate_lexicon: t.Optional[str] = None,
+    status_update: t.Optional[str] = None,
 ):
 
     # logging.basicConfig(filename="warnings.log")
@@ -643,12 +670,15 @@ def load_dataset(
             )
             EP = ExcelParser
             # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
+        # add Status_Column if not existing
+        if status_update:
+            add_status_column_to_table(dataset=dataset, table_name="FormTable")
         EP = EP(dataset)
 
         EP.db.empty_cache()
 
         lexicon_wb = openpyxl.load_workbook(lexicon).active
-        EP.parse_cells(lexicon_wb)
+        EP.parse_cells(lexicon_wb, status_update=status_update)
         EP.db.write_dataset_from_cache()
 
     # load cognate data set if provided by metadata
@@ -659,10 +689,13 @@ def load_dataset(
             )
         except (AttributeError, KeyError):
             ECP = ExcelCognateParser
+        # add Status_Column if not existing
+        if status_update:
+            add_status_column_to_table(dataset=dataset, table_name="CognateTable")
         ECP = ECP(dataset)
         ECP.db.cache_dataset()
         for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
-            ECP.parse_cells(sheet)
+            ECP.parse_cells(sheet, status_update=status_update)
         ECP.db.write_dataset_from_cache()
 
 
@@ -693,5 +726,14 @@ if __name__ == "__main__":
         default="Wordlist-metadata.json",
         help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
+    parser.add_argument(
+        "--status-update",
+        type=str,
+        default="initial import",
+        help="Text written to Status_Column. Set to 'None' for no status update. "
+        "(default: initial import)",
+    )
     args = parser.parse_args()
-    load_dataset(args.metadata, args.lexicon, args.cogsets)
+    if args.status_update == "None":
+        args.status_update = None
+    load_dataset(args.metadata, args.lexicon, args.cogsets, args.status_update)

@@ -70,8 +70,6 @@ def header_from_cognate_excel(
             column_name = dataset["CognatesetTable", "id"].name
         try:
             column_name = dataset["CognatesetTable", column_name].name
-        # TODO: @Gereon is this break here intentional. So if one header does not match we stop reading headers?
-        # TODO: Not rather continue?
         except KeyError:
             break
         row_header.append(column_name)
@@ -98,11 +96,10 @@ def import_cognates_from_excel(excel: str, dataset: pycldf.Dataset) -> None:
         check_for_match=[dataset["FormTable", "id"].name],
         check_for_row_match=[dataset["CognatesetTable", "id"].name],
     )
-
     excel_parser_cognate.db.cache_dataset()
     excel_parser_cognate.db.drop_from_cache("CognatesetTable")
     excel_parser_cognate.db.drop_from_cache("CognateTable")
-    excel_parser_cognate.parse_cells(ws)
+    excel_parser_cognate.parse_cells(ws, status_update=None)
     excel_parser_cognate.db.write_dataset_from_cache(
         ["CognateTable", "CognatesetTable"]
     )
@@ -127,7 +124,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
     import_cognates_from_excel(
         args.cogsets, pycldf.Dataset.from_metadata(args.metadata)
     )

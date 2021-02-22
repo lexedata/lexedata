@@ -8,6 +8,7 @@ import pycldf
 from lexedata.util import string_to_id, clean_cell_value, normalize_header
 from lexedata.importer.fromexcel import DB
 from lexedata.types import Form
+from lexedata.enrich.add_status_column import add_status_column_to_table
 
 try:
     from typing import Literal
@@ -74,6 +75,7 @@ def read_single_excel_sheet(
     concept_column: t.Optional[str] = None,
     ignore_missing: bool = False,
     ignore_superfluous: bool = False,
+    status_update: t.Optional[str] = None,
 ):
     concept_columns: t.Tuple[str, str]
     if concept_column is None:
@@ -86,7 +88,6 @@ def read_single_excel_sheet(
             dataset["FormTable", "parameterReference"].name,
             concept_column,
         )
-
     db = DB(dataset)
     db.cache_dataset()
     # required cldf fields of a form
@@ -184,6 +185,8 @@ def read_single_excel_sheet(
                 )
                 form[c_f_id] = string_to_id(f"{form[c_f_language]}_{concept_reference}")
             db.make_id_unique(form)
+            if status_update:
+                form["Status_Column"] = status_update
             db.insert_into_db(form)
     # write to cldf
     db.write_dataset_from_cache()
@@ -249,6 +252,16 @@ if __name__ == "__main__":
         default=False,
         help="Report existing forms",
     )
+    parser.add_argument(
+        "--status-update",
+        type=str,
+        default="new import",
+        help="Text written to Status_Column. Set to 'None' for no status update. "
+        "(default: new import)",
+    )
+    args = parser.parse_args()
+    if args.status_update == "None":
+        args.status_update = None
     args = parser.parse_args()
     if args.verbose:
         logging.basicConfig(level=logging.INFO)
@@ -276,7 +289,9 @@ if __name__ == "__main__":
     except KeyError:
         concepts = KeyKeyDict()
         concept_column = dataset["FormTable", "parameterReference"].name
-
+    # add Status_Column if not existing and status_update given
+    if args.status_update:
+        add_status_column_to_table(dataset=dataset, table_name="FormTable")
     # import all selected sheets
     for sheet in args.sheet:
         read_single_excel_sheet(
@@ -287,4 +302,5 @@ if __name__ == "__main__":
             concept_column=concept_column,
             ignore_missing=args.ignore_missing_excel_columns,
             ignore_superfluous=args.ignore_superfluous_excel_columns,
+            status_update=args.status_update,
         )

@@ -1,9 +1,11 @@
 import typing as t
 import collections
 from pathlib import Path
+
 from csvw.metadata import URITemplate
 import pycldf
 import networkx
+
 from lexedata.util import load_clics
 
 FormID = str
@@ -197,7 +199,6 @@ def add_central_concepts_to_cognateset_table(
     else:
         for cognateset, concepts in concepts_of_cognateset.items():
             central[cognateset] = central_concept(concepts, {}, None)
-
     dataset = reshape_dataset(dataset, add_column=add_column)
     c_core_concept = dataset.column_names.cognatesets.parameterReference
     if c_core_concept is None:
@@ -262,7 +263,6 @@ if __name__ == "__main__":
         help="Overwrite #parameterReference values of cognate sets already given in the dataset",
     )
     args = parser.parse_args()
-
     dataset = pycldf.Wordlist.from_metadata(args.wordlist)
 
     add_central_concepts_to_cognateset_table(

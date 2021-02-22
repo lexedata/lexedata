@@ -10,6 +10,8 @@ import cldfcatalog
 import cldfbench
 from pyconcepticon.glosses import concept_map2
 
+from lexedata.enrich.add_status_column import add_status_column_to_table
+
 concepticon_path = cldfcatalog.Config.from_file().get_clone("concepticon")
 concepticon = cldfbench.catalogs.Concepticon(concepticon_path)
 
@@ -47,6 +49,7 @@ def add_concepticon_names(
 def add_concepticon_references(
     dataset: pycldf.Wordlist,
     gloss_languages: t.Mapping[str, str],
+    status_update: t.Optional[str],
     overwrite: bool = False,
 ) -> None:
     """Guess Concepticon links for a multilingual Concept table.
@@ -59,9 +62,11 @@ def add_concepticon_references(
     ==========
     dataset: A pycldf.Wordlist with a concepticonReference column in its
         ParameterTable
-    gloss_lang: A mapping from ParameterTable column names to ISO-639-1
+    gloss_languages: A mapping from ParameterTable column names to ISO-639-1
         language codes that Concepticon has concept lists for (eg. en, fr, de,
         es, zh, pt)
+    status_update: String written to Status_Column of #parameterTable if provided
+    overwrite: Overwrite existing Concepticon references
 
     """
     # TODO: If this function took only dataset["ParameterTable"] and the name
@@ -96,7 +101,9 @@ def add_concepticon_references(
 
     write_back = []
     for i, row in enumerate(dataset["ParameterTable"]):
-        if overwrite or not row[dataset.column_names.parameters.concepticonReference]:
+        if overwrite or not row.get(
+            dataset.column_names.parameters.concepticonReference
+        ):
             matches = [(m.get(i, ([], 10)), t) for m, t in cmaps]
             best_sim = min(x[0][1] for x in matches)
             best_matches = [t[m] for (ms, s), t in matches for m in ms if s <= best_sim]
@@ -112,12 +119,25 @@ def add_concepticon_references(
                 row[
                     dataset.column_names.parameters.concepticonReference
                 ] = c.most_common(1)[0][0]
+        # add status update if given
+        if status_update:
+            row["Status_Column"] = status_update
         write_back.append(row)
 
     dataset.write(ParameterTable=write_back)
 
 
-def create_concepticon_for_concepts(dataset: pycldf.Dataset, overwrite: bool = True):
+def create_concepticon_for_concepts(
+    dataset: pycldf.Dataset,
+    language: t.Iterable,
+    concepticon_glosses: bool,
+    overwrite: bool,
+    status_update: t.Optional[str],
+):
+    # add Status_Column if status update
+    if status_update:
+        add_status_column_to_table(dataset=dataset, table_name="ParameterTable")
+    # add Concepticon_ID column to ParameterTable
     if dataset.column_names.parameters.concepticonReference is None:
         # Create a concepticonReference column
         dataset.add_columns("ParameterTable", "Concepticon_ID")
@@ -127,10 +147,19 @@ def create_concepticon_for_concepts(dataset: pycldf.Dataset, overwrite: bool = T
             "http://cldf.clld.org/v1.0/terms.rdf#concepticonReference"
         )
         dataset.write_metadata()
+    if not language:
+        language = [(dataset.column_names.parameters.id, "en")]
 
-    language = [(dataset.column_names.parameters.id, "en")]
     gloss_languages: t.Dict[str, str] = dict(language)
-    add_concepticon_references(dataset, gloss_languages, overwrite)
+    add_concepticon_references(
+        dataset,
+        gloss_languages=gloss_languages,
+        status_update=status_update,
+        overwrite=overwrite,
+    )
+
+    if concepticon_glosses:
+        add_concepticon_names(dataset)
 
 
 if __name__ == "__main__":
@@ -164,26 +193,22 @@ if __name__ == "__main__":
         help="Maps from column names to language codes, eg. '-l GLOSS=en'. "
         "If no language mappings are given, try to understand the #id column in English.",
     )
+    parser.add_argument(
+        "--status-update",
+        type=str,
+        default="automatic Concepticon link",
+        help="Text written to Status_Column. Set to 'None' for no status update. "
+        "(default: automatic Concepticon link)",
+    )
     args = parser.parse_args()
+    if args.status_update == "None":
+        args.status_update = None
 
-    dataset = pycldf.Wordlist.from_metadata(args.metadata)
-
-    if dataset.column_names.parameters.concepticonReference is None:
-        # Create a concepticonReference column
-        dataset.add_columns("ParameterTable", "Concepticon_ID")
-        c = dataset["ParameterTable"].tableSchema.columns[-1]
-        c.valueUrl = "http://concepticon.clld.org/parameters/{Concepticon_ID}"
-        c.propertyUrl = URITemplate(
-            "http://cldf.clld.org/v1.0/terms.rdf#concepticonReference"
-        )
-        dataset.write_metadata()
-
-    if not args.language:
-        args.language = [(dataset.column_names.parameters.id, "en")]
-
-    gloss_languages: t.Dict[str, str] = dict(args.language)
-
-    add_concepticon_references(dataset, gloss_languages, overwrite=args.overwrite)
-
-    if args.concepticon_glosses:
-        add_concepticon_names(dataset)
+    # TODO: @Gereon is pycldf.Wordlist instead of pycldf.Dataset correct?
+    create_concepticon_for_concepts(
+        dataset=pycldf.Wordlist.from_metadata(args.metadata),
+        language=args.language,
+        concepticon_glosses=args.concepticon_glosses,
+        overwrite=args.overwrite,
+        status_update=args.status_update,
+    )
