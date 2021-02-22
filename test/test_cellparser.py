@@ -46,7 +46,6 @@ def test_fields_of_formtable():
     dataset.add_columns("FormTable", "languageReference")
 
     # test required fields of FormTable from CellParser
-
     # missing field #comment
     with pytest.raises(ValueError) as err:
         c.CellParser(dataset=dataset)
@@ -63,13 +62,13 @@ def test_fields_of_formtable():
            " which is required by your chosen cell parser CellParser"
     dataset.add_columns("FormTable", "source")
 
-    # missing field #source
-    with pytest.raises(ValueError) as err:
-        c.CellParser(dataset=dataset)
-    assert str(err.value) == \
-           "Your metadata are missing a #source column in FormTable," \
-           " which is required by your chosen cell parser CellParser"
-    dataset.add_columns("FormTable", "source")
+    # # missing field #variants
+    # with pytest.raises(ValueError) as err:
+    #     c.CellParser(dataset=dataset)
+    # assert str(err.value) == \
+    #        "Your metadata are missing a #variants column in FormTable," \
+    #        " which is required by your chosen cell parser CellParser"
+    # dataset.add_columns("FormTable", "variants")
 
     # missing transcription element
     with pytest.raises(AssertionError) as err:
@@ -89,22 +88,13 @@ def test_fields_of_formtable():
 def n(s: str):
     return unicodedata.normalize("NFKC", s)
 
+
 @pytest.fixture
 def naive_parser():
     dataset = pycldf.Dataset.from_metadata(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
     return c.NaiveCellParser(dataset)
-    return c.NaiveCellParser()
-
-
-def test_source_from_source_string(parser):
-    assert parser.source_from_source_string("{1}", "abui") == "abui_s1"
-    assert parser.source_from_source_string("", "abui") == "abui_s"
-    assert (
-        parser.source_from_source_string("{Gul2020: p. 4}", "abui")
-        == "abui_sgul2020[p. 4]"
-    )
 
 
 def test_cellparser_error(naive_parser):
@@ -113,6 +103,7 @@ def test_cellparser_error(naive_parser):
         "Language_ID": "language",
         "Value": "form ",
     }
+
 
 
 @pytest.fixture
@@ -132,14 +123,34 @@ def parser():
     )
 
 
-def test_cellparser_separate(parser):
+def test_source_from_source_string(parser, caplog):
+    assert parser.source_from_source_string("{1}", "abui") == "abui_s1"
+    assert parser.source_from_source_string("", "abui") == "abui_s"
+    assert (
+        parser.source_from_source_string("{Gul2020: p. 4}", "abui")
+        == "abui_sgul2020[p. 4]"
+    )
+    # catch warning for misshaped source
+    parser.source_from_source_string("{1:", "abui")
+    assert caplog.text == \
+        "WARNING  lexedata.importer.cellparser:cellparser.py:254 In source " \
+        "{1:: Closing bracket '}' is missing, split into source and " \
+        "page/context may be wrong\n"
+
+
+def test_cellparser_separate(parser, caplog):
     assert list(parser.separate("hic, haec, hoc")) == ["hic", "haec", "hoc"]
     assert list(parser.separate("hic (this, also: here); hoc")) == [
         "hic (this, also: here)",
         "hoc",
     ]
-    assert list(parser.separate("hic (this, also: here")) == ["hic (this, also: here"]
     assert list(parser.separate("illic,")) == ["illic"]
+    assert list(parser.separate("hic (this, also: here")) == ["hic (this, also: here"]
+    # catch logger warning for mismatching delimiters after separation
+    assert caplog.text == \
+        "WARNING  lexedata.importer.cellparser:cellparser.py:314 In values " \
+        "hic (this, also: here: Encountered mismatched closing delimiters. " \
+        "Please check that the separation into different forms was correct.\n"
 
 
 def test_cellparser_empty(parser):
