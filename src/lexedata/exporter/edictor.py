@@ -90,35 +90,58 @@ def forms_to_tsv(
                         form[c] = form[c].replace("\t", "!t").replace("\n", "!n")
                 forms[form[c_form_id]] = form
 
-    cognatesets: t.Dict[t.Optional[str], int] = {
+    cognateset_cache: t.Dict[t.Optional[str], int] = {
         cognateset["ID"]: c
         for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
         if cognateset["ID"] in cognatesets
     }
-    cognatesets[None] = 0
+    cognateset_cache[None] = 0
+    alignments: t.Dict[t.Tuple[str, str], t.List[str]] = {}
 
     # load all cognates corresponding to those forms
-    which_segment_belongs_to_which_cognateset: t.Dict[str, t.List[t.Set[str]]] = {}
+    which_segment_belongs_to_which_cognateset: t.Dict[str, t.List[t.Optional[str]]] = {}
     for j in dataset["CognateTable"]:
-        if j[c_cognate_form] in forms and j[c_cognate_cognateset] in cognatesets:
+        if j[c_cognate_form] in forms and j[c_cognate_cognateset] in cognateset_cache:
             form = forms[j[c_cognate_form]]
             if j[c_cognate_form] not in which_segment_belongs_to_which_cognateset:
                 which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [
-                    set() for _ in form[c_form_segments]
+                    None for _ in form[c_form_segments]
                 ]
             segments_judged = segment_slices_to_segment_list(
                 segments=form[c_form_segments], judgement=j
             )
             for s in segments_judged:
-                try:
-                    which_segment_belongs_to_which_cognateset[j[c_cognate_form]][s].add(
-                        j[c_cognate_cognateset]
-                    )
-                except IndexError:
+                if s >= len(
+                    which_segment_belongs_to_which_cognateset[j[c_cognate_form]]
+                ):
                     print(
                         f"WARNING: In judgement {j}, segment slice point outside valid range 0:{len(form[c_form_segments])}."
                     )
                     continue
+                elif (
+                    s > 0
+                    and j[c_cognate_cognateset]
+                    != which_segment_belongs_to_which_cognateset[j[c_cognate_form]][
+                        s - 1
+                    ]
+                    and j[c_cognate_cognateset]
+                    in which_segment_belongs_to_which_cognateset[j[c_cognate_form]]
+                ):
+                    raise ValueError(
+                        f"ERROR: In judgement {j}, encountered non-concatenative morphology: Segments of judgement are not contiguous."
+                    )
+
+                elif which_segment_belongs_to_which_cognateset[j[c_cognate_form]][s]:
+                    raise ValueError(
+                        f"ERROR: In judgement {j}, encountered non-concatenative morphology: Segments overlap with cognate set {which_segment_belongs_to_which_cognateset[j[c_cognate_form]][s]}."
+                    )
+                else:
+                    which_segment_belongs_to_which_cognateset[j[c_cognate_form]][s] = j[
+                        c_cognate_cognateset
+                    ]
+            alignments[j[c_cognate_form], j[c_cognate_cognateset]] = j["Alignment"] or [
+                s for i, s in enumerate(form[c_form_segments]) if i in segments_judged
+            ]
 
     # write output to tsv
     out = csv.DictWriter(
@@ -127,38 +150,49 @@ def forms_to_tsv(
         delimiter="\t",
     )
     out.writerow({column: rename(column, dataset) for column in tsv_header})
-    breakpoint()
     out_cognatesets: t.List[t.Optional[str]]
     for c, (form, judgements) in enumerate(
         which_segment_belongs_to_which_cognateset.items(), 1
     ):
-        for s, segment_cognatesets in enumerate(judgements):
+        for s, segment_cognateset in enumerate(judgements):
             if s == 0:
-                if not segment_cognatesets:
+                if segment_cognateset is None:
                     out_segments = [forms[form][c_form_segments][s]]
+                    out_alignment = [forms[form][c_form_segments][s]]
                     out_cognatesets = [None]
                 else:
                     out_segments = [forms[form][c_form_segments][s]]
-                    out_cognatesets = [segment_cognatesets.pop()]
+                    out_alignment = alignments[form, segment_cognateset]
+                    out_cognatesets = [segment_cognateset]
             else:
-                if out_cognatesets[-1] in segment_cognatesets:
+                if out_cognatesets[-1] == segment_cognateset:
                     pass
-                elif out_cognatesets[-1] is None and not segment_cognatesets:
+                elif out_cognatesets[-1] is None and segment_cognateset is None:
+                    out_alignment.append(forms[form][c_form_segments][s])
                     pass
-                elif not segment_cognatesets:
+                elif segment_cognateset is None:
                     out_segments.append("+")
+                    out_alignment.append("+")
+                    out_alignment.append(forms[form][c_form_segments][s])
                     out_cognatesets.append(None)
                 else:
                     out_segments.append("+")
-                    out_cognatesets.append(segment_cognatesets.pop())
+                    out_alignment.append("+")
+                    out_alignment.extend(alignments[form, segment_cognateset])
+                    out_cognatesets.append(segment_cognateset)
                 out_segments.append(forms[form][c_form_segments][s])
+        if out_segments != [s for s in out_alignment if s != "-"]:
+            print(
+                f"WARNING: In form {form}, alignment {out_alignment} did not match segments {out_segments}!"
+            )
         # store original form id in other field and get cogset integer id
         this_form = forms[form]
         this_form["LINGPY_ID"] = c
         # if there is a cogset, add its integer id. otherwise set id to 0
         this_form["cognatesetReference"] = " ".join(
-            str(cognatesets[e]) for e in out_cognatesets
+            str(cognateset_cache[e]) for e in out_cognatesets
         )
+        this_form["alignment"] = " ".join(out_alignment)
         this_form[c_form_segments] = " ".join(out_segments)
 
         # add integer form id
