@@ -153,13 +153,23 @@ def test_cellparser_separate(parser, caplog):
         "Please check that the separation into different forms was correct.\n"
 
 
+def test_cellparser_separate_1(parser):
+    assert list(
+        parser.separate("[iɾũndɨ] (H.F.) (parir), (GIVE BIRTH) [mbohaˈpɨ]")
+    ) == ["[iɾũndɨ] (H.F.) (parir)", "(GIVE BIRTH) [mbohaˈpɨ]"]
+
+
+def test_cellparser_separate_2(parser):
+    assert len(list(parser.separate("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]"))) == 1
+
+
 def test_cellparser_empty(parser):
     # white spaces in excel cell
     assert parser.parse_form(" ", "language") is None
     assert parser.parse_form(" \t", "abui") is None
 
 
-def test_cellparser_1(parser):
+def test_cellparser_form_1(parser):
     form = parser.parse_form("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]", "l1")
     assert form["Source"] == {"l1_s1"}
     assert n(form["Value"]) == n("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]")
@@ -167,7 +177,7 @@ def test_cellparser_1(parser):
     assert n(form["phonetic"]) == n("tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa")
 
 
-def test_cellparser_2(parser):
+def test_cellparser_form_2(parser):
     form = parser.parse_form("/ta/ [ta.'ʔa] ['ta] (cabello púbico){4}", "language")
     assert form == {
         "Comment": "cabello púbico",
@@ -181,7 +191,7 @@ def test_cellparser_2(parser):
     }
 
 
-def test_cellparser_3(parser):
+def test_cellparser_form_3(parser):
     form = parser.parse_form("[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}", "language")
     assert form == {
         "Language_ID": "language",
@@ -193,21 +203,7 @@ def test_cellparser_3(parser):
     }
 
 
-def test_cellparser_4(parser):
-    form = parser.parse_form(" /a/ [a.'ʔa] (cabello){4} /aʔa/", "language")
-    assert form == {
-        "Comment": "cabello",
-        "Language_ID": "language",
-        "Source": {"language_s4"},
-        "Value": " /a/ [a.'ʔa] (cabello){4} /aʔa/",
-        "phonemic": "a",
-        "phonetic": "a.'ʔa",
-        "variants": ["/aʔa/"],
-        "Form": "a",
-    }
-
-
-def test_cellparser_5(parser):
+def test_cellparser_form_4(parser):
     form = parser.parse_form("[iɾũndɨ] (H.F.) (parir)", "language")
     assert form["Comment"] == "H.F."
     assert form["Source"] == {"language_s1"}
@@ -216,7 +212,7 @@ def test_cellparser_5(parser):
     assert form["variants"] == ["(parir)"]
 
 
-def test_cellparser_6(parser):
+def test_cellparser_form_5(parser):
     form = parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ]", "language")
     assert form == {
         "Comment": "GIVE BIRTH",
@@ -228,7 +224,7 @@ def test_cellparser_6(parser):
     }
 
 
-def test_cellparser_7(parser):
+def test_cellparser_form_6(parser):
     form = parser.parse_form("[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}", "language")
     assert form == {
         "Language_ID": "language",
@@ -240,7 +236,7 @@ def test_cellparser_7(parser):
     }
 
 
-def test_cellparser_8(parser):
+def test_cellparser_form_7(parser):
     # comment error due to not matching opening and closing brackets
     form = parser.parse_form(
         "<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water))){2}",  # noqa: E501
@@ -258,14 +254,42 @@ def test_cellparser_8(parser):
     assert not form.get("phonemic")
 
 
-def test_cellparser_separate_1(parser):
-    assert list(
-        parser.separate("[iɾũndɨ] (H.F.) (parir), (GIVE BIRTH) [mbohaˈpɨ]")
-    ) == ["[iɾũndɨ] (H.F.) (parir)", "(GIVE BIRTH) [mbohaˈpɨ]"]
+def test_cellparser_unexpected_variant(parser, caplog):
+    form = parser.parse_form(" /a/ [a.'ʔa] (cabello){4} /aʔa/", "language")
+    assert form == {
+        "Comment": "cabello",
+        "Language_ID": "language",
+        "Source": {"language_s4"},
+        "Value": " /a/ [a.'ʔa] (cabello){4} /aʔa/",
+        "phonemic": "a",
+        "phonetic": "a.'ʔa",
+        "variants": ["/aʔa/"],
+        "Form": "a",
+    }
+    # catch the logger warning
+    assert caplog.text == \
+        "WARNING  lexedata.importer.cellparser:cellparser.py:399 In form  /a/ [a.'ʔa] (cabello){4} " \
+        "/aʔa/: Element /aʔa/ was an unexpected variant for phonemic\n"
 
 
-def test_cellparser_separate_2(parser):
-    assert len(list(parser.separate("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]"))) == 1
+def test_cellparser_missmatching(parser, caplog):
+    parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ", "language")
+    assert caplog.text == \
+        "WARNING  lexedata.importer.cellparser:cellparser.py:367 In form " \
+        "(GIVE BIRTH) [mbohaˈpɨ: Element [mbohaˈpɨ had mismatching delimiters\n"
+
+
+def test_cellparser_not_parsable(parser, caplog):
+    parser.parse_form("!!", "language")
+    assert caplog.text == \
+        "WARNING  lexedata.importer.cellparser:cellparser.py:382 In form !!: Element !! could not be parsed, ignored\n"
+
+
+def test_cellparser_no_real_variant(parser, caplog):
+    parser.parse_form(" ~ [ʒi'tɨka] {2} {2}", "language")
+    assert caplog.text == \
+        "WARNING  lexedata.importer.cellparser:cellparser.py:407 In form  ~ [ʒi'tɨka] {2} {2}: " \
+        "Element [ʒi'tɨka] was supposed to be a variant, but there is no earlier phonetic\n"
 
 
 @pytest.fixture
