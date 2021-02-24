@@ -13,7 +13,7 @@
    viewBox="0 0 51.116981 14.723381"
    version="1.1"
    id="svg8"
-   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07, custom)"
    sodipodi:docname="logo.svg"
    inkscape:export-filename="/home/gereon/Develop/lexedata/lexedata.png"
    inkscape:export-xdpi="120"
@@ -22,15 +22,27 @@
      id="defs2">
     <linearGradient
        inkscape:collect="always"
-       id="linearGradient970">
+       id="linearGradient951">
       <stop
-         style="stop-color:#053a09;stop-opacity:1"
+         style="stop-color:#0a7011;stop-opacity:0.9921568"
          offset="0"
-         id="stop966" />
+         id="stop947" />
       <stop
-         style="stop-color:#fffbff;stop-opacity:1"
+         style="stop-color:#fffbff;stop-opacity:0.04145002"
          offset="1"
-         id="stop968" />
+         id="stop949" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient945">
+      <stop
+         style="stop-color:#1b1a16;stop-opacity:1"
+         offset="0"
+         id="stop941" />
+      <stop
+         style="stop-color:#7ea0f8;stop-opacity:1"
+         offset="1"
+         id="stop943" />
     </linearGradient>
     <linearGradient
        inkscape:collect="always"
@@ -48,11 +60,15 @@
        inkscape:collect="always"
        id="linearGradient896">
       <stop
-         style="stop-color:#053a09;stop-opacity:1"
+         style="stop-color:#053a09;stop-opacity:0.99389702"
          offset="0"
          id="stop892" />
       <stop
-         style="stop-color:#fffbff;stop-opacity:1"
+         style="stop-color:#556756;stop-opacity:0.34042659"
+         offset="0.66494346"
+         id="stop953" />
+      <stop
+         style="stop-color:#fffbff;stop-opacity:0.16884634"
          offset="1"
          id="stop894" />
     </linearGradient>
@@ -62,8 +78,8 @@
        id="linearGradient862"
        x1="-116.82871"
        y1="169.08876"
-       x2="-96.446465"
-       y2="172.52269"
+       x2="-97.462173"
+       y2="174.08461"
        gradientUnits="userSpaceOnUse"
        gradientTransform="matrix(0.97679006,0,0,0.97679006,-5.1108292,-11.762037)" />
     <linearGradient
@@ -78,14 +94,24 @@
        gradientTransform="translate(0,11.871927)" />
     <linearGradient
        inkscape:collect="always"
-       xlink:href="#linearGradient970"
+       xlink:href="#linearGradient951"
        id="linearGradient902"
        gradientUnits="userSpaceOnUse"
        gradientTransform="matrix(0.97679006,0,0,0.97679006,-5.1108292,-11.762037)"
        x1="-116.82871"
        y1="169.08876"
-       x2="-96.446465"
-       y2="172.52269" />
+       x2="-97.462173"
+       y2="174.08461" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient945"
+       id="linearGradient939"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(0,11.871927)"
+       x1="-98.719383"
+       y1="175.46947"
+       x2="-116.40189"
+       y2="178.45641" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -119,7 +145,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -142,7 +168,7 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.3377px;font-family:'Arial Black';-inkscape-font-specification:'Arial Black, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient862);fill-opacity:1;stroke-width:0.264583">edit</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:url(#linearGradient890);fill-opacity:1;stroke:none;stroke-width:0.264583"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:url(#linearGradient939);fill-opacity:1.0;stroke:none;stroke-width:0.264583"
        x="-140.55701"
        y="190.65648"
        id="text874"
@@ -151,7 +177,7 @@
          id="tspan872"
          x="-140.55701"
          y="190.65648"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient890);fill-opacity:1;stroke-width:0.264583">lexidata</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient939);fill-opacity:1.0;stroke-width:0.264583">lexidata</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:10.3377px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:1;fill:url(#linearGradient902);fill-opacity:1;stroke:none;stroke-width:0.264583"
