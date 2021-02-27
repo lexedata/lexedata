@@ -300,7 +300,7 @@ def test_cellparser_not_parsable(parser, caplog):
     assert (
         caplog.text
         == "WARNING  lexedata.importer.cellparser:cellparser.py:375 In form "
-           "!!: Element !! could not be parsed, ignored\n"
+        "!!: Element !! could not be parsed, ignored\n"
     )
 
 
