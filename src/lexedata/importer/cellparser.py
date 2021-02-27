@@ -219,16 +219,23 @@ class CellParser(NaiveCellParser):
 
         # Colums necessary for word list
         self.cc(short="source", long=("FormTable", "source"), dataset=dataset)
-
         self.cc(short="comment", long=("FormTable", "comment"), dataset=dataset)
 
-        self.cc(short="variants", long=("FormTable", "variants"), dataset=dataset)
         try:
             self.c["comment"] = dataset["FormTable", "comment"].name
             self.comment_separator = dataset["FormTable", "comment"].separator or "\t"
         except KeyError:
             logger.info("No #comment column found.")
             self.comment_separator = ""
+
+        try:
+            # As long as there is no CLDF term #variants, this will either be
+            # 'variants' or raise a KeyError. However, it is a transparent
+            # re-use of an otherwise established idiom in this module, so we
+            # use this minor overhead.
+            self.c["variants"] = dataset["FormTable", "variants"].name
+        except KeyError:
+            logger.info("No 'variants' column found.")
 
         # Other class attributes
         self.separation_pattern = separation_pattern
@@ -507,6 +514,8 @@ def alignment_from_braces(text, start=0):
 
 class CellParserHyperlink(CellParser):
     def __init__(self, dataset: pycldf.Dataset):
+        #TODO: this is very ugly and only has the purpose to make a HyperlinkParser run without a variants column
+        #TODO: @Gereon we need to discuss this issue. THe HyperlinkParser inherits from Cellparser, thus inherits all the varnings.
         super().__init__(dataset=dataset)
         self.cc(short="c_id", long=("CognateTable", "formReference"), dataset=dataset)
         try:
