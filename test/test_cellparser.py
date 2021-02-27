@@ -142,7 +142,7 @@ def test_source_from_source_string(parser, caplog):
     parser.source_from_source_string("{1:", "abui")
     assert (
         caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:254 In source "
+        == "WARNING  lexedata.importer.cellparser:cellparser.py:247 In source "
         "{1:: Closing bracket '}' is missing, split into source and "
         "page/context may be wrong\n"
     )
@@ -159,7 +159,7 @@ def test_cellparser_separate(parser, caplog):
     # catch logger warning for mismatching delimiters after separation
     assert (
         caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:314 In values "
+        == "WARNING  lexedata.importer.cellparser:cellparser.py:307 In values "
         "hic (this, also: here: Encountered mismatched closing delimiters. "
         "Please check that the separation into different forms was correct.\n"
     )
@@ -189,12 +189,7 @@ def test_cellparser_form_1(parser):
     assert n(form["phonetic"]) == n("tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa")
 
 
-def test_cellparser_form_2():
-    parser = c.CellParser(
-        dataset=pycldf.Dataset.from_metadata(
-            Path(__file__).parent / "data/cldf/defective_dataset/Wordlist-metadata.json"
-        )
-    )
+def test_cellparser_form_2(parser):
     form = parser.parse_form("/ta/ [ta.'ʔa] ['ta] (cabello púbico){4}", "language")
     assert form == {
         "Comment": "cabello púbico",
@@ -286,7 +281,7 @@ def test_cellparser_unexpected_variant(parser, caplog):
     # catch the logger warning
     assert (
         caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:399 In form  /a/ [a.'ʔa] (cabello){4} "
+        == "WARNING  lexedata.importer.cellparser:cellparser.py:392 In form  /a/ [a.'ʔa] (cabello){4} "
         "/aʔa/: Element /aʔa/ was an unexpected variant for phonemic\n"
     )
 
@@ -295,7 +290,7 @@ def test_cellparser_missmatching(parser, caplog):
     parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ", "language")
     assert (
         caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:367 In form "
+        == "WARNING  lexedata.importer.cellparser:cellparser.py:360 In form "
         "(GIVE BIRTH) [mbohaˈpɨ: Element [mbohaˈpɨ had mismatching delimiters\n"
     )
 
@@ -304,7 +299,8 @@ def test_cellparser_not_parsable(parser, caplog):
     parser.parse_form("!!", "language")
     assert (
         caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:382 In form !!: Element !! could not be parsed, ignored\n"
+        == "WARNING  lexedata.importer.cellparser:cellparser.py:375 In form "
+           "!!: Element !! could not be parsed, ignored\n"
     )
 
 
@@ -312,7 +308,7 @@ def test_cellparser_no_real_variant(parser, caplog):
     parser.parse_form(" ~ [ʒi'tɨka] {2} {2}", "language")
     assert (
         caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:407 In form  ~ [ʒi'tɨka] {2} {2}: "
+        == "WARNING  lexedata.importer.cellparser:cellparser.py:400 In form  ~ [ʒi'tɨka] {2} {2}: "
         "Element [ʒi'tɨka] was supposed to be a variant, but there is no earlier phonetic\n"
     )
 
