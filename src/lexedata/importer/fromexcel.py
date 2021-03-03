@@ -649,24 +649,27 @@ def load_dataset(
             **dataset.tablegroup.common_props["special:fromexcel"]
         )
     except KeyError:
-        logger.warning(
-            "Dialect not found or dialect was missing a key, "
-            "falling back to default parser"
-        )
         dialect = None
 
     if not lexicon and not cognate_lexicon:
         raise argparse.ArgumentError(
-            "At least one of LEXICON and COGSETS must be specified"
+            "At least one of WORDLIST and COGNATESETS excel files must be specified"
         )
     if lexicon:
         # load dialect from metadata
-        try:
-            EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
-        except (AttributeError, KeyError):
+        if dialect:
+            try:
+                EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
+            except (AttributeError, KeyError) as err:
+                field = re.match(r".+'(.+?)'$", str(err)).group()
+                logger.warning(
+                    f"User-defined format specification in the json-file was missing the key{field}, "
+                    "falling back to default parser"
+                )
+                EP = ExcelParser
+        else:
             logger.warning(
-                "Dialect not found or dialect was missing a key, "
-                "falling back to default parser"
+                "User-defined format specification in the json-file was missing, falling back to default parser"
             )
             EP = ExcelParser
             # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
@@ -683,11 +686,20 @@ def load_dataset(
 
     # load cognate data set if provided by metadata
     if cognate_lexicon:
-        try:
-            ECP = excel_parser_from_dialect(
-                dataset, argparse.Namespace(**dialect.cognates), cognate=True
+        if dialect:
+            try:
+                ECP = excel_parser_from_dialect(
+                    dataset, argparse.Namespace(**dialect.cognates), cognate=True
+                )
+            except (AttributeError, KeyError) as err:
+                field = re.match(r".+'(.+?)'$", str(err)).group()
+                f"User-defined format specification in the json-file was missing the key{field}, "
+                "falling back to default parser"
+                ECP = ExcelCognateParser
+        else:
+            logger.warning(
+                "User-defined format specification in the json-file was missing, falling back to default parser"
             )
-        except (AttributeError, KeyError):
             ECP = ExcelCognateParser
         # add Status_Column if not existing
         if status_update:
@@ -709,7 +721,7 @@ if __name__ == "__main__":
         "./test/data/cldf/smallmawetiguarani/Wordlist-metadata.json for examples."
     )
     parser.add_argument(
-        "lexicon",
+        "wordlist",
         nargs="?",
         default=None,
         help="Path to an Excel file containing the dataset",
