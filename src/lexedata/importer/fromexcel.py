@@ -653,6 +653,7 @@ def load_dataset(
 
     if not lexicon and not cognate_lexicon:
         raise argparse.ArgumentError(
+            None,
             "At least one of WORDLIST and COGNATESETS excel files must be specified"
         )
     if lexicon:
