@@ -694,8 +694,10 @@ def load_dataset(
                 )
             except (AttributeError, KeyError) as err:
                 field = re.match(r".+'(.+?)'$", str(err)).group()
-                f"User-defined format specification in the json-file was missing the key{field}, "
-                "falling back to default parser"
+                logger.warning(
+                    f"User-defined format specification in the json-file was missing the key{field}, "
+                    "falling back to default parser"
+                )
                 ECP = ExcelCognateParser
         else:
             logger.warning(
@@ -731,7 +733,7 @@ if __name__ == "__main__":
         "--cogsets",
         type=Path,
         default="",
-        help="Path to an optional second Excel file containing cogsets and cognatejudgements",
+        help="Path to an optional second Excel file containing cogsets and cognate judgements",
     )
     parser.add_argument(
         "--metadata",

@@ -147,7 +147,9 @@ class NaiveCellParser:
             self.c[short] = dataset[long].name
         except KeyError:
             raise ValueError(
-                f"Your metadata are missing a #{long[1]} column in {long[0]}, which is required by your chosen cell parser {self.__class__.__name__}"
+                "Your metadata json file and your cell parser don’t match: "
+                f"Your cell parser {self.__class__.__name__} expects a #{long[1]} column (usually named '{long[1]}') "
+                f"in FormTable, but your metadata defines no such column."
             )
 
     def separate(self, values: str, context: str = "") -> t.Iterable[str]:
@@ -215,7 +217,10 @@ class CellParser(NaiveCellParser):
             self.cc(short=term, long=("FormTable", term), dataset=dataset)
         assert (
             self.transcriptions
-        ), "You must specify an element with transcription semantics"
+        ), "Your metadata json file and your cell parser don’t match: Your cell parser " \
+           f"{self.__class__.__name__} expects to work with transcriptions " \
+           "(at least one of 'orthographic', 'phonemic', and 'phonetic') to derive a #form " \
+           "in #FormTable, but your metadata defines no such column."
 
         # Colums necessary for word list
         self.cc(short="source", long=("FormTable", "source"), dataset=dataset)
@@ -311,7 +316,9 @@ class CellParser(NaiveCellParser):
                 raw_split[:2] = ["".join(raw_split[:2])]
         if not check_brackets(raw_split[0], self.bracket_pairs):
             logger.warning(
-                f"{context:}In values {values:}: Encountered mismatched closing delimiters. Please check that the separation into different forms was correct."
+                f"{context:} In values {values:}: "
+                "Encountered mismatched closing delimiters. Please check that the "
+                "separation of the cell into multiple entries, for different forms, was correct."
             )
 
         form = raw_split.pop(0).strip()
@@ -514,8 +521,6 @@ def alignment_from_braces(text, start=0):
 
 class CellParserHyperlink(CellParser):
     def __init__(self, dataset: pycldf.Dataset):
-        #TODO: this is very ugly and only has the purpose to make a HyperlinkParser run without a variants column
-        #TODO: @Gereon we need to discuss this issue. THe HyperlinkParser inherits from Cellparser, thus inherits all the varnings.
         super().__init__(dataset=dataset)
         self.cc(short="c_id", long=("CognateTable", "formReference"), dataset=dataset)
         try:

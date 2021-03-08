@@ -11,8 +11,6 @@ import lexedata.importer.fromexcel as f
 from lexedata.exporter.cognates import ExcelWriter
 from lexedata.importer.cognates import import_cognates_from_excel
 
-# todo: these test must be adapted to new interface of fromexcel.py
-
 
 @pytest.fixture(
     params=[
@@ -79,6 +77,29 @@ def copy_to_temp(cldf_wordlist):
     shutil.copyfile(o, t)
     dataset.sources = pycldf.dataset.Sources.from_file(dataset.bibpath)
     return dataset, target
+
+
+def test_no_wordlist_and_no_cogsets():
+    import argparse
+    with pytest.raises(argparse.ArgumentError) as err:
+        f.load_dataset(
+            metadata=Path(__file__).parent / "data/cldf/defective_dataset/Wordlist-metadata.json",
+            lexicon=None,
+            cognate_lexicon=None
+        )
+    assert str(err.value) == "At least one of WORDLIST and COGNATESETS excel files must be specified"
+
+
+def test_no_dialect(caplog):
+
+    with pytest.raises(AssertionError):
+        f.load_dataset(
+            metadata=Path(__file__).parent / "data/cldf/defective_dataset/Wordlist-metadata.json",
+            lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.py"
+        )
+        assert caplog.text.endswith(
+            "User-defined format specification in the json-file was missing, falling back to default parser"
+        )
 
 
 def test_fromexcel_runs(excel_wordlist):

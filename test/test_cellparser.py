@@ -26,10 +26,13 @@ def test_fields_of_formtable():
     dataset = pycldf.Dataset.from_metadata(target)
     # missing field #value
     with pytest.raises(ValueError) as err:
+
         c.NaiveCellParser(dataset=dataset)
     assert (
-        str(err.value) == "Your metadata are missing a #value column in FormTable,"
-        " which is required by your chosen cell parser NaiveCellParser"
+        str(err.value) ==
+        "Your metadata json file and your cell parser don’t match: "
+        "Your cell parser NaiveCellParser expects a #value column (usually named 'value') "
+        "in FormTable, but your metadata defines no such column.\n"
     )
     dataset.add_columns("FormTable", "value")
 
@@ -37,8 +40,9 @@ def test_fields_of_formtable():
     with pytest.raises(ValueError) as err:
         c.NaiveCellParser(dataset=dataset)
     assert (
-        str(err.value) == "Your metadata are missing a #form column in FormTable,"
-        " which is required by your chosen cell parser NaiveCellParser"
+        str(err.value) == "Your metadata json file and your cell parser don’t match: "
+                          "Your cell parser NaiveCellParser expects a #form column (usually named 'form') "
+                          "in FormTable, but your metadata defines no such column.\n"
     )
     dataset.add_columns("FormTable", "form")
 
@@ -47,8 +51,9 @@ def test_fields_of_formtable():
         c.NaiveCellParser(dataset=dataset)
     assert (
         str(err.value)
-        == "Your metadata are missing a #languageReference column in FormTable,"
-        " which is required by your chosen cell parser NaiveCellParser"
+        == "Your metadata json file and your cell parser don’t match: "
+          "Your cell parser NaiveCellParser expects a #languageReference column (usually named 'languageReference')"
+          " in FormTable, but your metadata defines no such column.\n"
     )
     dataset.add_columns("FormTable", "languageReference")
 
@@ -57,8 +62,9 @@ def test_fields_of_formtable():
     with pytest.raises(ValueError) as err:
         c.CellParser(dataset=dataset)
     assert (
-        str(err.value) == "Your metadata are missing a #comment column in FormTable,"
-        " which is required by your chosen cell parser CellParser"
+        str(err.value) == "Your metadata json file and your cell parser don’t match: "
+                          "Your cell parser CellParser expects a #comment column (usually named 'comment') "
+                          "in FormTable, but your metadata defines no such column.\n"
     )
     dataset.add_columns("FormTable", "comment")
 
@@ -66,8 +72,9 @@ def test_fields_of_formtable():
     with pytest.raises(ValueError) as err:
         c.CellParser(dataset=dataset)
     assert (
-        str(err.value) == "Your metadata are missing a #source column in FormTable,"
-        " which is required by your chosen cell parser CellParser"
+        str(err.value) == "Your metadata json file and your cell parser don’t match: "
+                              "Your cell parser CellParser expects a #source column (usually named 'source') "
+                              "in FormTable, but your metadata defines no such column.\n"
     )
     dataset.add_columns("FormTable", "source")
 
@@ -83,7 +90,11 @@ def test_fields_of_formtable():
                 ("{", "}", "source", False),
             ],
         )
-    assert str(err.value) == "You must specify an element with transcription semantics"
+    assert str(err.value) == \
+        "Your metadata json file and your cell parser don’t match: Your cell parser " \
+        "CellParser expects to work with transcriptions " \
+        "(at least one of 'orthographic', 'phonemic', and 'phonetic') to derive a #form " \
+        "in #FormTable, but your metadata defines no such column."
 
 
 def n(s: str):
@@ -133,10 +144,11 @@ def test_source_from_source_string(parser, caplog):
     # catch warning for misshaped source
     parser.source_from_source_string("{1:", "abui")
     assert (
-        caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:254 In source "
-        "{1:: Closing bracket '}' is missing, split into source and "
-        "page/context may be wrong\n"
+        caplog.text.endswith(
+            "In source "
+            "{1:: Closing bracket '}' is missing, split into source and "
+            "page/context may be wrong\n"
+        )
     )
 
 
@@ -150,10 +162,11 @@ def test_cellparser_separate(parser, caplog):
     assert list(parser.separate("hic (this, also: here")) == ["hic (this, also: here"]
     # catch logger warning for mismatching delimiters after separation
     assert (
-        caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:314 In values "
-        "hic (this, also: here: Encountered mismatched closing delimiters. "
-        "Please check that the separation into different forms was correct.\n"
+        caplog.text.endswith(
+            "In values "
+            "hic (this, also: here: Encountered mismatched closing delimiters. "
+            "Please check that the separation of the cell into multiple entries, for different forms, was correct.\n"
+        )
     )
 
 
@@ -272,9 +285,10 @@ def test_cellparser_unexpected_variant(parser, caplog):
     }
     # catch the logger warning
     assert (
-        caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:399 In form  /a/ [a.'ʔa] (cabello){4} "
+        caplog.text.endswith(
+        "In form  /a/ [a.'ʔa] (cabello){4} "
         "/aʔa/: Element /aʔa/ was an unexpected variant for phonemic\n"
+        )
     )
 
 
@@ -290,9 +304,10 @@ def test_parser_variant_lands_in_comment(caplog):
             ("(", ")", "comment", False),
         ],
     )
-    assert caplog.text == "INFO     lexedata.importer.cellparser:cellparser.py:238 No 'variants' column found.\n"
+    assert caplog.text.endswith(
+        "No 'variants' column found.\n"
+    )
     form = parser.parse_form(" {2} [dʒi'tɨka] ~[ʒi'tɨka] {2}", "language")
-    print(form)
     assert form == {
         'Language_ID': 'language',
         'Value': " {2} [dʒi'tɨka] ~[ʒi'tɨka] {2}",
@@ -302,30 +317,33 @@ def test_parser_variant_lands_in_comment(caplog):
         'Form': "dʒi'tɨka"}
 
 
-
 def test_cellparser_missmatching(parser, caplog):
     parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ", "language")
     assert (
-        caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:367 In form "
+        caplog.text.endswith(
+        "In form "
         "(GIVE BIRTH) [mbohaˈpɨ: Element [mbohaˈpɨ had mismatching delimiters\n"
+        )
     )
 
 
 def test_cellparser_not_parsable(parser, caplog):
     parser.parse_form("!!", "language")
     assert (
-        caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:382 In form !!: Element !! could not be parsed, ignored\n"
+        caplog.text.endswith(
+        "In form !!: Element !! could not be parsed, ignored\n"
+        )
     )
+
 
 
 def test_cellparser_no_real_variant(parser, caplog):
     parser.parse_form(" ~ [ʒi'tɨka] {2} {2}", "language")
     assert (
-        caplog.text
-        == "WARNING  lexedata.importer.cellparser:cellparser.py:407 In form  ~ [ʒi'tɨka] {2} {2}: "
+        caplog.text.endswith(
+        "In form  ~ [ʒi'tɨka] {2} {2}: "
         "Element [ʒi'tɨka] was supposed to be a variant, but there is no earlier phonetic\n"
+    )
     )
 
 
