@@ -124,11 +124,15 @@ def components_in_brackets(form_string, bracket_pairs, context=""):
                     i += len(q)
                     break
                 elif p and remainder[i:].startswith(p):
+                    # TODO: @Geroen: do we need this warning? I think this case is better handled in parse_form...
                     logger.info(
-                        f"{context:}In form {form_string}: Encountered mismatched closing delimiter {p}. This is *probably* fine."
+                        f"{context:}In form {form_string}: Encountered mismatched closing delimiter {p}. "
+                        f"This could be a bigger problem in the cell, so the form was not imported."
                     )
             else:
                 i += 1
+    # if any(waiting_for):
+    #     return elements
     return elements + [remainder]
 
 
@@ -140,6 +144,7 @@ class NaiveCellParser:
         self.cc(short="value", long=("FormTable", "value"), dataset=dataset)
         self.cc(short="form", long=("FormTable", "form"), dataset=dataset)
         self.cc(short="lang", long=("FormTable", "languageReference"), dataset=dataset)
+
 
     def cc(self, short, long, dataset):
         """Cache the name of a column, or complain if it doesn't exist"""
@@ -227,10 +232,12 @@ class CellParser(NaiveCellParser):
         self.cc(short="comment", long=("FormTable", "comment"), dataset=dataset)
 
         try:
-            self.c["comment"] = dataset["FormTable", "comment"].name
+            # self.c["comment"] = dataset["FormTable", "comment"].name
             self.comment_separator = dataset["FormTable", "comment"].separator or "\t"
         except KeyError:
-            logger.info("No #comment column found.")
+            # TODO: @Geroen, I think we never land here without having a comment field,
+            # as self.cc(short=comment ..) is called and the error is handled there
+            #logger.info("No #comment column found, usually named 'comment'.")
             self.comment_separator = ""
 
         try:
@@ -370,8 +377,14 @@ class CellParser(NaiveCellParser):
             # the last element, because a mismatched opening bracket means we
             # are still waiting for the closing one), warn.
             if not check_brackets(element, self.bracket_pairs):
+                try:
+                    delimiter = self.bracket_pairs[element[0]]
+                except KeyError:
+                    delimiter = element[0]
                 logger.warning(
-                    f"{cell_identifier}In form {form_string}: Element {element} had mismatching delimiters"
+                    f"{cell_identifier}In form {form_string}: Element {element} had mismatching delimiters "
+                    f"{delimiter}. This could be a bigger problem in the cell, "
+                    f"so the form was not imported."
                 )
 
             # Check what kind of element we have.
@@ -693,3 +706,8 @@ class MawetiCognateCellParser(MawetiCellParser):
             return None
         else:
             return super().parse_form(values, language, cell_identifier)
+
+if __name__ == "__main__":
+    b = {"!/": "", "(": ")", "[": "]", "{": "}", "/": "/"}
+    res = components_in_brackets("/aha/ (exclam. /ah/", b)
+    print(res)

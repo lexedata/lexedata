@@ -32,7 +32,7 @@ def test_fields_of_formtable():
         str(err.value) ==
         "Your metadata json file and your cell parser don’t match: "
         "Your cell parser NaiveCellParser expects a #value column (usually named 'value') "
-        "in FormTable, but your metadata defines no such column.\n"
+        "in FormTable, but your metadata defines no such column."
     )
     dataset.add_columns("FormTable", "value")
 
@@ -42,7 +42,7 @@ def test_fields_of_formtable():
     assert (
         str(err.value) == "Your metadata json file and your cell parser don’t match: "
                           "Your cell parser NaiveCellParser expects a #form column (usually named 'form') "
-                          "in FormTable, but your metadata defines no such column.\n"
+                          "in FormTable, but your metadata defines no such column."
     )
     dataset.add_columns("FormTable", "form")
 
@@ -53,8 +53,8 @@ def test_fields_of_formtable():
         str(err.value)
         == "Your metadata json file and your cell parser don’t match: "
           "Your cell parser NaiveCellParser expects a #languageReference column (usually named 'languageReference')"
-          " in FormTable, but your metadata defines no such column.\n"
-    )
+          " in FormTable, but your metadata defines no such column."
+)
     dataset.add_columns("FormTable", "languageReference")
 
     # test required fields of FormTable from CellParser
@@ -64,7 +64,7 @@ def test_fields_of_formtable():
     assert (
         str(err.value) == "Your metadata json file and your cell parser don’t match: "
                           "Your cell parser CellParser expects a #comment column (usually named 'comment') "
-                          "in FormTable, but your metadata defines no such column.\n"
+                          "in FormTable, but your metadata defines no such column."
     )
     dataset.add_columns("FormTable", "comment")
 
@@ -74,7 +74,7 @@ def test_fields_of_formtable():
     assert (
         str(err.value) == "Your metadata json file and your cell parser don’t match: "
                               "Your cell parser CellParser expects a #source column (usually named 'source') "
-                              "in FormTable, but your metadata defines no such column.\n"
+                              "in FormTable, but your metadata defines no such column."
     )
     dataset.add_columns("FormTable", "source")
 
@@ -159,8 +159,8 @@ def test_cellparser_separate(parser, caplog):
         "hoc",
     ]
     assert list(parser.separate("illic,")) == ["illic"]
-    assert list(parser.separate("hic (this, also: here")) == ["hic (this, also: here"]
     # catch logger warning for mismatching delimiters after separation
+    assert list(parser.separate("hic (this, also: here")) == ["hic (this, also: here"]
     assert (
         caplog.text.endswith(
             "In values "
@@ -318,30 +318,31 @@ def test_parser_variant_lands_in_comment(caplog):
 
 
 def test_cellparser_missmatching(parser, caplog):
-    parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ", "language")
+    parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ", "language", cell_identifier="34")
     assert (
         caplog.text.endswith(
-        "In form "
-        "(GIVE BIRTH) [mbohaˈpɨ: Element [mbohaˈpɨ had mismatching delimiters\n"
+        "34: In form "
+        "(GIVE BIRTH) [mbohaˈpɨ: Element [mbohaˈpɨ had mismatching delimiters ]. "
+        "This could be a bigger problem in the cell, so the form was not imported.\n"
         )
     )
 
 
 def test_cellparser_not_parsable(parser, caplog):
-    parser.parse_form("!!", "language")
+    parser.parse_form("!!", "language", "C3")
     assert (
         caplog.text.endswith(
-        "In form !!: Element !! could not be parsed, ignored\n"
+        "C3: In form !!: Element !! could not be parsed, ignored\n"
         )
     )
 
 
 
 def test_cellparser_no_real_variant(parser, caplog):
-    parser.parse_form(" ~ [ʒi'tɨka] {2} {2}", "language")
+    parser.parse_form(" ~ [ʒi'tɨka] {2} {2}", "language", "A4")
     assert (
         caplog.text.endswith(
-        "In form  ~ [ʒi'tɨka] {2} {2}: "
+        "A4: In form  ~ [ʒi'tɨka] {2} {2}: "
         "Element [ʒi'tɨka] was supposed to be a variant, but there is no earlier phonetic\n"
     )
     )
