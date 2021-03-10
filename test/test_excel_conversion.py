@@ -92,7 +92,7 @@ def test_no_wordlist_and_no_cogsets():
 
 def test_no_dialect(caplog):
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         f.load_dataset(
             metadata=Path(__file__).parent / "data/cldf/defective_dataset/Wordlist-metadata.json",
             lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.py"
