@@ -318,8 +318,8 @@ class ExcelParser:
             if row_object is None:
                 if any(c.value for c in row_forms):
                     raise AssertionError(
-                        "Empty first row: Row had no properties, "
-                        "and there was no previous row to copy"
+                        "Your first data row didn’t have a name. "
+                        "Please check your format specification or ensure the first row has a name."
                     )
                 else:
                     continue

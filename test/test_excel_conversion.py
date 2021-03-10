@@ -95,11 +95,28 @@ def test_no_dialect(caplog):
     with pytest.raises(ValueError):
         f.load_dataset(
             metadata=Path(__file__).parent / "data/cldf/defective_dataset/Wordlist-metadata.json",
-            lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.py"
+            lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
         )
         assert caplog.text.endswith(
             "User-defined format specification in the json-file was missing, falling back to default parser"
         )
+
+
+@pytest.mark.skip(reason="no AssertionError is thrown")
+def test_no_first_row_in_excel():
+    original = Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
+    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    target = dirname / "cldf-metadata.json"
+    copy = shutil.copyfile(original, target)
+    print(copy)
+    with pytest.raises(AssertionError) as err:
+        f.load_dataset(
+            metadata=copy,
+            lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
+        )
+    assert str(err.value) == \
+           "Your first data row didn’t have a name. " \
+           "Please check your format specification or ensure the first row has a name."
 
 
 def test_fromexcel_runs(excel_wordlist):
