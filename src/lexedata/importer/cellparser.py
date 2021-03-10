@@ -179,6 +179,9 @@ class NaiveCellParser:
         self, cell: openpyxl.cell.Cell, language_id: str, cell_identifier: str = ""
     ) -> t.Iterable[Form]:
         """Return form properties for every form in the cell"""
+        # cell_identifier format: sheet.cell_coordinate
+        cell_identifier = "{}: ".format(cell_identifier) if cell_identifier else ""
+
         text = clean_cell_value(cell)
         if not text:
             return []
@@ -323,7 +326,7 @@ class CellParser(NaiveCellParser):
                 raw_split[:2] = ["".join(raw_split[:2])]
         if not check_brackets(raw_split[0], self.bracket_pairs):
             logger.warning(
-                f"{context:} In values {values:}: "
+                f"{context:}In values {values:}: "
                 "Encountered mismatched closing delimiters. Please check that the "
                 "separation of the cell into multiple entries, for different forms, was correct."
             )
@@ -351,9 +354,6 @@ class CellParser(NaiveCellParser):
         # if string is only whitespaces, there is no form.
         if not form_string.strip():
             return None
-
-        # cell_identifier format: sheet.cell_coordinate
-        cell_identifier = "{}: ".format(cell_identifier) if cell_identifier else ""
 
         properties: t.Dict[str, t.Any] = {
             self.c["lang"]: language_id,

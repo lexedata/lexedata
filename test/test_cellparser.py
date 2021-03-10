@@ -160,10 +160,10 @@ def test_cellparser_separate(parser, caplog):
     ]
     assert list(parser.separate("illic,")) == ["illic"]
     # catch logger warning for mismatching delimiters after separation
-    assert list(parser.separate("hic (this, also: here")) == ["hic (this, also: here"]
+    assert list(parser.separate("hic (this, also: here", "B6: ")) == ["hic (this, also: here"]
     assert (
         caplog.text.endswith(
-            "In values "
+            "B6: In values "
             "hic (this, also: here: Encountered mismatched closing delimiters. "
             "Please check that the separation of the cell into multiple entries, for different forms, was correct.\n"
         )
@@ -318,7 +318,7 @@ def test_parser_variant_lands_in_comment(caplog):
 
 
 def test_cellparser_missmatching(parser, caplog):
-    parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ", "language", cell_identifier="34")
+    parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ", "language", cell_identifier="34: ")
     assert (
         caplog.text.endswith(
         "34: In form "
@@ -329,7 +329,7 @@ def test_cellparser_missmatching(parser, caplog):
 
 
 def test_cellparser_not_parsable(parser, caplog):
-    parser.parse_form("!!", "language", "C3")
+    parser.parse_form("!!", "language", "C3: ")
     assert (
         caplog.text.endswith(
         "C3: In form !!: Element !! could not be parsed, ignored\n"
@@ -339,7 +339,7 @@ def test_cellparser_not_parsable(parser, caplog):
 
 
 def test_cellparser_no_real_variant(parser, caplog):
-    parser.parse_form(" ~ [ʒi'tɨka] {2} {2}", "language", "A4")
+    parser.parse_form(" ~ [ʒi'tɨka] {2} {2}", "language", "A4: ")
     assert (
         caplog.text.endswith(
         "A4: In form  ~ [ʒi'tɨka] {2} {2}: "
