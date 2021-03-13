@@ -313,7 +313,11 @@ class ExcelParser:
                         self.db.insert_into_db(properties)
                     else:
                         continue
-                row_object = properties
+                # TODO: here we set the row_object to be the properties. However, we end up with a row_object with
+                # empty entries but not with a row_object that is None.
+                # We have to distinguish these cases. any(properties.values()) should do
+                if any(properties.values()):
+                    row_object = properties
 
             if row_object is None:
                 if any(c.value for c in row_forms):
