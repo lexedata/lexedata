@@ -304,6 +304,7 @@ class ExcelParser:
                     properties[c_r_id] = row_id
                     break
                 else:
+                    # TODO: check that warnings together wit on_row/form/language_not_found are not duplicated
                     if self.on_row_not_found(properties, row[0]):
                         if c_r_id not in properties:
                             properties[c_r_id] = string_to_id(
@@ -322,7 +323,7 @@ class ExcelParser:
             if row_object is None:
                 if any(c.value for c in row_forms):
                     raise AssertionError(
-                        "Your first data row didn’t have a name. "
+                        "Your first data row didn't have a name. "
                         "Please check your format specification or ensure the first row has a name."
                     )
                 else:
@@ -369,6 +370,7 @@ class ExcelParser:
             self.db.associate(form_id, row_object)
         except StopIteration:
             # no candidates. form is created or not.
+            # TODO: check that warnings together wit on_row/form/language_not_found are not duplicated
             if self.on_form_not_found(form, cell_with_forms):
                 form[c_f_id] = "{:}_{:}".format(form[c_f_language], row_object[c_r_id])
                 form[c_f_value] = cell_with_forms.value
@@ -427,7 +429,7 @@ class ExcelCognateParser(ExcelParser):
     ) -> t.Optional[RowObject]:
         row_object = self.row_object
         row_object = row_object()
-        # TODO: Ask Gereon: get_cell_comment with unicode normalization or not?
+        # TODO: get_cell_comment with unicode normalization or not?
         c_id = self.db.dataset[row_object.__table__, "id"].name
         c_comment = self.db.dataset[row_object.__table__, "comment"].name
         c_name = self.db.dataset[row_object.__table__, "name"].name
@@ -506,10 +508,18 @@ class ExcelCognateParser(ExcelParser):
                 )
                 self.db.associate(form_id, row_object)
             except StopIteration:
+                # TODO: check that warnings together wit on_row/form/language_not_found are not duplicated
                 if self.on_form_not_found(form, cell_with_forms):
-                    raise RuntimeError(
-                        "I don't know how to add a non-existent form, referenced in a cognateset, to the dataset. This refers to form {form} in cell {cell_with_forms.coordinate}."
+                    logger.warning(
+                        f"Unable to find form {form} in cell {cell_with_forms.coordinate} in the dataset. "
+                        f"This cognate judgement was skipped. "
+                        f"Please make sure that the form is present in forms.csv or in the file "
+                        f"used for the Wordlist importation."
                     )
+                    # old Error thrown
+                    # raise RuntimeError(
+                    #     f"I don't know how to add a non-existent form, referenced in a cognateset, to the dataset. This refers to form {form} in cell {cell_with_forms.coordinate}."
+                    # )
 
 
 def excel_parser_from_dialect(
