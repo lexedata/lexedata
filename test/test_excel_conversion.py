@@ -102,21 +102,99 @@ def test_no_dialect(caplog):
         )
 
 
-@pytest.mark.skip(reason="no AssertionError is thrown")
 def test_no_first_row_in_excel():
     original = Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / "cldf-metadata.json"
     copy = shutil.copyfile(original, target)
-    print(copy)
     with pytest.raises(AssertionError) as err:
         f.load_dataset(
             metadata=copy,
             lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
         )
     assert str(err.value) == \
-           "Your first data row didn’t have a name. " \
-           "Please check your format specification or ensure the first row has a name."
+        "Your first data row didn't have a name. " \
+        "Please check your format specification or ensure the first row has a name."
+
+
+def test_language_regex_error():
+    import argparse
+    excel = Path(__file__).parent / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+    original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    target = dirname / "cldf-metadata.json"
+    copy = shutil.copyfile(original, target)
+
+    dataset = pycldf.Dataset.from_metadata(copy)
+    dialect = argparse.Namespace(
+        **dataset.tablegroup.common_props["special:fromexcel"])
+    lexicon_wb = openpyxl.load_workbook(excel).active
+    dialect.lang_cell_regexes = ["(?P<Name>\[.*)", "(?P<Curator>.*)"]
+    EP = f.excel_parser_from_dialect(dataset, dialect, cognate=False)
+    EP = EP(dataset)
+
+    with pytest.raises(ValueError) as err:
+        EP.parse_cells(lexicon_wb)
+    assert str(err.value) == "In cell G1: Expected to encounter match for (?P<Name>\[.*), but found no_language"
+
+    dialect.lang_cell_regexes = ["(?P<Name>.*)", "(?P<Curator>.*)"]
+    dialect.lang_comment_regexes = ["\[.*", ".*"]
+    EP = f.excel_parser_from_dialect(dataset, dialect, cognate=False)
+    EP = EP(dataset)
+    with pytest.raises(ValueError) as err:
+        EP.parse_cells(lexicon_wb)
+    assert str(err.value) == "In cell G1: Expected to encounter match for \[.*, but found no_lan_comment"
+
+
+def test_properties_regex_error():
+    import argparse
+    excel = Path(__file__).parent / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+    original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    target = dirname / "cldf-metadata.json"
+    copy = shutil.copyfile(original, target)
+
+    dataset = pycldf.Dataset.from_metadata(copy)
+    dialect = argparse.Namespace(
+        **dataset.tablegroup.common_props["special:fromexcel"]
+    )
+    lexicon_wb = openpyxl.load_workbook(excel).active
+    dialect.row_cell_regexes = [
+        "(?P<set>.*)",
+        "(?P<Name>\[.*)",
+        "(?P<English>.*)",
+        "(?P<Spanish>.*)",
+        "(?P<Portuguese>.*)",
+        "(?P<French>.*)"
+    ]
+    EP = f.excel_parser_from_dialect(dataset, dialect, cognate=False)
+    EP = EP(dataset)
+
+    with pytest.raises(ValueError) as err:
+        EP.parse_cells(lexicon_wb)
+    assert str(err.value) == "In cell B3: Expected to encounter match for (?P<Name>\[.*), but found no_concept_name"
+
+    dialect.row_cell_regexes = [
+        "(?P<set>.*)",
+        "(?P<Name>.*)",
+        "(?P<English>.*)",
+        "(?P<Spanish>.*)",
+        "(?P<Portuguese>.*)",
+        "(?P<French>.*)"
+    ]
+    dialect.row_comment_regexes = [
+            ".*",
+            "\[.*",
+            ".*",
+            ".*",
+            ".*",
+            ".*"
+        ]
+    EP = f.excel_parser_from_dialect(dataset, dialect, cognate=False)
+    EP = EP(dataset)
+    with pytest.raises(ValueError) as err:
+        EP.parse_cells(lexicon_wb)
+    assert str(err.value) == "In cell B3: Expected to encounter match for \[.*, but found no_concept_comment"
 
 
 def test_fromexcel_runs(excel_wordlist):

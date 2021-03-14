@@ -536,7 +536,14 @@ def excel_parser_from_dialect(
     row_header = []
     for row_regex in dialect.row_cell_regexes:
         match = re.fullmatch(row_regex, "", re.DOTALL)
-        row_header += list(match.groupdict().keys()) or [None]
+        # TODO: when trying to raise a ValueError due to row_regexes not matching with the cell content,
+        # I modify one of the regexes so that it does not match with any content of the cell.
+        # Thus it doesn't match with '' either. The match object is None, and an AttributeError is raised.
+        # What to do about this case?
+        if match:
+            row_header += list(match.groupdict().keys()) or [None]
+        else:
+            row_header += [None]
     initialized_cell_parser = getattr(cell_parsers, dialect.cell_parser["name"])(
         output_dataset,
         element_semantics=dialect.cell_parser["cell_parser_semantics"],
@@ -622,7 +629,7 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(cell_regex, cell.value.strip(), re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match"
+                            f"In cell {cell.coordinate}: Expected to encounter match "
                             f"for {cell_regex}, but found {cell.value}"
                         )
                     for k, v in match.groupdict().items():
@@ -634,8 +641,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match "
-                            f"for {comment_regex}, but found {cell.comment.content}"
+                            f"In cell {cell.coordinate}: Expected to encounter match for "
+                            f"{comment_regex}, but found {cell.comment.content}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
