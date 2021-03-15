@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import typing as t
 import warnings
+import logging
 
 
 class ObjectNotFoundWarning(UserWarning):
@@ -12,6 +13,8 @@ class MultipleCandidatesWarning(UserWarning):
 
 
 MissingHandler = t.Callable[[t.Dict[str, t.Any], t.Optional[str]], bool]
+
+logger = logging.getLogger(__name__)
 
 
 def error(db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
@@ -39,7 +42,7 @@ def warn(db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
 
     """
     rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
-    warnings.warn(
+    logger.warning(
         f"Failed to find object {rep:} in the database. Skipped. In cell: {cell:}.",
         ObjectNotFoundWarning,
     )
@@ -60,7 +63,7 @@ def warn_and_create(
 
     """
     rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
-    warnings.warn(
+    logger.warning(
         f"Failed to find object {rep:} in the database. Added. Object of cell: {cell:}",
         ObjectNotFoundWarning,
     )
