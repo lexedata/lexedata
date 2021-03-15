@@ -83,7 +83,7 @@ def test_no_wordlist_and_no_cogsets():
     import argparse
     with pytest.raises(argparse.ArgumentError) as err:
         f.load_dataset(
-            metadata=Path(__file__).parent / "data/cldf/defective_dataset/Wordlist-metadata.json",
+            metadata=Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json",
             lexicon=None,
             cognate_lexicon=None
         )
@@ -91,16 +91,48 @@ def test_no_wordlist_and_no_cogsets():
 
 
 def test_no_dialect(caplog):
-
+    # ExcelParser
     with pytest.raises(ValueError):
         f.load_dataset(
-            metadata=Path(__file__).parent / "data/cldf/defective_dataset/Wordlist-metadata.json",
+            metadata=Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json",
             lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
         )
         assert caplog.text.endswith(
             "User-defined format specification in the json-file was missing, falling back to default parser"
         )
+    # ExcelCognateParser
+    with pytest.raises(ValueError):
+        f.load_dataset(
+            metadata=Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json",
+            lexicon=None,
+            cognate_lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
+        )
+        assert caplog.text.endswith(
+            "User-defined format specification in the json-file was missing, falling back to default parser"
+        )
 
+
+def test_dilaect_missing_key(caplog):
+    excel = Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
+    original = Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_no_lang_cell_regexes.json"
+    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    target = dirname / "cldf-metadata.json"
+    copy = shutil.copyfile(original, target)
+
+    # ExcelParser
+    with pytest.raises(ValueError):
+        f.load_dataset(copy, lexicon=excel)
+    assert caplog.text.endswith(
+        "User-defined format specification in the json-file was missing the key lang_cell_regexes, "
+        "falling back to default parser\n"
+    )
+    # CognateExcelParser
+    with pytest.raises(ValueError):
+        f.load_dataset(copy, lexicon=None, cognate_lexicon=excel)
+    assert caplog.text.endswith(
+        "User-defined format specification in the json-file was missing the key lang_cell_regexes, "
+        "falling back to default parser\n"
+    )
 
 def test_no_first_row_in_excel():
     original = Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"

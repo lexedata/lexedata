@@ -1,0 +1,248 @@
+{
+    "@context": [
+        "http://www.w3.org/ns/csvw",
+        {
+            "@language": "en"
+        }
+    ],
+    "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#Wordlist",
+    "dc:source": "sources.bib",
+    "special:fromexcel": {
+        "row_cell_regexes": [
+            "(?P<set>.*)",
+            "(?P<Name>.*)",
+            "(?P<English>.*)",
+            "(?P<Spanish>.*)",
+            "(?P<Portuguese>.*)",
+            "(?P<French>.*)"
+        ],
+        "row_comment_regexes": [
+            ".*",
+            ".*",
+            ".*",
+            ".*",
+            ".*",
+            ".*"
+        ],
+        "lang_comment_regexes": [
+            ".*",
+            ".*"
+        ],
+        "check_for_match": [
+            "ID"
+        ],
+        "check_for_row_match": [
+            "Name"
+        ],
+        "check_for_language_match": [
+            "Name"
+        ],
+        "cell_parser": {
+            "name": "MawetiCellParser",
+            "form_separator": [
+                ";",
+                ","
+            ],
+            "variant_separator": [
+                "~",
+                "%"
+            ],
+            "add_default_source": "{1}",
+            "cell_parser_semantics": [
+                [
+                    "(",
+                    ")",
+                    "comment",
+                    false
+                ],
+                [
+                    "{",
+                    "}",
+                    "source",
+                    false
+                ],
+                [
+                    "[",
+                    "]",
+                    "phonetic",
+                    true
+                ],
+                [
+                    "/",
+                    "/",
+                    "phonemic",
+                    true
+                ],
+                [
+                    "<",
+                    ">",
+                    "orthographic",
+                    true
+                ]
+            ]
+        },
+        "cognates": {
+            "row_cell_regexes": [
+                "(?P<Set>.*)",
+                "(?P<Name>.*)",
+                ".*",
+                ".*",
+                ".*",
+                ".*"
+            ],
+            "row_comment_regexes": [
+                ".*",
+                ".*",
+                ".*",
+                ".*",
+                ".*",
+                ".*"
+            ],
+            "lang_cell_regexes": [
+                "(?P<Name>.*)",
+                "(?P<Curator>.*)"
+            ],
+            "lang_comment_regexes": [
+                ".*",
+                ".*"
+            ],
+            "check_for_match": [
+                "orthographic",
+                "Language_ID",
+                "phonemic",
+                "phonetic",
+                "source"
+            ],
+            "check_for_row_match": [
+                "Name"
+            ],
+            "check_for_language_match": [
+                "Name"
+            ],
+            "cell_parser": {
+                "name": "MawetiCognateCellParser",
+                "form_separator": [
+                    ";",
+                    ","
+                ],
+                "variant_separator": [
+                    "~",
+                    "%"
+                ],
+                "add_default_source": "{1}",
+                "cell_parser_semantics": [
+                    [
+                        "(",
+                        ")",
+                        "comment",
+                        false
+                    ],
+                    [
+                        "{",
+                        "}",
+                        "source",
+                        false
+                    ],
+                    [
+                        "[",
+                        "]",
+                        "phonetic",
+                        true
+                    ],
+                    [
+                        "/",
+                        "/",
+                        "phonemic",
+                        true
+                    ],
+                    [
+                        "<",
+                        ">",
+                        "orthographic",
+                        true
+                    ]
+                ]
+            }
+        }
+    },
+    "dialect": {
+        "commentPrefix": null
+    },
+    "tables": [
+        {
+            "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
+            "dc:extent": 2,
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+                        "name": "ID"
+                    }
+                ],
+                "primaryKey": [
+                    "ID"
+                ]
+            },
+            "url": "forms.csv"
+        },
+        {
+            "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognatesetTable",
+            "dc:extent": 2,
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+                        "required": true,
+                        "name": "ID"
+                    }
+		]
+	    },
+            "url": "cognatesets.csv"
+	},
+        {
+            "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognateTable",
+            "dc:extent": 2,
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+                        "required": true,
+                        "name": "ID"
+                    },
+                    {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#formReference",
+                        "required": true,
+                        "name": "Form_ID"
+                    },
+                    {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
+                        "required": true,
+                        "name": "Cognateset_ID"
+                    }
+                ],
+                "foreignKeys": [
+                    {
+                        "columnReference": [
+                            "Form_ID"
+                        ],
+                        "reference": {
+                            "resource": "forms.csv",
+                            "columnReference": [
+                                "ID"
+                            ]
+                        }
+                    }
+                ],
+                "primaryKey": [
+                    "ID"
+                ]
+            },
+            "url": "cognates.csv"
+        }
+    ]
+}
