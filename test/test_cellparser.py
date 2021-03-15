@@ -18,7 +18,7 @@ from lexedata.importer import cellparser as c
 def test_fields_of_formtable():
     # Copy the dataset metadata file to a temporary directory.
     original = (
-        Path(__file__).parent / "data/cldf/defective_dataset/Wordlist-metadata.json"
+        Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect"
     )
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
