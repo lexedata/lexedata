@@ -683,10 +683,10 @@ def load_dataset(
             try:
                 EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
             except (AttributeError, KeyError) as err:
-                print(err)
                 field = re.match(r".*?'(.+?)'.+?'(.+?)'$", str(err)).group(2)
                 logger.warning(
-                    f"User-defined format specification in the json-file was missing the key {field}, falling back to default parser"
+                    f"User-defined format specification in the json-file was missing the key {field}, "
+                    f"falling back to default parser"
                 )
                 EP = ExcelParser
         else:
@@ -714,10 +714,10 @@ def load_dataset(
                     dataset, argparse.Namespace(**dialect.cognates), cognate=True
                 )
             except (AttributeError, KeyError) as err:
-                field = re.match(r".+'(.+?)'$", str(err)).group()
+                field = re.match(r".*?'(.+?)'.+?'(.+?)'$", str(err)).group(2)
                 logger.warning(
                     f"User-defined format specification in the json-file was missing the key {field}, "
-                    "falling back to default parser".rstrip("\n")
+                    f"falling back to default parser"
                 )
                 ECP = ExcelCognateParser
         else:

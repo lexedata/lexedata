@@ -112,7 +112,7 @@ def test_no_dialect(caplog):
         )
 
 
-def test_dilaect_missing_key(caplog):
+def test_dialect_missing_key(caplog):
     excel = Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
     original = Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_no_lang_cell_regexes.json"
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
@@ -133,6 +133,7 @@ def test_dilaect_missing_key(caplog):
         "User-defined format specification in the json-file was missing the key lang_cell_regexes, "
         "falling back to default parser\n"
     )
+
 
 def test_no_first_row_in_excel():
     original = Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
@@ -229,9 +230,10 @@ def test_properties_regex_error():
     assert str(err.value) == "In cell B3: Expected to encounter match for \[.*, but found no_concept_comment"
 
 
-def test_fromexcel_runs(excel_wordlist):
+def test_fromexcel_runs(excel_wordlist, caplog):
     lexicon, cogsets, (empty_dataset, original) = excel_wordlist
     f.load_dataset(Path(empty_dataset.tablegroup._fname), str(lexicon), str(cogsets))
+    print(caplog.text)
 
 
 def test_fromexcel_correct(excel_wordlist):
