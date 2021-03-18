@@ -44,7 +44,10 @@ pre_replace = {
 
 
 def segment_form(
-    formstring: str, system=bipa, pre_replace=pre_replace, split_diphthongs: bool = True
+    formstring: str,
+    system=bipa,
+    split_diphthongs: bool = True,
+    context_for_warnings: str = "",
 ) -> t.Iterable[pyclts.models.Symbol]:
     """Segment the form.
 
@@ -69,8 +72,6 @@ def segment_form(
 
     """
     # and with the syllable boundary marker '.', so we wrap it with special cases for those.
-    for wrong, right in pre_replace.items():
-        formstring = formstring.replace(wrong, right)
     raw_tokens = [
         system[s]
         for s in tokenizer(
@@ -156,14 +157,23 @@ def add_segments_to_dataset(
         dataset.write_metadata()
 
     write_back = []
-    c_f_segments = dataset["FormTable", "Segments"].name
-    for row in dataset["FormTable"]:
+    c_f_segments = dataset["FormTable", "segments"].name
+    c_f_id = dataset["FormTable", "id"].name
+    for r, row in enumerate(dataset["FormTable"], 1):
         if row[c_f_segments] and not overwrite_existing:
             continue
         else:
             if row[transcription]:
                 form = row[transcription].strip()
-                row[dataset.column_names.forms.segments] = segment_form(form)
+                for wrong, right in pre_replace.items():
+                    if wrong in formstring:
+                        # TODO Melvin: Count these instances per language, for
+                        # final reporting – maybe add a command line switch to
+                        # also apply these replacements back to the form?
+                        formstring = formstring.replace(wrong, right)
+                row[dataset.column_names.forms.segments] = segment_form(
+                    form, context_for_warning=f"In form {row[c_f_id]} (line {r}): "
+                )
             write_back.append(row)
     dataset.write(FormTable=write_back)
 
