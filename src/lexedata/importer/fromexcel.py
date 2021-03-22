@@ -187,14 +187,14 @@ class ExcelParser:
         check_for_match: t.List[str] = ["ID"],
         check_for_row_match: t.List[str] = ["Name"],
         check_for_language_match: t.List[str] = ["Name"],
-        on_language_not_found: err.MissingHandler = err.create,
-        on_row_not_found: err.MissingHandler = err.create,
-        on_form_not_found: err.MissingHandler = err.create,
+        # on_language_not_found: err.MissingHandler = err.create,
+        # on_row_not_found: err.MissingHandler = err.create,
+        # on_form_not_found: err.MissingHandler = err.create,
         fuzzy=0,
     ) -> None:
-        self.on_language_not_found = on_language_not_found
-        self.on_row_not_found = on_row_not_found
-        self.on_form_not_found = on_form_not_found
+        # self.on_language_not_found = on_language_not_found
+        # self.on_row_not_found = on_row_not_found
+        # self.on_form_not_found = on_form_not_found
         self.row_header = row_header
         try:
             self.cell_parser = cellparser(output_dataset)
@@ -208,6 +208,18 @@ class ExcelParser:
         self.check_for_language_match = check_for_language_match
         self.db = DB(output_dataset)
         self.fuzzy = fuzzy
+
+    def on_language_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+        """Create language"""
+        return True
+
+    def on_row_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+        """Create row object"""
+        return True
+
+    def on_form_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+        """Create form"""
+        return True
 
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
         data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
@@ -406,9 +418,9 @@ class ExcelCognateParser(ExcelParser):
         check_for_match: t.List[str] = ["Form"],
         check_for_row_match: t.List[str] = ["Name"],
         check_for_language_match: t.List[str] = ["Name"],
-        on_language_not_found: err.MissingHandler = err.error,
-        on_row_not_found: err.MissingHandler = err.create,
-        on_form_not_found: err.MissingHandler = err.warn,
+        # on_language_not_found: err.MissingHandler = err.error,
+        # on_row_not_found: err.MissingHandler = err.create,
+        # on_form_not_found: err.MissingHandler = err.warn,
     ) -> None:
         super().__init__(
             output_dataset=output_dataset,
@@ -419,10 +431,45 @@ class ExcelCognateParser(ExcelParser):
             row_header=row_header,
             check_for_row_match=check_for_row_match,
             check_for_language_match=check_for_language_match,
-            on_language_not_found=on_language_not_found,
-            on_row_not_found=on_row_not_found,
-            on_form_not_found=on_form_not_found,
+            # on_language_not_found=on_language_not_found,
+            # on_row_not_found=on_row_not_found,
+            # on_form_not_found=on_form_not_found,
         )
+
+    def on_language_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+        """Should I add a missing object? No, the object missing is an error.
+
+        Raise an exception (ObjectNotFoundWarning) reporting the missing object and cell.
+
+        Raises
+        ======
+        ObjectNotFoundWarning
+
+        """
+        class ObjectNotFoundWarning(UserWarning):
+            pass
+        rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
+        raise ObjectNotFoundWarning(f"Failed to find object {rep:} {cell:} in the database")
+
+    def on_row_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+        """Create row object"""
+        return True
+
+    def on_form_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+        """Should I add a missing object? No, but inform the user.
+
+        Send a warning (ObjectNotFoundWarning) reporting the missing object and cell.
+
+        Returns
+        =======
+        False: The object should not be added.
+
+        """
+        rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
+        logger.warning(
+            f"Failed to find object {rep:} in the database. Skipped. In cell: {cell:}."
+        )
+        return False
 
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
