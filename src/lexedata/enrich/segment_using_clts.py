@@ -50,7 +50,6 @@ def segment_form(
     split_diphthongs: bool = True,
     context_for_warnings: str = "",
     report: t.Optional[t.Dict] =None,
-    language_id:t.Optional[t.Dict] =None
 ) -> t.Iterable[pyclts.models.Symbol]:
     """Segment the form.
 
@@ -97,11 +96,12 @@ def segment_form(
             continue
         if raw_tokens[i].source == "/":
             if report:
-                report[language_id][str(raw_tokens[i])]["count"] += 1
-                report[language_id][str(raw_tokens[i])]["comment"] = "illegal symbol"
+                report[str(raw_tokens[i])]["count"] += 1
+                report[str(raw_tokens[i])]["comment"] = "illegal symbol"
             del raw_tokens[i]
             logging.warning(
-                f"{context_for_warnings}Impossible sound / encountered in {formstring} – You cannot use CLTS extended normalization "
+                f"{context_for_warnings}Impossible sound / encountered in {formstring} – "
+                f"You cannot use CLTS extended normalization "
                 f"with this script. The slash was not taken over into the segments."
             )
             i -= 1
@@ -124,10 +124,9 @@ def segment_form(
                 logging.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
-                #Todo: Gereon correct comment
                 if report:
-                    report[language_id][str(raw_tokens[i])]["count"] += 1
-                    report[language_id][str(raw_tokens[i])]["comment"] = "unknown nasalization"
+                    report[str(raw_tokens[i])]["count"] += 1
+                    report[str(raw_tokens[i])]["comment"] = "unknown pre-nasalization"
                 i -= 1
                 continue
             raw_tokens[i + 1] = bipa["pre-nasalized " + raw_tokens[i + 1].name]
@@ -138,10 +137,9 @@ def segment_form(
                 logging.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
-                # Todo: Gereon correct comment
                 if report:
-                    report[language_id][str(raw_tokens[i])]["count"] += 1
-                    report[language_id][str(raw_tokens[i])]["comment"] = "unknown aspiration"
+                    report[str(raw_tokens[i])]["count"] += 1
+                    report[str(raw_tokens[i])]["comment"] = "unknown pre-aspiration"
                 i -= 1
                 continue
             raw_tokens[i + 1] = bipa["pre-aspirated " + raw_tokens[i + 1].name]
@@ -150,20 +148,16 @@ def segment_form(
         logging.warning(
             f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
         )
-        # Todo: Gereon correct comment
         if report:
-            report[language_id][str(raw_tokens[i])]["count"] += 1
-            report[language_id][str(raw_tokens[i])]["comment"] = "unknown sound"
+            report[str(raw_tokens[i])]["count"] += 1
+            report[str(raw_tokens[i])]["comment"] = "unknown sound"
         i -= 1
-    if report:
-        return raw_tokens, report
-    else:
-        return raw_tokens
 
+    return raw_tokens
 
 
 def add_segments_to_dataset(
-    dataset: pycldf.Dataset, transcription: str, overwrite_existing: bool
+    dataset: pycldf.Dataset, transcription: str, overwrite_existing: bool, replace_form: bool
 ):
     if dataset.column_names.forms.segments is None:
         # Create a Segments column in FormTable
@@ -177,6 +171,7 @@ def add_segments_to_dataset(
     c_f_segments = dataset["FormTable", "segments"].name
     c_f_id = dataset["FormTable", "id"].name
     c_f_lan = dataset["FormTable", "languageReference"].name
+    c_f_form = dataset["FormTable", "form"].name
     # report = t.Dict[str, t.Dict[str, t.Dict[str, str]]] = {}
     report = {f[c_f_lan]: defaultdict(lambda: {"count": 0, "comment": ""})
                                                            for f in dataset["FormTable"]
@@ -189,17 +184,16 @@ def add_segments_to_dataset(
                 form = row[transcription].strip()
                 for wrong, right in pre_replace.items():
                     if wrong in form:
-                        # TODO Melvin: Count these instances per language, for
-                        # final reporting – maybe add a command line switch to
-                        # also apply these replacements back to the form?
                         report[row[c_f_lan]][wrong]["count"] += 1
-                        report[row[c_f_lan]][wrong]["comment"] = "pre-replace"
+                        report[row[c_f_lan]][wrong]["comment"] = f"pre-replace '{wrong}' by '{right}'"
                         form = form.replace(wrong, right)
-                row[dataset.column_names.forms.segments], report = segment_form(
+                        # also replace symbol in #FormTable *form
+                        if replace_form:
+                            row[c_f_form] = row[c_f_form].replace(wrong, right)
+                row[dataset.column_names.forms.segments] = segment_form(
                     form,
                     context_for_warnings=f"In form {row[c_f_id]} (line {r}): ",
-                    report=report,
-                    language_id=row[c_f_lan]
+                    report=report[row[c_f_lan]],
                 )
             write_back.append(row)
     from tabulate import tabulate
@@ -230,6 +224,13 @@ if __name__ == "__main__":
         default=False,
         help="Overwrite #segments values already given in the dataset",
     )
+
+    parser.add_argument(
+        "--replace-form",
+        action="store_true",
+        default=False,
+        help="Apply the replacements performed on segments also to #form column of #FormTable",
+    )
     args = parser.parse_args()
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
@@ -237,4 +238,4 @@ if __name__ == "__main__":
     if args.transcription is None:
         args.transcription = dataset.column_names.forms.form
     # add segments to FormTable
-    add_segments_to_dataset(dataset, args.transcription, args.overwrite)
+    add_segments_to_dataset(dataset, args.transcription, args.overwrite, args.replace_form)
