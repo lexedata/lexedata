@@ -387,7 +387,7 @@ class ExcelParser:
                         row_object[c_r_id], this_lan, form[c_f_value]
                     )
                 )
-                # TODO: Fill data with a fuzzy search
+                # Do a fuzzy search
                 for row in self.db.find_db_candidates(
                     form, self.check_for_match, edit_dist_threshold=4
                 ):
@@ -429,7 +429,7 @@ class ExcelCognateParser(ExcelParser):
     ) -> t.Optional[RowObject]:
         row_object = self.row_object
         row_object = row_object()
-        # TODO: get_cell_comment with unicode normalization or not?
+        # TODO: get_cell_comment with unicode normalization or not? -> yes, comments also
         c_id = self.db.dataset[row_object.__table__, "id"].name
         c_comment = self.db.dataset[row_object.__table__, "comment"].name
         c_name = self.db.dataset[row_object.__table__, "name"].name
