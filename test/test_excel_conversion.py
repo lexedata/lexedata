@@ -81,21 +81,28 @@ def copy_to_temp(cldf_wordlist):
 
 def test_no_wordlist_and_no_cogsets():
     import argparse
+
     with pytest.raises(argparse.ArgumentError) as err:
         f.load_dataset(
-            metadata=Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json",
+            metadata=Path(__file__).parent
+            / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json",
             lexicon=None,
-            cognate_lexicon=None
+            cognate_lexicon=None,
         )
-    assert str(err.value) == "At least one of WORDLIST and COGNATESETS excel files must be specified"
+    assert (
+        str(err.value)
+        == "At least one of WORDLIST and COGNATESETS excel files must be specified"
+    )
 
 
 def test_no_dialect(caplog):
     # ExcelParser
     with pytest.raises(ValueError):
         f.load_dataset(
-            metadata=Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json",
-            lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
+            metadata=Path(__file__).parent
+            / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json",
+            lexicon=Path(__file__).parent
+            / "data/cldf/defective_dataset/empty_excel.xlsx",
         )
         assert caplog.text.endswith(
             "User-defined format specification in the json-file was missing, falling back to default parser"
@@ -103,9 +110,11 @@ def test_no_dialect(caplog):
     # ExcelCognateParser
     with pytest.raises(ValueError):
         f.load_dataset(
-            metadata=Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json",
+            metadata=Path(__file__).parent
+            / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json",
             lexicon=None,
-            cognate_lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
+            cognate_lexicon=Path(__file__).parent
+            / "data/cldf/defective_dataset/empty_excel.xlsx",
         )
         assert caplog.text.endswith(
             "User-defined format specification in the json-file was missing, falling back to default parser"
@@ -114,7 +123,10 @@ def test_no_dialect(caplog):
 
 def test_dialect_missing_key(caplog):
     excel = Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
-    original = Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_no_lang_cell_regexes.json"
+    original = (
+        Path(__file__).parent
+        / "data/cldf/defective_dataset/wordlist-metadata_no_lang_cell_regexes.json"
+    )
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / "cldf-metadata.json"
     copy = shutil.copyfile(original, target)
@@ -143,69 +155,85 @@ def test_no_first_row_in_excel():
     with pytest.raises(AssertionError) as err:
         f.load_dataset(
             metadata=copy,
-            lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
+            lexicon=Path(__file__).parent
+            / "data/cldf/defective_dataset/empty_excel.xlsx",
         )
-    assert str(err.value) == \
-        "Your first data row didn't have a name. " \
+    assert (
+        str(err.value) == "Your first data row didn't have a name. "
         "Please check your format specification or ensure the first row has a name."
+    )
 
 
 def test_language_regex_error():
     import argparse
-    excel = Path(__file__).parent / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+
+    excel = (
+        Path(__file__).parent
+        / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+    )
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / "cldf-metadata.json"
     copy = shutil.copyfile(original, target)
 
     dataset = pycldf.Dataset.from_metadata(copy)
-    dialect = argparse.Namespace(
-        **dataset.tablegroup.common_props["special:fromexcel"])
+    dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     lexicon_wb = openpyxl.load_workbook(excel).active
-    dialect.lang_cell_regexes = ["(?P<Name>\[.*)", "(?P<Curator>.*)"]
+    dialect.lang_cell_regexes = [r"(?P<Name>\[.*)", "(?P<Curator>.*)"]
     EP = f.excel_parser_from_dialect(dataset, dialect, cognate=False)
     EP = EP(dataset)
 
     with pytest.raises(ValueError) as err:
         EP.parse_cells(lexicon_wb)
-    assert str(err.value) == "In cell G1: Expected to encounter match for (?P<Name>\[.*), but found no_language"
+    assert (
+        str(err.value)
+        == r"In cell G1: Expected to encounter match for (?P<Name>\[.*), but found no_language"
+    )
 
     dialect.lang_cell_regexes = ["(?P<Name>.*)", "(?P<Curator>.*)"]
-    dialect.lang_comment_regexes = ["\[.*", ".*"]
+    dialect.lang_comment_regexes = [r"\[.*", ".*"]
     EP = f.excel_parser_from_dialect(dataset, dialect, cognate=False)
     EP = EP(dataset)
     with pytest.raises(ValueError) as err:
         EP.parse_cells(lexicon_wb)
-    assert str(err.value) == "In cell G1: Expected to encounter match for \[.*, but found no_lan_comment"
+    assert (
+        str(err.value)
+        == r"In cell G1: Expected to encounter match for \[.*, but found no_lan_comment"
+    )
 
 
 def test_properties_regex_error():
     import argparse
-    excel = Path(__file__).parent / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+
+    excel = (
+        Path(__file__).parent
+        / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+    )
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / "cldf-metadata.json"
     copy = shutil.copyfile(original, target)
 
     dataset = pycldf.Dataset.from_metadata(copy)
-    dialect = argparse.Namespace(
-        **dataset.tablegroup.common_props["special:fromexcel"]
-    )
+    dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     lexicon_wb = openpyxl.load_workbook(excel).active
     dialect.row_cell_regexes = [
         "(?P<set>.*)",
-        "(?P<Name>\[.*)",
+        r"(?P<Name>\[.*)",
         "(?P<English>.*)",
         "(?P<Spanish>.*)",
         "(?P<Portuguese>.*)",
-        "(?P<French>.*)"
+        "(?P<French>.*)",
     ]
     EP = f.excel_parser_from_dialect(dataset, dialect, cognate=False)
     EP = EP(dataset)
 
     with pytest.raises(ValueError) as err:
         EP.parse_cells(lexicon_wb)
-    assert str(err.value) == "In cell B3: Expected to encounter match for (?P<Name>\[.*), but found no_concept_name"
+    assert (
+        str(err.value)
+        == r"In cell B3: Expected to encounter match for (?P<Name>\[.*), but found no_concept_name"
+    )
 
     dialect.row_cell_regexes = [
         "(?P<set>.*)",
@@ -213,21 +241,17 @@ def test_properties_regex_error():
         "(?P<English>.*)",
         "(?P<Spanish>.*)",
         "(?P<Portuguese>.*)",
-        "(?P<French>.*)"
+        "(?P<French>.*)",
     ]
-    dialect.row_comment_regexes = [
-            ".*",
-            "\[.*",
-            ".*",
-            ".*",
-            ".*",
-            ".*"
-        ]
+    dialect.row_comment_regexes = [".*", r"\[.*", ".*", ".*", ".*", ".*"]
     EP = f.excel_parser_from_dialect(dataset, dialect, cognate=False)
     EP = EP(dataset)
     with pytest.raises(ValueError) as err:
         EP.parse_cells(lexicon_wb)
-    assert str(err.value) == "In cell B3: Expected to encounter match for \[.*, but found no_concept_comment"
+    assert (
+        str(err.value)
+        == r"In cell B3: Expected to encounter match for \[.*, but found no_concept_comment"
+    )
 
 
 def test_fromexcel_runs(excel_wordlist, caplog):

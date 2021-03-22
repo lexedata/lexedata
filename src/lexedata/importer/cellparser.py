@@ -145,7 +145,6 @@ class NaiveCellParser:
         self.cc(short="form", long=("FormTable", "form"), dataset=dataset)
         self.cc(short="lang", long=("FormTable", "languageReference"), dataset=dataset)
 
-
     def cc(self, short, long, dataset):
         """Cache the name of a column, or complain if it doesn't exist"""
         try:
@@ -223,12 +222,12 @@ class CellParser(NaiveCellParser):
         for start, end, term, transcription in element_semantics:
             # Ensure that all terms required by the element semantics are fields we can write to.
             self.cc(short=term, long=("FormTable", term), dataset=dataset)
-        assert (
-            self.transcriptions
-        ), "Your metadata json file and your cell parser don’t match: Your cell parser " \
-           f"{self.__class__.__name__} expects to work with transcriptions " \
-           "(at least one of 'orthographic', 'phonemic', and 'phonetic') to derive a #form " \
-           "in #FormTable, but your metadata defines no such column."
+        assert self.transcriptions, (
+            "Your metadata json file and your cell parser don’t match: Your cell parser "
+            f"{self.__class__.__name__} expects to work with transcriptions "
+            "(at least one of 'orthographic', 'phonemic', and 'phonetic') to derive a #form "
+            "in #FormTable, but your metadata defines no such column."
+        )
 
         # Colums necessary for word list
         self.cc(short="source", long=("FormTable", "source"), dataset=dataset)
@@ -240,7 +239,7 @@ class CellParser(NaiveCellParser):
         except KeyError:
             # TODO: @Geroen, I think we never land here without having a comment field,
             # as self.cc(short=comment ..) is called and the error is handled there
-            #logger.info("No #comment column found, usually named 'comment'.")
+            # logger.info("No #comment column found, usually named 'comment'.")
             self.comment_separator = ""
 
         try:
@@ -706,6 +705,7 @@ class MawetiCognateCellParser(MawetiCellParser):
             return None
         else:
             return super().parse_form(values, language, cell_identifier)
+
 
 if __name__ == "__main__":
     b = {"!/": "", "(": ")", "[": "]", "{": "}", "/": "/"}

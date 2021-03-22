@@ -18,7 +18,8 @@ from lexedata.importer import cellparser as c
 def test_fields_of_formtable():
     # Copy the dataset metadata file to a temporary directory.
     original = (
-        Path(__file__).parent / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json"
+        Path(__file__).parent
+        / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json"
     )
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
@@ -29,8 +30,7 @@ def test_fields_of_formtable():
 
         c.NaiveCellParser(dataset=dataset)
     assert (
-        str(err.value) ==
-        "Your metadata json file and your cell parser don’t match: "
+        str(err.value) == "Your metadata json file and your cell parser don’t match: "
         "Your cell parser NaiveCellParser expects a #value column (usually named 'value') "
         "in FormTable, but your metadata defines no such column."
     )
@@ -41,8 +41,8 @@ def test_fields_of_formtable():
         c.NaiveCellParser(dataset=dataset)
     assert (
         str(err.value) == "Your metadata json file and your cell parser don’t match: "
-                          "Your cell parser NaiveCellParser expects a #form column (usually named 'form') "
-                          "in FormTable, but your metadata defines no such column."
+        "Your cell parser NaiveCellParser expects a #form column (usually named 'form') "
+        "in FormTable, but your metadata defines no such column."
     )
     dataset.add_columns("FormTable", "form")
 
@@ -50,11 +50,10 @@ def test_fields_of_formtable():
     with pytest.raises(ValueError) as err:
         c.NaiveCellParser(dataset=dataset)
     assert (
-        str(err.value)
-        == "Your metadata json file and your cell parser don’t match: "
-          "Your cell parser NaiveCellParser expects a #languageReference column (usually named 'languageReference')"
-          " in FormTable, but your metadata defines no such column."
-)
+        str(err.value) == "Your metadata json file and your cell parser don’t match: "
+        "Your cell parser NaiveCellParser expects a #languageReference column (usually named 'languageReference')"
+        " in FormTable, but your metadata defines no such column."
+    )
     dataset.add_columns("FormTable", "languageReference")
 
     # test required fields of FormTable from CellParser
@@ -63,8 +62,8 @@ def test_fields_of_formtable():
         c.CellParser(dataset=dataset)
     assert (
         str(err.value) == "Your metadata json file and your cell parser don’t match: "
-                          "Your cell parser CellParser expects a #comment column (usually named 'comment') "
-                          "in FormTable, but your metadata defines no such column."
+        "Your cell parser CellParser expects a #comment column (usually named 'comment') "
+        "in FormTable, but your metadata defines no such column."
     )
     dataset.add_columns("FormTable", "comment")
 
@@ -73,8 +72,8 @@ def test_fields_of_formtable():
         c.CellParser(dataset=dataset)
     assert (
         str(err.value) == "Your metadata json file and your cell parser don’t match: "
-                              "Your cell parser CellParser expects a #source column (usually named 'source') "
-                              "in FormTable, but your metadata defines no such column."
+        "Your cell parser CellParser expects a #source column (usually named 'source') "
+        "in FormTable, but your metadata defines no such column."
     )
     dataset.add_columns("FormTable", "source")
 
@@ -90,11 +89,13 @@ def test_fields_of_formtable():
                 ("{", "}", "source", False),
             ],
         )
-    assert str(err.value) == \
-        "Your metadata json file and your cell parser don’t match: Your cell parser " \
-        "CellParser expects to work with transcriptions " \
-        "(at least one of 'orthographic', 'phonemic', and 'phonetic') to derive a #form " \
+    assert (
+        str(err.value)
+        == "Your metadata json file and your cell parser don’t match: Your cell parser "
+        "CellParser expects to work with transcriptions "
+        "(at least one of 'orthographic', 'phonemic', and 'phonetic') to derive a #form "
         "in #FormTable, but your metadata defines no such column."
+    )
 
 
 def n(s: str):
@@ -143,12 +144,10 @@ def test_source_from_source_string(parser, caplog):
     )
     # catch warning for misshaped source
     parser.source_from_source_string("{1:", "abui")
-    assert (
-        caplog.text.endswith(
-            "In source "
-            "{1:: Closing bracket '}' is missing, split into source and "
-            "page/context may be wrong\n"
-        )
+    assert caplog.text.endswith(
+        "In source "
+        "{1:: Closing bracket '}' is missing, split into source and "
+        "page/context may be wrong\n"
     )
 
 
@@ -160,13 +159,13 @@ def test_cellparser_separate(parser, caplog):
     ]
     assert list(parser.separate("illic,")) == ["illic"]
     # catch logger warning for mismatching delimiters after separation
-    assert list(parser.separate("hic (this, also: here", "B6: ")) == ["hic (this, also: here"]
-    assert (
-        caplog.text.endswith(
-            "B6: In values "
-            "hic (this, also: here: Encountered mismatched closing delimiters. "
-            "Please check that the separation of the cell into multiple entries, for different forms, was correct.\n"
-        )
+    assert list(parser.separate("hic (this, also: here", "B6: ")) == [
+        "hic (this, also: here"
+    ]
+    assert caplog.text.endswith(
+        "B6: In values "
+        "hic (this, also: here: Encountered mismatched closing delimiters. "
+        "Please check that the separation of the cell into multiple entries, for different forms, was correct.\n"
     )
 
 
@@ -284,18 +283,19 @@ def test_cellparser_unexpected_variant(parser, caplog):
         "Form": "a",
     }
     # catch the logger warning
-    assert (
-        caplog.text.endswith(
+    assert caplog.text.endswith(
         "In form  /a/ [a.'ʔa] (cabello){4} "
         "/aʔa/: Element /aʔa/ was an unexpected variant for phonemic\n"
-        )
     )
 
 
 def test_parser_variant_lands_in_comment(caplog):
     caplog.set_level(logging.INFO)
     parser = c.CellParser(
-        dataset=pycldf.Dataset.from_metadata(Path(__file__).parent / "data/cldf/defective_dataset/wordlist_maweti_no_variants.json"),
+        dataset=pycldf.Dataset.from_metadata(
+            Path(__file__).parent
+            / "data/cldf/defective_dataset/wordlist_maweti_no_variants.json"
+        ),
         element_semantics=[
             ("/", "/", "phonemic", True),
             ("[", "]", "phonetic", True),
@@ -304,47 +304,39 @@ def test_parser_variant_lands_in_comment(caplog):
             ("(", ")", "comment", False),
         ],
     )
-    assert caplog.text.endswith(
-        "No 'variants' column found.\n"
-    )
+    assert caplog.text.endswith("No 'variants' column found.\n")
     form = parser.parse_form(" {2} [dʒi'tɨka] ~[ʒi'tɨka] {2}", "language")
     assert form == {
-        'Language_ID': 'language',
-        'Value': " {2} [dʒi'tɨka] ~[ʒi'tɨka] {2}",
-        'phonetic': "dʒi'tɨka",
-        'Comment': "~[ʒi'tɨka]\t2",
-        'Source': {'language_s2'},
-        'Form': "dʒi'tɨka"}
+        "Language_ID": "language",
+        "Value": " {2} [dʒi'tɨka] ~[ʒi'tɨka] {2}",
+        "phonetic": "dʒi'tɨka",
+        "Comment": "~[ʒi'tɨka]\t2",
+        "Source": {"language_s2"},
+        "Form": "dʒi'tɨka",
+    }
 
 
 def test_cellparser_missmatching(parser, caplog):
     parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ", "language", cell_identifier="34: ")
-    assert (
-        caplog.text.endswith(
+    assert caplog.text.endswith(
         "34: In form "
         "(GIVE BIRTH) [mbohaˈpɨ: Element [mbohaˈpɨ had mismatching delimiters ]. "
         "This could be a bigger problem in the cell, so the form was not imported.\n"
-        )
     )
 
 
 def test_cellparser_not_parsable(parser, caplog):
     parser.parse_form("!!", "language", "C3: ")
-    assert (
-        caplog.text.endswith(
+    assert caplog.text.endswith(
         "C3: In form !!: Element !! could not be parsed, ignored\n"
-        )
     )
-
 
 
 def test_cellparser_no_real_variant(parser, caplog):
     parser.parse_form(" ~ [ʒi'tɨka] {2} {2}", "language", "A4: ")
-    assert (
-        caplog.text.endswith(
+    assert caplog.text.endswith(
         "A4: In form  ~ [ʒi'tɨka] {2} {2}: "
         "Element [ʒi'tɨka] was supposed to be a variant, but there is no earlier phonetic\n"
-    )
     )
 
 
