@@ -203,7 +203,6 @@ def add_segments_to_dataset(
                 )
             write_back.append(row)
     from tabulate import tabulate
-    breakpoint()
     data = [[k, kk] + list(values.values()) for k, v in report.items() for kk, values in v.items()]
     print(tabulate(data, headers=["LanguageID", "Sound", "Occurrences", "Comment"], tablefmt='orgtbl'))
     dataset.write(FormTable=write_back)
