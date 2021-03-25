@@ -399,11 +399,7 @@ class ExcelParser:
                         row_object[c_r_id], this_lan, form[c_f_value]
                     )
                 )
-                # Do a fuzzy search
-                for row in self.db.find_db_candidates(
-                    form, self.check_for_match, edit_dist_threshold=4
-                ):
-                    logger.info(f"Did you mean {row} ?")
+                # TODO: do we need this return?
                 return
 
 
@@ -563,11 +559,11 @@ class ExcelCognateParser(ExcelParser):
                         f"Please make sure that the form is present in forms.csv or in the file "
                         f"used for the Wordlist importation."
                     )
-                    # old Error thrown
-                    # raise RuntimeError(
-                    #     f"I don't know how to add a non-existent form, referenced in a cognateset, to the dataset. This refers to form {form} in cell {cell_with_forms.coordinate}."
-                    # )
-
+                    # Do a fuzzy search
+                    for row in self.db.find_db_candidates(
+                            form, self.check_for_match, edit_dist_threshold=4
+                    ):
+                        logger.info(f"Did you mean {row} ?")
 
 def excel_parser_from_dialect(
     output_dataset: pycldf.Wordlist, dialect: argparse.Namespace, cognate: bool
