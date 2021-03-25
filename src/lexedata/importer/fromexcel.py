@@ -27,7 +27,6 @@ from lexedata.util import (
     edit_distance,
 )
 import lexedata.importer.cellparser as cell_parsers
-import lexedata.error_handling as err
 from lexedata.enrich.add_status_column import add_status_column_to_table
 
 Ob = t.TypeVar("O", bound=Object)
