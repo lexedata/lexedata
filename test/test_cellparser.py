@@ -304,7 +304,9 @@ def test_parser_variant_lands_in_comment(caplog):
             ("(", ")", "comment", False),
         ],
     )
-    assert caplog.text.endswith("No 'variants' column found for FormTable in Wordlist-metadata.json. Form variants will be added to #comment.\n")
+    assert caplog.text.endswith(
+        "No 'variants' column found for FormTable in Wordlist-metadata.json. Form variants will be added to #comment.\n"
+    )
     form = parser.parse_form(" {2} [dʒi'tɨka] ~[ʒi'tɨka] {2}", "language")
     assert form == {
         "Language_ID": "language",

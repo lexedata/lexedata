@@ -208,15 +208,21 @@ class ExcelParser:
         self.db = DB(output_dataset)
         self.fuzzy = fuzzy
 
-    def on_language_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+    def on_language_not_found(
+        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+    ) -> bool:
         """Create language"""
         return True
 
-    def on_row_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+    def on_row_not_found(
+        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+    ) -> bool:
         """Create row object"""
         return True
 
-    def on_form_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+    def on_form_not_found(
+        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+    ) -> bool:
         """Create form"""
         return True
 
@@ -431,7 +437,9 @@ class ExcelCognateParser(ExcelParser):
             # on_form_not_found=on_form_not_found,
         )
 
-    def on_language_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+    def on_language_not_found(
+        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+    ) -> bool:
         """Should I add a missing object? No, the object missing is an error.
 
         Raise an exception (ObjectNotFoundWarning) reporting the missing object and cell.
@@ -441,16 +449,24 @@ class ExcelCognateParser(ExcelParser):
         ObjectNotFoundWarning
 
         """
+
         class ObjectNotFoundWarning(UserWarning):
             pass
-        rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
-        raise ObjectNotFoundWarning(f"Failed to find object {rep:} {cell:} in the database")
 
-    def on_row_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+        rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
+        raise ObjectNotFoundWarning(
+            f"Failed to find object {rep:} {cell:} in the database"
+        )
+
+    def on_row_not_found(
+        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+    ) -> bool:
         """Create row object"""
         return True
 
-    def on_form_not_found(self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None) -> bool:
+    def on_form_not_found(
+        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+    ) -> bool:
         """Should I add a missing object? No, but inform the user.
 
         Send a warning (ObjectNotFoundWarning) reporting the missing object and cell.
@@ -560,9 +576,10 @@ class ExcelCognateParser(ExcelParser):
                     )
                     # Do a fuzzy search
                     for row in self.db.find_db_candidates(
-                            form, self.check_for_match, edit_dist_threshold=4
+                        form, self.check_for_match, edit_dist_threshold=4
                     ):
                         logger.info(f"Did you mean {row} ?")
+
 
 def excel_parser_from_dialect(
     output_dataset: pycldf.Wordlist, dialect: argparse.Namespace, cognate: bool

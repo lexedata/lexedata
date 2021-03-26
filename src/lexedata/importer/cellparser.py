@@ -249,8 +249,10 @@ class CellParser(NaiveCellParser):
             # use this minor overhead.
             self.c["variants"] = dataset["FormTable", "variants"].name
         except KeyError:
-            logger.warning("No 'variants' column found for FormTable in Wordlist-metadata.json. "
-                           "Form variants will be added to #comment.")
+            logger.warning(
+                "No 'variants' column found for FormTable in Wordlist-metadata.json. "
+                "Form variants will be added to #comment."
+            )
 
         # Other class attributes
         self.separation_pattern = separation_pattern
