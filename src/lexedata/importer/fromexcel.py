@@ -209,19 +209,22 @@ class ExcelParser:
         self.fuzzy = fuzzy
 
     def on_language_not_found(
-        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+        self, language: t.Dict[str, t.Any], cell_identifier: t.Optional[str] = None
     ) -> bool:
         """Create language"""
         return True
 
     def on_row_not_found(
-        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+        self, row_object: t.Dict[str, t.Any], cell_identifier: t.Optional[str] = None
     ) -> bool:
         """Create row object"""
         return True
 
     def on_form_not_found(
-        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+        self,
+        form: t.Dict[str, t.Any],
+        cell_identifier: t.Optional[str] = None,
+        language_id: t.Optional[str] = None
     ) -> bool:
         """Create form"""
         return True
@@ -287,10 +290,9 @@ class ExcelParser:
             for language_id in candidates:
                 break
             else:
-                if not (
-                    self.on_language_not_found(language, lan_col[0])
-                    and self.db.insert_into_db(language)
-                ):
+                if self.on_language_not_found(language, lan_col[0].coordinate):
+                    self.db.insert_into_db(language)
+                else:
                     continue
                 language_id = language[c_l_id]
             languages_by_column[lan_col[0].column] = language_id
@@ -321,8 +323,7 @@ class ExcelParser:
                     properties[c_r_id] = row_id
                     break
                 else:
-                    # TODO: check that warnings together wit on_row/form/language_not_found are not duplicated
-                    if self.on_row_not_found(properties, row[0]):
+                    if self.on_row_not_found(properties, cell_identifier=row[0].coordinate):
                         if c_r_id not in properties:
                             properties[c_r_id] = string_to_id(
                                 str(properties.get(c_r_name, ""))
@@ -331,9 +332,7 @@ class ExcelParser:
                         self.db.insert_into_db(properties)
                     else:
                         continue
-                # TODO: here we set the row_object to be the properties. However, we end up with a row_object with
-                # empty entries but not with a row_object that is None.
-                # We have to distinguish these cases. any(properties.values()) should do
+                # check the fields of properties are not empty, if so, set row object to properties
                 if any(properties.values()):
                     row_object = properties
 
@@ -387,8 +386,7 @@ class ExcelParser:
             self.db.associate(form_id, row_object)
         except StopIteration:
             # no candidates. form is created or not.
-            # TODO: check that warnings together wit on_row/form/language_not_found are not duplicated
-            if self.on_form_not_found(form, cell_with_forms):
+            if self.on_form_not_found(form, cell_identifier=cell_with_forms, language_id=this_lan):
                 form[c_f_id] = "{:}_{:}".format(form[c_f_language], row_object[c_r_id])
                 form[c_f_value] = cell_with_forms.value
                 # add status update if given
@@ -398,14 +396,13 @@ class ExcelParser:
                 self.db.insert_into_db(form)
                 form_id = form[c_f_id]
                 self.db.associate(form_id, row_object)
-            else:
-                logger.error(
-                    "The missing form was {:} in {:}, given as {:}.".format(
-                        row_object[c_r_id], this_lan, form[c_f_value]
-                    )
-                )
-                # TODO: do we need this return?
-                return
+            # TODO: do we still need this more specific warning in the on_form_not_found method?
+            # else:
+                # logger.error(
+                #     "The missing form was {:} in {:}, given as {:}.".format(
+                #         row_object[c_r_id], this_lan, form[c_f_value]
+                #     )
+                # )
 
 
 class ExcelCognateParser(ExcelParser):
@@ -438,7 +435,7 @@ class ExcelCognateParser(ExcelParser):
         )
 
     def on_language_not_found(
-        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+        self, language: t.Dict[str, t.Any],  cell_identifier: t.Optional[str] = None,
     ) -> bool:
         """Should I add a missing object? No, the object missing is an error.
 
@@ -449,23 +446,26 @@ class ExcelCognateParser(ExcelParser):
         ObjectNotFoundWarning
 
         """
+        # TODO: A simple ValueError should be enough
+        # class ObjectNotFoundWarning(UserWarning):
+        #     pass
 
-        class ObjectNotFoundWarning(UserWarning):
-            pass
-
-        rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
-        raise ObjectNotFoundWarning(
-            f"Failed to find object {rep:} {cell:} in the database"
+        rep = language.get("cldf_name", language.get("cldf_id", repr(language)))
+        raise ValueError(
+            f"Failed to find object {rep:} in the database. In cell: {cell_identifier:}"
         )
 
     def on_row_not_found(
-        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+        self, row_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
     ) -> bool:
         """Create row object"""
         return True
 
     def on_form_not_found(
-        self, db_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+        self,
+        form: t.Dict[str, t.Any],
+        cell_identifier: t.Optional[str] = None,
+        language_id: t.Optional[str] = None
     ) -> bool:
         """Should I add a missing object? No, but inform the user.
 
@@ -476,10 +476,18 @@ class ExcelCognateParser(ExcelParser):
         False: The object should not be added.
 
         """
-        rep = db_object.get("cldf_name", db_object.get("cldf_id", repr(db_object)))
+        rep = form.get("cldf_id", repr(form))
         logger.warning(
-            f"Failed to find object {rep:} in the database. Skipped. In cell: {cell:}."
+            f"Unable to find form {rep} in cell {cell_with_forms.coordinate} in the dataset. "
+            f"This cognate judgement was skipped. "
+            f"Please make sure that the form is present in forms.csv or in the file "
+            f"used for the Wordlist importation."
         )
+        # Do a fuzzy search
+        for row in self.db.find_db_candidates(
+                form, self.check_for_match, edit_dist_threshold=4
+        ):
+            logger.info(f"Did you mean {row} ?")
         return False
 
     def properties_from_row(
@@ -567,18 +575,10 @@ class ExcelCognateParser(ExcelParser):
                 self.db.associate(form_id, row_object)
             except StopIteration:
                 # TODO: check that warnings together wit on_row/form/language_not_found are not duplicated
-                if self.on_form_not_found(form, cell_with_forms):
-                    logger.warning(
-                        f"Unable to find form {form} in cell {cell_with_forms.coordinate} in the dataset. "
-                        f"This cognate judgement was skipped. "
-                        f"Please make sure that the form is present in forms.csv or in the file "
-                        f"used for the Wordlist importation."
-                    )
-                    # Do a fuzzy search
-                    for row in self.db.find_db_candidates(
-                        form, self.check_for_match, edit_dist_threshold=4
-                    ):
-                        logger.info(f"Did you mean {row} ?")
+                if self.on_form_not_found(form, cell_identifier=cell_with_forms, language_id=this_lan):
+                    pass
+                    #TODO: @Gereon: Do we want to create the form here, in case the error handel $
+                    # would be overwritten to return true
 
 
 def excel_parser_from_dialect(
