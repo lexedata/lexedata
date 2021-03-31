@@ -100,7 +100,7 @@ def segment_form(
                 report[str(raw_tokens[i])]["comment"] = "illegal symbol"
             del raw_tokens[i]
             logging.warning(
-                f"{context_for_warnings}Impossible sound / encountered in {formstring} – "
+                f"{context_for_warnings}Impossible sound '/' encountered in {formstring} – "
                 f"You cannot use CLTS extended normalization "
                 f"with this script. The slash was not taken over into the segments."
             )
