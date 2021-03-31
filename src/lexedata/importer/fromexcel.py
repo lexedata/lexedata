@@ -583,7 +583,9 @@ class ExcelCognateParser(ExcelParser):
             except StopIteration:
                 # TODO: check that warnings together wit on_row/form/language_not_found are not duplicated
                 if self.on_form_not_found(
-                    form, cell_identifier=cell_with_forms.coordinate, language_id=this_lan
+                    form,
+                    cell_identifier=cell_with_forms.coordinate,
+                    language_id=this_lan,
                 ):
                     pass
                     # TODO: @Gereon: Do we want to create the form here, in case the error handel $
