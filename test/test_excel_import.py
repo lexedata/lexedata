@@ -82,8 +82,8 @@ def test_dialect_missing_key_excel_parser(caplog):
 def test_dialect_missing_key_excel_cognate_parser(caplog):
     excel = Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
     original = (
-            Path(__file__).parent
-            / "data/cldf/defective_dataset/wordlist-metadata_no_lang_cell_regexes.json"
+        Path(__file__).parent
+        / "data/cldf/defective_dataset/wordlist-metadata_no_lang_cell_regexes.json"
     )
     copy = copy_metadata(original=original)
     # CognateExcelParser
@@ -102,7 +102,8 @@ def test_no_first_row_in_excel():
     with pytest.raises(AssertionError) as err:
         f.load_dataset(
             metadata=copy,
-            lexicon=Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx",
+            lexicon=Path(__file__).parent
+            / "data/cldf/defective_dataset/empty_excel.xlsx",
         )
     assert (
         str(err.value) == "Your first data row didn't have a name. "
@@ -135,8 +136,8 @@ def test_language_regex_error():
 
 def test_language_comment_regex_error():
     excel = (
-            Path(__file__).parent
-            / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+        Path(__file__).parent
+        / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
     )
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     copy = copy_metadata(original=original)
@@ -188,8 +189,8 @@ def test_properties_regex_error():
 
 def test_properties_comment_regex_error():
     excel = (
-            Path(__file__).parent
-            / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+        Path(__file__).parent
+        / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
     )
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     copy = copy_metadata(original=original)
@@ -209,10 +210,7 @@ def test_properties_comment_regex_error():
 
 
 def test_cognate_parser_language_not_found():
-    excel = (
-            Path(__file__).parent
-            / "data\excel\minimal_cog.xlsx"
-    )
+    excel = Path(__file__).parent / "data/excel/minimal_cog.xlsx"
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     dataset, copy = copy_to_temp(original)
     lexicon_wb = openpyxl.load_workbook(excel).active
@@ -224,5 +222,5 @@ def test_cognate_parser_language_not_found():
     assert (
         str(err.value)
         == "Failed to find object {'ID': 'autaa', 'Name': 'Autaa', 'Comment': "
-           "'fictitious!'} in the database. In cell: D1"
+        "'fictitious!'} in the database. In cell: D1"
     )

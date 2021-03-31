@@ -161,6 +161,7 @@ class DB:
 
             def match(x, y):
                 return x == y
+
         return [
             candidate
             for candidate, properties in self.cache[object.__table__].items()
