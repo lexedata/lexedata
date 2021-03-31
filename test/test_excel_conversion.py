@@ -79,10 +79,9 @@ def copy_to_temp(cldf_wordlist):
     return dataset, target
 
 
-def test_fromexcel_runs(excel_wordlist, caplog):
+def test_fromexcel_runs(excel_wordlist):
     lexicon, cogsets, (empty_dataset, original) = excel_wordlist
     f.load_dataset(Path(empty_dataset.tablegroup._fname), str(lexicon), str(cogsets))
-    print(caplog.text)
 
 
 def test_fromexcel_correct(excel_wordlist):
