@@ -49,6 +49,8 @@ class DB:
         self.cache = {}
         self.source_ids = set()
 
+    # TODO: @Gereon the cache_dataset method is only called in the load_dataset method. This means that if you would load the CognateParser directly, it doesn't work as the cache is empty and the code will throw errors (e.g. when trying to look for candidates we get a key error)
+    # TODO: I want to make sure, it is intended this way
     def cache_dataset(self):
         for table in self.dataset.tables:
             table_type = (
@@ -159,7 +161,6 @@ class DB:
 
             def match(x, y):
                 return x == y
-
         return [
             candidate
             for candidate, properties in self.cache[object.__table__].items()
@@ -187,14 +188,8 @@ class ExcelParser:
         check_for_match: t.List[str] = ["ID"],
         check_for_row_match: t.List[str] = ["Name"],
         check_for_language_match: t.List[str] = ["Name"],
-        # on_language_not_found: err.MissingHandler = err.create,
-        # on_row_not_found: err.MissingHandler = err.create,
-        # on_form_not_found: err.MissingHandler = err.create,
         fuzzy=0,
     ) -> None:
-        # self.on_language_not_found = on_language_not_found
-        # self.on_row_not_found = on_row_not_found
-        # self.on_form_not_found = on_form_not_found
         self.row_header = row_header
         try:
             self.cell_parser = cellparser(output_dataset)
@@ -463,7 +458,7 @@ class ExcelCognateParser(ExcelParser):
         )
 
     def on_row_not_found(
-        self, row_object: t.Dict[str, t.Any], cell: t.Optional[str] = None
+        self, row_object: t.Dict[str, t.Any], cell_identifier: t.Optional[str] = None
     ) -> bool:
         """Create row object"""
         return True
