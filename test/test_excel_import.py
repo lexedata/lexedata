@@ -8,6 +8,7 @@ import pycldf
 import openpyxl
 
 import lexedata.importer.fromexcel as f
+from test_excel_conversion import copy_to_temp
 
 
 def copy_metadata(original: Path):
@@ -86,8 +87,9 @@ def test_dialect_missing_key_excel_cognate_parser(caplog):
     )
     copy = copy_metadata(original=original)
     # CognateExcelParser
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as err:
         f.load_dataset(copy, lexicon=None, cognate_lexicon=excel)
+    print(err.value)
     assert caplog.text.endswith(
         "User-defined format specification in the json-file was missing the key lang_cell_regexes, "
         "falling back to default parser\n"
@@ -203,4 +205,24 @@ def test_properties_comment_regex_error():
     assert (
         str(err.value)
         == r"In cell B3: Expected to encounter match for \[.*, but found no_concept_comment"
+    )
+
+
+def test_cognate_parser_language_not_found():
+    excel = (
+            Path(__file__).parent
+            / "data\excel\minimal_cog.xlsx"
+    )
+    original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    dataset, copy = copy_to_temp(original)
+    lexicon_wb = openpyxl.load_workbook(excel).active
+    EP = f.ExcelCognateParser(output_dataset=dataset)
+    print(dataset["LanguageTable"])
+    with pytest.raises(ValueError) as err:
+        EP.db.cache_dataset()
+        EP.parse_cells(lexicon_wb)
+    assert (
+        str(err.value)
+        == "Failed to find object {'ID': 'autaa', 'Name': 'Autaa', 'Comment': "
+           "'fictitious!'} in the database. In cell: D1"
     )
