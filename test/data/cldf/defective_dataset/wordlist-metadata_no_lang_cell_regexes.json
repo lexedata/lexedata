@@ -98,10 +98,6 @@
                 ".*",
                 ".*"
             ],
-            "lang_cell_regexes": [
-                "(?P<Name>.*)",
-                "(?P<Curator>.*)"
-            ],
             "lang_comment_regexes": [
                 ".*",
                 ".*"
