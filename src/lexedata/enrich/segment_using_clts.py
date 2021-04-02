@@ -185,7 +185,7 @@ def add_segments_to_dataset(
                 for wrong, right in pre_replace.items():
                     if wrong in form:
                         report[row[c_f_lan]][wrong]["count"] += 1
-                        report[row[c_f_lan]][wrong]["comment"] = f"pre-replace '{wrong}' by '{right}'"
+                        report[row[c_f_lan]][wrong]["comment"] = f"'{wrong}' replaced by '{right}'"
                         form = form.replace(wrong, right)
                         # also replace symbol in #FormTable *form
                         if replace_form:
