@@ -49,7 +49,7 @@ def segment_form(
     system=bipa,
     split_diphthongs: bool = True,
     context_for_warnings: str = "",
-    report: t.Optional[t.Dict] =None,
+    report: t.Optional[t.Dict] = None,
 ) -> t.Iterable[pyclts.models.Symbol]:
     """Segment the form.
 
@@ -83,7 +83,9 @@ def segment_form(
     ]
     if system != bipa:
         if any(r.type == "unknownsound" for r in raw_tokens):
-            logging.warning(f"{context_for_warnings}Unknown sound encountered in {formstring:}")
+            logging.warning(
+                f"{context_for_warnings}Unknown sound encountered in {formstring:}"
+            )
         return raw_tokens
     i = len(raw_tokens) - 1
     while i >= 0:
@@ -157,7 +159,10 @@ def segment_form(
 
 
 def add_segments_to_dataset(
-    dataset: pycldf.Dataset, transcription: str, overwrite_existing: bool, replace_form: bool
+    dataset: pycldf.Dataset,
+    transcription: str,
+    overwrite_existing: bool,
+    replace_form: bool,
 ):
     if dataset.column_names.forms.segments is None:
         # Create a Segments column in FormTable
@@ -173,9 +178,10 @@ def add_segments_to_dataset(
     c_f_lan = dataset["FormTable", "languageReference"].name
     c_f_form = dataset["FormTable", "form"].name
     # report = t.Dict[str, t.Dict[str, t.Dict[str, str]]] = {}
-    report = {f[c_f_lan]: defaultdict(lambda: {"count": 0, "comment": ""})
-                                                           for f in dataset["FormTable"]
-                                                           }
+    report = {
+        f[c_f_lan]: defaultdict(lambda: {"count": 0, "comment": ""})
+        for f in dataset["FormTable"]
+    }
     for r, row in enumerate(dataset["FormTable"], 1):
         if row[c_f_segments] and not overwrite_existing:
             continue
@@ -185,7 +191,9 @@ def add_segments_to_dataset(
                 for wrong, right in pre_replace.items():
                     if wrong in form:
                         report[row[c_f_lan]][wrong]["count"] += 1
-                        report[row[c_f_lan]][wrong]["comment"] = f"'{wrong}' replaced by '{right}'"
+                        report[row[c_f_lan]][wrong][
+                            "comment"
+                        ] = f"'{wrong}' replaced by '{right}'"
                         form = form.replace(wrong, right)
                         # also replace symbol in #FormTable *form
                         if replace_form:
@@ -197,8 +205,19 @@ def add_segments_to_dataset(
                 )
             write_back.append(row)
     from tabulate import tabulate
-    data = [[k, kk] + list(values.values()) for k, v in report.items() for kk, values in v.items()]
-    print(tabulate(data, headers=["LanguageID", "Sound", "Occurrences", "Comment"], tablefmt='orgtbl'))
+
+    data = [
+        [k, kk] + list(values.values())
+        for k, v in report.items()
+        for kk, values in v.items()
+    ]
+    print(
+        tabulate(
+            data,
+            headers=["LanguageID", "Sound", "Occurrences", "Comment"],
+            tablefmt="orgtbl",
+        )
+    )
     dataset.write(FormTable=write_back)
 
 
@@ -238,4 +257,6 @@ if __name__ == "__main__":
     if args.transcription is None:
         args.transcription = dataset.column_names.forms.form
     # add segments to FormTable
-    add_segments_to_dataset(dataset, args.transcription, args.overwrite, args.replace_form)
+    add_segments_to_dataset(
+        dataset, args.transcription, args.overwrite, args.replace_form
+    )
