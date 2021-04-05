@@ -251,6 +251,7 @@ def test_cellparser_form_6(parser):
         "Form": "dʒi'tɨka",
     }
 
+
 @pytest.mark.skip()
 def test_cellparser_form_7(parser):
     # comment error due to not matching opening and closing brackets
