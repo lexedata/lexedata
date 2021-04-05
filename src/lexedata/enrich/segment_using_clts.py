@@ -18,7 +18,7 @@ bipa = clts.api.bipa
 
 tokenizer = segments.Tokenizer()
 
-# this is just a comment to push again
+
 def cleanup(form: str) -> str:
     form = form.split(";")[0].strip()
     form = form.split(",")[0].strip()
