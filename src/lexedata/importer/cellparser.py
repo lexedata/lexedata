@@ -86,18 +86,18 @@ def check_brackets(string, bracket_pairs):
     return not any(waiting_for)
 
 
-def components_in_brackets(form_string, bracket_pairs, context=""):
+def components_in_brackets(form_string, bracket_pairs):
     """Find all elements delimited by complete pairs of matching brackets.
 
     >>> b = {"!/": "", "(": ")", "[": "]", "{": "}", "/": "/"}
-    >>> components_in_brackets("/aha/ (exclam. !/ int., also /ah/)", b)
+    >>> components_in_brackets("/aha/ (exclam. !/ int., also /ah/)",b)
     ['', '/aha/', ' ', '(exclam. !/ int., also /ah/)', '']
 
     Recovery from mismatched delimiters early in the string is difficult. The
     following example is still waiting for the first '/' to be closed by the
     end of the string.
 
-    >>> components_in_brackets("/aha (exclam. !/ int., also /ah/)", b)
+    >>> components_in_brackets("/aha (exclam. !/ int., also /ah/)",b)
     ['', '/aha (exclam. !/ int., also /ah/)']
 
     """
@@ -123,16 +123,15 @@ def components_in_brackets(form_string, bracket_pairs, context=""):
                     waiting_for.insert(0, p)
                     i += len(q)
                     break
-                elif p and remainder[i:].startswith(p):
-                    # TODO: @Geroen: do we need this warning? I think this case is better handled in parse_form...
-                    logger.info(
-                        f"{context:}In form {form_string}: Encountered mismatched closing delimiter {p}. "
-                        f"This could be a bigger problem in the cell, so the form was not imported."
-                    )
+                # elif p and remainder[i:].startswith(p):
+                #     # TODO: @Geroen: do we need this warning? I think this case is better handled in parse_form...
+                #     logger.info(
+                #         f"{context:}In form {form_string}: Encountered mismatched closing delimiter {p}. "
+                #         f"This could be a bigger problem in the cell, so the form was not imported."
+                #    )
             else:
                 i += 1
-    # if any(waiting_for):
-    #     return elements
+
     return elements + [remainder]
 
 
@@ -232,15 +231,6 @@ class CellParser(NaiveCellParser):
         # Colums necessary for word list
         self.cc(short="source", long=("FormTable", "source"), dataset=dataset)
         self.cc(short="comment", long=("FormTable", "comment"), dataset=dataset)
-
-        try:
-            # self.c["comment"] = dataset["FormTable", "comment"].name
-            self.comment_separator = dataset["FormTable", "comment"].separator or "\t"
-        except KeyError:
-            # TODO: @Geroen, I think we never land here without having a comment field,
-            # as self.cc(short=comment ..) is called and the error is handled there
-            # logger.info("No #comment column found, usually named 'comment'.")
-            self.comment_separator = ""
 
         try:
             # As long as there is no CLDF term #variants, this will either be
@@ -367,9 +357,7 @@ class CellParser(NaiveCellParser):
         # '%', see below.
         expect_variant: t.Optional[str] = None
         # Iterate over the delimiter-separated elements of the form.
-        for element in components_in_brackets(
-            form_string, self.bracket_pairs, context=cell_identifier
-        ):
+        for element in components_in_brackets(form_string, self.bracket_pairs):
             element = element.strip()
 
             if not element:
@@ -388,7 +376,9 @@ class CellParser(NaiveCellParser):
                     f"{delimiter}. This could be a bigger problem in the cell, "
                     f"so the form was not imported."
                 )
-
+                # parse_form is embedded in a try except KeyError block,
+                # raise KeyError to continue processing the next form string
+                raise KeyError
             # Check what kind of element we have.
             for start, (term, transcription) in self.element_semantics.items():
                 field = self.c[term]
@@ -708,9 +698,3 @@ class MawetiCognateCellParser(MawetiCellParser):
             return None
         else:
             return super().parse_form(values, language, cell_identifier)
-
-
-if __name__ == "__main__":
-    b = {"!/": "", "(": ")", "[": "]", "{": "}", "/": "/"}
-    res = components_in_brackets("/aha/ (exclam. /ah/", b)
-    print(res)
