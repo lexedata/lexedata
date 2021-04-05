@@ -2,6 +2,7 @@ import logging
 import argparse
 import typing as t
 from pathlib import Path
+from collections import defaultdict
 
 from csvw.metadata import URITemplate
 
@@ -44,7 +45,11 @@ pre_replace = {
 
 
 def segment_form(
-    formstring: str, system=bipa, pre_replace=pre_replace, split_diphthongs: bool = True
+    formstring: str,
+    system=bipa,
+    split_diphthongs: bool = True,
+    context_for_warnings: str = "",
+    report: t.Optional[t.Dict] = None,
 ) -> t.Iterable[pyclts.models.Symbol]:
     """Segment the form.
 
@@ -64,13 +69,11 @@ def segment_form(
     ['i', 'ɾ', 'ũ', 'n', 'd', 'ɨ']
     >>> [str(x) for x in segment_form("mokõi")]
     ['m', 'o', 'k', 'õ', 'i']
-    >>> segment_form("pan̥onoː́t͡síkoːʔú")
+    >>> segment_form("pan̥onoót͡síkoːʔú")
     [<pyclts.models.Consonant: voiceless bilabial stop consonant>, <pyclts.models.Vowel: unrounded open front vowel>, <pyclts.models.Consonant: devoiced voiced alveolar nasal consonant>, <pyclts.models.Vowel: rounded close-mid back vowel>, <pyclts.models.Consonant: voiced alveolar nasal consonant>, <pyclts.models.Vowel: rounded close-mid back vowel>, <pyclts.models.Vowel: rounded close-mid back with_high_tone vowel>, <pyclts.models.Consonant: voiceless alveolar sibilant affricate consonant>, <pyclts.models.Vowel: unrounded close front with_high_tone vowel>, <pyclts.models.Consonant: voiceless velar stop consonant>, <pyclts.models.Vowel: long rounded close-mid back vowel>, <pyclts.models.Consonant: voiceless glottal stop consonant>, <pyclts.models.Vowel: rounded close back with_high_tone vowel>]
 
     """
     # and with the syllable boundary marker '.', so we wrap it with special cases for those.
-    for wrong, right in pre_replace.items():
-        formstring = formstring.replace(wrong, right)
     raw_tokens = [
         system[s]
         for s in tokenizer(
@@ -80,7 +83,9 @@ def segment_form(
     ]
     if system != bipa:
         if any(r.type == "unknownsound" for r in raw_tokens):
-            logging.warning(f"Unknown sound encountered in {formstring:}")
+            logging.warning(
+                f"{context_for_warnings}Unknown sound encountered in {formstring:}"
+            )
         return raw_tokens
     i = len(raw_tokens) - 1
     while i >= 0:
@@ -92,11 +97,14 @@ def segment_form(
             i -= 1
             continue
         if raw_tokens[i].source == "/":
+            if report:
+                report[str(raw_tokens[i])]["count"] += 1
+                report[str(raw_tokens[i])]["comment"] = "illegal symbol"
             del raw_tokens[i]
             logging.warning(
-                "Impossible sound / encountered in {:} – You cannot use CLTS extended normalization with this script. The slash was not taken over into the segments.".format(
-                    formstring
-                )
+                f"{context_for_warnings}Impossible sound '/' encountered in {formstring} – "
+                f"You cannot use CLTS extended normalization "
+                f"with this script. The slash was not taken over into the segments."
             )
             i -= 1
             continue
@@ -116,10 +124,11 @@ def segment_form(
         if grapheme.endswith("ⁿ") or grapheme.endswith("ᵐ") or grapheme.endswith("ᵑ"):
             if raw_tokens[i + 1].preceding is not None:
                 logging.warning(
-                    "Unknown sound {:} encountered in {:}".format(
-                        raw_tokens[i], formstring
-                    )
+                    f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
+                if report:
+                    report[str(raw_tokens[i])]["count"] += 1
+                    report[str(raw_tokens[i])]["comment"] = "unknown pre-nasalization"
                 i -= 1
                 continue
             raw_tokens[i + 1] = bipa["pre-nasalized " + raw_tokens[i + 1].name]
@@ -128,24 +137,32 @@ def segment_form(
         if grapheme.endswith("ʰ"):
             if raw_tokens[i + 1].preceding is not None:
                 logging.warning(
-                    "Unknown sound {:} encountered in {:}".format(
-                        raw_tokens[i], formstring
-                    )
+                    f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
+                if report:
+                    report[str(raw_tokens[i])]["count"] += 1
+                    report[str(raw_tokens[i])]["comment"] = "unknown pre-aspiration"
                 i -= 1
                 continue
             raw_tokens[i + 1] = bipa["pre-aspirated " + raw_tokens[i + 1].name]
             raw_tokens[i] = bipa[grapheme[:-1]]
             continue
         logging.warning(
-            "Unknown sound {:} encountered in {:}".format(raw_tokens[i], formstring)
+            f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
         )
+        if report:
+            report[str(raw_tokens[i])]["count"] += 1
+            report[str(raw_tokens[i])]["comment"] = "unknown sound"
         i -= 1
+
     return raw_tokens
 
 
 def add_segments_to_dataset(
-    dataset: pycldf.Dataset, transcription: str, overwrite_existing: bool
+    dataset: pycldf.Dataset,
+    transcription: str,
+    overwrite_existing: bool,
+    replace_form: bool,
 ):
     if dataset.column_names.forms.segments is None:
         # Create a Segments column in FormTable
@@ -156,15 +173,51 @@ def add_segments_to_dataset(
         dataset.write_metadata()
 
     write_back = []
-    c_f_segments = dataset["FormTable", "Segments"].name
-    for row in dataset["FormTable"]:
+    c_f_segments = dataset["FormTable", "segments"].name
+    c_f_id = dataset["FormTable", "id"].name
+    c_f_lan = dataset["FormTable", "languageReference"].name
+    c_f_form = dataset["FormTable", "form"].name
+    # report = t.Dict[str, t.Dict[str, t.Dict[str, str]]] = {}
+    report = {
+        f[c_f_lan]: defaultdict(lambda: {"count": 0, "comment": ""})
+        for f in dataset["FormTable"]
+    }
+    for r, row in enumerate(dataset["FormTable"], 1):
         if row[c_f_segments] and not overwrite_existing:
             continue
         else:
             if row[transcription]:
                 form = row[transcription].strip()
-                row[dataset.column_names.forms.segments] = segment_form(form)
+                for wrong, right in pre_replace.items():
+                    if wrong in form:
+                        report[row[c_f_lan]][wrong]["count"] += 1
+                        report[row[c_f_lan]][wrong][
+                            "comment"
+                        ] = f"'{wrong}' replaced by '{right}'"
+                        form = form.replace(wrong, right)
+                        # also replace symbol in #FormTable *form
+                        if replace_form:
+                            row[c_f_form] = row[c_f_form].replace(wrong, right)
+                row[dataset.column_names.forms.segments] = segment_form(
+                    form,
+                    context_for_warnings=f"In form {row[c_f_id]} (line {r}): ",
+                    report=report[row[c_f_lan]],
+                )
             write_back.append(row)
+    from tabulate import tabulate
+
+    data = [
+        [k, kk] + list(values.values())
+        for k, v in report.items()
+        for kk, values in v.items()
+    ]
+    print(
+        tabulate(
+            data,
+            headers=["LanguageID", "Sound", "Occurrences", "Comment"],
+            tablefmt="orgtbl",
+        )
+    )
     dataset.write(FormTable=write_back)
 
 
@@ -190,6 +243,13 @@ if __name__ == "__main__":
         default=False,
         help="Overwrite #segments values already given in the dataset",
     )
+
+    parser.add_argument(
+        "--replace-form",
+        action="store_true",
+        default=False,
+        help="Apply the replacements performed on segments also to #form column of #FormTable",
+    )
     args = parser.parse_args()
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
@@ -197,4 +257,6 @@ if __name__ == "__main__":
     if args.transcription is None:
         args.transcription = dataset.column_names.forms.form
     # add segments to FormTable
-    add_segments_to_dataset(dataset, args.transcription, args.overwrite)
+    add_segments_to_dataset(
+        dataset, args.transcription, args.overwrite, args.replace_form
+    )
