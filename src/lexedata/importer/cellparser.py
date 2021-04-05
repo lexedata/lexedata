@@ -233,6 +233,12 @@ class CellParser(NaiveCellParser):
         self.cc(short="comment", long=("FormTable", "comment"), dataset=dataset)
 
         try:
+            self.comment_separator = dataset["FormTable", "comment"].separator or "\t"
+        except KeyError:
+            logger.info("No #comment column found.")
+            self.comment_separator = ""
+
+        try:
             # As long as there is no CLDF term #variants, this will either be
             # 'variants' or raise a KeyError. However, it is a transparent
             # re-use of an otherwise established idiom in this module, so we
