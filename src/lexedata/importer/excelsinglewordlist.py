@@ -82,7 +82,7 @@ def read_single_excel_sheet(
     ignore_missing: bool = False,
     ignore_superfluous: bool = False,
     status_update: t.Optional[str] = None,
-    report: t.Optional[t.Dict] = None
+    report: t.Optional[t.Dict] = None,
 ):
     concept_columns: t.Tuple[str, str]
     if concept_column is None:
@@ -222,26 +222,24 @@ def read_single_excel_sheet(
 
 
 def add_single_languages(
-        metadata: Path,
-        excel: str,
-        sheet: t.Optional[t.List[str]],
-        match_form: t.Optional[t.List[str]],
-        concept_name: t.Optional[str],
-        ignore_missing: bool,
-        ignore_superfluous: bool,
-        exclude_sheet,
-        verbose: bool,
-        status_update: t.Optional[str],
-        report: bool
-)-> None:
+    metadata: Path,
+    excel: str,
+    sheet: t.Optional[t.List[str]],
+    match_form: t.Optional[t.List[str]],
+    concept_name: t.Optional[str],
+    ignore_missing: bool,
+    ignore_superfluous: bool,
+    exclude_sheet,
+    verbose: bool,
+    status_update: t.Optional[str],
+    report: bool,
+) -> None:
     if status_update == "None":
         status_update = None
     if verbose:
         logging.basicConfig(level=logging.INFO)
     if not sheet:
-        sheets = [
-            sheet for sheet in excel.sheetnames if sheet not in exclude_sheet
-        ]
+        sheets = [sheet for sheet in excel.sheetnames if sheet not in exclude_sheet]
         logging.warning("No sheets specified. Parsing sheets: %s", sheet)
     # initiate data set from meta data or csv depending on command line arguments
     if metadata:
@@ -280,22 +278,29 @@ def add_single_languages(
             ignore_missing=ignore_missing,
             ignore_superfluous=ignore_superfluous,
             status_update=status_update,
-            report=report
+            report=report,
         )
     if report:
         report_data = [
-            [("(new)" if bool(values["lan_stat"]) else "") + language,
-             values["new"],
-             values["existing"],
-             values["skipped"],
-             values["concepts"]
-             ]
+            [
+                ("(new)" if bool(values["lan_stat"]) else "") + language,
+                values["new"],
+                values["existing"],
+                values["skipped"],
+                values["concepts"],
+            ]
             for language, values in report.items()
         ]
         print(
             tabulate(
                 report_data,
-                headers=["LanguageID", "New forms", "Existing forms", "Skipped forms", "New concept reference"],
+                headers=[
+                    "LanguageID",
+                    "New forms",
+                    "Existing forms",
+                    "Skipped forms",
+                    "New concept reference",
+                ],
                 tablefmt="orgtbl",
             )
         )
@@ -386,5 +391,5 @@ if __name__ == "__main__":
         exclude_sheet=args.exclude_sheet,
         verbose=args.verbose,
         status_update=args.status_update,
-        report=args.report
+        report=args.report,
     )
