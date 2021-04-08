@@ -15,6 +15,9 @@ WARNING = "\u26A0"
 # TODO: Make comments on Languages, Cognatesets, and Judgements appear as notes
 # in Excel.
 
+# Type aliases, for clarity
+CognatesetID = str
+
 
 class ExcelWriter:
     """Class logic for cognateset Excel export."""
@@ -128,7 +131,7 @@ class ExcelWriter:
                 concept_id_by_form_id[f[c_form_id]] = concept[0]
 
         # load all cognates by cognateset id
-        all_judgements = {}
+        all_judgements: t.Dict[CognatesetID, t.List[types.CogSet]] = {}
         c_cognate_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
         c_cognate_form = self.dataset["CognateTable", "formReference"].name
         for j in self.dataset["CognateTable"]:
@@ -225,7 +228,7 @@ class ExcelWriter:
                         value = concept_id_by_form_id[form_id]
                     elif db_name == c_cogset_concept:
                         value = concept_id_by_form_id[form_id]
-                    elif header == "Status_Column":
+                    elif header == "Status_Column" and status_update is not None:
                         value = status_update
                     else:
                         value = ""
