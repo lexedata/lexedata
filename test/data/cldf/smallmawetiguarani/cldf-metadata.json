@@ -198,7 +198,7 @@
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#parameterReference",
                         "required": true,
                         "separator": ";",
-                        "name": "Concept_ID"
+                        "name": "Parameter_ID"
                     },
                     {
                         "datatype": "string",
