@@ -539,9 +539,7 @@ class CellParserHyperlink(CellParser):
                 slice, alignment = alignment_from_braces(text)
             properties = {
                 self.c["c_id"]: url.split("/")[-1],
-                self.c.get("c_segments"): ",".join(
-                    "{:}:{:}".format(i, j) for i, j in slice
-                ),
+                self.c.get("c_segments"): ["{:}:{:}".format(i, j) for i, j in slice],
                 self.c.get("c_alignment"): alignment,
                 self.c.get("c_comment"): comment,
             }
