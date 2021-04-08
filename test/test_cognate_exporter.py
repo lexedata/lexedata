@@ -69,6 +69,6 @@ def test_adding_singleton_cognatesets():
         "four8",
         "five5",
         "X1_old_paraguayan_guarani",
-        "X2_ache",
-        "X3_paraguayan_guarani",
+        "X2_paraguayan_guarani",
+        "X3_ache",
     ]
