@@ -1,46 +1,11 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 import platform
 
-REQUIRES = [
-    "attrs",
-    "python-igraph",
-    "openpyxl",
-    "pycldf",
-    "sqlalchemy",
-    "segments",
-    "lingpy",
-    "unidecode",
-    "cldfbench",
-    "pyglottolog",
-    "pyconcepticon",
-    "pyclts~=2.1.3",
-]
-
 if platform.system() == "Windows":
-    REQUIRES.append("pyreadline")
+    readline = "pyreadline"
 elif platform.system() == "Darwin":
-    REQUIRES.append("gnureadline")
+    readline = "gnureadline"
 else:
-    REQUIRES.append("readline")
+    readline = "readline"
 
-setup(
-    name="lexedata",
-    version="0.1",
-    description="Tools for editing lexical databases for historical linguistics",
-    author="Melvin Steiger, Gereon A. Kaiping",
-    author_email="gereon.kaiping@geo.uzh.ch",
-    long_description=open("README.md").read(),
-    long_description_content_type="text/markdown",
-    keywords="data linguistics",
-    license="???",
-    url="https://gitlab.uzh.ch/gereonalexander.kaiping/editinglexicaldatasets",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    platforms="any",
-    install_requires=REQUIRES,
-    entry_points={
-        "console_scripts": [
-            "import-data-mg = importer.cells:main",
-        ]
-    },
-)
+setup(extras_require={"formatguesser": [readline]})
