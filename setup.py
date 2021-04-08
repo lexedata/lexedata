@@ -15,10 +15,13 @@ REQUIRES = [
     "pyconcepticon",
     "pyclts~=2.1.3",
 ]
-if platform.system() != "Windows":
-    REQUIRES.append("readline")
-else:
+
+if platform.system() == "Windows":
     REQUIRES.append("pyreadline")
+elif platform.system() == "Darwin":
+    REQUIRES.append("gnureadline")
+else:
+    REQUIRES.append("readline")
 
 setup(
     name="lexedata",
