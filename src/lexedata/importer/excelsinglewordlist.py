@@ -1,6 +1,8 @@
 import logging
 import typing as t
 from pathlib import Path
+from collections import defaultdict
+from tabulate import tabulate
 
 import openpyxl
 import pycldf
@@ -51,15 +53,19 @@ def import_data_from_sheet(
         data = Form({k: clean_cell_value(cell) for k, cell in zip(sheet_header, row)})
         if "value" in implicit:
             data[implicit["value"]] = "\t".join(map(str, data.values()))
-        try:
-            concept_entry = data.pop(concept_column[1])
-            data[concept_column[0]] = entries_to_concepts[concept_entry]
-        except KeyError:
-            logger.warning(
-                f"Concept {concept_entry} was not found. Please add it to the concepts table manually. The corresponding form was ignored and not added to the dataset."
-            )
-            data[concept_column[0]] = concept_entry
-            continue
+        concept_entry = data.pop(concept_column[1])
+        data[concept_column[0]] = concept_entry
+        # TODO: I moved this warning to read_single_excel_sheet in order to count the skipped forms
+        # try:
+        #     concept_entry = data.pop(concept_column[1])
+        #     data[concept_column[0]] = entries_to_concepts[concept_entry]
+        # except KeyError:
+        #     logger.warning(
+        #          f"Concept {concept_entry} was not found. Please add it to the concepts table manually. The corresponding form was ignored and not added to the dataset."
+        #     )
+        #     breakpoint()
+        #     data[concept_column[0]] = concept_entry
+        #    continue
         if "id" in implicit:
             data[implicit["id"]] = None
         if "languageReference" in implicit:
@@ -76,6 +82,7 @@ def read_single_excel_sheet(
     ignore_missing: bool = False,
     ignore_superfluous: bool = False,
     status_update: t.Optional[str] = None,
+    report: t.Optional[t.Dict] = None,
 ):
     concept_columns: t.Tuple[str, str]
     if concept_column is None:
@@ -127,7 +134,7 @@ def read_single_excel_sheet(
             logger.warning(message)
         else:
             raise ValueError(message)
-    # check if language exist, add if not add language to cache
+    # check if language exist
     c_l_name = db.dataset["LanguageTable", "name"].name
     c_l_id = db.dataset["LanguageTable", "id"].name
     language_name_to_language_id = {
@@ -136,8 +143,16 @@ def read_single_excel_sheet(
     language_name = sheet.title
     if language_name in language_name_to_language_id:
         language_id = language_name_to_language_id[language_name]
+        lan_stat = 1
     else:
         language_id = language_name
+        lan_stat = 0
+    if isinstance(report, dict):
+        report[language_id]["lan_stat"] = lan_stat
+        report[language_id]["new"]
+        report[language_id]["existing"]
+        report[language_id]["skipped"]
+        report[language_id]["concepts"]
     # read new data from sheet
     for form in import_data_from_sheet(
         sheet,
@@ -146,10 +161,18 @@ def read_single_excel_sheet(
         entries_to_concepts=entries_to_concepts,
         concept_column=concept_columns,
     ):
-        # if concept not in datasete, don't add form
+        print(form)
+        print(entries_to_concepts)
+        # if concept not in dataset, don't add form
         try:
-            entries_to_concepts[form[c_f_concept]]
+            concept_entry = form[c_f_concept]
+            entries_to_concepts[concept_entry]
         except KeyError:
+            logger.warning(
+                f"Concept {concept_entry} was not found. Please add it to the concepts table manually. The corresponding form was ignored and not added to the dataset."
+            )
+            if report:
+                report[language_id]["skipped"] += 1
             continue
         # else, look for candidates, link to existing form or add new form
         for item, value in form.items():
@@ -163,8 +186,12 @@ def read_single_excel_sheet(
         form_candidates = db.find_db_candidates(form, match_form)
         for form_id in form_candidates:
             logger.info(f"Form {form[c_f_value]} was already in data set.")
+            if report:
+                report[language_id]["existing"] += 1
 
             if db.dataset["FormTable", c_f_concept].separator:
+                # TODO: @Gereon, I think we should discuss these lines quickly
+                # most of the time we check if e concepts exists with entries_to_concept, but here we use the db.chache
                 for new_concept in form[c_f_concept]:
                     if new_concept not in db.cache[form_id][c_f_concept]:
                         db.cache[form_id][c_f_concept].append(new_concept)
@@ -174,6 +201,8 @@ def read_single_excel_sheet(
                             f"you need to manually remove that concept "
                             f"from the old form and create a separate new form."
                         )
+                        if report:
+                            report[language_id]["concepts"] += 1
             break
         else:
             form[c_f_language] = language_id
@@ -188,8 +217,95 @@ def read_single_excel_sheet(
             if status_update:
                 form["Status_Column"] = status_update
             db.insert_into_db(form)
+            if report:
+                report[language_id]["new"] += 1
     # write to cldf
     db.write_dataset_from_cache()
+
+
+def add_single_languages(
+    metadata: Path,
+    excel: str,
+    sheet: t.Optional[t.List[str]],
+    match_form: t.Optional[t.List[str]],
+    concept_name: t.Optional[str],
+    ignore_missing: bool,
+    ignore_superfluous: bool,
+    exclude_sheet,
+    verbose: bool,
+    status_update: t.Optional[str],
+    report: bool,
+) -> None:
+    if status_update == "None":
+        status_update = None
+    if verbose:
+        logging.basicConfig(level=logging.INFO)
+    if not sheet:
+        sheets = [sheet for sheet in excel.sheetnames if sheet not in exclude_sheet]
+        logging.warning("No sheets specified. Parsing sheets: %s", sheet)
+    # initiate data set from meta data or csv depending on command line arguments
+    if metadata:
+        if metadata.name == "forms.csv":
+            dataset = pycldf.Dataset.from_data(metadata)
+        else:
+            dataset = pycldf.Dataset.from_metadata(metadata)
+
+    try:
+        cid = dataset["ParameterTable", "id"].name
+        if concept_name is None:
+            concepts = {c[cid]: c[cid] for c in dataset["ParameterTable"]}
+            concept_column = dataset["FormTable", "parameterReference"].name
+        else:
+            name = dataset["ParameterTable", "name"].name
+            concepts = {c[name]: c[cid] for c in dataset["ParameterTable"]}
+            concept_column = concept_name
+    except KeyError:
+        concepts = KeyKeyDict()
+        concept_column = dataset["FormTable", "parameterReference"].name
+    # add Status_Column if not existing and status_update given
+    if status_update:
+        add_status_column_to_table(dataset=dataset, table_name="FormTable")
+    if report:
+        report = defaultdict(lambda: defaultdict(int))
+    else:
+        report = None
+    # import all selected sheets
+    for sheet in sheets:
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=excel[sheet],
+            match_form=match_form,
+            entries_to_concepts=concepts,
+            concept_column=concept_column,
+            ignore_missing=ignore_missing,
+            ignore_superfluous=ignore_superfluous,
+            status_update=status_update,
+            report=report,
+        )
+    if report:
+        report_data = [
+            [
+                ("(new)" if bool(values["lan_stat"]) else "") + language,
+                values["new"],
+                values["existing"],
+                values["skipped"],
+                values["concepts"],
+            ]
+            for language, values in report.items()
+        ]
+        print(
+            tabulate(
+                report_data,
+                headers=[
+                    "LanguageID",
+                    "New forms",
+                    "Existing forms",
+                    "Skipped forms",
+                    "New concept reference",
+                ],
+                tablefmt="orgtbl",
+            )
+        )
 
 
 if __name__ == "__main__":
@@ -259,48 +375,23 @@ if __name__ == "__main__":
         help="Text written to Status_Column. Set to 'None' for no status update. "
         "(default: new import)",
     )
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        default=False,
+        help="Prints report of newly added forms",
+    )
     args = parser.parse_args()
-    if args.status_update == "None":
-        args.status_update = None
-    args = parser.parse_args()
-    if args.verbose:
-        logging.basicConfig(level=logging.INFO)
-    if not args.sheet:
-        args.sheet = [
-            sheet for sheet in args.excel.sheetnames if sheet not in args.exclude_sheet
-        ]
-        logging.warning("No sheets specified. Parsing sheets: %s", args.sheet)
-    # initiate data set from meta data or csv depending on command line arguments
-    if args.metadata:
-        if args.metadata.name == "forms.csv":
-            dataset = pycldf.Dataset.from_data(args.metadata)
-        else:
-            dataset = pycldf.Dataset.from_metadata(args.metadata)
-
-    try:
-        cid = dataset["ParameterTable", "id"].name
-        if args.concept_name is None:
-            concepts = {c[cid]: c[cid] for c in dataset["ParameterTable"]}
-            concept_column = dataset["FormTable", "parameterReference"].name
-        else:
-            name = dataset["ParameterTable", "name"].name
-            concepts = {c[name]: c[cid] for c in dataset["ParameterTable"]}
-            concept_column = args.concept_name
-    except KeyError:
-        concepts = KeyKeyDict()
-        concept_column = dataset["FormTable", "parameterReference"].name
-    # add Status_Column if not existing and status_update given
-    if args.status_update:
-        add_status_column_to_table(dataset=dataset, table_name="FormTable")
-    # import all selected sheets
-    for sheet in args.sheet:
-        read_single_excel_sheet(
-            dataset=dataset,
-            sheet=args.excel[sheet],
-            match_form=args.match_form,
-            entries_to_concepts=concepts,
-            concept_column=concept_column,
-            ignore_missing=args.ignore_missing_excel_columns,
-            ignore_superfluous=args.ignore_superfluous_excel_columns,
-            status_update=args.status_update,
-        )
+    add_single_languages(
+        metadata=args.metadata,
+        excel=args.excel,
+        sheet=args.sheet,
+        match_form=args.match_form,
+        concept_name=args.concept_name,
+        ignore_missing=args.ignore_missing_excel_columns,
+        ignore_superfluous=args.ignore_superfluous_excel_columns,
+        exclude_sheet=args.exclude_sheet,
+        verbose=args.verbose,
+        status_update=args.status_update,
+        report=args.report,
+    )
