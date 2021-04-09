@@ -134,12 +134,27 @@ def test_import_report(single_import_parameters):
         ]
     )
     sheet.title = "new_language"
-    for name, report in read_single_excel_sheet(
+
+    # Import this single form in a new language
+    assert read_single_excel_sheet(
         dataset=dataset,
         sheet=sheet,
         entries_to_concepts=concepts,
         concept_column=concept_name,
-    ).items():
-        assert report == ImportLanguageReport(
+    ) == {
+        "new_language": ImportLanguageReport(
             is_new_language=True, new=1, existing=0, skipped=0, concepts=0
         )
+    }
+
+    # Import it again, now both form and language should be existing
+    assert read_single_excel_sheet(
+        dataset=dataset,
+        sheet=sheet,
+        entries_to_concepts=concepts,
+        concept_column=concept_name,
+    ) == {
+        "new_language": ImportLanguageReport(
+            is_new_language=False, new=0, existing=1, skipped=0, concepts=0
+        )
+    }
