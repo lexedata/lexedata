@@ -79,7 +79,7 @@ def import_data_from_sheet(
 
     assert (
         concept_column[1] in sheet_header
-    ), f"Could not find concept column {concept_column[0]} in your excel sheet {sheet.title}."
+    ), f"Could not find concept column {concept_column[1]} in your excel sheet {sheet.title}."
 
     for row in row_iter:
         data = Form({k: clean_cell_value(cell) for k, cell in zip(sheet_header, row)})
@@ -176,10 +176,10 @@ def read_single_excel_sheet(
     language_name = sheet.title
     if language_name in language_name_to_language_id:
         language_id = language_name_to_language_id[language_name]
-        report[language_id].is_new_language = True
+        report[language_id].is_new_language = False
     else:
         language_id = language_name
-        report[language_id].is_new_language = False
+        report[language_id].is_new_language = True
 
     # read new data from sheet
     for form in import_data_from_sheet(

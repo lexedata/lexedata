@@ -11,6 +11,8 @@ from lexedata.importer.excelsinglewordlist import (
     ImportLanguageReport,
 )
 
+from test_form_matcher import MockSingleExcelSheet
+
 
 def writable_copy_of_cldf_wordlist(cldf_wordlist):
     # Copy the dataset metadata file to a temporary directory.
@@ -66,20 +68,78 @@ def test_add_forms_maweti(single_import_parameters):
     assert new_form_ids - old_form_ids == {"ache_one_1", "ache_one_2"}
 
 
-def test_import_report(single_import_parameters):
+def test_import_error_missing_parameter_column(single_import_parameters):
     dataset, original, excel, concept_name = single_import_parameters
-    excel = openpyxl.load_workbook(excel)
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
-    sheet = [sheet for sheet in excel.sheetnames]
-    for sheet in sheet:
-        for name, report in read_single_excel_sheet(
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "variants",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+            ],
+            [],
+        ]
+    )
+    with pytest.raises(
+        AssertionError, match=f"Could not find concept column {concept_name} in .*"
+    ):
+        read_single_excel_sheet(
             dataset=dataset,
-            sheet=excel[sheet],
+            sheet=sheet,
             entries_to_concepts=concepts,
             concept_column=concept_name,
-        ).items():
-            assert report == ImportLanguageReport(
-                is_new_language=True, new=2, existing=0, skipped=4, concepts=0
-            )
+        )
+
+
+def test_import_report(single_import_parameters):
+    dataset, original, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    sheet.title = "new_language"
+    for name, report in read_single_excel_sheet(
+        dataset=dataset,
+        sheet=sheet,
+        entries_to_concepts=concepts,
+        concept_column=concept_name,
+    ).items():
+        assert report == ImportLanguageReport(
+            is_new_language=True, new=1, existing=0, skipped=0, concepts=0
+        )
