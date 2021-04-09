@@ -6,7 +6,10 @@ from pathlib import Path
 import pycldf
 import openpyxl
 
-from lexedata.importer.excelsinglewordlist import read_single_excel_sheet
+from lexedata.importer.excelsinglewordlist import (
+    read_single_excel_sheet,
+    ImportLanguageReport,
+)
 
 
 def writable_copy_of_cldf_wordlist(cldf_wordlist):
@@ -61,3 +64,22 @@ def test_add_forms_maweti(single_import_parameters):
         )
     new_form_ids = {row[c_f_id] for row in dataset["FormTable"]}
     assert new_form_ids - old_form_ids == {"ache_one_1", "ache_one_2"}
+
+
+def test_import_report(single_import_parameters):
+    dataset, original, excel, concept_name = single_import_parameters
+    excel = openpyxl.load_workbook(excel)
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    sheet = [sheet for sheet in excel.sheetnames]
+    for sheet in sheet:
+        for name, report in read_single_excel_sheet(
+            dataset=dataset,
+            sheet=excel[sheet],
+            entries_to_concepts=concepts,
+            concept_column=concept_name,
+        ).items():
+            assert report == ImportLanguageReport(
+                is_new_language=True, new=2, existing=0, skipped=4, concepts=0
+            )
