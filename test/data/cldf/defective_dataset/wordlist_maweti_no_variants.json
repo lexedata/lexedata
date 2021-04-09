@@ -10,7 +10,7 @@
     "special:fromexcel": {
         "row_cell_regexes": [
             "(?P<set>.*)",
-            "(?P<Name>.*)",
+            "(?P<cldf_name>.*)",
             "(?P<English>.*)",
             "(?P<Spanish>.*)",
             "(?P<Portuguese>.*)",
@@ -25,7 +25,7 @@
             ".*"
         ],
         "lang_cell_regexes": [
-            "(?P<Name>.*)",
+            "(?P<cldf_name>.*)",
             "(?P<Curator>.*)"
         ],
         "lang_comment_regexes": [
@@ -33,13 +33,13 @@
             ".*"
         ],
         "check_for_match": [
-            "ID"
+            "cldf_id"
         ],
         "check_for_row_match": [
-            "Name"
+            "cldf_name"
         ],
         "check_for_language_match": [
-            "Name"
+            "cldf_name"
         ],
         "cell_parser": {
             "name": "MawetiCellParser",
@@ -56,13 +56,13 @@
                 [
                     "(",
                     ")",
-                    "comment",
+                    "cldf_comment",
                     false
                 ],
                 [
                     "{",
                     "}",
-                    "source",
+                    "cldf_source",
                     false
                 ],
                 [
@@ -88,7 +88,7 @@
         "cognates": {
             "row_cell_regexes": [
                 "(?P<Set>.*)",
-                "(?P<Name>.*)",
+                "(?P<cldf_name>.*)",
                 ".*",
                 ".*",
                 ".*",
@@ -103,7 +103,7 @@
                 ".*"
             ],
             "lang_cell_regexes": [
-                "(?P<Name>.*)",
+                "(?P<cldf_name>.*)",
                 "(?P<Curator>.*)"
             ],
             "lang_comment_regexes": [
@@ -112,16 +112,16 @@
             ],
             "check_for_match": [
                 "orthographic",
-                "Language_ID",
+                "cldf_languageReference",
                 "phonemic",
                 "phonetic",
                 "source"
             ],
             "check_for_row_match": [
-                "Name"
+                "cldf_name"
             ],
             "check_for_language_match": [
-                "Name"
+                "cldf_name"
             ],
             "cell_parser": {
                 "name": "MawetiCognateCellParser",
@@ -135,37 +135,37 @@
                 ],
                 "add_default_source": "{1}",
                 "cell_parser_semantics": [
-                    [
-                        "(",
-                        ")",
-                        "comment",
-                        false
-                    ],
-                    [
-                        "{",
-                        "}",
-                        "source",
-                        false
-                    ],
-                    [
-                        "[",
-                        "]",
-                        "phonetic",
-                        true
-                    ],
-                    [
-                        "/",
-                        "/",
-                        "phonemic",
-                        true
-                    ],
-                    [
-                        "<",
-                        ">",
-                        "orthographic",
-                        true
-                    ]
+                [
+                    "cldf_comment",
+                    "(",
+                    ")",
+                    false
+                ],
+                [
+                    "cldf_source",
+                    "{",
+                    "}",
+                    false
+                ],
+                [
+                    "phonetic",
+                    "[",
+                    "]",
+                    true
+                ],
+                [
+                    "phonemic",
+                    "/",
+                    "/",
+                    true
+                ],
+                [
+                    "orthographic",
+                    "<",
+                    ">",
+                    true
                 ]
+            ]
             }
         }
     },
@@ -175,7 +175,7 @@
     "tables": [
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
-            "dc:extent": 34,
+            "dc:extent": 24200,
             "tableSchema": {
                 "columns": [
                     {
@@ -198,7 +198,7 @@
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#parameterReference",
                         "required": true,
                         "separator": ";",
-                        "name": "Parameter_ID"
+                        "name": "Concept_ID"
                     },
                     {
                         "datatype": "string",
@@ -216,12 +216,6 @@
                     {
                         "datatype": "string",
                         "name": "phonetic"
-                    },
-                    {
-                        "datatype": "string",
-                        "required": false,
-                        "separator": ",",
-                        "name": "variants"
                     },
                     {
                         "datatype": "string",
@@ -284,7 +278,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#ParameterTable",
-            "dc:extent": 23,
+            "dc:extent": 1153,
             "tableSchema": {
                 "columns": [
                     {
@@ -336,7 +330,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#LanguageTable",
-            "dc:extent": 4,
+            "dc:extent": 38,
             "tableSchema": {
                 "columns": [
                     {
@@ -372,7 +366,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognateTable",
-            "dc:extent": 0,
+            "dc:extent": 25368,
             "tableSchema": {
                 "columns": [
                     {
@@ -393,14 +387,6 @@
                         "datatype": "string",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
                         "name": "Comment"
-                    },
-                    {
-                        "datatype": "string",
-                        "name": "Segment_Slice"
-                    },
-                    {
-                        "datatype": "string",
-                        "name": "Alignment"
                     },
                     {
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
@@ -440,7 +426,7 @@
         },
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#CognatesetTable",
-            "dc:extent": 0,
+            "dc:extent": 6450,
             "tableSchema": {
                 "columns": [
                     {

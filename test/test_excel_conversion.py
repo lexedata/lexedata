@@ -11,8 +11,6 @@ import lexedata.importer.fromexcel as f
 from lexedata.exporter.cognates import ExcelWriter
 from lexedata.importer.cognates import import_cognates_from_excel
 
-# todo: these test must be adapted to new interface of fromexcel.py
-
 
 @pytest.fixture(
     params=[
@@ -61,9 +59,11 @@ def excel_wordlist(request):
 
 
 def copy_to_temp(cldf_wordlist):
-    # Copy the dataset to a different temporary location, so that editing the
-    # dataset will not change it.
+    """ Copy the dataset to a different temporary location, so that editing the dataset will not change it."""
     original = cldf_wordlist
+    dataset = pycldf.Dataset.from_metadata(original)
+    orig_bibpath = dataset.bibpath
+
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
     shutil.copyfile(original, target)
@@ -77,8 +77,34 @@ def copy_to_temp(cldf_wordlist):
     o = original.parent / link
     t = target.parent / link
     shutil.copyfile(o, t)
-    dataset.sources = pycldf.dataset.Sources.from_file(dataset.bibpath)
+    shutil.copyfile(orig_bibpath, dataset.bibpath)
     return dataset, target
+
+
+def copy_to_temp_no_bib(cldf_wordlist):
+    """ Copy the dataset to a temporary location, then delete the sources file."""
+    dataset, target = copy_to_temp(cldf_wordlist)
+    dataset.bibpath.unlink()
+    return dataset, target
+
+
+def copy_to_temp_bad_bib(cldf_wordlist):
+    """ Copy the dataset to a temporary location, then mess with the source file syntax."""
+    dataset, target = copy_to_temp(cldf_wordlist)
+    with dataset.bibpath.open("a") as bibfile:
+        bibfile.write("\n { \n")
+    return dataset, target
+
+
+@pytest.fixture(
+    params=[
+        copy_to_temp,
+        copy_to_temp_no_bib,
+        copy_to_temp_bad_bib,
+    ]
+)
+def working_and_nonworking_bibfile(request):
+    return request.param
 
 
 def test_fromexcel_runs(excel_wordlist):
@@ -114,8 +140,8 @@ def test_fromexcel_correct(excel_wordlist):
     )
 
 
-def test_toexcel_runs(cldf_wordlist):
-    filled_cldf_wordlist = copy_to_temp(cldf_wordlist)
+def test_toexcel_runs(cldf_wordlist, working_and_nonworking_bibfile):
+    filled_cldf_wordlist = working_and_nonworking_bibfile(cldf_wordlist)
     writer = ExcelWriter(
         dataset=filled_cldf_wordlist[0],
         database_url=str(filled_cldf_wordlist[1]),
@@ -124,8 +150,8 @@ def test_toexcel_runs(cldf_wordlist):
     writer.create_excel(out_filename)
 
 
-def test_roundtrip(cldf_wordlist):
-    filled_cldf_wordlist = copy_to_temp(cldf_wordlist)
+def test_roundtrip(cldf_wordlist, working_and_nonworking_bibfile):
+    filled_cldf_wordlist = working_and_nonworking_bibfile(cldf_wordlist)
     dataset, target = filled_cldf_wordlist
     c_formReference = dataset["CognateTable", "formReference"].name
     c_cogsetReference = dataset["CognateTable", "cognatesetReference"].name
@@ -152,9 +178,9 @@ def test_roundtrip(cldf_wordlist):
     assert new_judgements == old_judgements
 
 
-def test_roundtrip_separator_column(cldf_wordlist):
+def test_roundtrip_separator_column(cldf_wordlist, working_and_nonworking_bibfile):
     """Test whether a CognatesetTable column with separator survives a roundtrip."""
-    dataset, target = copy_to_temp(cldf_wordlist)
+    dataset, target = working_and_nonworking_bibfile(cldf_wordlist)
     dataset.add_columns("CognatesetTable", "CommaSeparatedTags")
     dataset["CognatesetTable", "CommaSeparatedTags"].separator = ","
     c_id = dataset["CognatesetTable", "id"].name

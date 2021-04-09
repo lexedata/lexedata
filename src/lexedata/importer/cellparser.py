@@ -86,18 +86,18 @@ def check_brackets(string, bracket_pairs):
     return not any(waiting_for)
 
 
-def components_in_brackets(form_string, bracket_pairs, context=""):
+def components_in_brackets(form_string, bracket_pairs):
     """Find all elements delimited by complete pairs of matching brackets.
 
     >>> b = {"!/": "", "(": ")", "[": "]", "{": "}", "/": "/"}
-    >>> components_in_brackets("/aha/ (exclam. !/ int., also /ah/)", b)
+    >>> components_in_brackets("/aha/ (exclam. !/ int., also /ah/)",b)
     ['', '/aha/', ' ', '(exclam. !/ int., also /ah/)', '']
 
     Recovery from mismatched delimiters early in the string is difficult. The
     following example is still waiting for the first '/' to be closed by the
     end of the string.
 
-    >>> components_in_brackets("/aha (exclam. !/ int., also /ah/)", b)
+    >>> components_in_brackets("/aha (exclam. !/ int., also /ah/)",b)
     ['', '/aha (exclam. !/ int., also /ah/)']
 
     """
@@ -123,12 +123,15 @@ def components_in_brackets(form_string, bracket_pairs, context=""):
                     waiting_for.insert(0, p)
                     i += len(q)
                     break
-                elif p and remainder[i:].startswith(p):
-                    logger.info(
-                        f"{context:}In form {form_string}: Encountered mismatched closing delimiter {p}. This is *probably* fine."
-                    )
+                # elif p and remainder[i:].startswith(p):
+                #     # TODO: @Geroen: do we need this warning? I think this case is better handled in parse_form...
+                #     logger.info(
+                #         f"{context:}In form {form_string}: Encountered mismatched closing delimiter {p}. "
+                #         f"This could be a bigger problem in the cell, so the form was not imported."
+                #    )
             else:
                 i += 1
+
     return elements + [remainder]
 
 
@@ -147,7 +150,9 @@ class NaiveCellParser:
             self.c[short] = dataset[long].name
         except KeyError:
             raise ValueError(
-                f"Your metadata are missing a #{long[1]} column in {long[0]}, which is required by your chosen cell parser {self.__class__.__name__}"
+                "Your metadata json file and your cell parser don’t match: "
+                f"Your cell parser {self.__class__.__name__} expects a #{long[1]} column (usually named '{long[1]}') "
+                f"in FormTable, but your metadata defines no such column."
             )
 
     def separate(self, values: str, context: str = "") -> t.Iterable[str]:
@@ -172,6 +177,9 @@ class NaiveCellParser:
         self, cell: openpyxl.cell.Cell, language_id: str, cell_identifier: str = ""
     ) -> t.Iterable[Form]:
         """Return form properties for every form in the cell"""
+        # cell_identifier format: sheet.cell_coordinate
+        cell_identifier = "{}: ".format(cell_identifier) if cell_identifier else ""
+
         text = clean_cell_value(cell)
         if not text:
             return []
@@ -213,16 +221,18 @@ class CellParser(NaiveCellParser):
         for start, end, term, transcription in element_semantics:
             # Ensure that all terms required by the element semantics are fields we can write to.
             self.cc(short=term, long=("FormTable", term), dataset=dataset)
-        assert (
-            self.transcriptions
-        ), "You must specify an element with transcription semantics"
+        assert self.transcriptions, (
+            "Your metadata json file and your cell parser don’t match: Your cell parser "
+            f"{self.__class__.__name__} expects to work with transcriptions "
+            "(at least one of 'orthographic', 'phonemic', and 'phonetic') to derive a #form "
+            "in #FormTable, but your metadata defines no such column."
+        )
 
         # Colums necessary for word list
         self.cc(short="source", long=("FormTable", "source"), dataset=dataset)
-
         self.cc(short="comment", long=("FormTable", "comment"), dataset=dataset)
+
         try:
-            self.c["comment"] = dataset["FormTable", "comment"].name
             self.comment_separator = dataset["FormTable", "comment"].separator or "\t"
         except KeyError:
             logger.info("No #comment column found.")
@@ -235,7 +245,10 @@ class CellParser(NaiveCellParser):
             # use this minor overhead.
             self.c["variants"] = dataset["FormTable", "variants"].name
         except KeyError:
-            logger.info("No 'variants' column found.")
+            logger.warning(
+                "No 'variants' column found for FormTable in Wordlist-metadata.json. "
+                "Form variants will be added to #comment."
+            )
 
         # Other class attributes
         self.separation_pattern = separation_pattern
@@ -311,7 +324,9 @@ class CellParser(NaiveCellParser):
                 raw_split[:2] = ["".join(raw_split[:2])]
         if not check_brackets(raw_split[0], self.bracket_pairs):
             logger.warning(
-                f"{context:}In values {values:}: Encountered mismatched closing delimiters. Please check that the separation into different forms was correct."
+                f"{context:}In values {values:}: "
+                "Encountered mismatched closing delimiters. Please check that the "
+                "separation of the cell into multiple entries, for different forms, was correct."
             )
 
         form = raw_split.pop(0).strip()
@@ -338,9 +353,6 @@ class CellParser(NaiveCellParser):
         if not form_string.strip():
             return None
 
-        # cell_identifier format: sheet.cell_coordinate
-        cell_identifier = "{}: ".format(cell_identifier) if cell_identifier else ""
-
         properties: t.Dict[str, t.Any] = {
             self.c["lang"]: language_id,
             self.c["value"]: form_string,
@@ -351,9 +363,7 @@ class CellParser(NaiveCellParser):
         # '%', see below.
         expect_variant: t.Optional[str] = None
         # Iterate over the delimiter-separated elements of the form.
-        for element in components_in_brackets(
-            form_string, self.bracket_pairs, context=cell_identifier
-        ):
+        for element in components_in_brackets(form_string, self.bracket_pairs):
             element = element.strip()
 
             if not element:
@@ -363,10 +373,18 @@ class CellParser(NaiveCellParser):
             # the last element, because a mismatched opening bracket means we
             # are still waiting for the closing one), warn.
             if not check_brackets(element, self.bracket_pairs):
+                try:
+                    delimiter = self.bracket_pairs[element[0]]
+                except KeyError:
+                    delimiter = element[0]
                 logger.warning(
-                    f"{cell_identifier}In form {form_string}: Element {element} had mismatching delimiters"
+                    f"{cell_identifier}In form {form_string}: Element {element} had mismatching delimiters "
+                    f"{delimiter}. This could be a bigger problem in the cell, "
+                    f"so the form was not imported."
                 )
-
+                # parse_form is embedded in a try except KeyError block,
+                # raise KeyError to continue processing the next form string
+                raise KeyError
             # Check what kind of element we have.
             for start, (term, transcription) in self.element_semantics.items():
                 field = self.c[term]
@@ -539,9 +557,7 @@ class CellParserHyperlink(CellParser):
                 slice, alignment = alignment_from_braces(text)
             properties = {
                 self.c["c_id"]: url.split("/")[-1],
-                self.c.get("c_segments"): ",".join(
-                    "{:}:{:}".format(i, j) for i, j in slice
-                ),
+                self.c.get("c_segments"): ["{:}:{:}".format(i, j) for i, j in slice],
                 self.c.get("c_alignment"): alignment,
                 self.c.get("c_comment"): comment,
             }
