@@ -65,7 +65,7 @@ def test_add_forms_maweti(single_import_parameters):
             concept_column=concept_name,
         )
     new_form_ids = {row[c_f_id] for row in dataset["FormTable"]}
-    assert new_form_ids - old_form_ids == {"ache_one_1", "ache_one_2"}
+    assert new_form_ids - old_form_ids == {"ache_one_1"}
 
 
 def test_import_error_missing_parameter_column(single_import_parameters):
