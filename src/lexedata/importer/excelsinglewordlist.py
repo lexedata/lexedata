@@ -7,7 +7,7 @@ from tabulate import tabulate
 import openpyxl
 import pycldf
 
-from lexedata.util import string_to_id, clean_cell_value, normalize_header
+from lexedata.util import string_to_id, clean_cell_value, normalize_header, normalize_string
 from lexedata.importer.fromexcel import DB
 from lexedata.types import Form
 from lexedata.enrich.add_status_column import add_status_column_to_table
@@ -69,7 +69,7 @@ def import_data_from_sheet(
         if "id" in implicit:
             data[implicit["id"]] = None
         if "languageReference" in implicit:
-            data[implicit["languageReference"]] = sheet.title
+            data[implicit["languageReference"]] = normalize_string(sheet.title)
         yield data
 
 
@@ -104,7 +104,10 @@ def read_single_excel_sheet(
     c_f_value = db.dataset["FormTable", "value"].name
     c_f_concept = db.dataset["FormTable", "parameterReference"].name
     if not match_form:
-        match_form = [c_f_form, c_f_language]
+        match_form = [c_f_form]
+        # TODO: adding the language ID as a default parameter for matching seems a bad idea to me.
+        # The candidate form gets the sheet title as language id, in most cases this is not identical to the actual language id
+        #match_form = [c_f_form, c_f_language]
     if not db.dataset["FormTable", c_f_concept].separator:
         match_form.append(c_f_concept)
 
@@ -182,27 +185,34 @@ def read_single_excel_sheet(
                 continue
             form[item] = value.split(sep)
         form_candidates = db.find_db_candidates(form, match_form)
-        for form_id in form_candidates:
-            logger.info(f"Form {form[c_f_value]} was already in data set.")
-            if report:
-                report[language_id]["existing"] += 1
+        if form_candidates: # indented the for block so only if no form_candidates are found the new form is created
+            new_concept_added = False
+            for form_id in form_candidates:
+                logger.info(f"Form {form[c_f_value]} was already in data set.")
 
-            if db.dataset["FormTable", c_f_concept].separator:
-                # TODO: @Gereon, I think we should discuss these lines quickly
-                # most of the time we check if e concepts exists with entries_to_concept, but here we use the db.chache
-                for new_concept in form[c_f_concept]:
-                    if new_concept not in db.cache[form_id][c_f_concept]:
-                        db.cache[form_id][c_f_concept].append(new_concept)
-                        logger.info(
-                            f"Existing form {form_id} was added to concept {form[c_f_concept]}. "
-                            f"If this was not intended (because it was a homophonous form, not a polysemy), "
-                            f"you need to manually remove that concept "
-                            f"from the old form and create a separate new form."
-                        )
-                        if report:
-                            report[language_id]["concepts"] += 1
-            break
+                if db.dataset["FormTable", c_f_concept].separator:
+                    # TODO: @Gereon, I think we should discuss these lines quickly
+                    # most of the time we check if a concepts exists with entries_to_concept, but here we use the db.chache
+                    for new_concept in form[c_f_concept]:
+                        if new_concept not in db.cache["FormTable"][form_id][c_f_concept]:
+                            db.cache["FormTable"][form_id][c_f_concept].append(new_concept)
+                            logger.info(
+                                f"Existing form {form_id} was added to concept {form[c_f_concept]}. "
+                                f"If this was not intended (because it was a homophonous form, not a polysemy), "
+                                f"you need to manually remove that concept "
+                                f"from the old form and create a separate new form."
+                            )
+                            new_concept_added = True
+
+                break
+            if new_concept_added:
+                if report:
+                    report[language_id]["concepts"] += 1
+            else:
+                if report:
+                    report[language_id]["existing"] += 1
         else:
+            # we land here after the break and keep adding existing forms to the dataset just with integer in id +1
             form[c_f_language] = language_id
             if "id" in implicit:
                 # TODO: check for type of form id column
