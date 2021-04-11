@@ -155,6 +155,16 @@ def test_import_report(single_import_parameters):
         concept_column=concept_name,
     ) == {
         "new_language": ImportLanguageReport(
-            is_new_language=False, new=0, existing=1, skipped=0, concepts=0
+            # TODO: Actually, this isn't a new language. The difference between
+            # adding forms for a language that is not in the LanguageTable yet,
+            # but already has forms in the FormTable, and adding something
+            # completely new, is washed out by read_single_language. The
+            # interpretation of “Does this language still need to be added to
+            # the LanguageTable?” for is_new_language is consistent.
+            is_new_language=True,
+            new=0,
+            existing=1,
+            skipped=0,
+            concepts=0,
         )
     }

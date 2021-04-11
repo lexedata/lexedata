@@ -214,10 +214,8 @@ def read_single_excel_sheet(
             report[language_id].existing += 1
 
             if db.dataset["FormTable", c_f_concept].separator:
-                # TODO: @Gereon, I think we should discuss these lines quickly
-                # most of the time we check if e concepts exists with entries_to_concept, but here we use the db.chache
                 for new_concept in form[c_f_concept]:
-                    if new_concept not in db.cache[form_id][c_f_concept]:
+                    if new_concept not in db.cache["FormTable"][form_id][c_f_concept]:
                         db.cache[form_id][c_f_concept].append(new_concept)
                         logger.info(
                             f"Existing form {form_id} was added to concept {form[c_f_concept]}. "
