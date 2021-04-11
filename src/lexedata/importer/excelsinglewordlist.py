@@ -161,8 +161,6 @@ def read_single_excel_sheet(
         entries_to_concepts=entries_to_concepts,
         concept_column=concept_columns,
     ):
-        print(form)
-        print(entries_to_concepts)
         # if concept not in dataset, don't add form
         try:
             concept_entry = form[c_f_concept]
