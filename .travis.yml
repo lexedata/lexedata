@@ -11,7 +11,7 @@ before_install:
   - mkdir -p ~/.config/cldf/
   - (cd ~/.config/cldf/ && [ -d glottolog ] || git clone --depth 1 https://github.com/glottolog/glottolog.git)
   - (cd ~/.config/cldf/ && [ -d concepticon-data ] || git clone --depth 1 https://github.com/concepticon/concepticon-data.git concepticon)
-  - (cd ~/.config/cldf/ && [ -d clts ] || git clone -b v1.4.1 --depth 1 https://github.com/cldf-clts/clts.git)
+  - (cd ~/.config/cldf/ && [ -d clts ] || git clone -b v2.0.0 --depth 1 https://github.com/cldf-clts/clts.git)
   - pip install cldfbench pyglottolog pyconcepticon pyclts
   - cldfbench catconfig
   - cldfbench catinfo

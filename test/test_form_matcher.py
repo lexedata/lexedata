@@ -36,12 +36,12 @@ class C:
         return repr(self.value)
 
 
-class MockWorkbook:
+class MockSingleExcelSheet:
     def __init__(self, data):
         self.data = [
             [C(d, i, j) for j, d in enumerate(dr, 1)] for i, dr in enumerate(data, 1)
         ]
-        self.title = "MockWorkbook"
+        self.title = "MockSingleExcelSheet"
 
     def iter_rows(self, min_row=1, max_row=None, min_col=1, max_col=None):
         if max_row is None:
@@ -124,7 +124,7 @@ def minimal_parser_with_dialect():
 
 
 def test_form_association(minimal_parser_with_dialect):
-    lexicon_wb = MockWorkbook(
+    lexicon_wb = MockSingleExcelSheet(
         [
             ["", "L1", "L2"],
             ["C1", "<L1C1>{1}", "<L2C1>{1}"],
@@ -177,7 +177,7 @@ def test_source_context(minimal_parser_with_dialect):
     of leading and trailing whitespace.
 
     """
-    lexicon_wb = MockWorkbook(
+    lexicon_wb = MockSingleExcelSheet(
         [
             ["", "L1"],
             ["C1", "<L1C1>{1:p. 34 }"],
@@ -198,7 +198,7 @@ def test_source_context(minimal_parser_with_dialect):
 
 
 def test_form_association_identical(minimal_parser_with_dialect):
-    lexicon_wb = MockWorkbook(
+    lexicon_wb = MockSingleExcelSheet(
         [
             ["", "L1", "L2"],
             ["C1", "<L1C1>{1}", "<L2C1>{1}"],
@@ -239,7 +239,7 @@ def test_form_association_id_after_normalization(minimal_parser_with_dialect):
     f1 = "\xf1"  # Composed form of ñ
     f2 = "n\u0303"  # Decomposed form of ñ
     assert unicodedata.normalize("NFC", f1) == unicodedata.normalize("NFC", f2)
-    lexicon_wb = MockWorkbook(
+    lexicon_wb = MockSingleExcelSheet(
         [
             ["", "L1", "L2"],
             ["C1", f"<{f1}>{{1}}", "<L2C1>{1}"],
@@ -263,7 +263,7 @@ def test_form_association_id_after_normalization(minimal_parser_with_dialect):
 
 
 def test_all_ipa_symbols(minimal_parser_with_dialect, bipa):
-    lexicon_wb = MockWorkbook(
+    lexicon_wb = MockSingleExcelSheet(
         [["", "L1"]] + [[s, f"<{s:}>{{bipa}}"] for s in bipa.sounds.keys()]
     )
     minimal_parser_with_dialect.parse_cells(lexicon_wb)

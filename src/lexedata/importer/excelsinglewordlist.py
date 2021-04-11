@@ -4,6 +4,7 @@ from pathlib import Path
 from collections import defaultdict
 from tabulate import tabulate
 
+import attr
 import openpyxl
 import pycldf
 
@@ -20,9 +21,40 @@ except ImportError:
 logger = logging.getLogger(__file__)
 
 
-class KeyKeyDict:
+class KeyKeyDict(t.Mapping[str, str]):
+    def __len__(self):
+        return 0
+
+    def __iter__(self):
+        return ()
+
     def __getitem__(self, key):
         return key
+
+
+@attr.s(auto_attribs=True)
+class ImportLanguageReport:
+    is_new_language: bool = False
+    new: int = 0
+    existing: int = 0
+    skipped: int = 0
+    concepts: int = 0
+
+    def __iadd__(self, other: "ImportLanguageReport"):
+        self.is_new_language |= other.is_new_language
+        self.skipped += other.skipped
+        self.new += other.new
+        self.existing += other.existing
+        self.concepts += other.concepts
+
+    def __call__(self, name: str) -> t.Tuple[str, int, int, int, int]:
+        return (
+            ("(new) " if self.is_new_language else "") + name,
+            self.new,
+            self.existing,
+            self.skipped,
+            self.concepts,
+        )
 
 
 def get_headers_from_excel(
@@ -47,7 +79,7 @@ def import_data_from_sheet(
 
     assert (
         concept_column[1] in sheet_header
-    ), f"Could not find concept column {concept_column[0]} in your excel sheet {sheet.title}."
+    ), f"Could not find concept column {concept_column[1]} in your excel sheet {sheet.title}."
 
     for row in row_iter:
         data = Form({k: clean_cell_value(cell) for k, cell in zip(sheet_header, row)})
@@ -82,8 +114,9 @@ def read_single_excel_sheet(
     ignore_missing: bool = False,
     ignore_superfluous: bool = False,
     status_update: t.Optional[str] = None,
-    report: t.Optional[t.Dict] = None,
-):
+) -> t.Mapping[str, ImportLanguageReport]:
+    report: t.Dict[str, ImportLanguageReport] = defaultdict(ImportLanguageReport)
+
     concept_columns: t.Tuple[str, str]
     if concept_column is None:
         concept_columns = (
@@ -146,16 +179,11 @@ def read_single_excel_sheet(
     language_name = sheet.title
     if language_name in language_name_to_language_id:
         language_id = language_name_to_language_id[language_name]
-        lan_stat = 1
+        report[language_id].is_new_language = False
     else:
         language_id = language_name
-        lan_stat = 0
-    if isinstance(report, dict):
-        report[language_id]["lan_stat"] = lan_stat
-        report[language_id]["new"]
-        report[language_id]["existing"]
-        report[language_id]["skipped"]
-        report[language_id]["concepts"]
+        report[language_id].is_new_language = True
+
     # read new data from sheet
     for form in import_data_from_sheet(
         sheet,
@@ -172,8 +200,7 @@ def read_single_excel_sheet(
             logger.warning(
                 f"Concept {concept_entry} was not found. Please add it to the concepts table manually. The corresponding form was ignored and not added to the dataset."
             )
-            if report:
-                report[language_id]["skipped"] += 1
+            report[language_id].skipped += 1
             continue
         # else, look for candidates, link to existing form or add new form
         for item, value in form.items():
@@ -203,14 +230,14 @@ def read_single_excel_sheet(
                                 f"from the old form and create a separate new form."
                             )
                             new_concept_added = True
-
                 break
+
             if new_concept_added:
                 if report:
-                    report[language_id]["concepts"] += 1
+                    report[language_id].concepts += 1
             else:
                 if report:
-                    report[language_id]["existing"] += 1
+                    report[language_id].existing += 1
         else:
             # we land here after the break and keep adding existing forms to the dataset just with integer in id +1
             form[c_f_language] = language_id
@@ -226,9 +253,10 @@ def read_single_excel_sheet(
                 form["Status_Column"] = status_update
             db.insert_into_db(form)
             if report:
-                report[language_id]["new"] += 1
+                report[language_id].new += 1
     # write to cldf
     db.write_dataset_from_cache()
+    return report
 
 
 def add_single_languages(
@@ -242,8 +270,7 @@ def add_single_languages(
     exclude_sheet,
     verbose: bool,
     status_update: t.Optional[str],
-    report: bool,
-) -> None:
+) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
     if verbose:
@@ -258,6 +285,7 @@ def add_single_languages(
         else:
             dataset = pycldf.Dataset.from_metadata(metadata)
 
+    concepts: t.Mapping[str, str]
     try:
         cid = dataset["ParameterTable", "id"].name
         if concept_name is None:
@@ -273,13 +301,10 @@ def add_single_languages(
     # add Status_Column if not existing and status_update given
     if status_update:
         add_status_column_to_table(dataset=dataset, table_name="FormTable")
-    if report:
-        report = defaultdict(lambda: defaultdict(int))
-    else:
-        report = None
+    report: t.Dict[str, ImportLanguageReport] = defaultdict(ImportLanguageReport)
     # import all selected sheets
     for sheet in sheets:
-        read_single_excel_sheet(
+        for lang, subreport in read_single_excel_sheet(
             dataset=dataset,
             sheet=excel[sheet],
             match_form=match_form,
@@ -288,32 +313,9 @@ def add_single_languages(
             ignore_missing=ignore_missing,
             ignore_superfluous=ignore_superfluous,
             status_update=status_update,
-            report=report,
-        )
-    if report:
-        report_data = [
-            [
-                ("(new)" if bool(values["lan_stat"]) else "") + language,
-                values["new"],
-                values["existing"],
-                values["skipped"],
-                values["concepts"],
-            ]
-            for language, values in report.items()
-        ]
-        print(
-            tabulate(
-                report_data,
-                headers=[
-                    "LanguageID",
-                    "New forms",
-                    "Existing forms",
-                    "Skipped forms",
-                    "New concept reference",
-                ],
-                tablefmt="orgtbl",
-            )
-        )
+        ).items():
+            report[lang] += subreport
+    return report
 
 
 if __name__ == "__main__":
@@ -390,7 +392,7 @@ if __name__ == "__main__":
         help="Prints report of newly added forms",
     )
     args = parser.parse_args()
-    add_single_languages(
+    report = add_single_languages(
         metadata=args.metadata,
         excel=args.excel,
         sheet=args.sheet,
@@ -401,5 +403,20 @@ if __name__ == "__main__":
         exclude_sheet=args.exclude_sheet,
         verbose=args.verbose,
         status_update=args.status_update,
-        report=args.report,
     )
+    if args.report:
+        print(report)
+        report_data = [report(language) for language, report in report.items()]
+        print(
+            tabulate(
+                report_data,
+                headers=[
+                    "LanguageID",
+                    "New forms",
+                    "Existing forms",
+                    "Skipped forms",
+                    "New concept reference",
+                ],
+                tablefmt="orgtbl",
+            )
+        )

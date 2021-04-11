@@ -27,7 +27,6 @@ from lexedata.util import (
     edit_distance,
 )
 import lexedata.importer.cellparser as cell_parsers
-import lexedata.error_handling as err
 from lexedata.enrich.add_status_column import add_status_column_to_table
 
 Ob = t.TypeVar("O", bound=Object)
@@ -50,6 +49,8 @@ class DB:
         self.cache = {}
         self.source_ids = set()
 
+    # TODO: @Gereon the cache_dataset method is only called in the load_dataset method. This means that if you would load the CognateParser directly, it doesn't work as the cache is empty and the code will throw errors (e.g. when trying to look for candidates we get a key error)
+    # TODO: I want to make sure, it is intended this way
     def cache_dataset(self):
         for table in self.dataset.tables:
             table_type = (
@@ -127,6 +128,7 @@ class DB:
             form.setdefault(column.name, []).append(row[id])
         return True
 
+    # TODO: associate and insert_into_db return True. Which is never really used
     def insert_into_db(self, object: Ob) -> bool:
         id = self.dataset[object.__table__, "id"].name
         assert object[id] not in self.cache[object.__table__]
@@ -187,14 +189,8 @@ class ExcelParser:
         check_for_match: t.List[str] = ["ID"],
         check_for_row_match: t.List[str] = ["Name"],
         check_for_language_match: t.List[str] = ["Name"],
-        on_language_not_found: err.MissingHandler = err.create,
-        on_row_not_found: err.MissingHandler = err.create,
-        on_form_not_found: err.MissingHandler = err.create,
         fuzzy=0,
     ) -> None:
-        self.on_language_not_found = on_language_not_found
-        self.on_row_not_found = on_row_not_found
-        self.on_form_not_found = on_form_not_found
         self.row_header = row_header
         try:
             self.cell_parser = cellparser(output_dataset)
@@ -208,6 +204,27 @@ class ExcelParser:
         self.check_for_language_match = check_for_language_match
         self.db = DB(output_dataset)
         self.fuzzy = fuzzy
+
+    def on_language_not_found(
+        self, language: t.Dict[str, t.Any], cell_identifier: t.Optional[str] = None
+    ) -> bool:
+        """Create language"""
+        return True
+
+    def on_row_not_found(
+        self, row_object: t.Dict[str, t.Any], cell_identifier: t.Optional[str] = None
+    ) -> bool:
+        """Create row object"""
+        return True
+
+    def on_form_not_found(
+        self,
+        form: t.Dict[str, t.Any],
+        cell_identifier: t.Optional[str] = None,
+        language_id: t.Optional[str] = None,
+    ) -> bool:
+        """Create form"""
+        return True
 
     def language_from_column(self, column: t.List[openpyxl.cell.Cell]) -> Language:
         data = [clean_cell_value(cell) for cell in column[: self.top - 1]]
@@ -270,10 +287,9 @@ class ExcelParser:
             for language_id in candidates:
                 break
             else:
-                if not (
-                    self.on_language_not_found(language, lan_col[0])
-                    and self.db.insert_into_db(language)
-                ):
+                if self.on_language_not_found(language, lan_col[0].coordinate):
+                    self.db.insert_into_db(language)
+                else:
                     continue
                 language_id = language[c_l_id]
             languages_by_column[lan_col[0].column] = language_id
@@ -304,7 +320,9 @@ class ExcelParser:
                     properties[c_r_id] = row_id
                     break
                 else:
-                    if self.on_row_not_found(properties, row[0]):
+                    if self.on_row_not_found(
+                        properties, cell_identifier=row[0].coordinate
+                    ):
                         if c_r_id not in properties:
                             properties[c_r_id] = string_to_id(
                                 str(properties.get(c_r_name, ""))
@@ -313,13 +331,15 @@ class ExcelParser:
                         self.db.insert_into_db(properties)
                     else:
                         continue
-                row_object = properties
+                # check the fields of properties are not empty, if so, set row object to properties
+                if any(properties.values()):
+                    row_object = properties
 
             if row_object is None:
                 if any(c.value for c in row_forms):
                     raise AssertionError(
-                        "Empty first row: Row had no properties, "
-                        "and there was no previous row to copy"
+                        "Your first data row didn't have a name. "
+                        "Please check your format specification or ensure the first row has a name."
                     )
                 else:
                     continue
@@ -365,7 +385,9 @@ class ExcelParser:
             self.db.associate(form_id, row_object)
         except StopIteration:
             # no candidates. form is created or not.
-            if self.on_form_not_found(form, cell_with_forms):
+            if self.on_form_not_found(
+                form, cell_identifier=cell_with_forms, language_id=this_lan
+            ):
                 form[c_f_id] = "{:}_{:}".format(form[c_f_language], row_object[c_r_id])
                 form[c_f_value] = cell_with_forms.value
                 # add status update if given
@@ -375,18 +397,13 @@ class ExcelParser:
                 self.db.insert_into_db(form)
                 form_id = form[c_f_id]
                 self.db.associate(form_id, row_object)
-            else:
-                logger.error(
-                    "The missing form was {:} in {:}, given as {:}.".format(
-                        row_object[c_r_id], this_lan, form[c_f_value]
-                    )
-                )
-                # TODO: Fill data with a fuzzy search
-                for row in self.db.find_db_candidates(
-                    form, self.check_for_match, edit_dist_threshold=4
-                ):
-                    logger.info(f"Did you mean {row} ?")
-                return
+            # TODO: do we still need this more specific warning in the on_form_not_found method?
+            # else:
+            # logger.error(
+            #     "The missing form was {:} in {:}, given as {:}.".format(
+            #         row_object[c_r_id], this_lan, form[c_f_value]
+            #     )
+            # )
 
 
 class ExcelCognateParser(ExcelParser):
@@ -400,9 +417,9 @@ class ExcelCognateParser(ExcelParser):
         check_for_match: t.List[str] = ["Form"],
         check_for_row_match: t.List[str] = ["Name"],
         check_for_language_match: t.List[str] = ["Name"],
-        on_language_not_found: err.MissingHandler = err.error,
-        on_row_not_found: err.MissingHandler = err.create,
-        on_form_not_found: err.MissingHandler = err.warn,
+        # on_language_not_found: err.MissingHandler = err.error,
+        # on_row_not_found: err.MissingHandler = err.create,
+        # on_form_not_found: err.MissingHandler = err.warn,
     ) -> None:
         super().__init__(
             output_dataset=output_dataset,
@@ -413,17 +430,75 @@ class ExcelCognateParser(ExcelParser):
             row_header=row_header,
             check_for_row_match=check_for_row_match,
             check_for_language_match=check_for_language_match,
-            on_language_not_found=on_language_not_found,
-            on_row_not_found=on_row_not_found,
-            on_form_not_found=on_form_not_found,
+            # on_language_not_found=on_language_not_found,
+            # on_row_not_found=on_row_not_found,
+            # on_form_not_found=on_form_not_found,
         )
+
+    def on_language_not_found(
+        self,
+        language: t.Dict[str, t.Any],
+        cell_identifier: t.Optional[str] = None,
+    ) -> bool:
+        """Should I add a missing object? No, the object missing is an error.
+
+        Raise an exception (ObjectNotFoundWarning) reporting the missing object and cell.
+
+        Raises
+        ======
+        ObjectNotFoundWarning
+
+        """
+        # TODO: A simple ValueError should be enough
+        # class ObjectNotFoundWarning(UserWarning):
+        #     pass
+
+        rep = language.get("cldf_name", language.get("cldf_id", repr(language)))
+        raise ValueError(
+            f"Failed to find object {rep:} in the database. In cell: {cell_identifier:}"
+        )
+
+    def on_row_not_found(
+        self, row_object: t.Dict[str, t.Any], cell_identifier: t.Optional[str] = None
+    ) -> bool:
+        """Create row object"""
+        return True
+
+    def on_form_not_found(
+        self,
+        form: t.Dict[str, t.Any],
+        cell_identifier: t.Optional[str] = None,
+        language_id: t.Optional[str] = None,
+    ) -> bool:
+        """Should I add a missing object? No, but inform the user.
+
+        Send a warning (ObjectNotFoundWarning) reporting the missing object and cell.
+
+        Returns
+        =======
+        False: The object should not be added.
+
+        """
+        rep = form.get("cldf_id", repr(form))
+        logger.warning(
+            f"Unable to find form {rep} in cell {cell_identifier} in the dataset. "
+            f"This cognate judgement was skipped. "
+            f"Please make sure that the form is present in forms.csv or in the file "
+            f"used for the Wordlist importation."
+        )
+        # Do a fuzzy search
+        for row in self.db.find_db_candidates(
+            form, self.check_for_match, edit_dist_threshold=4
+        ):
+            logger.info(f"Did you mean {row} ?")
+        return False
 
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
     ) -> t.Optional[RowObject]:
         row_object = self.row_object
         row_object = row_object()
-        # TODO: Ask Gereon: get_cell_comment with unicode normalization or not?
+        # TODO: get_cell_comment with unicode normalization or not? -> yes, comments also
         c_id = self.db.dataset[row_object.__table__, "id"].name
         c_comment = self.db.dataset[row_object.__table__, "comment"].name
         c_name = self.db.dataset[row_object.__table__, "name"].name
@@ -502,10 +577,15 @@ class ExcelCognateParser(ExcelParser):
                 )
                 self.db.associate(form_id, row_object)
             except StopIteration:
-                if self.on_form_not_found(form, cell_with_forms):
-                    raise RuntimeError(
-                        "I don't know how to add a non-existent form, referenced in a cognateset, to the dataset. This refers to form {form} in cell {cell_with_forms.coordinate}."
-                    )
+                # TODO: check that warnings together wit on_row/form/language_not_found are not duplicated
+                if self.on_form_not_found(
+                    form,
+                    cell_identifier=cell_with_forms.coordinate,
+                    language_id=this_lan,
+                ):
+                    pass
+                    # TODO: @Gereon: Do we want to create the form here, in case the error handel $
+                    # would be overwritten to return true
 
 
 def excel_parser_from_dialect(
@@ -522,7 +602,14 @@ def excel_parser_from_dialect(
     row_header = []
     for row_regex in dialect.row_cell_regexes:
         match = re.fullmatch(row_regex, "", re.DOTALL)
-        row_header += list(match.groupdict().keys()) or [None]
+        # TODO: when trying to raise a ValueError due to row_regexes not matching with the cell content,
+        # I modify one of the regexes so that it does not match with any content of the cell.
+        # Thus it doesn't match with '' either. The match object is None, and an AttributeError is raised.
+        # What to do about this case?
+        if match:
+            row_header += list(match.groupdict().keys()) or [None]
+        else:
+            row_header += [None]
     initialized_cell_parser = getattr(cell_parsers, dialect.cell_parser["name"])(
         output_dataset,
         element_semantics=dialect.cell_parser["cell_parser_semantics"],
@@ -608,7 +695,7 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(cell_regex, cell.value.strip(), re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match"
+                            f"In cell {cell.coordinate}: Expected to encounter match "
                             f"for {cell_regex}, but found {cell.value}"
                         )
                     for k, v in match.groupdict().items():
@@ -620,8 +707,8 @@ def excel_parser_from_dialect(
                     match = re.fullmatch(comment_regex, cell.comment.content, re.DOTALL)
                     if match is None:
                         raise ValueError(
-                            f"In cell {cell.coordinate}: Expected to encounter match "
-                            f"for {comment_regex}, but found {cell.comment.content}"
+                            f"In cell {cell.coordinate}: Expected to encounter match for "
+                            f"{comment_regex}, but found {cell.comment.content}"
                         )
                     for k, v in match.groupdict().items():
                         if k in d:
@@ -649,24 +736,28 @@ def load_dataset(
             **dataset.tablegroup.common_props["special:fromexcel"]
         )
     except KeyError:
-        logger.warning(
-            "Dialect not found or dialect was missing a key, "
-            "falling back to default parser"
-        )
         dialect = None
 
     if not lexicon and not cognate_lexicon:
         raise argparse.ArgumentError(
-            "At least one of LEXICON and COGSETS must be specified"
+            None,
+            "At least one of WORDLIST and COGNATESETS excel files must be specified",
         )
     if lexicon:
         # load dialect from metadata
-        try:
-            EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
-        except (AttributeError, KeyError):
+        if dialect:
+            try:
+                EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
+            except (AttributeError, KeyError) as err:
+                field = re.match(r".*?'(.+?)'.+?'(.+?)'$", str(err)).group(2)
+                logger.warning(
+                    f"User-defined format specification in the json-file was missing the key {field}, "
+                    f"falling back to default parser"
+                )
+                EP = ExcelParser
+        else:
             logger.warning(
-                "Dialect not found or dialect was missing a key, "
-                "falling back to default parser"
+                "User-defined format specification in the json-file was missing, falling back to default parser"
             )
             EP = ExcelParser
             # The Intermediate Storage, in a in-memory DB (unless specified otherwise)
@@ -683,11 +774,22 @@ def load_dataset(
 
     # load cognate data set if provided by metadata
     if cognate_lexicon:
-        try:
-            ECP = excel_parser_from_dialect(
-                dataset, argparse.Namespace(**dialect.cognates), cognate=True
+        if dialect:
+            try:
+                ECP = excel_parser_from_dialect(
+                    dataset, argparse.Namespace(**dialect.cognates), cognate=True
+                )
+            except (AttributeError, KeyError) as err:
+                field = re.match(r".*?'(.+?)'.+?'(.+?)'$", str(err)).group(2)
+                logger.warning(
+                    f"User-defined format specification in the json-file was missing the key {field}, "
+                    f"falling back to default parser"
+                )
+                ECP = ExcelCognateParser
+        else:
+            logger.warning(
+                "User-defined format specification in the json-file was missing, falling back to default parser"
             )
-        except (AttributeError, KeyError):
             ECP = ExcelCognateParser
         # add Status_Column if not existing
         if status_update:
@@ -709,7 +811,7 @@ if __name__ == "__main__":
         "./test/data/cldf/smallmawetiguarani/Wordlist-metadata.json for examples."
     )
     parser.add_argument(
-        "lexicon",
+        "wordlist",
         nargs="?",
         default=None,
         help="Path to an Excel file containing the dataset",
@@ -718,7 +820,7 @@ if __name__ == "__main__":
         "--cogsets",
         type=Path,
         default="",
-        help="Path to an optional second Excel file containing cogsets and cognatejudgements",
+        help="Path to an optional second Excel file containing cogsets and cognate judgements",
     )
     parser.add_argument(
         "--metadata",
