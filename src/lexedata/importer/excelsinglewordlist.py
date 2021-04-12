@@ -96,7 +96,9 @@ def import_data_from_sheet(
         if "id" in implicit:
             data[implicit["id"]] = None
         if "languageReference" in implicit:
-            assert language_id is not None, "LanguageReference cannot be implicit if language id is not given"
+            assert (
+                language_id is not None
+            ), "LanguageReference cannot be implicit if language id is not given"
             data[implicit["languageReference"]] = language_id
         yield data
 
@@ -206,9 +208,7 @@ def read_single_excel_sheet(
                 continue
             form[item] = value.split(sep)
         form_candidates = db.find_db_candidates(form, match_form)
-        if (
-            form_candidates
-        ):
+        if form_candidates:
             new_concept_added = False
             for form_id in form_candidates:
                 logger.info(f"Form {form[c_f_value]} was already in data set.")

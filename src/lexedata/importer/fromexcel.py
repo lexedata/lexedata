@@ -567,7 +567,9 @@ class ExcelCognateParser(ExcelParser):
                     cell_identifier=cell_with_forms.coordinate,
                     language_id=this_lan,
                 ):
-                    raise NotImplementedError("Creating a form is not supported in CognateExcelParser")
+                    raise NotImplementedError(
+                        "Creating a form is not supported in CognateExcelParser"
+                    )
 
 
 def excel_parser_from_dialect(

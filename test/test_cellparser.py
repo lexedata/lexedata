@@ -255,7 +255,7 @@ def test_cellparser_form_6(parser):
 def test_cellparser_form_7(parser):
     # comment error due to not matching opening and closing brackets
     with pytest.raises(ValueError, match="had mismatching delimiters"):
-        form = parser.parse_form(
+        parser.parse_form(
             "<eniãcũpũ> (good-tasting (sweet honey, hard candy, chocolate candy, water))){2}",  # noqa: E501
             "language",
         )
@@ -310,7 +310,9 @@ def test_parser_variant_lands_in_comment(caplog):
 
 
 def test_cellparser_missmatching(parser, caplog):
-    with pytest.raises(ValueError, match="34: .* [mbohaˈpɨ had mismatching delimiters ]"):
+    with pytest.raises(
+        ValueError, match="34: .* [mbohaˈpɨ had mismatching delimiters ]"
+    ):
         parser.parse_form("(GIVE BIRTH) [mbohaˈpɨ", "language", cell_identifier="34: ")
 
 
