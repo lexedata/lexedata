@@ -51,6 +51,7 @@ class ImportLanguageReport:
         self.new += other.new
         self.existing += other.existing
         self.concepts += other.concepts
+        return self
 
     def __call__(self, name: str) -> t.Tuple[str, int, int, int, int]:
         return (
@@ -72,7 +73,7 @@ def import_data_from_sheet(
     sheet,
     sheet_header,
     implicit: t.Mapping[Literal["languageReference", "id", "value"], str] = {},
-    entries_to_concepts: t.Mapping[str, str] = KeyKeyDict(),
+    language_id: t.Optional[str] = None,
     concept_column: t.Tuple[str, str] = ("Concept_ID", "Concept_ID"),
 ) -> t.Iterable[Form]:
     row_iter = sheet.iter_rows()
@@ -92,21 +93,11 @@ def import_data_from_sheet(
             data[implicit["value"]] = "\t".join(map(str, data.values()))
         concept_entry = data.pop(concept_column[1])
         data[concept_column[0]] = concept_entry
-        # TODO: I moved this warning to read_single_excel_sheet in order to count the skipped forms
-        # try:
-        #     concept_entry = data.pop(concept_column[1])
-        #     data[concept_column[0]] = entries_to_concepts[concept_entry]
-        # except KeyError:
-        #     logger.warning(
-        #          f"Concept {concept_entry} was not found. Please add it to the concepts table manually. The corresponding form was ignored and not added to the dataset."
-        #     )
-        #     breakpoint()
-        #     data[concept_column[0]] = concept_entry
-        #    continue
         if "id" in implicit:
             data[implicit["id"]] = None
         if "languageReference" in implicit:
-            data[implicit["languageReference"]] = normalize_string(sheet.title)
+            assert language_id is not None, "LanguageReference cannot be implicit if language id is not given"
+            data[implicit["languageReference"]] = language_id
         yield data
 
 
@@ -142,10 +133,7 @@ def read_single_excel_sheet(
     c_f_value = db.dataset["FormTable", "value"].name
     c_f_concept = db.dataset["FormTable", "parameterReference"].name
     if not match_form:
-        match_form = [c_f_form]
-        # TODO: adding the language ID as a default parameter for matching seems a bad idea to me.
-        # The candidate form gets the sheet title as language id, in most cases this is not identical to the actual language id
-        # match_form = [c_f_form, c_f_language]
+        match_form = [c_f_form, c_f_language]
     if not db.dataset["FormTable", c_f_concept].separator:
         match_form.append(c_f_concept)
 
@@ -181,7 +169,7 @@ def read_single_excel_sheet(
     language_name_to_language_id = {
         row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()
     }
-    language_name = sheet.title
+    language_name = normalize_string(sheet.title)
     if language_name in language_name_to_language_id:
         language_id = language_name_to_language_id[language_name]
         report[language_id].is_new_language = False
@@ -194,7 +182,7 @@ def read_single_excel_sheet(
         sheet,
         sheet_header=sheet_header,
         implicit=implicit,
-        entries_to_concepts=entries_to_concepts,
+        language_id=language_id,
         concept_column=concept_columns,
     ):
         # if concept not in dataset, don't add form
@@ -203,7 +191,8 @@ def read_single_excel_sheet(
             entries_to_concepts[concept_entry]
         except KeyError:
             logger.warning(
-                f"Concept {concept_entry} was not found. Please add it to the concepts table manually. The corresponding form was ignored and not added to the dataset."
+                f"Concept {concept_entry} was not found. Please add it to the concepts table manually. "
+                f"The corresponding form was ignored and not added to the dataset."
             )
             report[language_id].skipped += 1
             continue
@@ -219,7 +208,7 @@ def read_single_excel_sheet(
         form_candidates = db.find_db_candidates(form, match_form)
         if (
             form_candidates
-        ):  # indented the for block so only if no form_candidates are found the new form is created
+        ):
             new_concept_added = False
             for form_id in form_candidates:
                 logger.info(f"Form {form[c_f_value]} was already in data set.")
@@ -243,11 +232,9 @@ def read_single_excel_sheet(
                 break
 
             if new_concept_added:
-                if report:
-                    report[language_id].concepts += 1
+                report[language_id].concepts += 1
             else:
-                if report:
-                    report[language_id].existing += 1
+                report[language_id].existing += 1
         else:
             # we land here after the break and keep adding existing forms to the dataset just with integer in id +1
             form[c_f_language] = language_id
@@ -262,8 +249,7 @@ def read_single_excel_sheet(
             if status_update:
                 form["Status_Column"] = status_update
             db.insert_into_db(form)
-            if report:
-                report[language_id].new += 1
+            report[language_id].new += 1
     # write to cldf
     db.write_dataset_from_cache()
     return report
@@ -415,7 +401,6 @@ if __name__ == "__main__":
         status_update=args.status_update,
     )
     if args.report:
-        print(report)
         report_data = [report(language) for language, report in report.items()]
         print(
             tabulate(
