@@ -49,7 +49,10 @@ class DB:
         self.cache = {}
         self.source_ids = set()
 
-    # TODO: @Gereon the cache_dataset method is only called in the load_dataset method. This means that if you would load the CognateParser directly, it doesn't work as the cache is empty and the code will throw errors (e.g. when trying to look for candidates we get a key error)
+    # TODO: @Gereon the cache_dataset method is only called in the load_dataset method.
+    # This means that if you would load the CognateParser directly,
+    # it doesn't work as the cache is empty and the code will throw errors
+    # (e.g. when trying to look for candidates we get a key error)
     # TODO: I want to make sure, it is intended this way
     def cache_dataset(self):
         for table in self.dataset.tables:
@@ -128,12 +131,10 @@ class DB:
             form.setdefault(column.name, []).append(row[id])
         return True
 
-    # TODO: associate and insert_into_db return True. Which is never really used
-    def insert_into_db(self, object: Ob) -> bool:
+    def insert_into_db(self, object: Ob) -> None:
         id = self.dataset[object.__table__, "id"].name
         assert object[id] not in self.cache[object.__table__]
         self.cache[object.__table__][object[id]] = object
-        return True
 
     def make_id_unique(self, object: Ob) -> str:
         id = self.dataset[object.__table__, "id"].name
@@ -397,13 +398,6 @@ class ExcelParser:
                 self.db.insert_into_db(form)
                 form_id = form[c_f_id]
                 self.db.associate(form_id, row_object)
-            # TODO: do we still need this more specific warning in the on_form_not_found method?
-            # else:
-            # logger.error(
-            #     "The missing form was {:} in {:}, given as {:}.".format(
-            #         row_object[c_r_id], this_lan, form[c_f_value]
-            #     )
-            # )
 
 
 class ExcelCognateParser(ExcelParser):
@@ -417,9 +411,6 @@ class ExcelCognateParser(ExcelParser):
         check_for_match: t.List[str] = ["Form"],
         check_for_row_match: t.List[str] = ["Name"],
         check_for_language_match: t.List[str] = ["Name"],
-        # on_language_not_found: err.MissingHandler = err.error,
-        # on_row_not_found: err.MissingHandler = err.create,
-        # on_form_not_found: err.MissingHandler = err.warn,
     ) -> None:
         super().__init__(
             output_dataset=output_dataset,
@@ -430,9 +421,6 @@ class ExcelCognateParser(ExcelParser):
             row_header=row_header,
             check_for_row_match=check_for_row_match,
             check_for_language_match=check_for_language_match,
-            # on_language_not_found=on_language_not_found,
-            # on_row_not_found=on_row_not_found,
-            # on_form_not_found=on_form_not_found,
         )
 
     def on_language_not_found(
@@ -449,10 +437,6 @@ class ExcelCognateParser(ExcelParser):
         ObjectNotFoundWarning
 
         """
-        # TODO: A simple ValueError should be enough
-        # class ObjectNotFoundWarning(UserWarning):
-        #     pass
-
         rep = language.get("cldf_name", language.get("cldf_id", repr(language)))
         raise ValueError(
             f"Failed to find object {rep:} in the database. In cell: {cell_identifier:}"
@@ -583,9 +567,7 @@ class ExcelCognateParser(ExcelParser):
                     cell_identifier=cell_with_forms.coordinate,
                     language_id=this_lan,
                 ):
-                    pass
-                    # TODO: @Gereon: Do we want to create the form here, in case the error handel $
-                    # would be overwritten to return true
+                    raise NotImplementedError("Creating a form is not supported in CognateExcelParser")
 
 
 def excel_parser_from_dialect(
