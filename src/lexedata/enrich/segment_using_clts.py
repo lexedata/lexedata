@@ -211,6 +211,7 @@ def add_segments_to_dataset(
         for k, v in report.items()
         for kk, values in v.items()
     ]
+    # Todo: move this print to __main__ part and make function return report
     print(
         tabulate(
             data,
