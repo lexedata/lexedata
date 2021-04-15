@@ -189,7 +189,7 @@ class NaiveCellParser:
         ):
             try:
                 form = self.parse_form(element, language_id, cell_identifier)
-            except KeyError:
+            except (KeyError, ValueError):
                 continue
             if form:
                 yield form
@@ -377,14 +377,11 @@ class CellParser(NaiveCellParser):
                     delimiter = self.bracket_pairs[element[0]]
                 except KeyError:
                     delimiter = element[0]
-                logger.warning(
+                raise ValueError(
                     f"{cell_identifier}In form {form_string}: Element {element} had mismatching delimiters "
                     f"{delimiter}. This could be a bigger problem in the cell, "
                     f"so the form was not imported."
                 )
-                # parse_form is embedded in a try except KeyError block,
-                # raise KeyError to continue processing the next form string
-                raise KeyError
             # Check what kind of element we have.
             for start, (term, transcription) in self.element_semantics.items():
                 field = self.c[term]

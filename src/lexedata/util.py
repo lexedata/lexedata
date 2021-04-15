@@ -60,6 +60,10 @@ def clean_cell_value(cell: op.cell.cell.Cell):
         return str(v)
 
 
+def normalize_string(text: str):
+    return unicodedata.normalize("NFC", text.strip())
+
+
 def get_cell_comment(cell: op.cell.Cell) -> t.Optional[str]:
     return cell.comment.text.strip() if cell.comment else ""
 
