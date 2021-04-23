@@ -56,7 +56,7 @@ class CognateEditParser(ExcelCognateParser):
 def header_from_cognate_excel(
     ws: openpyxl.worksheet.worksheet.Worksheet, dataset: pycldf.Dataset
 ):
-    row_header = []
+    row_header = []F
     separators = []
     for (header,) in ws.iter_cols(
         min_row=1,
