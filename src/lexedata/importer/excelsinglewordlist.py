@@ -24,7 +24,7 @@ except ImportError:
     from typing_extensions import Literal
 
 logger = logging.getLogger(__file__)
-
+logger.setLevel(logging.INFO)
 
 class KeyKeyDict(t.Mapping[str, str]):
     def __len__(self):
