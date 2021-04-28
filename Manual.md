@@ -30,17 +30,24 @@ You can see the directory (folder) you are in at the moment (current directory) 
 In order to go to a directory above (the directory containing the current directory), type `cd ..`. Note that you can type any path combining up and down steps. So, if I am in the data directory given as an example above, in order to go to the directory maweti-guarani which is within Documents, I can type `cd ../../maweti-guarani`.
 At any point you can see the contents of your current directory by typing `ls`. 
 
+<!-- Is navigation any different in different operating systems??? -->
+
 ### 1.3 Working with git
 #### 1.3.1 How to set up git on your computer
-#### 1.3.2 Basic git commands (HELP GEREON!)
+#### 1.3.2 Basic git commands
+<!-- Natalia: this section needs review by someone else! -->
 You can use the following git commands in your terminal or you can use the GitHub Desktop application.
 In order to get the latest version of a repository, navigate to the corresponding folder and type `git pull`. If the version on GitHub is different from the one on your computer, it will be updated to match the version on GitHub. If you have made changes on your local version that are not yet committed, and that affect the same files modified by someone else on GitHub (eg. both you and they edited the forms.csv), the `git pull` will abort, allowing you to commit changes before you pull.
 In order to push your local version to GitHub, so it is updated, you need to first commit and then push your changes. Type `git commit` while in the repository you have modified and you will be prompted to add a commit message describing your latest changes. Then type `git push` and your local version will become the current version on GitHub (assuming that there are no conflicts to resolve). For lexical data repositories we recommend running `cldf validate Wordlist-metadata.json` before committing and pushing, so that any cldf errors are caught and corrected.
+
+<!--TODO: how do you set up git for the command line in the first place??? Natalia doesn't remember. -->
 
 ### 1.4 Some terminology
 Lexedata is CLDF-centric, so ‘Export’ is always ‘away from CLDF’ and ‘import’ is always ‘towards CLDF’.
 
 ## 2. Lexedata installation instructions
+
+<!-- Is installation any different on other operation systems??? -->
 
 The following instructions are for MacOS computers.
 
