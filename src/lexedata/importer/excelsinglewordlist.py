@@ -180,7 +180,7 @@ def read_single_excel_sheet(
         if ignore_superfluous:
             logger.info(
                 f"Your Excel sheet {sheet.title} contained unexpected columns "
-                f"{found_columns - expected_columns}. These columns will be ignored"
+                f"{found_columns - expected_columns}. These columns will be ignored."
             )
         else:
             raise ValueError(
