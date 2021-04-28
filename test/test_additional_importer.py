@@ -115,12 +115,13 @@ def test_missing_columns1(single_import_parameters):
                 "Comment",
                 "Source",
                 "phonetic",
+                "phonemic"
             ],
             [],
         ]
     )
     with pytest.raises(
-        ValueError, match="Your Excel sheet MockSingleExcelSheet is missing columns {'orthographic', 'phonemic'}. "
+        ValueError, match="Your Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}. "
                           "Clean up your data, or use --ignore-missing-excel-columns to import anyway and "
                           "leave these columns empty in the dataset for the newly imported forms."
     ):
@@ -147,6 +148,7 @@ def test_missing_columns2(single_import_parameters, caplog):
                 "Comment",
                 "Source",
                 "phonetic",
+                'phonemic',
                 "superfluous",
                 "superfluous2"
             ],
@@ -163,12 +165,101 @@ def test_missing_columns2(single_import_parameters, caplog):
         )
     assert caplog.text.endswith(
         "Your Excel sheet MockSingleExcelSheet is missing columns "
-        "{'orthographic', 'phonemic'}. For the newly imported forms, these columns "
+        "{'orthographic'}. For the newly imported forms, these columns "
         "will be left empty in the dataset.\n"
     )
+
+
+def test_superfluous_columns1(single_import_parameters):
+    dataset, original, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "variants",
+                "Form",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                'phonemic',
+                'orthographic',
+                "superfluous",
+            ],
+            [],
+        ]
+    )
+    with pytest.raises(
+        ValueError,
+        match="Your Excel sheet MockSingleExcelSheet contained unexpected columns {'superfluous'}. "
+              "Clean up your data, or use --ignore-superfluous-excel-columns to import the data anyway "
+              "and ignore these columns."
+    ):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column="English",
+        )
+
+
+def test_superfluous_columns2(single_import_parameters, caplog):
+    dataset, original, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "variants",
+                "Form",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                'phonemic',
+                'orthographic',
+                "superfluous",
+            ],
+            [],
+        ]
+    )
+    with pytest.raises(
+         AssertionError
+    ):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column="English",
+            ignore_superfluous=True
+        )
+    assert caplog.text.endswith(
+        "Your Excel sheet MockSingleExcelSheet contained unexpected columns "
+        "{'superfluous'}. These columns will be ignored.\n"
+    )
+
+
+def test_no_concept_separator(single_import_parameters):
+    import json
+    dataset, original, excel, concept_name = single_import_parameters
+    # delete parameterReference separator and store met
+    json_file = dataset.tablegroup._fname
+    with json_file.open("r+") as metadata_file:
+        metadata = json.load(metadata_file)
+        #del metadata["tables"][0]["tableSchema"]["columns"][2]["separator"]
+        json.dump(metadata, metadata_file)
+        #metadata_file.write("\n")
+    dataset = pycldf.Dataset.from_metadata(dataset.tablegroup._fname)
 #############################
 # Test report functionality #
 #############################
+
+
 def test_import_report_new_language(single_import_parameters):
     dataset, original, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
