@@ -116,7 +116,7 @@ def test_missing_columns1(single_import_parameters):
                 "Comment",
                 "Source",
                 "phonetic",
-                "phonemic"
+                "phonemic",
             ],
             [],
         ]
@@ -129,7 +129,7 @@ def test_missing_columns1(single_import_parameters):
             dataset=dataset,
             sheet=sheet,
             entries_to_concepts=concepts,
-            concept_column=concept_name
+            concept_column=concept_name,
         )
 
 
@@ -148,9 +148,9 @@ def test_missing_columns2(single_import_parameters, caplog):
                 "Comment",
                 "Source",
                 "phonetic",
-                'phonemic',
+                "phonemic",
                 "superfluous",
-                "superfluous2"
+                "superfluous2",
             ],
             [],
         ]
@@ -161,7 +161,7 @@ def test_missing_columns2(single_import_parameters, caplog):
             sheet=sheet,
             entries_to_concepts=concepts,
             concept_column="English",
-            ignore_missing=True
+            ignore_missing=True,
         )
     assert re.match(
         ".* Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}.* ",
@@ -184,8 +184,8 @@ def test_superfluous_columns1(single_import_parameters):
                 "Comment",
                 "Source",
                 "phonetic",
-                'phonemic',
-                'orthographic',
+                "phonemic",
+                "orthographic",
                 "superfluous",
             ],
             [],
@@ -219,23 +219,21 @@ def test_superfluous_columns2(single_import_parameters, caplog):
                 "Comment",
                 "Source",
                 "phonetic",
-                'phonemic',
-                'orthographic',
+                "phonemic",
+                "orthographic",
                 "superfluous",
             ],
             [],
         ]
     )
     # AssertionError on concept column not in excel header
-    with pytest.raises(
-         AssertionError
-    ) as err:
+    with pytest.raises(AssertionError):
         read_single_excel_sheet(
             dataset=dataset,
             sheet=sheet,
             entries_to_concepts=concepts,
             concept_column="English",
-            ignore_superfluous=True
+            ignore_superfluous=True,
         )
     assert re.match(
         r".* Excel sheet MockSingleExcelSheet .* {'superfluous'}. These columns will be ignored.*",
@@ -321,6 +319,7 @@ def test_concept_separator(single_import_parameters, caplog):
         r".*Matching by concept enabled.* run lexedata.report.list_homophones.*",
         caplog.text
     )
+
 #############################
 # Test report functionality #
 #############################

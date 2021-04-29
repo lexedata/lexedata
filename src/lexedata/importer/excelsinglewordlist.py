@@ -26,6 +26,7 @@ except ImportError:
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.INFO)
 
+
 class KeyKeyDict(t.Mapping[str, str]):
     def __len__(self):
         return 0
@@ -184,8 +185,8 @@ def read_single_excel_sheet(
             )
         else:
             raise ValueError(
-                f"Your Excel sheet {sheet.title} contained unexpected columns " 
-                f"{found_columns - expected_columns}. Clean up your data, or use " 
+                f"Your Excel sheet {sheet.title} contained unexpected columns "
+                f"{found_columns - expected_columns}. Clean up your data, or use "
                 f"--ignore-superfluous-excel-columns to import the data anyway and ignore these columns."
             )
     # check if language exist
@@ -252,7 +253,7 @@ def read_single_excel_sheet(
                                 f"you need to manually remove that concept from the old form in forms.csv "
                                 f"and create a separate new form. If you want to treat identical forms "
                                 f"as homophones in general, add  "
-                                f"--match-forms={' '.join(args.match_forms)} {ds['FormTable', 'parameterReference']} "
+                                f"--match-forms={' '.join(args.match_forms)} {db.dataset['FormTable', 'parameterReference']} "
                                 f"when you run this script."
                             )
                             new_concept_added = True
