@@ -2,6 +2,7 @@ import pytest
 import shutil
 import tempfile
 from pathlib import Path
+import re
 
 import pycldf
 import openpyxl
@@ -121,9 +122,8 @@ def test_missing_columns1(single_import_parameters):
         ]
     )
     with pytest.raises(
-        ValueError, match="Your Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}. "
-                          "Clean up your data, or use --ignore-missing-excel-columns to import anyway and "
-                          "leave these columns empty in the dataset for the newly imported forms."
+        ValueError, match=".* Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}.* "
+                          ".* use --ignore-missing-excel-columns .*"
     ):
         read_single_excel_sheet(
             dataset=dataset,
@@ -163,10 +163,9 @@ def test_missing_columns2(single_import_parameters, caplog):
             concept_column="English",
             ignore_missing=True
         )
-    assert caplog.text.endswith(
-        "Your Excel sheet MockSingleExcelSheet is missing columns "
-        "{'orthographic'}. For the newly imported forms, these columns "
-        "will be left empty in the dataset.\n"
+    assert re.match(
+        ".* Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}.* ",
+        caplog.text
     )
 
 
@@ -194,9 +193,8 @@ def test_superfluous_columns1(single_import_parameters):
     )
     with pytest.raises(
         ValueError,
-        match="Your Excel sheet MockSingleExcelSheet contained unexpected columns {'superfluous'}. "
-              "Clean up your data, or use --ignore-superfluous-excel-columns to import the data anyway "
-              "and ignore these columns."
+        match=".* Excel sheet MockSingleExcelSheet contained unexpected columns {'superfluous'}.*"
+              ".* use --ignore-superfluous-excel-columns .*"
     ):
         read_single_excel_sheet(
             dataset=dataset,
@@ -238,23 +236,18 @@ def test_superfluous_columns2(single_import_parameters, caplog):
             concept_column="English",
             ignore_superfluous=True
         )
-    assert caplog.text.endswith(
-        "Your Excel sheet MockSingleExcelSheet contained unexpected columns "
-        "{'superfluous'}. These columns will be ignored.\n"
+    assert re.match(
+        r".* Excel sheet MockSingleExcelSheet .* {'superfluous'}. These columns will be ignored.*",
+        caplog.text
     )
 
 
 def test_no_concept_separator(single_import_parameters):
-    import json
     dataset, original, excel, concept_name = single_import_parameters
     # delete parameterReference separator and store met
-    json_file = dataset.tablegroup._fname
-    with json_file.open("r+") as metadata_file:
-        metadata = json.load(metadata_file)
-        #del metadata["tables"][0]["tableSchema"]["columns"][2]["separator"]
-        json.dump(metadata, metadata_file)
-        #metadata_file.write("\n")
-    dataset = pycldf.Dataset.from_metadata(dataset.tablegroup._fname)
+    dataset["FormTable", "parameterReference"].separator = None
+    dataset.write_metadata()
+
 #############################
 # Test report functionality #
 #############################
