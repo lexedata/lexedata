@@ -115,21 +115,22 @@ def test_missing_columns1(single_import_parameters):
                 "Comment",
                 "Source",
                 "phonetic",
-                "phonemic"
+                "phonemic",
             ],
             [],
         ]
     )
     with pytest.raises(
-        ValueError, match="Your Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}. "
-                          "Clean up your data, or use --ignore-missing-excel-columns to import anyway and "
-                          "leave these columns empty in the dataset for the newly imported forms."
+        ValueError,
+        match="Your Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}. "
+        "Clean up your data, or use --ignore-missing-excel-columns to import anyway and "
+        "leave these columns empty in the dataset for the newly imported forms.",
     ):
         read_single_excel_sheet(
             dataset=dataset,
             sheet=sheet,
             entries_to_concepts=concepts,
-            concept_column=concept_name
+            concept_column=concept_name,
         )
 
 
@@ -148,9 +149,9 @@ def test_missing_columns2(single_import_parameters, caplog):
                 "Comment",
                 "Source",
                 "phonetic",
-                'phonemic',
+                "phonemic",
                 "superfluous",
-                "superfluous2"
+                "superfluous2",
             ],
             [],
         ]
@@ -161,7 +162,7 @@ def test_missing_columns2(single_import_parameters, caplog):
             sheet=sheet,
             entries_to_concepts=concepts,
             concept_column="English",
-            ignore_missing=True
+            ignore_missing=True,
         )
     assert caplog.text.endswith(
         "Your Excel sheet MockSingleExcelSheet is missing columns "
@@ -185,8 +186,8 @@ def test_superfluous_columns1(single_import_parameters):
                 "Comment",
                 "Source",
                 "phonetic",
-                'phonemic',
-                'orthographic',
+                "phonemic",
+                "orthographic",
                 "superfluous",
             ],
             [],
@@ -195,8 +196,8 @@ def test_superfluous_columns1(single_import_parameters):
     with pytest.raises(
         ValueError,
         match="Your Excel sheet MockSingleExcelSheet contained unexpected columns {'superfluous'}. "
-              "Clean up your data, or use --ignore-superfluous-excel-columns to import the data anyway "
-              "and ignore these columns."
+        "Clean up your data, or use --ignore-superfluous-excel-columns to import the data anyway "
+        "and ignore these columns.",
     ):
         read_single_excel_sheet(
             dataset=dataset,
@@ -221,22 +222,20 @@ def test_superfluous_columns2(single_import_parameters, caplog):
                 "Comment",
                 "Source",
                 "phonetic",
-                'phonemic',
-                'orthographic',
+                "phonemic",
+                "orthographic",
                 "superfluous",
             ],
             [],
         ]
     )
-    with pytest.raises(
-         AssertionError
-    ):
+    with pytest.raises(AssertionError):
         read_single_excel_sheet(
             dataset=dataset,
             sheet=sheet,
             entries_to_concepts=concepts,
             concept_column="English",
-            ignore_superfluous=True
+            ignore_superfluous=True,
         )
     assert caplog.text.endswith(
         "Your Excel sheet MockSingleExcelSheet contained unexpected columns "
@@ -246,15 +245,18 @@ def test_superfluous_columns2(single_import_parameters, caplog):
 
 def test_no_concept_separator(single_import_parameters):
     import json
+
     dataset, original, excel, concept_name = single_import_parameters
     # delete parameterReference separator and store met
     json_file = dataset.tablegroup._fname
     with json_file.open("r+") as metadata_file:
         metadata = json.load(metadata_file)
-        #del metadata["tables"][0]["tableSchema"]["columns"][2]["separator"]
+        # del metadata["tables"][0]["tableSchema"]["columns"][2]["separator"]
         json.dump(metadata, metadata_file)
-        #metadata_file.write("\n")
+        # metadata_file.write("\n")
     dataset = pycldf.Dataset.from_metadata(dataset.tablegroup._fname)
+
+
 #############################
 # Test report functionality #
 #############################
@@ -411,18 +413,17 @@ def test_import_report_skipped(single_import_parameters):
         entries_to_concepts=concepts,
         concept_column=concept_name,
     ) == {
-               "new_language": ImportLanguageReport(
-                   # TODO: Actually, this isn't a new language. The difference between
-                   # adding forms for a language that is not in the LanguageTable yet,
-                   # but already has forms in the FormTable, and adding something
-                   # completely new, is washed out by read_single_language. The
-                   # interpretation of “Does this language still need to be added to
-                   # the LanguageTable?” for is_new_language is consistent.
-                   is_new_language=True,
-                   new=0,
-                   existing=0,
-                   skipped=1,
-                   concepts=0,
-               )
-           }
-
+        "new_language": ImportLanguageReport(
+            # TODO: Actually, this isn't a new language. The difference between
+            # adding forms for a language that is not in the LanguageTable yet,
+            # but already has forms in the FormTable, and adding something
+            # completely new, is washed out by read_single_language. The
+            # interpretation of “Does this language still need to be added to
+            # the LanguageTable?” for is_new_language is consistent.
+            is_new_language=True,
+            new=0,
+            existing=0,
+            skipped=1,
+            concepts=0,
+        )
+    }
