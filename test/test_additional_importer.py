@@ -226,9 +226,10 @@ def test_superfluous_columns2(single_import_parameters, caplog):
             [],
         ]
     )
+    # AssertionError on concept column not in excel header
     with pytest.raises(
          AssertionError
-    ):
+    ) as err:
         read_single_excel_sheet(
             dataset=dataset,
             sheet=sheet,
@@ -242,12 +243,84 @@ def test_superfluous_columns2(single_import_parameters, caplog):
     )
 
 
-def test_no_concept_separator(single_import_parameters):
+def test_no_concept_separator(single_import_parameters, caplog):
     dataset, original, excel, concept_name = single_import_parameters
     # delete parameterReference separator and store met
     dataset["FormTable", "parameterReference"].separator = None
     dataset.write_metadata()
+    concepts = dict()
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "variants",
+                "Form",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                'phonemic',
+            ],
+            [],
+        ]
+    )
+    # ValueError on missing column
+    with pytest.raises(
+            ValueError
+    ):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column="English",
+        )
+    assert re.match(
+        r".* add a separator to your FormTable #parameterReference "
+        r"in the Metadata.json To find potential polysemies, run lexedata.report.list_homophones.*",
+        caplog.text
+    )
 
+
+def test_concept_separator(single_import_parameters, caplog):
+    # set logger level to info
+    import logging
+    caplog.set_level(logging.INFO)
+
+    dataset, original, excel, concept_name = single_import_parameters
+    c_f_concept = dataset["FormTable", "parameterReference"].name
+    match_form = [c_f_concept]
+    concepts = dict()
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "variants",
+                "Form",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                'phonemic',
+            ],
+            [],
+        ]
+    )
+    # ValueError on missing column
+    with pytest.raises(
+            ValueError
+    ):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            match_form=match_form,
+            concept_column="English",
+        )
+    print(caplog.text)
+    assert re.match(
+        r".*Matching by concept enabled.* run lexedata.report.list_homophones.*",
+        caplog.text
+    )
 #############################
 # Test report functionality #
 #############################
@@ -405,12 +478,6 @@ def test_import_report_skipped(single_import_parameters):
         concept_column=concept_name,
     ) == {
                "new_language": ImportLanguageReport(
-                   # TODO: Actually, this isn't a new language. The difference between
-                   # adding forms for a language that is not in the LanguageTable yet,
-                   # but already has forms in the FormTable, and adding something
-                   # completely new, is washed out by read_single_language. The
-                   # interpretation of “Does this language still need to be added to
-                   # the LanguageTable?” for is_new_language is consistent.
                    is_new_language=True,
                    new=0,
                    existing=0,
