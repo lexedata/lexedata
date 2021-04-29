@@ -122,8 +122,9 @@ def test_missing_columns1(single_import_parameters):
         ]
     )
     with pytest.raises(
-        ValueError, match=".* Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}.* "
-                          ".* use --ignore-missing-excel-columns .*"
+        ValueError,
+        match=".* Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}.* "
+        ".* use --ignore-missing-excel-columns .*",
     ):
         read_single_excel_sheet(
             dataset=dataset,
@@ -165,7 +166,7 @@ def test_missing_columns2(single_import_parameters, caplog):
         )
     assert re.match(
         ".* Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}.* ",
-        caplog.text
+        caplog.text,
     )
 
 
@@ -194,7 +195,7 @@ def test_superfluous_columns1(single_import_parameters):
     with pytest.raises(
         ValueError,
         match=".* Excel sheet MockSingleExcelSheet contained unexpected columns {'superfluous'}.*"
-              ".* use --ignore-superfluous-excel-columns .*"
+        ".* use --ignore-superfluous-excel-columns .*",
     ):
         read_single_excel_sheet(
             dataset=dataset,
@@ -237,7 +238,7 @@ def test_superfluous_columns2(single_import_parameters, caplog):
         )
     assert re.match(
         r".* Excel sheet MockSingleExcelSheet .* {'superfluous'}. These columns will be ignored.*",
-        caplog.text
+        caplog.text,
     )
 
 
@@ -257,15 +258,13 @@ def test_no_concept_separator(single_import_parameters, caplog):
                 "Comment",
                 "Source",
                 "phonetic",
-                'phonemic',
+                "phonemic",
             ],
             [],
         ]
     )
     # ValueError on missing column
-    with pytest.raises(
-            ValueError
-    ):
+    with pytest.raises(ValueError):
         read_single_excel_sheet(
             dataset=dataset,
             sheet=sheet,
@@ -275,13 +274,14 @@ def test_no_concept_separator(single_import_parameters, caplog):
     assert re.match(
         r".* add a separator to your FormTable #parameterReference "
         r"in the Metadata.json To find potential polysemies, run lexedata.report.list_homophones.*",
-        caplog.text
+        caplog.text,
     )
 
 
 def test_concept_separator(single_import_parameters, caplog):
     # set logger level to info
     import logging
+
     caplog.set_level(logging.INFO)
 
     dataset, original, excel, concept_name = single_import_parameters
@@ -298,15 +298,13 @@ def test_concept_separator(single_import_parameters, caplog):
                 "Comment",
                 "Source",
                 "phonetic",
-                'phonemic',
+                "phonemic",
             ],
             [],
         ]
     )
     # ValueError on missing column
-    with pytest.raises(
-            ValueError
-    ):
+    with pytest.raises(ValueError):
         read_single_excel_sheet(
             dataset=dataset,
             sheet=sheet,
@@ -317,8 +315,9 @@ def test_concept_separator(single_import_parameters, caplog):
     print(caplog.text)
     assert re.match(
         r".*Matching by concept enabled.* run lexedata.report.list_homophones.*",
-        caplog.text
+        caplog.text,
     )
+
 
 #############################
 # Test report functionality #
@@ -476,12 +475,11 @@ def test_import_report_skipped(single_import_parameters):
         entries_to_concepts=concepts,
         concept_column=concept_name,
     ) == {
-               "new_language": ImportLanguageReport(
-                   is_new_language=True,
-                   new=0,
-                   existing=0,
-                   skipped=1,
-                   concepts=0,
-               )
-           }
-
+        "new_language": ImportLanguageReport(
+            is_new_language=True,
+            new=0,
+            existing=0,
+            skipped=1,
+            concepts=0,
+        )
+    }
