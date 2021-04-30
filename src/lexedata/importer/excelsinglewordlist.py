@@ -73,8 +73,8 @@ def get_headers_from_excel(
 def import_data_from_sheet(
     sheet,
     sheet_header,
+    language_id: str,
     implicit: t.Mapping[Literal["languageReference", "id", "value"], str] = {},
-    language_id: t.Optional[str] = None,
     concept_column: t.Tuple[str, str] = ("Concept_ID", "Concept_ID"),
 ) -> t.Iterable[Form]:
     row_iter = sheet.iter_rows()
@@ -97,9 +97,6 @@ def import_data_from_sheet(
         if "id" in implicit:
             data[implicit["id"]] = None
         if "languageReference" in implicit:
-            assert (
-                language_id is not None
-            ), "LanguageReference cannot be implicit if language id is not given"
             data[implicit["languageReference"]] = language_id
         yield data
 
