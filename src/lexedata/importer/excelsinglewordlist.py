@@ -164,7 +164,7 @@ def read_single_excel_sheet(
     expected_columns = set(form_header) - {c_f_concept} - set(implicit.values())
     if not found_columns >= expected_columns:
         if ignore_missing:
-            logger.warning(
+            logger.info(
                 f"Your Excel sheet {sheet.title} is missing columns {expected_columns - found_columns}. "
                 f"For the newly imported forms, these columns will be left empty in the dataset."
             )
