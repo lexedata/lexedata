@@ -253,7 +253,8 @@ def read_single_excel_sheet(
                                 f"you need to manually remove that concept from the old form in forms.csv "
                                 f"and create a separate new form. If you want to treat identical forms "
                                 f"as homophones in general, add  "
-                                f"--match-forms={' '.join(args.match_forms)} {db.dataset['FormTable', 'parameterReference']} "
+                                f"--match-forms={' '.join(args.match_forms)}"
+                                f"{db.dataset['FormTable', 'parameterReference']} "
                                 f"when you run this script."
                             )
                             new_concept_added = True
@@ -301,7 +302,7 @@ def add_single_languages(
         logging.basicConfig(level=logging.INFO)
     if not sheet:
         sheets = [sheet for sheet in excel.sheetnames if sheet not in exclude_sheet]
-        logging.warning("No sheets specified. Parsing sheets: %s", sheet)
+        logging.info("No sheets specified. Parsing sheets: %s", sheet)
     # initiate data set from meta data or csv depending on command line arguments
     if metadata:
         if metadata.name == "forms.csv":
