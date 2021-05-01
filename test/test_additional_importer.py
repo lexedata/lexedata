@@ -354,10 +354,7 @@ def test_concept_not_found(single_import_parameters, caplog):
         concept_column=concept_name,
     )
     print(caplog.text)
-    assert re.match(
-        r".*Concept FAKE was not found.*",
-        caplog.text
-    )
+    assert re.match(r".*Concept FAKE was not found.*", caplog.text)
 
 
 def test_form_exists(single_import_parameters, caplog):
@@ -404,7 +401,7 @@ def test_form_exists(single_import_parameters, caplog):
     # Test new concept association
     assert re.match(
         r".*two.*e.ta.'kɾã.*was already in data set.*",
-        [rec.message for rec in caplog.records][0]
+        [rec.message for rec in caplog.records][0],
     )
 
 
@@ -453,8 +450,10 @@ def test_new_concept_association(single_import_parameters, caplog):
     print(caplog.text)
     assert re.match(
         r".* Concept \['two'] was added to existing form ache_one\. .*",
-        [rec.message for rec in caplog.records][1]
+        [rec.message for rec in caplog.records][1],
     )
+
+
 #############################
 # Test report functionality #
 #############################
