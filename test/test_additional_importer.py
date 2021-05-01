@@ -279,11 +279,6 @@ def test_no_concept_separator(single_import_parameters, caplog):
 
 
 def test_concept_separator(single_import_parameters, caplog):
-    # set logger level to info
-    import logging
-
-    caplog.set_level(logging.INFO)
-
     dataset, original, excel, concept_name = single_import_parameters
     c_f_concept = dataset["FormTable", "parameterReference"].name
     match_form = [c_f_concept]
@@ -312,13 +307,154 @@ def test_concept_separator(single_import_parameters, caplog):
             match_form=match_form,
             concept_column="English",
         )
-    print(caplog.text)
     assert re.match(
         r".*Matching by concept enabled.* run lexedata.report.list_homophones.*",
         caplog.text,
     )
 
 
+def test_concept_not_found(single_import_parameters, caplog):
+    dataset, original, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    mocksheet = MockSingleExcelSheet(
+        [
+            [
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "FAKE",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    mocksheet.title = "new_language"
+    read_single_excel_sheet(
+        dataset=dataset,
+        sheet=mocksheet,
+        entries_to_concepts=concepts,
+        concept_column=concept_name,
+    )
+    print(caplog.text)
+    assert re.match(
+        r".*Concept FAKE was not found.*",
+        caplog.text
+    )
+
+
+def test_form_exists(single_import_parameters, caplog):
+    dataset, original, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    mocksheet = MockSingleExcelSheet(
+        [
+            [
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "two",  # existing concept, but new association
+                "e.ta.'kɾã",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+        ]
+    )
+    mocksheet.title = "ache"
+    read_single_excel_sheet(
+        dataset=dataset,
+        sheet=mocksheet,
+        entries_to_concepts=concepts,
+        concept_column=concept_name,
+    )
+    # Test form already exists
+    # Test new concept association
+    assert re.match(
+        r".*two.*e.ta.'kɾã.*was already in data set.*",
+        [rec.message for rec in caplog.records][0]
+    )
+
+
+def test_new_concept_association(single_import_parameters, caplog):
+    dataset, original, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    mocksheet = MockSingleExcelSheet(
+        [
+            [
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "two",  # existing concept, but new association
+                "e.ta.'kɾã",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+        ]
+    )
+    mocksheet.title = "ache"
+    read_single_excel_sheet(
+        dataset=dataset,
+        sheet=mocksheet,
+        entries_to_concepts=concepts,
+        concept_column=concept_name,
+    )
+    # Test form already exists
+    # Test new concept association
+    print(caplog.text)
+    assert re.match(
+        r".* Concept \['two'] was added to existing form ache_one\. .*",
+        [rec.message for rec in caplog.records][1]
+    )
 #############################
 # Test report functionality #
 #############################
