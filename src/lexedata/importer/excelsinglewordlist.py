@@ -250,7 +250,7 @@ def read_single_excel_sheet(
                                 f"you need to manually remove that concept from the old form in forms.csv "
                                 f"and create a separate new form. If you want to treat identical forms "
                                 f"as homophones in general, add  "
-                                f"--match-forms={' '.join(match_form)}"
+                                f"--match-forms={' '.join(match_form)}, "
                                 f"{db.dataset['FormTable', 'parameterReference']} "
                                 f"when you run this script."
                             )
