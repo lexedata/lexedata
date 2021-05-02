@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 import typing as t
 import urllib.parse
 from pathlib import Path
@@ -188,7 +189,8 @@ class ExcelWriter:
                     # Transfer the cognateset comment to the first Excel cell.
                     if c_comment and col == 1 and cogset.get(c_comment):
                         cell.comment = op.comments.Comment(
-                            cogset["Comment"], __package__
+                            re.sub(f"-?{__package__}", "", cogset["Comment"]).strip(),
+                            "lexedata.exporter",
                         )
 
             row_index = new_row_index
