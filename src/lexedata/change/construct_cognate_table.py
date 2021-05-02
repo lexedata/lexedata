@@ -10,7 +10,21 @@ import pycldf
 from lexedata.util import cache_table
 
 
-def add_cognate_table(dataset: pycldf.Wordlist):
+def add_explicit_cognateset_table(dataset: pycldf.Wordlist) -> None:
+    if dataset["CognatesetTable"]:
+        return
+    dataset.add_component("CognatesetTable")
+
+    c_cognateset = dataset["CognateTable", "cognatesetReference"].name
+
+    cognatesets = set()
+    for judgement in dataset["CognateTable"]:
+        cognatesets.add(c_cognateset)
+
+    dataset.write(CognatesetTable=[{"ID": id for id in sorted(cognatesets)}])
+
+
+def add_cognate_table(dataset: pycldf.Wordlist) -> None:
     if dataset["CognateTable"]:
         return
     dataset.add_component("CognateTable")
@@ -46,6 +60,8 @@ def add_cognate_table(dataset: pycldf.Wordlist):
             # Doesn't matter, if we were given one, we take it.
             judgement["Alignment"] = form.get("alignment")
             cognate_judgements.append(judgement)
+
+    add_explicit_cognateset_table(dataset)
 
     # TODO: Delete those moved columns
     dataset.write(CognateTable=cognate_judgements)
