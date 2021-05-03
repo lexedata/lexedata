@@ -24,6 +24,7 @@ except ImportError:
     from typing_extensions import Literal
 
 logger = logging.getLogger(__file__)
+logger.setLevel(logging.INFO)
 
 
 class KeyKeyDict(t.Mapping[str, str]):
@@ -72,8 +73,8 @@ def get_headers_from_excel(
 def import_data_from_sheet(
     sheet,
     sheet_header,
+    language_id: str,
     implicit: t.Mapping[Literal["languageReference", "id", "value"], str] = {},
-    language_id: t.Optional[str] = None,
     concept_column: t.Tuple[str, str] = ("Concept_ID", "Concept_ID"),
 ) -> t.Iterable[Form]:
     row_iter = sheet.iter_rows()
@@ -96,9 +97,6 @@ def import_data_from_sheet(
         if "id" in implicit:
             data[implicit["id"]] = None
         if "languageReference" in implicit:
-            assert (
-                language_id is not None
-            ), "LanguageReference cannot be implicit if language id is not given"
             data[implicit["languageReference"]] = language_id
         yield data
 
@@ -137,7 +135,18 @@ def read_single_excel_sheet(
     if not match_form:
         match_form = [c_f_form, c_f_language]
     if not db.dataset["FormTable", c_f_concept].separator:
+        logger.warning(
+            "Your metadata does not allow polysemous forms. According to your specifications, "
+            "identical forms with different concepts will always be considered homophones, not a single "
+            "polysemous form. To include polysemous forms, add a separator to your FormTable #parameterReference "
+            "in the Metadata.json To find potential polysemies, run lexedata.report.list_homophones."
+        )
         match_form.append(c_f_concept)
+    else:
+        if c_f_concept in match_form:
+            logger.info(
+                "Matching by concept enabled: To find potential polysemies, run lexedata.report.list_homophones."
+            )
 
     sheet_header = get_headers_from_excel(sheet)
     form_header = list(db.dataset["FormTable"].tableSchema.columndict.keys())
@@ -154,17 +163,29 @@ def read_single_excel_sheet(
     found_columns = set(sheet_header) - {concept_column} - set(implicit.values())
     expected_columns = set(form_header) - {c_f_concept} - set(implicit.values())
     if not found_columns >= expected_columns:
-        message = f"Your Excel sheet {sheet.title} is missing columns {expected_columns - found_columns}."
         if ignore_missing:
-            logger.warning(message)
+            logger.info(
+                f"Your Excel sheet {sheet.title} is missing columns {expected_columns - found_columns}. "
+                f"For the newly imported forms, these columns will be left empty in the dataset."
+            )
         else:
-            raise ValueError(message)
+            raise ValueError(
+                f"Your Excel sheet {sheet.title} is missing columns {expected_columns - found_columns}. "
+                f"Clean up your data, or use --ignore-missing-excel-columns to import anyway and leave these "
+                f"columns empty in the dataset for the newly imported forms."
+            )
     if not found_columns <= expected_columns:
-        message = f"Your Excel sheet {sheet.title} contained unexpected columns {found_columns - expected_columns}."
         if ignore_superfluous:
-            logger.warning(message)
+            logger.info(
+                f"Your Excel sheet {sheet.title} contained unexpected columns "
+                f"{found_columns - expected_columns}. These columns will be ignored."
+            )
         else:
-            raise ValueError(message)
+            raise ValueError(
+                f"Your Excel sheet {sheet.title} contained unexpected columns "
+                f"{found_columns - expected_columns}. Clean up your data, or use "
+                f"--ignore-superfluous-excel-columns to import the data anyway and ignore these columns."
+            )
     # check if language exist
     c_l_name = db.dataset["LanguageTable", "name"].name
     c_l_id = db.dataset["LanguageTable", "id"].name
@@ -193,7 +214,7 @@ def read_single_excel_sheet(
             entries_to_concepts[concept_entry]
         except KeyError:
             logger.warning(
-                f"Concept {concept_entry} was not found. Please add it to the concepts table manually. "
+                f"Concept {concept_entry} was not found. Please add it to the concepts.csv file manually. "
                 f"The corresponding form was ignored and not added to the dataset."
             )
             report[language_id].skipped += 1
@@ -223,10 +244,15 @@ def read_single_excel_sheet(
                                 new_concept
                             )
                             logger.info(
-                                f"Existing form {form_id} was added to concept {form[c_f_concept]}. "
-                                f"If this was not intended (because it was a homophonous form, not a polysemy), "
-                                f"you need to manually remove that concept "
-                                f"from the old form and create a separate new form."
+                                f"New form-concept association: Concept {form[c_f_concept]} was added to existing form "
+                                f"{form_id}. If this was not intended "
+                                f"(because it is a homophonous form, not a polysemy), "
+                                f"you need to manually remove that concept from the old form in forms.csv "
+                                f"and create a separate new form. If you want to treat identical forms "
+                                f"as homophones in general, add  "
+                                f"--match-forms={' '.join(match_form)}, "
+                                f"{db.dataset['FormTable', 'parameterReference']} "
+                                f"when you run this script."
                             )
                             new_concept_added = True
                 break
@@ -273,7 +299,7 @@ def add_single_languages(
         logging.basicConfig(level=logging.INFO)
     if not sheet:
         sheets = [sheet for sheet in excel.sheetnames if sheet not in exclude_sheet]
-        logging.warning("No sheets specified. Parsing sheets: %s", sheet)
+        logging.info("No sheets specified. Parsing sheets: %s", sheet)
     # initiate data set from meta data or csv depending on command line arguments
     if metadata:
         if metadata.name == "forms.csv":

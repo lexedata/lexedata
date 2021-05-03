@@ -32,7 +32,7 @@ from lexedata.enrich.add_status_column import add_status_column_to_table
 Ob = t.TypeVar("O", bound=Object)
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 # NOTE: Excel uses 1-based indices, this shows up in a few places in this file.
 
 
