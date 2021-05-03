@@ -29,7 +29,6 @@ def cleanup(form: str) -> str:
 
 pre_replace = {
     "l̴": "ɬ",
-    ".": ".",
     "˺": "̚",
     "ˑ": ".",
     "oː́": "oó",

@@ -11,6 +11,7 @@ from lexedata.types import Form, Judgement
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def check_brackets(string, bracket_pairs):
