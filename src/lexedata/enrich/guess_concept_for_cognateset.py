@@ -7,14 +7,11 @@ import pycldf
 import networkx
 
 from lexedata.util import load_clics
+from lexedata import cli
 
 FormID = str
 ConceptID = str
 CognatesetID = str
-
-
-def tqdm(iter, total=0):
-    return iter
 
 
 def load_concepts_by_form(
@@ -24,7 +21,7 @@ def load_concepts_by_form(
     concepts_by_form_id: t.Dict[FormID, t.Sequence[ConceptID]] = {}
     c_f_id = dataset.column_names.forms.id
     c_f_concept = dataset.column_names.forms.parameterReference
-    for form in tqdm(
+    for form in cli.tq(
         dataset["FormTable"],
         total=dataset["FormTable"].common_props.get("dc:extent"),
     ):
@@ -40,7 +37,7 @@ def concepts_to_concepticon(dataset: pycldf.Wordlist) -> t.Mapping[ConceptID, in
         row[dataset.column_names.parameters.id]: row.get(
             dataset.column_names.parameters.concepticonReference
         )
-        for row in tqdm(
+        for row in cli.tq(
             dataset["ParameterTable"],
             total=dataset["ParameterTable"].common_props.get("dc:extent"),
         )
@@ -163,7 +160,7 @@ def connected_concepts(
             " or a FormTable and is thus not compatible with this script."
         )
 
-    for judgement in tqdm(
+    for judgement in cli.tq(
         table,
         total=table.common_props.get("dc:extent"),
     ):
@@ -209,7 +206,7 @@ def add_central_concepts_to_cognateset_table(
 
     # write cognatesets with central concepts
     write_back = []
-    for row in tqdm(
+    for row in cli.tq(
         dataset["CognatesetTable"],
         total=dataset["CognatesetTable"].common_props.get("dc:extent"),
     ):
@@ -223,7 +220,6 @@ def add_central_concepts_to_cognateset_table(
 
 if __name__ == "__main__":
     import argparse
-    from tqdm import tqdm  # noqa
 
     parser = argparse.ArgumentParser(
         description="""Add central concepts to cognatesets.
@@ -246,15 +242,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--add-column",
-        default=True,
-        action="store_true",
-        help="Add column 'Core_Concept_ID' as new #parameterReference to #CognatesetTable (default)",
-    )
-    parser.add_argument(
-        "--no-add-column",
         default=False,
         action="store_true",
-        help="Do not add a new #parameterReference to #CognatesetTable, but instead use the existing one",
+        help="Add column 'Core_Concept_ID' as new #parameterReference to #CognatesetTable (default)",
     )
     parser.add_argument(
         "--overwrite",
@@ -263,10 +253,10 @@ if __name__ == "__main__":
         help="Overwrite #parameterReference values of cognate sets already given in the dataset",
     )
     args = parser.parse_args()
-    dataset = pycldf.Wordlist.from_metadata(args.wordlist)
+    dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
     add_central_concepts_to_cognateset_table(
         dataset,
         add_column=args.add_column,
-        overwrite_existing=args.overwrite_existing,
+        overwrite_existing=args.overwrite,
     )

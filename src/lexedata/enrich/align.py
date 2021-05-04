@@ -10,6 +10,7 @@ from pathlib import Path
 import pycldf
 
 from lexedata.enrich.add_status_column import add_status_column_to_table
+from lexedata import cli
 
 
 def align(forms):
@@ -38,7 +39,7 @@ def aligne_cognate_table(
         add_status_column_to_table(dataset=dataset, table_name="CognateTable")
 
     forms = {}
-    for form in dataset["FormTable"]:
+    for form in cli.tq(dataset["FormTable"]):
         forms[form[f_id]] = form
 
     c_id = dataset["CognateTable", "id"].name

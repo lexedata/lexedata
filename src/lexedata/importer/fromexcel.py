@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-import argparse
 import typing as t
 from pathlib import Path
 import logging
@@ -11,6 +10,7 @@ from tqdm import tqdm
 import pycldf
 import openpyxl
 
+from lexedata import cli
 from lexedata.types import (
     Object,
     Language,
@@ -54,14 +54,20 @@ class DB:
     # it doesn't work as the cache is empty and the code will throw errors
     # (e.g. when trying to look for candidates we get a key error)
     # TODO: I want to make sure, it is intended this way
-    def cache_dataset(self):
+    def cache_dataset(self, logger: cli.logging.Logger = cli.logger):
+        logger.info("Caching dataset into memory…")
         for table in self.dataset.tables:
             table_type = (
                 table.common_props.get("dc:conformsTo", "").rsplit("#", 1)[1]
                 or table.url
             )
             (id,) = table.tableSchema.primaryKey
-            self.cache[table_type] = {row[id]: row for row in table}
+            # Extent may be wrong, but it's usually at least roughly correct
+            # and a better indication of the table size than none at all.
+            self.cache[table_type] = {
+                row[id]: row
+                for row in cli.tq(table, total=table.common_props.get("dc:extent"))
+            }
         for source in self.dataset.sources:
             self.source_ids.add(source.id)
 
@@ -272,7 +278,7 @@ class ExcelParser:
         """
         languages_by_column: t.Dict[str, str] = {}
         # iterate over language columns
-        for lan_col in tqdm(
+        for lan_col in cli.tq(
             sheet.iter_cols(min_row=1, max_row=self.top - 1, min_col=self.left),
             total=sheet.max_column - self.left,
         ):
@@ -573,7 +579,7 @@ class ExcelCognateParser(ExcelParser):
 
 
 def excel_parser_from_dialect(
-    output_dataset: pycldf.Wordlist, dialect: argparse.Namespace, cognate: bool
+    output_dataset: pycldf.Wordlist, dialect: t.NamedTuple, cognate: bool
 ) -> t.Type[ExcelParser]:
     if cognate:
         Row: t.Type[RowObject] = CogSet
@@ -789,7 +795,7 @@ if __name__ == "__main__":
     import argparse
     import pycldf
 
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="Imports a dataset from an excel file into CLDF. "
         "The import is configured by a special key in the metadata file, check "
         "./test/data/cldf/smallmawetiguarani/Wordlist-metadata.json for examples."
@@ -807,12 +813,6 @@ if __name__ == "__main__":
         help="Path to an optional second Excel file containing cogsets and cognate judgements",
     )
     parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
-    parser.add_argument(
         "--status-update",
         type=str,
         default="initial import",
@@ -820,6 +820,8 @@ if __name__ == "__main__":
         "(default: initial import)",
     )
     args = parser.parse_args()
+    cli.setup_logging(args)
+
     if args.status_update == "None":
         args.status_update = None
     load_dataset(args.metadata, args.lexicon, args.cogsets, args.status_update)

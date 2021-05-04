@@ -1,10 +1,9 @@
-import argparse
 import typing as t
-from pathlib import Path
 
 import pycldf
 import openpyxl
 
+from lexedata import cli
 from lexedata.types import Language, RowObject, CogSet
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.importer.fromexcel import ExcelCognateParser
@@ -77,8 +76,14 @@ def header_from_cognate_excel(
     return row_header, separators
 
 
-def import_cognates_from_excel(excel: str, dataset: pycldf.Dataset) -> None:
+def import_cognates_from_excel(
+    excel: str, dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger
+) -> None:
+    logger.info("Loading sheet…")
     ws = openpyxl.load_workbook(excel).active
+    logger.info(
+        f"Importing cognate sets from {excel}, sheet {ws.title}, into {dataset.tablegroup._fname}…"
+    )
 
     row_header, _ = header_from_cognate_excel(ws, dataset)
     excel_parser_cognate = CognateEditParser(
@@ -106,24 +111,19 @@ def import_cognates_from_excel(excel: str, dataset: pycldf.Dataset) -> None:
 
 
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="Load #cognate and #cognatesets from excel file into CLDF"
     )
     parser.add_argument(
         "cogsets",
         nargs="?",
         default="cognates.xlsx",
-        help="Path to an Excel file containing cogsets and cognatejudgements (default: cognates.xlsx)",
-    )
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
+        help="Path to an Excel file containing cogsets and cognatejudgements (default: cognates.xlsx). The data will be imported from the *active sheet* (probably the last one you had open in Excel) of that spreadsheet.",
     )
 
     args = parser.parse_args()
+    cli.setup_logging(args)
+
     import_cognates_from_excel(
         args.cogsets, pycldf.Dataset.from_metadata(args.metadata)
     )
