@@ -178,8 +178,7 @@ def parse_segment_slices(
             yield i
 
 
-# TODO: This function has great re-use potential, so it should be moved to
-# `util` or so. There we can also make the internal logic more robust.
+# TODO: Is this logic sound?
 def cache_table(
     dataset,
     columns: t.Optional[t.Mapping[str, str]] = None,
@@ -197,6 +196,17 @@ def cache_table(
         row[c_id]: {prop: row[name] for prop, name in columns.items()}
         for row in dataset[table]
     }
+
+
+class KeyKeyDict(t.Mapping[str, str]):
+    def __len__(self):
+        return 0
+
+    def __iter__(self):
+        return ()
+
+    def __getitem__(self, key):
+        return key
 
 
 if __name__ == "__main__":

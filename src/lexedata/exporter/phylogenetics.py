@@ -1,42 +1,41 @@
-import re
 import sys
 import typing as t
-import collections
 from pathlib import Path
-import warnings
+
+import pycldf
+
+from lexedata import util
+from lexedata import types
+from lexedata import cli
+
+import xml.etree.ElementTree as ET
 
 try:
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
 
-import pycldf
-from lexedata.util import get_dataset
+
+# Some type aliases, which should probably be moved elsewhere or made obsolete.
+class Language_ID(str):
+    pass
 
 
-def sanitise_name(name: str) -> str:
-    """Clean a name for phylogenetics analyses.
+class Parameter_ID(str):
+    pass
 
-    Take a name for a language or a feature which has come from somewhere like
-    a CLDF dataset and make sure it does not contain any characters which will
-    cause trouble for BEAST or postanalysis tools.
 
-    >>> sanitise_name("Idempotent")
-    'Idempotent'
-    >>> sanitise_name("Name with Spaces")
-    'Name_with_Spaces'
-    >>> sanitise_name("Name\\tcontaining much\\nwhitespace")
-    'Name_containing_much_whitespace'
-    >>> sanitise_name("Name for this, or that")
-    'Name_for_this_or_that'
-
-    """
-    return re.sub(r"\s", "_", name).replace(",", "")
+class Cognateset_ID(str):
+    pass
 
 
 def read_cldf_dataset(
-    dataset: pycldf.Dataset, code_column=None, use_ids=False
-) -> t.Tuple[t.Mapping[str, t.Mapping[str, t.Set[str]]], t.Mapping[str, str]]:
+    filename: Path,
+    code_column: t.Optional[str] = None,
+    logger: cli.logging.Logger = cli.logger,
+) -> t.Mapping[
+    types.Language_ID, t.Mapping[types.Parameter_ID, t.Set[types.Cognateset_ID]]
+]:
     """Load a CLDF dataset.
 
     Load the file as `json` CLDF metadata description file, or as metadata-free
@@ -47,36 +46,13 @@ def read_cldf_dataset(
     CLDF module specifications. Directories are checked for the presence of
     any CLDF datasets in undefined order of the dataset types.
 
-    If use_ids == False (the default), the reader is free to choose language
-    names or language glottocodes for the output if they are unique. With
-    use_ids=True you can force the reader to use the data set's language ids.
+    If use_ids == False, the reader is free to choose language names or
+    language glottocodes for the output if they are unique.
 
     Examples
     --------
 
-    >>> _ = open("forms.csv", "w").write('''ID,Language_ID,Parameter_ID,Form,Cognateset,Source
-    ... 1,Autaa,Woman,fam,A,ficticious
-    ... 2,Autaa,Person,hom,B,ficticious
-    ... ''')
-    >>> wordlist = pycldf.Wordlist.from_data("forms.csv")
-    >>> data, mapping = read_cldf_dataset(wordlist, code_column="Cognateset")
-    >>> mapping
-    {}
-    >>> dict(data)
-    {'Autaa': defaultdict(<class 'set'>, {'Woman': {'A'}, 'Person': {'B'}})}
-
-    This function also works with cross-semantic cognate codes.
-
-    >>> _ = open("forms.csv", "w").write('''ID,Language_ID,Parameter_ID,Form,Cognateset,Source
-    ... 2,Autaa,Person,hom,B,ficticious
-    ... 3,Autaa,Man,hom,B,ficticious
-    ... ''')
-    >>> wordlist = pycldf.Wordlist.from_data("forms.csv")
-    >>> data, mapping = read_cldf_dataset(wordlist, code_column="Cognateset")
-    >>> mapping
-    {}
-    >>> data["Autaa"]["Person"] == data["Autaa"]["Man"]
-    True
+    >>> _= open("forms.csv", "w").write("""...""")
 
     Parameters
     ----------
@@ -85,234 +61,244 @@ def read_cldf_dataset(
 
     Returns
     -------
-    Dataset
+    Data:
 
     """
-    data: t.DefaultDict[str, t.DefaultDict[str, t.Set]] = t.DefaultDict(
-        lambda: t.DefaultDict(set)
-    )
+    dataset = util.get_dataset(filename)
 
-    # Make sure this is a kind of dataset BEASTling can handle
+    # Make sure this is a kind of dataset we can handle
     if dataset.module not in ("Wordlist", "StructureDataset"):
         raise ValueError(
-            "BEASTling does not know how to interpret CLDF {:} data.".format(
-                dataset.module
+            "{:} does not know how to interpret CLDF {:} data.".format(
+                __package__,
+                dataset.module,
             )
         )
-
-    # Build dictionaries of nice IDs for languages and features
-    col_map = dataset.column_names
-    lang_ids, language_code_map = build_lang_ids(dataset, col_map, use_ids=use_ids)
-    feature_ids = {}
-    if col_map.parameters:
-        for row in dataset["ParameterTable"]:
-            feature_ids[row[col_map.parameters.id]] = sanitise_name(
-                row[col_map.parameters.id]
-            )
 
     # Build actual data dictionary, based on dataset type
     if dataset.module == "Wordlist":
-        # We search for cognatesetReferences in the FormTable or a separate
-        # CognateTable.
-        cognate_column_in_form_table = True
-        # If we find them in CognateTable, we store them keyed with formReference:
-        if (
-            not code_column
-        ):  # If code_column is given explicitly, we don't have to search!
-            code_column = col_map.forms.cognatesetReference
-            if not code_column:
-                if (
-                    col_map.cognates
-                    and col_map.cognates.cognatesetReference
-                    and col_map.cognates.formReference
-                ):
-                    code_column = col_map.cognates.cognatesetReference
-                    form_reference = col_map.cognates.formReference
-                    cognatesets: t.Dict[
-                        t.Hashable, t.Set[t.Hashable]
-                    ] = collections.defaultdict(set)
-                    for row in dataset["CognateTable"]:
-                        cognatesets[row[form_reference]].add(row[code_column])
-                else:
-                    raise ValueError(
-                        "Dataset {:} has no cognatesetReference column in its "
-                        "primary table or in a separate cognate table. "
-                        "Is this a metadata-free wordlist and you forgot to "
-                        "specify code_column explicitly?".format(
-                            dataset.tablegroup._fname
-                        )
-                    )
-                cognate_column_in_form_table = False
-
-        language_column = col_map.forms.languageReference
-        parameter_column = col_map.forms.parameterReference
-        if dataset["FormTable", parameter_column].separator:
-
-            def all_parameters(parameter):
-                return list(parameter)
-
-        else:
-
-            def all_parameters(parameter):
-                return [parameter]
-
-        warnings.filterwarnings(
-            "ignore",
-            '.*Unspecified column "Cognate_Set"',
-            UserWarning,
-            r"csvw\.metadata",
-            0,
-        )
-        warnings.filterwarnings(
-            "ignore",
-            '.*Unspecified column "{:}"'.format(code_column),
-            UserWarning,
-            r"csvw\.metadata",
-            0,
-        )
-        # We know how to deal with a 'Cognate_Set' column, even in a
-        # metadata-free CSV file
-
-        for row in dataset["FormTable"].iterdicts():
-            lang_id = lang_ids.get(row[language_column], row[language_column])
-            for parameter in all_parameters(row[parameter_column]):
-                feature_id = feature_ids.get(parameter, parameter)
-                if cognate_column_in_form_table:
-                    data[lang_id][feature_id].add(row[code_column])
-                else:
-                    data[lang_id][feature_id] = cognatesets[row[col_map.forms.id]]
-        return data, language_code_map
-
+        return read_wordlist(dataset, code_column, logger=logger)
     elif dataset.module == "StructureDataset":
-        code_column = col_map.values.codeReference or col_map.values.value
-        for row in dataset["ValueTable"]:
-            lang_id = lang_ids.get(
-                row[col_map.values.languageReference],
-                row[col_map.values.languageReference],
-            )
-            feature_id = feature_ids.get(
-                row[col_map.values.parameterReference],
-                row[col_map.values.parameterReference],
-            )
-            data[lang_id][feature_id].add(row[code_column] or "")
-        return data, language_code_map
-
+        return read_structure_dataset(dataset, logger=logger)
     else:
         raise ValueError("Module {:} not supported".format(dataset.module))
 
 
-def build_lang_ids(dataset, col_map, use_ids=False):
-    """Create a language ID translation table.
+def read_wordlist(
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+    code_column: t.Optional[str],
+    logger: cli.logging.Logger = cli.logger,
+) -> t.MutableMapping[types.Language_ID, t.MutableMapping[types.Parameter_ID, t.Set]]:
+    col_map = dataset.column_names
 
-    In the early days of CLDF, language tables often contained numerical IDs.
-    Those were really intransparent to the intermediate data users, so this
-    function tries to use sensible IDs instead. These days, this function is
-    probably obsolete and supported largely for legacy reasons. However, it is
-    possible, in principle, to encounter language IDs with ‘strange’ characters
-    in them, and for those tables, this infrastructure is still useful.
-
-    """
-    if col_map.languages is None:
-        # No language table so we can't do anything
-        return {}, {}
-
-    col_map = col_map.languages
-    lang_ids = {}
-    language_code_map = {}
-
-    # First check for unique names and Glottocodes
-    names = []
-    gcs = []
-    langs = []
-    for row in dataset["LanguageTable"]:
-        langs.append(row)
-        names.append(row[col_map.name])
-        if row.get(col_map.glottocode):
-            gcs.append(row[col_map.glottocode])
-
-    unique_names = len(set(names)) == len(names)
-    unique_gcs = len(set(gcs)) == len(gcs) == len(names)
-
-    if not use_ids:
-        # TODO: Use standard logging interface, this is an INFO.
-        print(
-            "{0} are used as language identifiers".format(
-                "Names"
-                if unique_names
-                else ("Glottocodes" if unique_gcs else "dataset-local IDs")
-            )
+    if code_column:
+        # Just in case that column was specified by property URL. We
+        # definitely want the name. In any case, this will also throw a
+        # helpful KeyError when the column does not exist.
+        cognatesets = util.cache_table(
+            dataset,
+            {"form": col_map.forms.id, "code": dataset["FormTable", code_column].name},
         )
+        target = col_map.forms.id
+    else:
+        # We search for cognatesetReferences in the FormTable or a separate
+        # CognateTable.
 
-    for row in langs:
-        if use_ids:
-            lang_ids[row[col_map.id]] = row[col_map.id]
-        elif unique_names:
-            # Use names if they're unique, for human-friendliness
-            lang_ids[row[col_map.id]] = sanitise_name(row[col_map.name])
-        elif unique_gcs:
-            # Otherwise, use glottocodes as at least they are meaningful
-            lang_ids[row[col_map.id]] = row[col_map.glottocode]
+        # Try the FormTable first.
+        code_column = col_map.forms.cognatesetReference
+
+        if code_column:
+            # This is not the CLDF way, warn the user.
+            logger.warning(
+                "Your dataset has a cognatesetReference in the FormTable. Consider running lexedata.enrich.explict_cognate_judgements to create an explicit cognate table, if this is your dataset."
+            )
+            cognatesets = util.cache_table(
+                dataset, {"form": col_map.forms.id, "code": code_column}
+            )
+            target = col_map.forms.id
         else:
-            # As a last resort, use the IDs which are guaranteed to be unique
-            lang_ids[row[col_map.id]] = row[col_map.id]
-        if row.get(col_map.glottocode):
-            language_code_map[lang_ids[row[col_map.id]]] = row[col_map.glottocode]
-    lang_ids = dict(sorted(lang_ids.items()))
-    language_code_map = dict(sorted(language_code_map.items()))
-    return lang_ids, language_code_map
+            # There was no cognatesetReference in the form table. If we
+            # find them in CognateTable (I mean, they should be there!), we
+            # store them keyed with formReference.
+            if (
+                col_map.cognates
+                and col_map.cognates.cognatesetReference
+                and col_map.cognates.formReference
+            ):
+                code_column = col_map.cognates.cognatesetReference
+                form_reference = col_map.cognates.formReference
+                (foreign_key,) = [
+                    key
+                    for key in dataset["CognateTable"].tableSchema.foreignKeys
+                    if key.columnReference == [code_column]
+                ]
+                (target,) = foreign_key.reference.columnReference
+                cognatesets = util.cache_table(
+                    dataset,
+                    {"form": form_reference, "code": code_column},
+                    "CognateTable",
+                )
+            else:
+                raise ValueError(
+                    "Dataset {:} has no cognatesetReference column in its "
+                    "primary table or in a separate cognate table. "
+                    "Is this a metadata-free wordlist and you forgot to "
+                    "specify code_column explicitly?".format(dataset.tableSchema._fname)
+                )
+
+    # Cognate sets have been loaded. Consolidate.
+    cognates_by_form: t.MutableMapping[
+        types.Form_ID, t.Set[types.Cognateset_ID]
+    ] = t.DefaultDict(set)
+    for judgement in cognatesets.values():
+        cognates_by_form[judgement["form"]].add(judgement["code"])
+    parameter_column = col_map.forms.parameterReference
+
+    # If one form can have multiple concepts,
+    if dataset["FormTable", parameter_column].separator:
+
+        def all_parameters(parameter):
+            return list(parameter)
+
+    else:
+
+        def all_parameters(parameter):
+            return [parameter]
+
+    data: t.MutableMapping[
+        types.Language_ID, t.MutableMapping[types.Parameter_ID, t.Set]
+    ] = t.DefaultDict(lambda: t.DefaultDict(set))
+    for row in dataset["FormTable"].iterdicts():
+        language = row[col_map.forms.languageReference]
+        for parameter in all_parameters(row[parameter_column]):
+            data[language][parameter] |= cognates_by_form[row[target]]
+    return data
+
+
+def read_structure_dataset(
+    dataset: pycldf.Wordlist, logger: cli.logging.Logger = cli.logger
+) -> t.MutableMapping[types.Language_ID, t.MutableMapping[types.Parameter_ID, t.Set]]:
+    col_map = dataset.column_names
+    data: t.MutableMapping[
+        types.Language_ID, t.MutableMapping[types.Parameter_ID, t.Set]
+    ] = t.DefaultDict(lambda: t.DefaultDict(set))
+    code_column = col_map.values.codeReference or col_map.values.value
+    for row in dataset["ValueTable"]:
+        lang_id = row[col_map.values.languageReference]
+        feature_id = row[col_map.values.parameterReference]
+        if row[code_column]:
+            data[lang_id][feature_id].add(row[code_column])
+    return data
 
 
 def root_meaning_code(
-    dataset: t.Dict[t.Hashable, t.Mapping[t.Hashable, t.Set[t.Hashable]]]
-) -> t.Mapping[t.Hashable, t.List[Literal["0", "1", "?"]]]:
+    dataset: t.Mapping[
+        types.Language_ID, t.Mapping[types.Parameter_ID, t.Set[types.Cognateset_ID]]
+    ],
+    core_concepts: t.Optional[t.Set[types.Parameter_ID]] = None,
+    ascertainment: t.Sequence[Literal["0", "1", "?"]] = ["0"],
+) -> t.Tuple[
+    t.Mapping[types.Language_ID, t.List[Literal["0", "1", "?"]]],
+    t.Mapping[types.Parameter_ID, t.Mapping[types.Cognateset_ID, int]],
+]:
     """Create a root-meaning coding from cognate codes in a dataset
 
     Take the cognate code information from a wordlist, i.e. a mapping of the
     form {Language ID: {Concept ID: {Cognateset ID}}}, and generate a binary
     alignment from it that lists for every meaning which roots are used to
-    represent that meaning in each language. The first entry in each sequence
-    is always '0': The configuration where a form is absent from all languages
-    is never observed, but always possible, so we add this entry for the
-    purposes of ascertainment correction.
+    represent that meaning in each language.
 
-    >>> root_meaning_code({"Language": {"Meaning": {"Cognateset 1"}}})
+    Return the aligment, and the list of slices belonging to each meaning.
+
+    The default ascertainment is the a single absence ('0'): The configuration
+    where a form is absent from all languages is never observed, but always
+    possible, so we add this entry for the purposes of ascertainment
+    correction.
+
+    Examples
+    ========
+
+    >>> alignment, concepts = root_meaning_code({"Language": {"Meaning": {"Cognateset 1"}}})
+    >>> alignment
     {'Language': ['0', '1']}
-    >>> root_meaning_code({"l1": {"m1": {"c1"}},
-    ...                    "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}})
-    {'l1': ['0', '1', '0', '?', '?'], 'l2': ['0', '0', '1', '1', '1']}
+
+
+    >>> alignment, concepts = root_meaning_code(
+    ...   {"l1": {"m1": {"c1"}},
+    ...    "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}})
+    >>> sorted(concepts)
+    ['m1', 'm2']
+    >>> sorted(concepts["m1"])
+    ['c1', 'c2']
+    >>> {language: sequence[concepts["m1"]["c1"]] for language, sequence in alignment.items()}
+    {'l1': '1', 'l2': '0'}
+    >>> {language: sequence[concepts["m2"]["c3"]] for language, sequence in alignment.items()}
+    {'l1': '?', 'l2': '1'}
+    >>> list(zip(*sorted(zip(*alignment.values()))))
+    [('0', '0', '1', '?', '?'), ('0', '1', '0', '1', '1')]
 
     """
-    roots: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
+    roots: t.Dict[types.Parameter_ID, t.Set[types.Cognateset_ID]] = {}
     for language, lexicon in dataset.items():
         for concept, cognatesets in lexicon.items():
-            roots.setdefault(concept, set()).update(cognatesets)
-    alignment: t.Dict[t.Hashable, t.List[Literal["0", "1", "?"]]] = {}
+            if core_concepts is None or concept in core_concepts:
+                roots.setdefault(concept, set()).update(cognatesets)
+
+    blocks = {}
+    sorted_roots: t.Dict[types.Parameter_ID, t.List[types.Cognateset_ID]] = {}
+    c = len(ascertainment)
+    for concept in sorted(roots, key=hash):
+        possible_roots = sorted(roots[concept], key=hash)
+        sorted_roots[concept] = possible_roots
+        blocks[concept] = {root: r for r, root in enumerate(possible_roots, c)}
+        c += len(possible_roots)
+
+    alignment: t.Dict[types.Language_ID, t.List[Literal["0", "1", "?"]]] = {}
     for language, lexicon in dataset.items():
-        alignment[language] = ["0"]
-        for concept, possible_roots in sorted(roots.items()):
+        alignment[language] = list(ascertainment)
+        for concept, possible_roots in sorted_roots.items():
             entries = lexicon.get(concept)
             if entries is None:
-                alignment[language].extend(["?" for _ in sorted(possible_roots)])
+                alignment[language].extend(["?" for _ in possible_roots])
             else:
                 alignment[language].extend(
-                    ["1" if k in entries else "0" for k in sorted(possible_roots)]
+                    ["1" if k in entries else "0" for k in possible_roots]
                 )
-    return alignment
+    return alignment, blocks
 
 
 def root_presence_code(
-    dataset: t.Dict[t.Hashable, t.Mapping[t.Hashable, t.Set[t.Hashable]]],
-    important: t.Callable[[t.Set[t.Hashable]], t.Set[t.Hashable]] = lambda x: x,
-) -> t.Mapping[t.Hashable, t.List[Literal["0", "1", "?"]]]:
+    dataset: t.Mapping[
+        types.Language_ID, t.Mapping[types.Parameter_ID, t.Set[types.Cognateset_ID]]
+    ],
+    important: t.Callable[
+        [t.Set[types.Parameter_ID]], t.Set[types.Parameter_ID]
+    ] = lambda x: x,
+    ascertainment: t.Sequence[Literal["0", "1", "?"]] = ["0"],
+    logger: cli.logging.Logger = cli.logger,
+) -> t.Tuple[
+    t.Mapping[types.Language_ID, t.List[Literal["0", "1", "?"]]],
+    t.Mapping[types.Cognateset_ID, int],
+]:
     """Create a root-presence/absence coding from cognate codes in a dataset
 
     Take the cognate code information from a wordlist, i.e. a mapping of the
     form {Language ID: {Concept ID: {Cognateset ID}}}, and generate a binary
     alignment from it that lists for every root whether it is present in that
-    language or not.
+    language or not. Return it, and the association between cognatesets and
+    characters.
 
-    >>> root_presence_code({"Language": {"Meaning": {"Cognateset 1"}}})
+    >>> alignment, roots = root_presence_code({"Language": {"Meaning": {"Cognateset 1"}}})
+    >>> alignment
     {'Language': ['0', '1']}
+    >>> roots
+    {'Cognateset 1': 1}
 
     The first entry in each sequence is always '0': The configuration where a
     form is absent from all languages is never observed, but always possible,
@@ -326,9 +312,16 @@ def root_presence_code(
     the root are present, but expressed by other roots, the root is assumed to
     be absent in the target language.
 
-    >>> root_presence_code({"l1": {"m1": {"c1"}},
-    ...                     "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}})
-    {'l1': ['0', '1', '0', '?'], 'l2': ['0', '1', '1', '1']}
+    >>> alignment, roots = root_presence_code(
+    ...     {"l1": {"m1": {"c1"}},
+    ...      "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}})
+    >>> sorted(roots)
+    ['c1', 'c2', 'c3']
+    >>> sorted_roots = sorted(roots.items())
+    >>> {language: [sequence[k[1]] for k in sorted_roots] for language, sequence in alignment.items()}
+    {'l1': ['1', '0', '?'], 'l2': ['1', '1', '1']}
+    >>> list(zip(*sorted(zip(*alignment.values()))))
+    [('0', '0', '1', '?'), ('0', '1', '1', '1')]
 
     If only some concepts associated with the root in question are attested for
     the target language, the function `important` is called on the concepts
@@ -340,22 +333,29 @@ def root_presence_code(
     `important` is the identity function.
 
     """
-    associated_concepts: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
-    all_roots: t.Set[t.Hashable] = set()
-    language_roots: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
+    associated_concepts: t.MutableMapping[
+        types.Cognateset_ID, t.Set[types.Parameter_ID]
+    ] = t.DefaultDict(set)
+    all_roots: t.Set[types.Cognateset_ID] = set()
+    language_roots: t.MutableMapping[
+        types.Language_ID, t.Set[types.Cognateset_ID]
+    ] = t.DefaultDict(set)
     for language, lexicon in dataset.items():
-        language_roots[language] = set()
         for concept, cognatesets in lexicon.items():
+            if not cognatesets:
+                logger.warning(
+                    f"The root presence coder script got a language ({language}) with an improper lexicon: Concept {concept} is marked as present in the language, but no cognate sets are associated with it."
+                )
             for cognateset in cognatesets:
-                associated_concepts.setdefault(cognateset, set()).add(concept)
+                associated_concepts[cognateset].add(concept)
                 all_roots.add(cognateset)
                 language_roots[language].add(cognateset)
 
-    all_roots_sorted = sorted(all_roots)
+    all_roots_sorted: t.Sequence[types.Cognateset_ID] = sorted(all_roots, key=hash)
 
-    alignment: t.Dict[t.Hashable, t.List[Literal["0", "1", "?"]]] = {}
+    alignment = {}
     for language, lexicon in dataset.items():
-        alignment[language] = ["0"]
+        alignment[language] = list(ascertainment)
         for root in all_roots_sorted:
             if root in language_roots[language]:
                 alignment[language].append("1")
@@ -367,12 +367,16 @@ def root_presence_code(
                 else:
                     alignment[language].append("?")
 
-    return alignment
+    return alignment, {
+        root: r for r, root in enumerate(all_roots_sorted, len(ascertainment))
+    }
 
 
 def multistate_code(
-    dataset: t.Dict[t.Hashable, t.Dict[t.Hashable, t.Set[t.Hashable]]]
-) -> t.Mapping[t.Hashable, t.List[t.Optional[int]]]:
+    dataset: t.Mapping[
+        types.Language_ID, t.Mapping[types.Parameter_ID, t.Set[types.Cognateset_ID]]
+    ],
+) -> t.Tuple[t.Mapping[types.Language_ID, t.Sequence[t.Set[int]]], t.Sequence[int]]:
     """Create a multistate root-meaning coding from cognate codes in a dataset
 
     Take the cognate code information from a wordlist, i.e. a mapping of the
@@ -380,52 +384,171 @@ def multistate_code(
     alignment from it that lists for every meaning which roots are used to
     represent that meaning in each language.
 
-    >>> multistate_code({"Language": {"Meaning": {"Cognateset 1"}}})
-    {'Language': [0]}
-    >>> multistate_code({"l1": {"m1": {"c1"}},
-    ...                    "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}})
-    {'l1': [0, None], 'l2': [1, 0]}
+    Also return the number of roots for each concept.
+
+    Examples
+    ========
+
+    >>> alignment, lengths = multistate_code({"Language": {"Meaning": {"Cognateset 1"}}})
+    >>> alignment =={'Language': [{0}]}
+    True
+    >>> lengths == [1]
+    True
+
+
+    >>> alignment, statecounts = multistate_code(
+    ...     {"l1": {"m1": {"c1"}},
+    ...      "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}})
+    >>> alignment["l1"][1]
+    set()
+    >>> alignment["l2"][1] == {0, 1}
+    True
+    >>> statecounts
+    [2, 2]
 
     """
-    roots: t.Dict[t.Hashable, t.Set[t.Hashable]] = {}
+    roots: t.Dict[types.Parameter_ID, t.Set[types.Cognateset_ID]] = t.DefaultDict(set)
     for language, lexicon in dataset.items():
         for concept, cognatesets in lexicon.items():
-            roots.setdefault(concept, set()).update(cognatesets)
-    alignment: t.Dict[t.Hashable, t.List[t.Optional[int]]] = {}
+            roots[concept].update(cognatesets)
+    sorted_roots: t.Mapping[types.Parameter_ID, t.Sequence[types.Cognateset_ID]] = {
+        concept: sorted(cognatesets, key=hash)
+        for concept, cognatesets in sorted(roots.items())
+    }
+
+    states: t.List[int] = [len(roots) for _, roots in sorted_roots.items()]
+
+    alignment: t.MutableMapping[types.Language_ID, t.List[t.Set[int]]] = t.DefaultDict(
+        list
+    )
     for language, lexicon in dataset.items():
-        alignment[language] = []
-        for concept, possible_roots in sorted(roots.items()):
+        for concept, possible_roots in sorted_roots.items():
             entries = lexicon.get(concept)
-            if entries is None:
-                alignment[language].append(None)
+            alignment[language].append(set())
+            if entries:
+                for entry in entries:
+                    state = possible_roots.index(entry)
+                    alignment[language][-1].add(state)
+    return alignment, states
+
+
+def raw_binary_alignment(alignment):
+    return ["".join(data) for language, data in alignment.items()]
+
+
+def raw_multistate_alignment(alignment, long_sep: str = ","):
+    max_code = max(
+        c for seq in alignment.values() for character in seq for c in character
+    )
+
+    if max_code < 10:
+
+        def encode(s: t.Set[int]):
+            if not s:
+                return "?"
+            elif len(s) == 1:
+                return str(s.pop())
             else:
-                alignment[language].append(
-                    # TODO: Bleagh, this is ugly, intransparent, error-prone,
-                    # and wrong. I typed it only because it is wrong anyway and
-                    # needs to be replaced ASAP.
-                    max(
-                        range(len(possible_roots)),
-                        key=lambda i: sorted(possible_roots)[i] in entries,
-                    )
-                )
-    return alignment
+                return "({})".format("".join(str(c) for c in s))
+
+        separator = ""
+
+    else:
+
+        def encode(s: t.Set[int]):
+            if not s:
+                return "?"
+            elif len(s) == 1:
+                return str(s.pop())
+            else:
+                return "({})".format(",".join(str(c) for c in s))
+
+        separator = long_sep
+
+    return [
+        separator.join([encode(c) for c in sequence])
+        for language, sequence in alignment.items()
+    ], max_code + 1
 
 
-def raw_alignment(alignment):
-    max_length = max([len(str(a)) for a in alignment])
-    for language, data in alignment.items():
-        yield "{language:} {spacer:} {data:}".format(
-            language=language,
-            spacer=" " * (max_length - len(str(language))),
-            data="".join(data),
+def format_nexus(
+    languages, sequences, n_symbols, n_characters, datatype, partitions=None
+):
+    max_length = max([len(str(lang)) for lang in languages])
+
+    sequences = [
+        "{} {} {}".format(lang, " " * (max_length - len(str(lang))), seq)
+        for lang, seq in zip(languages, sequences)
+    ]
+
+    if partitions:
+        charsetstrings = [
+            "CharSet {id}={indices};".format(
+                id=id, indices=" ".join(str(k) for k in indices)
+            )
+            for id, indices in partitions.items()
+        ]
+        charsets = """Begin Sets;
+  {:}
+End;""".format(
+            "\n  ".join(charsetstrings)
         )
+    else:
+        charsets = ""
+
+    return """#NEXUS
+Begin Taxa;
+  Dimensions ntax={len_taxa:d};
+  TaxLabels {taxa:s};
+End;
+
+Begin Characters;
+  Dimensions NChar={len_alignment:d};
+  Format Datatype={datatype} Missing=? Gap=- Symbols="{symbols:s}" {tokens:s};
+  Matrix
+    [The first column is constant zero, for programs with ascertainment correction]
+    {sequences:s}
+  ;
+End;
+
+{charsets}
+""".format(
+        len_taxa=len(languages),
+        taxa=" ".join([str(language) for language in languages]),
+        charsets=charsets,
+        len_alignment=n_characters,
+        datatype="Restriction" if datatype == "binary" else "Standard",
+        symbols=" ".join(str(i) for i in range(n_symbols)),
+        tokens="Tokens" if n_symbols >= 10 else "",
+        sequences="\n    ".join(sequences),
+    )
+
+
+def fill_beast(data_object: ET.Element):
+    data_object.clear()
+    data_object.attrib = {
+        "id": "vocabulary",
+        "dataType": "integer",
+        "spec": "Alignment",
+    }
+    data_object.text = "\n"
+    for language, sequence in alignment.items():
+        seq = "".join(sequence)
+        ET.SubElement(
+            data_object,
+            "sequence",
+            id=f"language_data_vocabulary:{language:}",
+            taxon=f"{language:}",
+            value=f"{seq:}",
+        ).tail = "\n"
+
+    taxa = ET.SubElement(data_object, "taxonset", id="taxa", spec="TaxonSet")
+    for lang in alignment:
+        ET.SubElement(taxa, "taxon", id=f"{lang:}", spec="Taxon")
 
 
 if __name__ == "__main__":
-    import argparse
-    import xml.etree.ElementTree as ET
-
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="Export a CLDF dataset (or similar) to bioinformatics alignments"
     )
     parser.add_argument(
@@ -443,12 +566,6 @@ if __name__ == "__main__":
         const="beast",
         dest="format",
         help="""Short form of --format=beast""",
-    )
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "--output-file",
@@ -469,10 +586,10 @@ if __name__ == "__main__":
         help="File to load a list of languages from",
     )
     parser.add_argument(
-        "--use-ids",
-        action="store_true",
-        default=False,
-        help="Use dataset's language IDs, instead of guessing whether names or glottocodes might be better.",
+        "--language-identifiers",
+        type=str,
+        default=None,
+        help="Use this column as language identifiers, instead of language IDs.",
     )
     parser.add_argument(
         "--exclude-concept",
@@ -495,9 +612,11 @@ if __name__ == "__main__":
             each character describes, possibly including uniform ambiguities,
             the cognate class of a meaning.""",
     )
-    parser.add_argument("--stats-file", type=Path, help="A file to write stats to")
+    parser.add_argument("--stats-file", type=Path, help="A file to write statistics to")
     args = parser.parse_args()
+    cli.setup_logging(args)
 
+    # Step 1: Prepare the output file. This only matters if the output is beast.
     if args.format == "beast":
         if args.output_file is None:
             root = ET.fromstring("<beast><data /></beast>")
@@ -510,91 +629,85 @@ if __name__ == "__main__":
             et = ET.ElementTree(root)
         datas = list(root.iter("data"))
         data_object = datas[0]
-
-    if args.output_file is None:
+    # Otherwise, it's just making the file accessible.
+    elif args.output_file is None:
         args.output_file = sys.stdout
     else:
         args.output_file = args.output_file.open("w")
 
-    languages: t.Optional[t.Set[str]]
-    ds, language_map = read_cldf_dataset(
-        get_dataset(args.metadata), code_column=args.code_column, use_ids=args.use_ids
-    )
+    # Step 2: Load the raw data.
+    ds: t.Mapping[
+        Language_ID, t.Mapping[Language_ID, t.Set[Language_ID]]
+    ] = read_cldf_dataset(args.metadata, code_column=args.code_column)
+
+    languages: t.Set[str]
     if args.languages_list:
         languages = {lg.strip() for lg in args.languages_list.open().read().split("\n")}
-    elif language_map:
-        languages = set(language_map)
     else:
-        languages = None
+        languages = set(ds.keys())
 
+    # Step 3: Filter the data.
     ds = {
         language: {k: v for k, v in sequence.items() if k not in args.exclude_concept}
         for language, sequence in ds.items()
         if (languages is None) or (language in languages)
     }
 
+    n_symbols, datatype = 2, "binary"
+    partitions = None
+
+    # Step 3: Code the data
+    alignment: t.Mapping[Language_ID, str]
     if args.coding == "rootpresence":
-        alignment = root_presence_code(ds)
+        binal, cogset_indices = root_presence_code(ds)
+        n_characters = len(next(iter(binal.values())))
+        alignment = {key: "".join(value) for key, value in binal.items()}
+        sequences = raw_binary_alignment(alignment)
     elif args.coding == "rootmeaning":
-        alignment = root_meaning_code(ds)
+        binal, concept_cogset_indices = root_meaning_code(ds)
+        n_characters = len(next(iter(binal.values())))
+        alignment = {key: "".join(value) for key, value in binal.items()}
+        sequences = raw_binary_alignment(alignment)
+        partitions = {
+            concept: cogsets.values()
+            for concept, cogsets in concept_cogset_indices.items()
+        }
     elif args.coding == "multistate":
-        raise NotImplementedError(
-            """There are some conceptual problems, for the case of more than 9 different
-                values for a slot, that have made us not implement multistate
-                codes yet."""
-        )
-        alignment = multistate_code(ds)
+        multial, concept_indices = multistate_code(ds)
+        n_characters = len(next(iter(multial.values())))
+        sequences, n_symbols = raw_multistate_alignment(multial, long_sep=",")
+        datatype = "multistate"
     else:
         raise ValueError("Coding schema {:} unknown.".format(args.coding))
 
+    # Step 4: Format the data for output
     if args.format == "raw":
-        print("\n".join(raw_alignment(alignment)), file=args.output_file)
-    elif args.format == "nexus":
-        print(
-            """#NEXUS
-Begin Taxa;
-  Dimensions ntax={len_taxa:d};
-  TaxLabels {taxa:s}
-End;
+        max_length = max([len(str(lang)) for lang in ds])
+        for language, sequence in zip(ds, sequences):
+            print(
+                language,
+                " " * (max_length - len(language)),
+                sequence,
+                file=args.output_file,
+            )
 
-Begin Data;
-  Dimensions NChar={len_alignment:d};
-  Format Datatype=Standard, Missing=?;
-  Matrix
-    [The first column is constant zero, for programs with ascertainment correction]
-    {sequences:s}
-  ;
-End;
-        """.format(
-                len_taxa=len(alignment),
-                taxa=" ".join([str(language) for language in alignment]),
-                len_alignment=len(next(iter(alignment.values()))),
-                sequences="\n    ".join(raw_alignment(alignment)),
-            ),
-            file=args.output_file,
+    elif args.format == "nexus":
+        args.output_file.write(
+            format_nexus(
+                ds,
+                sequences,
+                n_symbols=n_symbols,
+                n_characters=n_characters,
+                datatype=datatype,
+                partitions=partitions,
+            )
         )
+
     elif args.format == "beast":
-        data_object.clear()
-        data_object.attrib = {
-            "id": "vocabulary",
-            "dataType": "integer",
-            "spec": "Alignment",
-        }
-        data_object.text = "\n"
-        for language, sequence in alignment.items():
-            seq = "".join(sequence)
-            ET.SubElement(
-                data_object,
-                "sequence",
-                id=f"language_data_vocabulary:{language:}",
-                taxon=f"{language:}",
-                value=f"{seq:}",
-            ).tail = "\n"
-        taxa = ET.SubElement(data_object, "taxonset", id="taxa", spec="TaxonSet")
-        for lang in alignment:
-            ET.SubElement(taxa, "taxon", id=f"{lang:}", spec="Taxon")
+        et = fill_beast(data_object)
         et.write(args.output_file, encoding="unicode")
 
+    # Step 5: Maybe print some statistics to file.
     if args.stats_file:
         countlects = len(ds)
         countconcepts = len(next(iter(ds.values())))
@@ -603,6 +716,7 @@ End;
                 f"""
             \\newcommand{{\\countlects}}{{{countlects}}}
             \\newcommand{{\\countconcepts}}{{{countconcepts}}}
+            \\newcommand{{\\ncharacters}}{{{n_characters}}}
             """,
                 file=s,
             )
