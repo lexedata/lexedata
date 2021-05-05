@@ -7,6 +7,7 @@ Lexedata is a set of tools for managing, editing, and annotating large lexical d
 
 ### 1.1 The CLDF format
 The CLDF format is designed for sharing and reusing comparative linguistic data. A CLDF lexical dataset consists of a series of .csv files, a .json file describing the structure of each .csv file and their inter-relationships, and a .bib file containing the relevant sources. A typical CLDF lexical dataset consists of the following .csv files: languages.csv, concepts.csv, forms.csv, cognatesets.csv, and cognates.csv. Each .csv file has an ID column There is the possibility to add further files depending on your needs. For more information on the CLDF format, you can refer to https://cldf.clld.org/. Below, we will briefly describe the typical files of a lexical CLDF dataset and how they interact with Lexedata when necessary.
+
 We recommend that you keep all these files in one folder which is versioned with git. You can use Github or Gitlab for this purpose, see section 1.3 below.
 
 #### 1.1.1 Languages.csv
@@ -87,6 +88,9 @@ python -m lexedata.importer.excelsinglewordlist --add-running-id <filename.xlsx>
 You can exclude individual sheets from being imported by using the option `--exclude-sheet <sheet name>`. @Gereon I am not sure I understand the rest of the command. I think that --concept-property TUS is so that this column is added to the concept table, instead of being treated as another language. 
 
 #### 3.1.2 Importing a lexical dataset using the "matrix" format
+
+#### 3.1.3 Importing a lexical dataset using the "interleaved" format
+
 ### 3.2 Adding a new language/new data to an existing lexical dataset
 
 
@@ -102,6 +106,17 @@ Your concepts.csv will now have two new columns: Concepticon ID and Concepticon 
 ### 4.3 Adding core concepts to cognate sets
 
 ### 4.4 Segment forms using CLTS
+In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms. Lexedata uses CLTS to segment the forms. To use this functionality type: ```python -m lexedata.enrich.segment_using_clts```. A column "Segments" will be filled in in your forms.csv. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review.
+
+Optional arguments:
+
+```--metadata [METADATA]```: the metadata file of your dataset
+
+```--overwrite```: segment all forms rather than only segment unsegmented forms (default behavior)
+
+```--replace-form```: with this option, any automatic corrections are applied not only on the Segments column, but also on the form itself in the #form column.
+
+<!-- Should this section be before the automatic cognate detection? Or when the automatic cognate detection is done it automatically segments as well? Finally, should we add more info about CLTS? Do you like this way of listing stuff? should I do it everywhere?-->
 
 ## 5. Making batch changes with lexedata (lexedata.change)
 ### 5.1. How to merge concepts
