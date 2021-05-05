@@ -30,7 +30,7 @@ class Cognateset_ID(str):
 
 
 def read_cldf_dataset(
-    filename: Path,
+    dataset: pycldf.Dataset,
     code_column: t.Optional[str] = None,
     logger: cli.logging.Logger = cli.logger,
 ) -> t.Mapping[
@@ -52,7 +52,14 @@ def read_cldf_dataset(
     Examples
     --------
 
-    >>> _= open("forms.csv", "w").write("""...""")
+    TODO: Create an example that does not depend on files in a specific relative location. (Data paths are fine.)
+
+    >>> _size = open("forms.csv", "w").write('''
+    ... ID,Language_ID,Parameter_ID,Form,Cognateset_ID
+    ... '''.strip())
+    >>> ds = pycldf.Wordlist.from_data("forms.csv")
+
+    {'autaa': defaultdict(<class 'set'>, {'Woman': {'WOMAN1'}, 'Person': {'PERSON1'}})}
 
     Parameters
     ----------
@@ -64,8 +71,6 @@ def read_cldf_dataset(
     Data:
 
     """
-    dataset = util.get_dataset(filename)
-
     # Make sure this is a kind of dataset we can handle
     if dataset.module not in ("Wordlist", "StructureDataset"):
         raise ValueError(
@@ -495,7 +500,6 @@ End;""".format(
         )
     else:
         charsets = ""
-
     return """#NEXUS
 Begin Taxa;
   Dimensions ntax={len_taxa:d};
