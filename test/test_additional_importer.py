@@ -164,8 +164,8 @@ def test_missing_columns2(single_import_parameters, caplog):
             concept_column="English",
             ignore_missing=True,
         )
-    assert re.match(
-        ".* Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}.* ",
+    assert re.search(
+        "Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}",
         caplog.text,
     )
 
