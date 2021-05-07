@@ -13,7 +13,7 @@ from lingpy.compare.strings import ldn_swap
 
 import csvw
 
-invalid_id_elements = re.compile(r"\W+")
+ID_FORMAT = re.compile("[a-z0-9_]+")
 
 
 def cldf_property(url: csvw.metadata.URITemplate) -> t.Optional[str]:
@@ -39,12 +39,14 @@ def string_to_id(string: str) -> str:
     'konoyan_yu_nihayin_jie_gaarimasu'
 
     """
-    # We nee to run this through valid_id_elements twice, because some word
-    # characters (eg. Chinese) are unidecoded to contain non-word characters.
-    # the japanese ist actually decoded incorrectly
-    return invalid_id_elements.sub(
-        "_", uni.unidecode(invalid_id_elements.sub("_", string)).lower()
-    ).strip("_")
+    # The Japanese ist actually transcribed incorrectly, because unidecode is
+    # (relatively) simple, but that doesn't matter for the approximation of a
+    # generic string by a very restricted string.
+
+    # We convert to lower case twice, because it can in principle happen that a
+    # character without lowercase equivalent is mapped to an uppercase
+    # character by unidecode, and we wouldn't want to lose that.
+    return "_".join(ID_FORMAT.findall(uni.unidecode(string.lower()).lower()))
 
 
 def clean_cell_value(cell: op.cell.cell.Cell):
