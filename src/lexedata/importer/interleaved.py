@@ -9,13 +9,19 @@ multiple forms), while the odd columns contain the associated cognate codes
 import re
 import csv
 import sys
+import logging
+from pathlib import Path
 
 import openpyxl
 
-if __name__ == "__main__":
+# TODO: move this logger part after the argument parser (after merge)
+logger = logging.getLogger(__file__)
+
+
+def import_interleaved(excel: str, forms_path: str):
     comma_or_semicolon = re.compile("[,;]\\W*")
 
-    ws = openpyxl.load_workbook("bantu/bantu.xlsx").active
+    ws = openpyxl.load_workbook(excel).active
 
     concepts = []
     for concept_metadata in ws.iter_cols(min_col=1, max_col=1, min_row=2):
@@ -25,7 +31,7 @@ if __name__ == "__main__":
             except AttributeError:
                 break
 
-    w = csv.writer(open("forms.csv", "w"))
+    w = csv.writer(open(Path(forms_path) / "forms.csv", "w"))
 
     w.writerow(["Language_ID", "Concept_ID", "Form", "Comment", "Cognateset"])
 
@@ -47,7 +53,7 @@ if __name__ == "__main__":
                     i += 1
                     continue
                 elif f[i] == ")":
-                    in_brackets = f[bracket_start + 1 : i]
+                    in_brackets = f[bracket_start + 1: i]
                     f = f[:bracket_start]
                     i -= len(in_brackets)
                     bracket_start = None
@@ -76,7 +82,7 @@ if __name__ == "__main__":
             if len(cogsets) == 1 or len(cogsets) == len(forms):
                 True
             else:
-                print(
+                logger.warning(
                     "{:}: Forms ({:}) did not match cognates ({:})".format(
                         entry.coordinate, ", ".join(forms), ", ".join(cogsets)
                     ),
@@ -85,3 +91,20 @@ if __name__ == "__main__":
 
             for form, comment, cogset in zip(forms, comments, cogsets + [None]):
                 w.writerow([language_name, concepts[c], form, comment, cogset])
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "excel", type=openpyxl.load_workbook, help="The Excel file to parse"
+    )
+    parser.add_argument(
+        "--directory",
+        type=Path,
+        default=Path(__file__).parent,
+        help="Path to directory where forms.csv is created (default: root directory of this script)",
+    )
+    args = parser.parse_args()
+    import_interleaved(args.excel, args.directory)
