@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pycldf
 
+
 import lexedata.cli as cli
 from lexedata.util import parse_segment_slices
 
