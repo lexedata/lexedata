@@ -153,13 +153,13 @@ def parse_segment_slices(
     NOTE: Segment slices are 1-based, inclusive; Python indices are 0-based
     (and we are not working with ranges, but they are also exclusive).
 
-    >>> list(parse_segment_slice(["1:3"]))
+    >>> list(parse_segment_slices(["1:3"]))
     [0, 1, 2]
 
-    >>> list(parse_segment_slice(["1:3", "2:4"]))
+    >>> list(parse_segment_slices(["1:3", "2:4"]))
     [0, 1, 2, 1, 2, 3]
 
-    >>> list(parse_segment_slice(["1:3", "2:4"], enforce_ordered=True))
+    >>> list(parse_segment_slices(["1:3", "2:4"], enforce_ordered=True))
     Traceback (most recent call last):
     ...
     ValueError: Segment slices are not ordered as required.
