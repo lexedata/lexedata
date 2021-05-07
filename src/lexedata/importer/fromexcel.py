@@ -4,8 +4,8 @@ import re
 import typing as t
 from pathlib import Path
 import logging
-import argparse
 from tqdm import tqdm
+import argparse
 
 import pycldf
 import openpyxl
@@ -717,7 +717,6 @@ def load_dataset(
     cognate_lexicon: t.Optional[str] = None,
     status_update: t.Optional[str] = None,
 ):
-
     # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
     # load dialect from metadata
@@ -792,7 +791,6 @@ def load_dataset(
 
 
 if __name__ == "__main__":
-    import argparse
     import pycldf
 
     parser = cli.parser(
