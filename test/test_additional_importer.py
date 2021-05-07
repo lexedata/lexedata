@@ -397,10 +397,10 @@ def test_form_exists(single_import_parameters, caplog):
         concept_column=concept_name,
     )
     # Test form already exists
-    # Test new concept association
+    # Todo: Find possibly a better way to catch the correct logger warning instead of magic index '-2'
     assert re.search(
-        r"two.*e.ta\.'kɾã.*was already in data set",
-        [rec.message for rec in caplog.records][0],
+        r"two.*e\.ta\.'kɾã.*was already in data set",
+        [rec.message for rec in caplog.records][-2],
     )
 
 
@@ -444,12 +444,10 @@ def test_new_concept_association(single_import_parameters, caplog):
         entries_to_concepts=concepts,
         concept_column=concept_name,
     )
-    # Test form already exists
     # Test new concept association
-    print(caplog.text)
     assert re.search(
         r"Concept \['two'] was added to existing form ache_one\.",
-        [rec.message for rec in caplog.records][1],
+        caplog.text,
     )
 
 
