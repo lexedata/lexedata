@@ -11,10 +11,17 @@ import openpyxl as op
 import networkx
 from lingpy.compare.strings import ldn_swap
 
-import lexedata.types
+import csvw
+
+ID_FORMAT = re.compile("[a-z0-9_]+")
 
 
-invalid_id_elements = re.compile(r"\W+")
+def cldf_property(url: csvw.metadata.URITemplate) -> t.Optional[str]:
+    if url.uri.startswith("http://cldf.clld.org/v1.0/terms.rdf#"):
+        # len("http://cldf.clld.org/v1.0/terms.rdf#") == 36
+        return url[36:]
+    else:
+        return None
 
 
 def string_to_id(string: str) -> str:
@@ -32,12 +39,14 @@ def string_to_id(string: str) -> str:
     'konoyan_yu_nihayin_jie_gaarimasu'
 
     """
-    # We nee to run this through valid_id_elements twice, because some word
-    # characters (eg. Chinese) are unidecoded to contain non-word characters.
-    # the japanese ist actually decoded incorrectly
-    return invalid_id_elements.sub(
-        "_", uni.unidecode(invalid_id_elements.sub("_", string)).lower()
-    ).strip("_")
+    # The Japanese ist actually transcribed incorrectly, because unidecode is
+    # (relatively) simple, but that doesn't matter for the approximation of a
+    # generic string by a very restricted string.
+
+    # We convert to lower case twice, because it can in principle happen that a
+    # character without lowercase equivalent is mapped to an uppercase
+    # character by unidecode, and we wouldn't want to lose that.
+    return "_".join(ID_FORMAT.findall(uni.unidecode(string.lower()).lower()))
 
 
 def clean_cell_value(cell: op.cell.cell.Cell):
@@ -138,24 +147,64 @@ def load_clics():
     return networkx.parse_gml(line.decode("utf-8") for line in gml)
 
 
-def segment_slices_to_segment_list(
-    segments: t.Iterable[str], judgement: lexedata.types.Judgement
-):
-    segment_list = []
-    if not judgement.get("Segment_Slice"):
-        judgement["Segment_Slice"] = ["0:{:d}".format(len(segments))]
-    for startend in judgement["Segment_Slice"]:
+def parse_segment_slices(
+    segment_slices: t.Sequence[str], enforce_ordered=False
+) -> t.Iterator[int]:
+    """Parse a segment slice representation into its component indices
+
+    NOTE: Segment slices are 1-based, inclusive; Python indices are 0-based
+    (and we are not working with ranges, but they are also exclusive).
+
+    >>> list(parse_segment_slices(["1:3"]))
+    [0, 1, 2]
+
+    >>> list(parse_segment_slices(["1:3", "2:4"]))
+    [0, 1, 2, 1, 2, 3]
+
+    >>> list(parse_segment_slices(["1:3", "2:4"], enforce_ordered=True))
+    Traceback (most recent call last):
+    ...
+    ValueError: Segment slices are not ordered as required.
+
+    """
+    i = -1  # Set it to the value before the first possible segment slice start
+    for startend in segment_slices:
         start, end = startend.split(":")
         start = int(start)
         end = int(end)
-        segment_list.extend(list(r for r in range(start, end)))
-    return segment_list
+        if enforce_ordered and start <= i:
+            raise ValueError("Segment slices are not ordered as required.")
+        for i in range(start - 1, end):
+            yield i
+
+
+# TODO: This function has great re-use potential, so it should be moved to
+# `util` or so. There we can also make the internal logic more robust.
+def cache_table(
+    dataset,
+    columns: t.Optional[t.Mapping[str, str]] = None,
+    table="FormTable",
+    index_column="id",
+) -> t.Mapping[str, t.Mapping[str, t.Any]]:
+    """Load the table into memory as a dictionary of dictionaries"""
+    if columns is None:
+        columns = {
+            cldf_property(c.propertyUrl) or c.name: c.name
+            for c in dataset[table].tableSchema.columns
+        }
+    c_id = dataset[table, index_column].name
+    return {
+        row[c_id]: {prop: row[name] for prop, name in columns.items()}
+        for row in dataset[table]
+    }
 
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Recode all data in NFC unicode normalization"
+    )
     parser.add_argument("file", nargs="+", type=Path)
     args = parser.parse_args()
     for file in args.file:
