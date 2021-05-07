@@ -9,8 +9,8 @@ import typing as t
 import pycldf
 
 
-from lexedata.util import parse_segment_slices as segment_slices_to_segment_list
 import lexedata.cli as cli
+from lexedata.util import parse_segment_slices
 
 
 def rename(form_column, dataset):
@@ -110,7 +110,7 @@ def forms_to_tsv(
                 which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [
                     None for _ in form[c_form_segments]
                 ]
-            segments_judged = segment_slices_to_segment_list(
+            segments_judged = parse_segment_slices(
                 segments=form[c_form_segments], judgement=j
             )
             for s in segments_judged:
