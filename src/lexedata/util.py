@@ -64,8 +64,12 @@ def normalize_string(text: str):
     return unicodedata.normalize("NFC", text.strip())
 
 
-def get_cell_comment(cell: op.cell.Cell) -> t.Optional[str]:
-    return cell.comment.text.strip() if cell.comment else ""
+def get_cell_comment(cell: op.cell.Cell) -> str:
+    raw_comment = cell.comment.text.strip() if cell.comment else ""
+    lines = [
+        line for line in raw_comment.split("\n") if line.strip() != "-lexedata.exporter"
+    ]
+    return " ".join(lines)
 
 
 def normalize_header(row: t.Iterable[op.cell.Cell]) -> t.Iterable[str]:

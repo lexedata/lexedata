@@ -164,8 +164,8 @@ def test_missing_columns2(single_import_parameters, caplog):
             concept_column="English",
             ignore_missing=True,
         )
-    assert re.match(
-        ".* Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}.* ",
+    assert re.search(
+        "Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}",
         caplog.text,
     )
 
@@ -236,8 +236,8 @@ def test_superfluous_columns2(single_import_parameters, caplog):
             concept_column="English",
             ignore_superfluous=True,
         )
-    assert re.match(
-        r".* Excel sheet MockSingleExcelSheet .* {'superfluous'}. These columns will be ignored.*",
+    assert re.search(
+        r"Excel sheet MockSingleExcelSheet contained unexpected columns {'superfluous'}. These columns will be ignored",
         caplog.text,
     )
 
@@ -271,9 +271,9 @@ def test_no_concept_separator(single_import_parameters, caplog):
             entries_to_concepts=concepts,
             concept_column="English",
         )
-    assert re.match(
-        r".* add a separator to your FormTable #parameterReference "
-        r"in the Metadata.json To find potential polysemies, run lexedata.report.list_homophones.*",
+    assert re.search(
+        r"add a separator to your FormTable #parameterReference "
+        r"in the Metadata\.json To find potential polysemies, run lexedata\.report\.list_homophones",
         caplog.text,
     )
 
@@ -307,8 +307,8 @@ def test_concept_separator(single_import_parameters, caplog):
             match_form=match_form,
             concept_column="English",
         )
-    assert re.match(
-        r".*Matching by concept enabled.* run lexedata.report.list_homophones.*",
+    assert re.search(
+        r"Matching by concept enabled.* run lexedata\.report\.list_homophones",
         caplog.text,
     )
 
@@ -353,8 +353,7 @@ def test_concept_not_found(single_import_parameters, caplog):
         entries_to_concepts=concepts,
         concept_column=concept_name,
     )
-    print(caplog.text)
-    assert re.match(r".*Concept FAKE was not found.*", caplog.text)
+    assert re.search(r"Concept FAKE was not found", caplog.text)
 
 
 def test_form_exists(single_import_parameters, caplog):
@@ -398,10 +397,10 @@ def test_form_exists(single_import_parameters, caplog):
         concept_column=concept_name,
     )
     # Test form already exists
-    # Test new concept association
-    assert re.match(
-        r".*two.*e.ta.'kɾã.*was already in data set.*",
-        [rec.message for rec in caplog.records][0],
+    # Todo: Find possibly a better way to catch the correct logger warning instead of magic index '-2'
+    assert re.search(
+        r"two.*e\.ta\.'kɾã.*was already in data set",
+        [rec.message for rec in caplog.records][-2],
     )
 
 
@@ -445,12 +444,10 @@ def test_new_concept_association(single_import_parameters, caplog):
         entries_to_concepts=concepts,
         concept_column=concept_name,
     )
-    # Test form already exists
     # Test new concept association
-    print(caplog.text)
-    assert re.match(
-        r".* Concept \['two'] was added to existing form ache_one\. .*",
-        [rec.message for rec in caplog.records][1],
+    assert re.search(
+        r"Concept \['two'] was added to existing form ache_one\.",
+        caplog.text,
     )
 
 
@@ -616,5 +613,105 @@ def test_import_report_skipped(single_import_parameters):
             existing=0,
             skipped=1,
             concepts=0,
+        )
+    }
+
+
+def test_import_report_add_concept(single_import_parameters):
+    dataset, original, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    sheet.title = "new_language"
+
+    # Import this single form in a new language
+    assert read_single_excel_sheet(
+        dataset=dataset,
+        sheet=sheet,
+        entries_to_concepts=concepts,
+        concept_column=concept_name,
+    ) == {
+        "new_language": ImportLanguageReport(
+            is_new_language=True, new=1, existing=0, skipped=0, concepts=0
+        )
+    }
+
+    # Import it again, with a new concept
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "three",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    sheet.title = "new_language"
+
+    assert read_single_excel_sheet(
+        dataset=dataset,
+        sheet=sheet,
+        entries_to_concepts=concepts,
+        concept_column=concept_name,
+    ) == {
+        "new_language": ImportLanguageReport(
+            # TODO: Actually, this isn't a new language. The difference between
+            # adding forms for a language that is not in the LanguageTable yet,
+            # but already has forms in the FormTable, and adding something
+            # completely new, is washed out by read_single_language. The
+            # interpretation of “Does this language still need to be added to
+            # the LanguageTable?” for is_new_language is consistent.
+            is_new_language=True,
+            new=0,
+            existing=0,
+            skipped=0,
+            concepts=1,
         )
     }
