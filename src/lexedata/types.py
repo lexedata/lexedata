@@ -1,3 +1,4 @@
+import pycldf
 import typing as t
 import abc
 
@@ -71,3 +72,17 @@ class Judgement(RowObject):
     @property
     def __table__(self) -> str:
         return "CognateTable"
+
+
+Language_ID = t.TypeVar("Language_ID", bound=t.Hashable)
+Form_ID = t.TypeVar("Form_ID", bound=t.Hashable)
+Parameter_ID = t.TypeVar("Parameter_ID", bound=t.Hashable)
+Cognate_ID = t.TypeVar("Cognate_ID", bound=t.Hashable)
+Cognateset_ID = t.TypeVar("Cognateset_ID", bound=t.Hashable)
+
+
+class Wordlist(
+    pycldf.Wordlist,
+    t.Generic[Language_ID, Form_ID, Parameter_ID, Cognate_ID, Cognateset_ID],
+):
+    pass
