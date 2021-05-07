@@ -10,6 +10,7 @@ try:
 except ImportError:
     from typing_extensions import Literal
 
+import pycldf
 from lexedata.util import get_dataset
 
 
@@ -34,7 +35,7 @@ def sanitise_name(name: str) -> str:
 
 
 def read_cldf_dataset(
-    filename, code_column=None, use_ids=False
+    dataset: pycldf.Dataset, code_column=None, use_ids=False
 ) -> t.Tuple[t.Mapping[str, t.Mapping[str, t.Set[str]]], t.Mapping[str, str]]:
     """Load a CLDF dataset.
 
@@ -53,27 +54,29 @@ def read_cldf_dataset(
     Examples
     --------
 
-    >>> data, mapping = read_cldf_dataset(
-    ...   Path(__file__).parent /
-    ...   "../../../test/data/cldf/minimal/cldf-metadata.json")
-    Names are used as language identifiers
+    >>> _ = open("forms.csv", "w").write('''ID,Language_ID,Parameter_ID,Form,Cognateset,Source
+    ... 1,Autaa,Woman,fam,A,ficticious
+    ... 2,Autaa,Person,hom,B,ficticious
+    ... ''')
+    >>> wordlist = pycldf.Wordlist.from_data("forms.csv")
+    >>> data, mapping = read_cldf_dataset(wordlist, code_column="Cognateset")
     >>> mapping
     {}
     >>> dict(data)
-    {'Autaa': defaultdict(<class 'set'>, {'Woman': {'WOMAN1'}, 'Person': {'PERSON1'}})}
+    {'Autaa': defaultdict(<class 'set'>, {'Woman': {'A'}, 'Person': {'B'}})}
 
-    This function also works with cross-semantic cognate codes. For example, in
-    the Maweti-Guaraní example dataset, the Aché forms meaning “two” are
-    cognate with other languages' forms meaning “three”:
+    This function also works with cross-semantic cognate codes.
 
-    >>> data, mapping = read_cldf_dataset(
-    ...   Path(__file__).parent /
-    ...   "../../../test/data/cldf/smallmawetiguarani/cldf-metadata.json")
-    Names are used as language identifiers
+    >>> _ = open("forms.csv", "w").write('''ID,Language_ID,Parameter_ID,Form,Cognateset,Source
+    ... 2,Autaa,Person,hom,B,ficticious
+    ... 3,Autaa,Man,hom,B,ficticious
+    ... ''')
+    >>> wordlist = pycldf.Wordlist.from_data("forms.csv")
+    >>> data, mapping = read_cldf_dataset(wordlist, code_column="Cognateset")
     >>> mapping
     {}
-    >>> data["Aché"]["two"]
-    {'two8'}
+    >>> data["Autaa"]["Person"] == data["Autaa"]["Man"]
+    True
 
     Parameters
     ----------
@@ -85,7 +88,6 @@ def read_cldf_dataset(
     Dataset
 
     """
-    dataset = get_dataset(filename)
     data: t.DefaultDict[str, t.DefaultDict[str, t.Set]] = t.DefaultDict(
         lambda: t.DefaultDict(set)
     )
@@ -136,7 +138,9 @@ def read_cldf_dataset(
                         "Dataset {:} has no cognatesetReference column in its "
                         "primary table or in a separate cognate table. "
                         "Is this a metadata-free wordlist and you forgot to "
-                        "specify code_column explicitly?".format(filename)
+                        "specify code_column explicitly?".format(
+                            dataset.tablegroup._fname
+                        )
                     )
                 cognate_column_in_form_table = False
 
@@ -514,7 +518,7 @@ if __name__ == "__main__":
 
     languages: t.Optional[t.Set[str]]
     ds, language_map = read_cldf_dataset(
-        args.metadata, code_column=args.code_column, use_ids=args.use_ids
+        get_dataset(args.metadata), code_column=args.code_column, use_ids=args.use_ids
     )
     if args.languages_list:
         languages = {lg.strip() for lg in args.languages_list.open().read().split("\n")}
