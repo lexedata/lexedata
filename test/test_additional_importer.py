@@ -713,8 +713,8 @@ def test_import_report_add_concept(single_import_parameters):
             # the LanguageTable?” for is_new_language is consistent.
             is_new_language=True,
             new=0,
-            existing=1,
+            existing=0,
             skipped=0,
-            concepts=0,
+            concepts=1,
         )
     }
