@@ -41,38 +41,32 @@ def import_interleaved(excel: str, forms_path: str):
             if not entry.value:
                 assert not cogset.value
                 continue
-            bracket_start = None
-            in_brackets = None
+            bracket_level = 0
             i = 0
             f = entry.value.strip()
-            forms, comments = [], []
+            forms = []
             while i < len(f):
                 match = comma_or_semicolon.match(f[i:])
                 if f[i] == "(":
-                    bracket_start = i
+                    bracket_level += 1
                     i += 1
                     continue
                 elif f[i] == ")":
-                    in_brackets = f[bracket_start + 1: i]
-                    f = f[:bracket_start]
-                    i -= len(in_brackets)
-                    bracket_start = None
+                    bracket_level -= 1
+                    i += 1
                     continue
-                elif bracket_start is not None:
+                elif bracket_level:
                     i += 1
                     continue
                 elif match:
                     forms.append(f[:i].strip())
-                    comments.append(in_brackets)
                     i += match.span()[1]
-                    in_brackets = None
                     f = f[i:]
                     i = 0
                 else:
                     i += 1
 
             forms.append(f.strip())
-            comments.append(in_brackets)
 
             if type(cogset.value) == float:
                 cogsets = [str(int(cogset.value))]
@@ -88,9 +82,8 @@ def import_interleaved(excel: str, forms_path: str):
                     ),
                     file=sys.stderr,
                 )
-
-            for form, comment, cogset in zip(forms, comments, cogsets + [None]):
-                w.writerow([language_name, concepts[c], form, comment, cogset])
+            for form, cogset in zip(forms, cogsets + [None]):
+                w.writerow([language_name, concepts[c], form, None, cogset])
 
 
 if __name__ == "__main__":
