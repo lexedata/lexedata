@@ -586,6 +586,9 @@ End;
                 taxon=f"{language:}",
                 value=f"{seq:}",
             ).tail = "\n"
+        taxa = ET.SubElement(data_object, "taxonset", id="taxa", spec="TaxonSet")
+        for lang in alignment:
+            ET.SubElement(taxa, "taxon", id=f"{lang:}", spec="Taxon")
         et.write(args.output_file, encoding="unicode")
 
     if args.stats_file:
