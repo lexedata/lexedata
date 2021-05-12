@@ -90,7 +90,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--directory",
         type=Path,
-        default=Path(__file__).parent,
+        default=Path(),
         help="Path to directory where forms.csv is created (default: root directory of this script)",
     )
     args = parser.parse_args()
