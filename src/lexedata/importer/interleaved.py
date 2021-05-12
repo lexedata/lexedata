@@ -8,7 +8,6 @@ multiple forms), while the odd columns contain the associated cognate codes
 """
 import re
 import csv
-import sys
 import logging
 from pathlib import Path
 
@@ -18,10 +17,8 @@ import openpyxl
 logger = logging.getLogger(__file__)
 
 
-def import_interleaved(excel: str, forms_path: str):
+def import_interleaved(ws: openpyxl.worksheet.worksheet.Worksheet, forms_path: str):
     comma_or_semicolon = re.compile("[,;]\\W*")
-
-    ws = openpyxl.load_workbook(excel).active
 
     concepts = []
     for concept_metadata in ws.iter_cols(min_col=1, max_col=1, min_row=2):
@@ -79,8 +76,7 @@ def import_interleaved(excel: str, forms_path: str):
                 logger.warning(
                     "{:}: Forms ({:}) did not match cognates ({:})".format(
                         entry.coordinate, ", ".join(forms), ", ".join(cogsets)
-                    ),
-                    file=sys.stderr,
+                    )
                 )
             for form, cogset in zip(forms, cogsets + [None]):
                 w.writerow([language_name, concepts[c], form, None, cogset])
@@ -90,9 +86,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "excel", type=openpyxl.load_workbook, help="The Excel file to parse"
-    )
+    parser.add_argument("excel", type=Path, help="The Excel file to parse")
     parser.add_argument(
         "--directory",
         type=Path,
@@ -100,4 +94,6 @@ if __name__ == "__main__":
         help="Path to directory where forms.csv is created (default: root directory of this script)",
     )
     args = parser.parse_args()
-    import_interleaved(args.excel, args.directory)
+
+    ws = openpyxl.load_workbook(args.excel).active
+    import_interleaved(ws, args.directory)
