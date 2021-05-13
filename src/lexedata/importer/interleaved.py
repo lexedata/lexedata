@@ -67,7 +67,12 @@ def import_interleaved(
             if type(cogset.value) == float:
                 cogsets = [str(int(cogset.value))]
             else:
-                cogsets = comma_or_semicolon.split(cogset.value.strip())
+                if isinstance(cogset.value, int):
+                    cogset = str(cogset.value)
+                    print(cogset)
+                else:
+                    cogset = cogset.value
+                cogsets = comma_or_semicolon.split(cogset.strip())
 
             if len(cogsets) == 1 or len(cogsets) == len(forms):
                 True
@@ -98,9 +103,9 @@ if __name__ == "__main__":
 
     ws = openpyxl.load_workbook(args.excel)
 
-    w = csv.writer(open(Path(args.directory) / "forms.csv", "w"))
+    w = csv.writer(open(Path(args.directory) / "forms.csv", "w", encoding="utf-8"))
     w.writerow(["Language_ID", "Concept_ID", "Form", "Comment", "Cognateset"])
 
     for sheet in ws.worksheets:
-        row = import_interleaved(sheet, logger=logger)
-        w.writerow(row)
+        for row in import_interleaved(sheet, logger=logger):
+            w.writerow(row)
