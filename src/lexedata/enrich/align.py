@@ -78,15 +78,8 @@ def aligne_cognate_table(
 
 
 if __name__ == "__main__":
-    import argparse
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
+    parser = cli.parser(description=__doc__)
     parser.add_argument(
         "--status-update",
         type=str,

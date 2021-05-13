@@ -1,10 +1,8 @@
 import pycldf
-import argparse
 import typing as t
-from pathlib import Path
 
 from lexedata.enrich.add_status_column import add_status_column_to_table
-
+import lexedata.cli as cli
 
 def substitute_many(
     row, columns, old_values_to_new_values, status_update: t.Optional[str]
@@ -23,7 +21,7 @@ def substitute_many(
     return row
 
 
-def rename(ds, old_values_to_new_values, status_update: t.Optional[str]):
+def rename(ds, old_values_to_new_values, logger: cli.logging.Logger, status_update: t.Optional[str]):
     languages = ds["LanguageTable"]
 
     for table in ds.tables:
@@ -40,7 +38,7 @@ def rename(ds, old_values_to_new_values, status_update: t.Optional[str]):
                 (column,) = reference.columnReference
                 columns.add(column)
         if columns:
-            print(f"Changing columns {columns:} in {component:}…")
+            logger.info(f"Changing columns {columns:} in {component:}…")
             ds.write(
                 **{
                     component: [
@@ -63,6 +61,7 @@ def replace_column(
     column_replace: bool,
     smush: bool,
     status_update: t.Optional[str],
+    logger: cli.logging.Logger = cli.logger
 ) -> None:
     # add Status_column if not existing and status update given
     if status_update:
@@ -82,36 +81,30 @@ def replace_column(
             set(mapping.values())
         ), "Would collapse some languages that were distinct before! Add '--smush' if that is intended."
         # dataset["LanguageTable"].tableSchema.columns["c_id"]
-        rename(dataset, mapping, status_update=status_update)
+        rename(dataset, mapping, logger, status_update=status_update)
     else:
         languages = dataset["LanguageTable"]
 
         c_id = dataset["LanguageTable", "id"].name
 
-        print(f"Changing {c_id:} of LanguageTable")
+        logger.info(f"Changing {c_id:} of LanguageTable")
         dataset.write(
             LanguageTable=[
                 substitute_many(r, [c_id], {original: replacement}, status_update=None)
                 for r in languages
             ]
         )
-        rename(dataset, {original: replacement}, status_update=status_update)
+        rename(dataset, {original: replacement}, logger, status_update=status_update)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="Change the ID of a language in the wordlist"
     )
     parser.add_argument(
         "original", type=str, help="Name of the original column to be replaced"
     )
     parser.add_argument("replacement", type=str, help="Name of the replacement column")
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
     parser.add_argument("--column-replace", action="store_true", default=False)
     parser.add_argument("--smush", action="store_true", default=False)
     parser.add_argument(
@@ -121,7 +114,10 @@ if __name__ == "__main__":
         help="Text written to Status_Column. Set to 'None' for no status update. "
         "(default: Replaced column {original} by column {replacement}",
     )
+    cli.add_log_controls(parser)
     args = parser.parse_args()
+    logger = cli.setup_logging(args)
+
     if args.status_update == "None":
         args.status_update = None
     if args.status_update == "default":
@@ -136,4 +132,5 @@ if __name__ == "__main__":
         column_replace=args.column_replace,
         smush=args.smush,
         status_update=args.status_update,
+        logger=logger
     )

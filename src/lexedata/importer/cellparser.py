@@ -8,9 +8,10 @@ import pycldf
 
 from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
 from lexedata.types import Form, Judgement
+import lexedata.cli as cli
 
 
-logger = logging.getLogger(__name__)
+logger = cli.logger
 logger.setLevel(logging.INFO)
 
 

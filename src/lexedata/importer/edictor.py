@@ -5,6 +5,8 @@ import collections
 
 import pycldf
 
+import lexedata.cli as cli
+
 
 def load_forms_from_tsv(dataset: pycldf.Dataset, input_file: Path):
     input = csv.DictReader(
@@ -161,16 +163,9 @@ def match_cognatesets(new_cognatesets, reference_cognatesets):
 
 
 if __name__ == "__main__":
-    import argparse
 
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="Export #FormTable to tsv format for import to edictor"
-    )
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     # TODO: set these arguments correctly
     parser.add_argument(

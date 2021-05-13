@@ -4,6 +4,7 @@ from pathlib import Path
 import pycldf
 
 from lexedata.util import segment_slices_to_segment_list
+import lexedata.cli as cli
 
 
 def segment_to_cognateset(dataset: pycldf.Dataset, cognatesets: t.Iterable):
@@ -46,9 +47,7 @@ def segment_to_cognateset(dataset: pycldf.Dataset, cognatesets: t.Iterable):
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="List segments that indicate non-concatenative morphology "
     )
     parser.add_argument(

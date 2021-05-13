@@ -8,6 +8,7 @@ import pycldf
 import openpyxl as op
 
 from lexedata import types
+from lexedata import cli
 
 WARNING = "\u26A0"
 
@@ -360,16 +361,8 @@ class ExcelWriter:
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="Create an Excel cognate view from a CLDF dataset"
-    )
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "excel",

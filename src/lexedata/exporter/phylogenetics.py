@@ -11,6 +11,7 @@ except ImportError:
     from typing_extensions import Literal
 
 from lexedata.util import get_dataset
+import lexedata.cli as cli
 
 
 def sanitise_name(name: str) -> str:
@@ -418,10 +419,9 @@ def raw_alignment(alignment):
 
 
 if __name__ == "__main__":
-    import argparse
     import xml.etree.ElementTree as ET
 
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="Export a CLDF dataset (or similar) to bioinformatics alignments"
     )
     parser.add_argument(
@@ -439,12 +439,6 @@ if __name__ == "__main__":
         const="beast",
         dest="format",
         help="""Short form of --format=beast""",
-    )
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "--output-file",

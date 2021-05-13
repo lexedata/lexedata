@@ -219,9 +219,7 @@ def add_central_concepts_to_cognateset_table(
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="""Add central concepts to cognatesets.
 
         Write a concept reference column to #CognatesetTable based on the
@@ -232,13 +230,6 @@ if __name__ == "__main__":
         You probably want to run this with `--add-column` (the default) the
         first time you run it, and with `--no-add-column --overwrite-existing`
         after you heavily edited the cognate sets afterwards."""
-    )
-
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "--add-column",

@@ -10,7 +10,6 @@ import argparse
 import pycldf
 import openpyxl
 
-from lexedata import cli
 from lexedata.types import (
     Object,
     Language,
@@ -28,11 +27,10 @@ from lexedata.util import (
 )
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.enrich.add_status_column import add_status_column_to_table
+import lexedata.cli as cli
 
 Ob = t.TypeVar("O", bound=Object)
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 # NOTE: Excel uses 1-based indices, this shows up in a few places in this file.
 
 
@@ -459,6 +457,7 @@ class ExcelCognateParser(ExcelParser):
         form: t.Dict[str, t.Any],
         cell_identifier: t.Optional[str] = None,
         language_id: t.Optional[str] = None,
+        logger: cli.logging.Logger = cli.logger
     ) -> bool:
         """Should I add a missing object? No, but inform the user.
 
@@ -567,7 +566,6 @@ class ExcelCognateParser(ExcelParser):
                 )
                 self.db.associate(form_id, row_object)
             except StopIteration:
-                # TODO: check that warnings together wit on_row/form/language_not_found are not duplicated
                 if self.on_form_not_found(
                     form,
                     cell_identifier=cell_with_forms.coordinate,
@@ -716,6 +714,7 @@ def load_dataset(
     lexicon: t.Optional[str],
     cognate_lexicon: t.Optional[str] = None,
     status_update: t.Optional[str] = None,
+    logger: t.Optional[logging.Logger] = None
 ):
     # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)
@@ -817,9 +816,10 @@ if __name__ == "__main__":
         help="Text written to Status_Column. Set to 'None' for no status update. "
         "(default: initial import)",
     )
+    cli.add_log_controls(parser)
     args = parser.parse_args()
-    cli.setup_logging(args)
+    logger = cli.setup_logging(args)
 
     if args.status_update == "None":
         args.status_update = None
-    load_dataset(args.metadata, args.lexicon, args.cogsets, args.status_update)
+    load_dataset(args.metadata, args.lexicon, args.cogsets, args.status_update, logger=logger)
