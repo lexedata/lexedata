@@ -92,7 +92,7 @@ def import_data_from_sheet(
 def read_single_excel_sheet(
     dataset: pycldf.Dataset,
     sheet: openpyxl.worksheet.worksheet.Worksheet,
-    logger: cli.logging.Logger,
+    logger: cli.logging.Logger = cli.logger,
     match_form: t.Optional[t.List[str]] = None,
     entries_to_concepts: t.Mapping[str, str] = KeyKeyDict(),
     concept_column: t.Optional[str] = None,

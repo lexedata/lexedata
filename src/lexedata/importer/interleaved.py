@@ -20,7 +20,7 @@ import lexedata.cli as cli
 
 def import_interleaved(
     ws: openpyxl.worksheet.worksheet.Worksheet,
-    logger: t.Optional[logging.Logger] = None,
+    logger: logging.Logger = cli.logger,
 ) -> list:
     comma_or_semicolon = re.compile("[,;]\\W*")
 

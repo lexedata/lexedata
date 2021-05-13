@@ -714,7 +714,7 @@ def load_dataset(
     lexicon: t.Optional[str],
     cognate_lexicon: t.Optional[str] = None,
     status_update: t.Optional[str] = None,
-    logger: t.Optional[logging.Logger] = None,
+    logger: logging.Logger = cli.logger,
 ):
     # logging.basicConfig(filename="warnings.log")
     dataset = pycldf.Dataset.from_metadata(metadata)

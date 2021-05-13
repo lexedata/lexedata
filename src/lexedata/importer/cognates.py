@@ -77,7 +77,7 @@ def header_from_cognate_excel(
 
 
 def import_cognates_from_excel(
-    excel: str, dataset: pycldf.Dataset, logger: cli.logging.Logger
+    excel: str, dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger
 ) -> None:
     logger.info("Loading sheet…")
     ws = openpyxl.load_workbook(excel).active
