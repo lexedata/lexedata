@@ -69,7 +69,6 @@ def import_interleaved(
             else:
                 if isinstance(cogset.value, int):
                     cogset = str(cogset.value)
-                    print(cogset)
                 else:
                     cogset = cogset.value
                 cogsets = comma_or_semicolon.split(cogset.strip())
