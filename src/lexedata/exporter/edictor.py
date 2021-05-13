@@ -9,7 +9,7 @@ import typing as t
 import pycldf
 
 
-from lexedata.util import segment_slices_to_segment_list
+from lexedata.util import parse_segment_slices as segment_slices_to_segment_list
 import lexedata.cli as cli
 
 
