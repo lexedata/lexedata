@@ -1,7 +1,5 @@
-import argparse
 import collections
 import typing as t
-from pathlib import Path
 
 from csvw.metadata import URITemplate
 
@@ -164,9 +162,7 @@ def create_concepticon_for_concepts(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(
-        description="Adds Concepticon reference to #parameterTable"
-    )
+    parser = cli.parser(description="Adds Concepticon reference to #parameterTable")
     parser.add_argument(
         "--overwrite",
         action="store_true",

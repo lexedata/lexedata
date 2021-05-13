@@ -101,7 +101,7 @@ def import_data_from_sheet(
 def read_single_excel_sheet(
     dataset: pycldf.Dataset,
     sheet: openpyxl.worksheet.worksheet.Worksheet,
-    logger: logging.Logger,
+    logger: cli.logging.Logger,
     match_form: t.Optional[t.List[str]] = None,
     entries_to_concepts: t.Mapping[str, str] = KeyKeyDict(),
     concept_column: t.Optional[str] = None,
@@ -290,12 +290,12 @@ def add_single_languages(
     exclude_sheet,
     verbose: bool,
     status_update: t.Optional[str],
-    logger: logging.Logger
+    logger: cli.logging.Logger,
 ) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
     if verbose:
-        logger.basicConfig(level=logging.INFO)
+        logger.basicConfig(level=cli.logging.INFO)
     if not sheet:
         sheets = [sheet for sheet in excel.sheetnames if sheet not in exclude_sheet]
         logger.info("No sheets specified. Parsing sheets: %s", sheet)
@@ -421,7 +421,7 @@ if __name__ == "__main__":
         exclude_sheet=args.exclude_sheet,
         verbose=args.verbose,
         status_update=args.status_update,
-        logger=logger
+        logger=logger,
     )
     if args.report:
         report_data = [report(language) for language, report in report.items()]

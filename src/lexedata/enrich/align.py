@@ -5,8 +5,6 @@ If possible, align using existing lexstat scorer.
 """
 
 import typing as t
-from pathlib import Path
-
 import pycldf
 
 from lexedata.enrich.add_status_column import add_status_column_to_table

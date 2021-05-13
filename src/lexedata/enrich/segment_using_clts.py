@@ -1,5 +1,4 @@
 import typing as t
-from pathlib import Path
 from collections import defaultdict
 
 from csvw.metadata import URITemplate
@@ -49,7 +48,7 @@ def segment_form(
     split_diphthongs: bool = True,
     context_for_warnings: str = "",
     report: t.Optional[t.Dict] = None,
-    logger: cli.logging.Logger = cli.logger
+    logger: cli.logging.Logger = cli.logger,
 ) -> t.Iterable[pyclts.models.Symbol]:
     """Segment the form.
 
@@ -163,7 +162,7 @@ def add_segments_to_dataset(
     transcription: str,
     overwrite_existing: bool,
     replace_form: bool,
-    logger: cli.logging.Logger = cli.logger
+    logger: cli.logging.Logger = cli.logger,
 ):
     if dataset.column_names.forms.segments is None:
         # Create a Segments column in FormTable
@@ -203,7 +202,7 @@ def add_segments_to_dataset(
                     form,
                     context_for_warnings=f"In form {row[c_f_id]} (line {r}): ",
                     report=report[row[c_f_lan]],
-                    logger=logger
+                    logger=logger,
                 )
             write_back.append(row)
     from tabulate import tabulate
@@ -225,7 +224,8 @@ def add_segments_to_dataset(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description="""Segment the form.
+    parser = cli.parser(
+        description="""Segment the form.
 
     First, apply some pre-processing replacements. Forms supplied contain all
     sorts of noise and lookalike symbols. This function comes with reasonable
@@ -237,7 +237,8 @@ if __name__ == "__main__":
     package. Check each returned segment to see whether it is valid according
     to CLTS's BIPA, and if not, try to fix some issues (in particular
     pre-aspirated or pre-nasalized consonants showing up as post-aspirated
-    resp. post-nasalized vowels, which BIPA does not accept).)""")
+    resp. post-nasalized vowels, which BIPA does not accept).)"""
+    )
     parser.add_argument(
         "transcription",
         nargs="?",

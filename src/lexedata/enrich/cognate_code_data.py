@@ -2,7 +2,6 @@
 
 import csv
 import hashlib
-import argparse
 import typing as t
 from pathlib import Path
 

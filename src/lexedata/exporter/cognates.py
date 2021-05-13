@@ -361,9 +361,7 @@ class ExcelWriter:
 
 
 if __name__ == "__main__":
-    parser = cli.parser(
-        description="Create an Excel cognate view from a CLDF dataset"
-    )
+    parser = cli.parser(description="Create an Excel cognate view from a CLDF dataset")
     parser.add_argument(
         "excel",
         type=Path,

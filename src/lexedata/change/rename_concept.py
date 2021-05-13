@@ -22,7 +22,12 @@ def substitute_many(
     return row
 
 
-def rename(ds, old_values_to_new_values, logger: cli.logging.Logger, status_update: t.Optional[str]):
+def rename(
+    ds,
+    old_values_to_new_values,
+    logger: cli.logging.Logger,
+    status_update: t.Optional[str],
+):
     concepts = ds["ParameterTable"]
 
     for table in ds.tables:
@@ -62,7 +67,7 @@ def replace_column(
     column_replace: bool,
     smush: bool,
     status_update: t.Optional[str],
-    logger: cli.logging.Logger = cli.logger
+    logger: cli.logging.Logger = cli.logger,
 ) -> None:
     # add Status_column if not existing and status update given
     if status_update:
@@ -99,9 +104,7 @@ def replace_column(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(
-        description="Change the ID of a concept in the wordlist"
-    )
+    parser = cli.parser(description="Change the ID of a concept in the wordlist")
     parser.add_argument(
         "original", type=str, help="Name of the original column to be replaced"
     )
@@ -133,5 +136,5 @@ if __name__ == "__main__":
         column_replace=args.column_replace,
         smush=args.smush,
         status_update=args.status_update,
-        logger=logger
+        logger=logger,
     )

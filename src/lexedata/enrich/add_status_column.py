@@ -1,9 +1,9 @@
-from pathlib import Path
 import typing as t
 
 import pycldf
 
 import lexedata.cli as cli
+
 
 def add_status_column_to_table(dataset: pycldf.Dataset, table_name: str) -> None:
     if "Status_Column" not in dataset[table_name].tableSchema.columndict.keys():

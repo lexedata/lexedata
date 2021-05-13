@@ -19,8 +19,8 @@ import lexedata.cli as cli
 
 
 def import_interleaved(
-        ws: openpyxl.worksheet.worksheet.Worksheet,
-        logger: t.Optional[logging.Logger] = None
+    ws: openpyxl.worksheet.worksheet.Worksheet,
+    logger: t.Optional[logging.Logger] = None,
 ) -> list:
     comma_or_semicolon = re.compile("[,;]\\W*")
 
@@ -105,4 +105,3 @@ if __name__ == "__main__":
     for sheet in ws.worksheets:
         row = import_interleaved(sheet, logger=logger)
         w.writerow(row)
-

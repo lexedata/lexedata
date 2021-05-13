@@ -1,6 +1,5 @@
 import typing as t
 import collections
-from pathlib import Path
 
 from csvw.metadata import URITemplate
 import pycldf

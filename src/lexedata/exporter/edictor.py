@@ -11,6 +11,7 @@ import pycldf
 from lexedata.util import segment_slices_to_segment_list
 import lexedata.cli as cli
 
+
 def rename(form_column, dataset):
     try:
         function = dataset["FormTable", form_column].propertyUrl.expand().split("#")[-1]
@@ -50,7 +51,7 @@ def forms_to_tsv(
     concepts: t.Set[str],
     cognatesets: t.Iterable[str],
     output_file: Path,
-    logger: cli.logging.Logger = cli.logger
+    logger: cli.logging.Logger = cli.logger,
 ):
     # required fields
     c_cognate_cognateset = dataset["CognateTable", "cognatesetReference"].name
@@ -243,6 +244,5 @@ if __name__ == "__main__":
         concepts=args.concepts or WorldSet(),
         cognatesets=args.cognatesets or WorldSet(),
         output_file=args.output_file,
-        logger=logger
+        logger=logger,
     )
-

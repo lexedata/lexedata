@@ -6,7 +6,6 @@ accidental homophones
 
 """
 import typing as t
-from pathlib import Path
 
 import networkx as nx
 import pycldf
@@ -15,7 +14,9 @@ import lexedata.cli as cli
 from lexedata.util import load_clics
 
 
-def list_homophones(dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger) -> None:
+def list_homophones(
+    dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger
+) -> None:
     clics = load_clics()
     # warn if clics cannot be loaded
     if not clics:
