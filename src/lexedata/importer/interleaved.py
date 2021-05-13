@@ -10,7 +10,6 @@ import re
 import csv
 import logging
 from pathlib import Path
-import typing as t
 import os
 
 import openpyxl
