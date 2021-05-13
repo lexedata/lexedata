@@ -16,10 +16,6 @@ except ImportError:
     from typing_extensions import Literal
 
 
-from lexedata.util import get_dataset
-import lexedata.cli as cli
-
-
 # Some type aliases, which should probably be moved elsewhere or made obsolete.
 class Language_ID(str):
     pass
