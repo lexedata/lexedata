@@ -103,7 +103,9 @@ Your concepts.csv will now have two new columns: Concepticon ID and Concepticon 
 
 ### 4.2 Automatic cognate detection
 
-### 4.3 Adding core concepts to cognate sets
+### 4.3 Adding central concepts to cognate sets
+```python -m lexedata.enrich.guess_concept_for_cognateset```
+```--overwrite``` to overwrite existing central concepts for all cognatesets.
 
 ### 4.4 Segment forms using CLTS
 In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms. Lexedata uses CLTS to segment the forms. To use this functionality type: ```python -m lexedata.enrich.segment_using_clts```. A column "Segments" will be filled in in your forms.csv. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review.

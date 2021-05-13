@@ -1,0 +1,43 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python application
+
+on:
+  push:
+    paths:
+      '**.py'
+  pull_request:
+    branches: [ $default-branch ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest tox
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Install catalogs
+      run: |
+        mkdir -p ~/.config/cldf/
+        (cd ~/.config/cldf/ && [ -d glottolog ] || git clone --depth 1 https://github.com/glottolog/glottolog.git)
+        (cd ~/.config/cldf/ && [ -d concepticon-data ] || git clone --depth 1 https://github.com/concepticon/concepticon-data.git concepticon)
+        (cd ~/.config/cldf/ && [ -d clts ] || git clone -b v2.0.0 --depth 1 https://github.com/cldf-clts/clts.git)
+        pip install cldfbench pyglottolog pyconcepticon pyclts
+        cldfbench catconfig
+        cldfbench catinfo
+    - name: Test with tox
+      run: |
+        tox

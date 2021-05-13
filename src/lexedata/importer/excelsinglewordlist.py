@@ -17,22 +17,13 @@ from lexedata.importer.fromexcel import DB
 from lexedata.types import Form
 from lexedata.enrich.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
+from lexedata.util import KeyKeyDict
+
 
 try:
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
-
-
-class KeyKeyDict(t.Mapping[str, str]):
-    def __len__(self):
-        return 0
-
-    def __iter__(self):
-        return ()
-
-    def __getitem__(self, key):
-        return key
 
 
 @attr.s(auto_attribs=True)
