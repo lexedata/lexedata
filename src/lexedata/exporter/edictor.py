@@ -13,8 +13,6 @@ from lexedata.util import segment_slices_to_segment_list
 import lexedata.cli as cli
 
 
-
-
 def rename(form_column, dataset):
     try:
         function = dataset["FormTable", form_column].propertyUrl.expand().split("#")[-1]

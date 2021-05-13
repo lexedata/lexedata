@@ -554,10 +554,10 @@ def fill_beast(data_object: ET.Element):
     for lang in alignment:
         ET.SubElement(taxa, "taxon", id=f"{lang:}", spec="Taxon")
 
-  
+
 if __name__ == "__main__":
     import xml.etree.ElementTree as ET
-    
+
     parser = cli.parser(
         description="Export a CLDF dataset (or similar) to bioinformatics alignments"
     )
