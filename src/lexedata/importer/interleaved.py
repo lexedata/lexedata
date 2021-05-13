@@ -10,14 +10,18 @@ import re
 import csv
 import logging
 from pathlib import Path
+import typing as t
+import os
 
 import openpyxl
 
-# TODO: move this logger part after the argument parser (after merge)
-logger = logging.getLogger(__file__)
+import lexedata.cli as cli
 
 
-def import_interleaved(ws: openpyxl.worksheet.worksheet.Worksheet, forms_path: str):
+def import_interleaved(
+        ws: openpyxl.worksheet.worksheet.Worksheet,
+        logger: t.Optional[logging.Logger] = None
+) -> list:
     comma_or_semicolon = re.compile("[,;]\\W*")
 
     concepts = []
@@ -27,10 +31,6 @@ def import_interleaved(ws: openpyxl.worksheet.worksheet.Worksheet, forms_path: s
                 concepts.append(entry.value.strip())
             except AttributeError:
                 break
-
-    w = csv.writer(open(Path(forms_path) / "forms.csv", "w"))
-
-    w.writerow(["Language_ID", "Concept_ID", "Form", "Comment", "Cognateset"])
 
     for language in ws.iter_cols(min_col=2):
         language_name = language[0].value
@@ -79,7 +79,7 @@ def import_interleaved(ws: openpyxl.worksheet.worksheet.Worksheet, forms_path: s
                     )
                 )
             for form, cogset in zip(forms, cogsets + [None]):
-                w.writerow([language_name, concepts[c], form, None, cogset])
+                yield [language_name, concepts[c], form, None, cogset]
 
 
 if __name__ == "__main__":
@@ -90,10 +90,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--directory",
         type=Path,
-        default=Path(),
-        help="Path to directory where forms.csv is created (default: root directory of this script)",
+        default=Path(os.getcwd()),
+        help="Path to directory where forms.csv is created (default: current working directory)",
     )
+    cli.add_log_controls(parser)
     args = parser.parse_args()
+    logger = cli.setup_logging(args)
 
-    ws = openpyxl.load_workbook(args.excel).active
-    import_interleaved(ws, args.directory)
+    ws = openpyxl.load_workbook(args.excel)
+
+    w = csv.writer(open(Path(args.directory) / "forms.csv", "w"))
+    w.writerow(["Language_ID", "Concept_ID", "Form", "Comment", "Cognateset"])
+
+    for sheet in ws.worksheets:
+        row = import_interleaved(sheet, logger=logger)
+        w.writerow(row)
+
