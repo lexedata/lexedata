@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import zipfile
+import tempfile
 import typing as t
 from pathlib import Path
 
@@ -179,6 +180,17 @@ def parse_segment_slices(
             yield i
 
 
+def make_temporary_dataset(form_table):
+    directory = Path(tempfile.mkdtemp())
+    form_table_file_name = directory / "forms.csv"
+    with form_table_file_name.open("w") as form_table_file:
+        form_table_file.write(form_table)
+    # Maybe guess metadata?
+    dataset = pycldf.Wordlist.from_data(form_table_file_name)
+    dataset.write(directory / "Wordlist-metadata.json")
+    return dataset
+
+
 # TODO: Is this logic sound?
 def cache_table(
     dataset,
@@ -196,23 +208,24 @@ def cache_table(
     Examples
     ========
 
-    >>> ds = pycldf.Wordlist.from_metadata(Path(__file__).parent / "../../test/data/cldf/smallmawetiguarani/cldf-metadata.json")
+    >>> ds = make_temporary_dataset('''ID,Language_ID,Parameter_ID,Form
+    ... ache_one,ache,one,"e.ta.'kɾã"
+    ... ''')
     >>> forms = cache_table(ds)
     >>> forms["ache_one"]["languageReference"]
     'ache'
     >>> forms["ache_one"]["form"]
     "e.ta.'kɾã"
-    >>> forms["ache_one"]["variants"]
-    ['~[test_variant with various comments]']
+    >>> #forms["ache_one"]["variants"] == ['~[test_variant with various comments]']
 
     We can also use it to look up a specific set of columns, and change the index column.
     This allows us, for example, to get language IDs by name:
 
-    >>> languages = cache_table(ds, "LanguageTable", {"id": "ID"}, index_column="Name")
-    >>> languages == {'Aché': {'id': 'ache'},
-    ...               'Paraguayan Guaraní': {'id': 'paraguayan_guarani'},
-    ...               'Old Paraguayan Guaraní': {'id': 'old_paraguayan_guarani'},
-    ...               'Kaiwá': {'id': 'kaiwa'}}
+    languages = cache_table(ds, "LanguageTable", {"id": "ID"}, index_column="Name")
+    languages == {'Aché': {'id': 'ache'},
+                  'Paraguayan Guaraní': {'id': 'paraguayan_guarani'},
+                  'Old Paraguayan Guaraní': {'id': 'old_paraguayan_guarani'},
+                  'Kaiwá': {'id': 'kaiwa'}}
     True
 
     In this case identical values later in the file overwrite earlier ones.
