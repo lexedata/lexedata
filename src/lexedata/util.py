@@ -221,12 +221,13 @@ def cache_table(
 
     We can also use it to look up a specific set of columns, and change the index column.
     This allows us, for example, to get language IDs by name:
-
-    languages = cache_table(ds, "LanguageTable", {"id": "ID"}, index_column="Name")
-    languages == {'Aché': {'id': 'ache'},
-                  'Paraguayan Guaraní': {'id': 'paraguayan_guarani'},
-                  'Old Paraguayan Guaraní': {'id': 'old_paraguayan_guarani'},
-                  'Kaiwá': {'id': 'kaiwa'}}
+    >>> _ = ds.add_component("LanguageTable")
+    >>> ds.write(LanguageTable=[
+    ...     ['ache', 'Aché', 'South America', -25.59, -56.47, "ache1246", "guq"],
+    ...     ['paraguayan_guarani', 'Paraguayan Guaraní', None, None, None, None, None]])
+    >>> languages = cache_table(ds, "LanguageTable", {"id": "ID"}, index_column="Name")
+    >>> languages == {'Aché': {'id': 'ache'},
+    ...               'Paraguayan Guaraní': {'id': 'paraguayan_guarani'}}
     True
 
     In this case identical values later in the file overwrite earlier ones.
