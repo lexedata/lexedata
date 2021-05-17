@@ -190,7 +190,9 @@ class ExcelWriter:
                     # Transfer the cognateset comment to the first Excel cell.
                     if c_comment and col == 1 and cogset.get(c_comment):
                         cell.comment = op.comments.Comment(
-                            re.sub(f"-?{__package__}", "", cogset["Comment"]).strip(),
+                            re.sub(
+                                f"-?{__package__}", "", cogset[c_comment] or ""
+                            ).strip(),
                             "lexedata.exporter",
                         )
 
