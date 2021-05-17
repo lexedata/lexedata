@@ -90,16 +90,11 @@ OTHER_KNOWN_COLUMNS = {
 }
 
 
-if __name__ == "__main__":
-    parser = cli.parser(__doc__)
-    args = parser.parse_args()
-    logger = cli.setup_logging(args)
-
-    # TODO, maybe: allow specification of the file by command line option. In that
-    # case, check for name and extension and make sure to write the metadata to
-    # the same folder.
-    fname = Path("forms.csv")
-
+def add_metadata(fname: Path):
+    if fname.name != "forms.csv":
+        raise ValueError(
+            "A metadata-free Wordlist must be in a file called 'forms.csv'."
+        )
     ds = pycldf.Wordlist.from_data(fname)
     # `from_data` checks that the reqired columns of the FormTable are present,
     # but it does not consolidate the columns further.
@@ -147,6 +142,17 @@ if __name__ == "__main__":
     ds[ds.primary_table].tableSchema.columns.sort(
         key=lambda k: colnames.index(k.name) if k.name in colnames else 1e10
     )
+    return ds
+
+
+if __name__ == "__main__":
+    parser = cli.parser(__doc__)
+    args = parser.parse_args()
+    logger = cli.setup_logging(args)
+
+    fname = Path("forms.csv")
+
+    ds = add_metadata(fname)
 
     ds.write_metadata(args.metadata)
 

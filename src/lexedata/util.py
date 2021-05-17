@@ -14,6 +14,7 @@ from lingpy.compare.strings import ldn_swap
 
 import csvw
 from lexedata.cli import tq
+from lexedata.enrich.add_free_metadata import add_metadata
 
 ID_FORMAT = re.compile("[a-z0-9_]+")
 
@@ -185,8 +186,7 @@ def make_temporary_dataset(form_table):
     form_table_file_name = directory / "forms.csv"
     with form_table_file_name.open("w") as form_table_file:
         form_table_file.write(form_table)
-    # Maybe guess metadata?
-    dataset = pycldf.Wordlist.from_data(form_table_file_name)
+    dataset = add_metadata(form_table_file_name)
     dataset.write(directory / "Wordlist-metadata.json")
     return dataset
 
@@ -208,15 +208,15 @@ def cache_table(
     Examples
     ========
 
-    >>> ds = make_temporary_dataset('''ID,Language_ID,Parameter_ID,Form
-    ... ache_one,ache,one,"e.ta.'kɾã"
+    >>> ds = make_temporary_dataset('''ID,Language_ID,Parameter_ID,Form,variants
+    ... ache_one,ache,one,"e.ta.'kɾã",~[testphoneticvariant]
     ... ''')
     >>> forms = cache_table(ds)
     >>> forms["ache_one"]["languageReference"]
     'ache'
     >>> forms["ache_one"]["form"]
     "e.ta.'kɾã"
-    >>> #forms["ache_one"]["variants"] == ['~[test_variant with various comments]']
+    >>> forms["ache_one"]["variants"] == ['~[test_variant with various comments]']
 
     We can also use it to look up a specific set of columns, and change the index column.
     This allows us, for example, to get language IDs by name:
