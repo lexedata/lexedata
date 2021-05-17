@@ -138,6 +138,7 @@ def segment_form(
                 logger.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
+
                 if report:
                     report[str(raw_tokens[i])]["count"] += 1
                     report[str(raw_tokens[i])]["comment"] = "unknown pre-aspiration"
@@ -184,8 +185,11 @@ def add_segments_to_dataset(
     }
     for r, row in enumerate(dataset["FormTable"], 1):
         if row[c_f_segments] and not overwrite_existing:
+            # other wise not overwritten segments not written back to forms.csv
+            write_back.append(row)
             continue
         else:
+            print(row)
             if row[transcription]:
                 form = row[transcription].strip()
                 for wrong, right in pre_replace.items():
@@ -205,6 +209,7 @@ def add_segments_to_dataset(
                     logger=logger,
                 )
             write_back.append(row)
+    dataset.write(FormTable=write_back)
     from tabulate import tabulate
 
     data = [
@@ -220,7 +225,6 @@ def add_segments_to_dataset(
             tablefmt="orgtbl",
         )
     )
-    dataset.write(FormTable=write_back)
 
 
 if __name__ == "__main__":
@@ -258,7 +262,6 @@ if __name__ == "__main__":
         default=False,
         help="Apply the replacements performed on segments also to #form column of #FormTable",
     )
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
