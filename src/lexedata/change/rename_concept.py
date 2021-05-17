@@ -4,6 +4,8 @@ import typing as t
 from lexedata.enrich.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
+# TODO: use lexedata.change.clean_ids.update_ids
+
 
 def substitute_many(
     row, columns, old_values_to_new_values, status_update: t.Optional[str]

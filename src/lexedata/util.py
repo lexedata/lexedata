@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import zipfile
+import tempfile
 import typing as t
 from pathlib import Path
 
@@ -12,6 +13,8 @@ import networkx
 from lingpy.compare.strings import ldn_swap
 
 import csvw
+from lexedata.cli import tq
+from lexedata.enrich.add_free_metadata import add_metadata
 
 ID_FORMAT = re.compile("[a-z0-9_]+")
 
@@ -19,7 +22,7 @@ ID_FORMAT = re.compile("[a-z0-9_]+")
 def cldf_property(url: csvw.metadata.URITemplate) -> t.Optional[str]:
     if url.uri.startswith("http://cldf.clld.org/v1.0/terms.rdf#"):
         # len("http://cldf.clld.org/v1.0/terms.rdf#") == 36
-        return url[36:]
+        return url.uri[36:]
     else:
         return None
 
@@ -178,23 +181,75 @@ def parse_segment_slices(
             yield i
 
 
+def make_temporary_dataset(form_table):
+    directory = Path(tempfile.mkdtemp())
+    form_table_file_name = directory / "forms.csv"
+    with form_table_file_name.open("w") as form_table_file:
+        form_table_file.write(form_table)
+    dataset = add_metadata(form_table_file_name)
+    dataset.write(directory / "Wordlist-metadata.json")
+    return dataset
+
+
 # TODO: Is this logic sound?
 def cache_table(
     dataset,
+    table: t.Optional[str] = None,
     columns: t.Optional[t.Mapping[str, str]] = None,
-    table="FormTable",
     index_column="id",
 ) -> t.Mapping[str, t.Mapping[str, t.Any]]:
-    """Load the table into memory as a dictionary of dictionaries"""
+    """Load a dataset table into memory as a dictionary of dictionaries.
+
+    If the table is unspecified, use the primary table of the dataset.
+
+    If the columns are unspecified, read each row completely, into a dictionary
+    indexed by the local CLDF properties of the table.
+
+    Examples
+    ========
+
+    >>> ds = make_temporary_dataset('''ID,Language_ID,Parameter_ID,Form,Variants
+    ... ache_one,ache,one,"e.ta.'kɾã",~[test phonetic variant]
+    ... ''')
+    >>> forms = cache_table(ds)
+    >>> forms["ache_one"]["languageReference"]
+    'ache'
+    >>> forms["ache_one"]["form"]
+    "e.ta.'kɾã"
+    >>> forms["ache_one"]["Variants"]
+    ['~[test phonetic variant]']
+
+    We can also use it to look up a specific set of columns, and change the index column.
+    This allows us, for example, to get language IDs by name:
+    >>> _ = ds.add_component("LanguageTable")
+    >>> ds.write(LanguageTable=[
+    ...     ['ache', 'Aché', 'South America', -25.59, -56.47, "ache1246", "guq"],
+    ...     ['paraguayan_guarani', 'Paraguayan Guaraní', None, None, None, None, None]])
+    >>> languages = cache_table(ds, "LanguageTable", {"id": "ID"}, index_column="Name")
+    >>> languages == {'Aché': {'id': 'ache'},
+    ...               'Paraguayan Guaraní': {'id': 'paraguayan_guarani'}}
+    True
+
+    In this case identical values later in the file overwrite earlier ones.
+
+    """
+    if table is None:
+        table = dataset.primary_table
+    assert (
+        table
+    ), "If your dataset has no primary table, you must specify which table to cache."
     if columns is None:
         columns = {
-            cldf_property(c.propertyUrl) or c.name: c.name
+            (cldf_property(c.propertyUrl) if c.propertyUrl else c.name)
+            or c.name: c.name
             for c in dataset[table].tableSchema.columns
         }
     c_id = dataset[table, index_column].name
     return {
         row[c_id]: {prop: row[name] for prop, name in columns.items()}
-        for row in dataset[table]
+        for row in tq(
+            dataset[table], total=dataset[table].common_props.get("dc:extent")
+        )
     }
 
 
@@ -207,16 +262,3 @@ class KeyKeyDict(t.Mapping[str, str]):
 
     def __getitem__(self, key):
         return key
-
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="Recode all data in NFC unicode normalization"
-    )
-    parser.add_argument("file", nargs="+", type=Path)
-    args = parser.parse_args()
-    for file in args.file:
-        content = file.open().read()
-        file.open("w").write(unicodedata.normalize("NFC", content))
