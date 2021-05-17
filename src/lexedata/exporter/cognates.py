@@ -9,7 +9,7 @@ import openpyxl as op
 
 from lexedata import types
 from lexedata import cli
-from lexedata.util import parse_segment_slice
+from lexedata.util import parse_segment_slices
 
 WARNING = "\u26A0"
 
@@ -328,7 +328,7 @@ class ExcelWriter:
             # that an error message here will be more useful than silently
             # messing with data.
             included_segments = set(
-                parse_segment_slice(meta["Segment_Slice"], enforce_ordered=True)
+                parse_segment_slices(meta["Segment_Slice"], enforce_ordered=True)
             )
 
             included = False
