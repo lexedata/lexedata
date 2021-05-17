@@ -208,15 +208,16 @@ def cache_table(
     Examples
     ========
 
-    >>> ds = make_temporary_dataset('''ID,Language_ID,Parameter_ID,Form,variants
-    ... ache_one,ache,one,"e.ta.'kɾã",~[testphoneticvariant]
+    >>> ds = make_temporary_dataset('''ID,Language_ID,Parameter_ID,Form,Variants
+    ... ache_one,ache,one,"e.ta.'kɾã",~[test phonetic variant]
     ... ''')
     >>> forms = cache_table(ds)
     >>> forms["ache_one"]["languageReference"]
     'ache'
     >>> forms["ache_one"]["form"]
     "e.ta.'kɾã"
-    >>> forms["ache_one"]["variants"] == ['~[test_variant with various comments]']
+    >>> forms["ache_one"]["Variants"]
+    ['~[test phonetic variant]']
 
     We can also use it to look up a specific set of columns, and change the index column.
     This allows us, for example, to get language IDs by name:
