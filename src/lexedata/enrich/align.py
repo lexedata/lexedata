@@ -5,8 +5,6 @@ If possible, align using existing lexstat scorer.
 """
 
 import typing as t
-from pathlib import Path
-
 import pycldf
 
 from lexedata.enrich.add_status_column import add_status_column_to_table
@@ -78,15 +76,8 @@ def aligne_cognate_table(
 
 
 if __name__ == "__main__":
-    import argparse
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
+    parser = cli.parser(description=__doc__)
     parser.add_argument(
         "--status-update",
         type=str,

@@ -5,19 +5,18 @@ minimal spanning tree according to clics, in order to identify polysemies vs.
 accidental homophones
 
 """
-
-from lexedata.util import load_clics
 import typing as t
-import logging
-from pathlib import Path
 
 import networkx as nx
 import pycldf
 
-logger = logging.getLogger(__name__)
+import lexedata.cli as cli
+from lexedata.util import load_clics
 
 
-def list_homophones(dataset: pycldf.Dataset) -> None:
+def list_homophones(
+    dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger
+) -> None:
     clics = load_clics()
     # warn if clics cannot be loaded
     if not clics:
@@ -61,14 +60,9 @@ def list_homophones(dataset: pycldf.Dataset) -> None:
 
 
 if __name__ == "__main__":
-    import argparse
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
+    parser = cli.parser(description=__doc__)
+    cli.add_log_controls(parser)
     args = parser.parse_args()
-    list_homophones(dataset=pycldf.Dataset.from_metadata(args.metadata))
+    logger = cli.setup_logging(args)
+    list_homophones(dataset=pycldf.Dataset.from_metadata(args.metadata), logger=logger)

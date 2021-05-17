@@ -8,14 +8,20 @@ multiple forms), while the odd columns contain the associated cognate codes
 """
 import re
 import csv
-import sys
+import logging
+from pathlib import Path
+import os
 
 import openpyxl
 
-if __name__ == "__main__":
-    comma_or_semicolon = re.compile("[,;]\\W*")
+import lexedata.cli as cli
 
-    ws = openpyxl.load_workbook("bantu/bantu.xlsx").active
+
+def import_interleaved(
+    ws: openpyxl.worksheet.worksheet.Worksheet,
+    logger: logging.Logger = cli.logger,
+) -> list:
+    comma_or_semicolon = re.compile("[,;]\\W*")
 
     concepts = []
     for concept_metadata in ws.iter_cols(min_col=1, max_col=1, min_row=2):
@@ -25,63 +31,80 @@ if __name__ == "__main__":
             except AttributeError:
                 break
 
-    w = csv.writer(open("forms.csv", "w"))
-
-    w.writerow(["Language_ID", "Concept_ID", "Form", "Comment", "Cognateset"])
-
     for language in ws.iter_cols(min_col=2):
         language_name = language[0].value
         for c, (entry, cogset) in enumerate(zip(language[1::2], language[2::2])):
             if not entry.value:
                 assert not cogset.value
                 continue
-            bracket_start = None
-            in_brackets = None
+            bracket_level = 0
             i = 0
             f = entry.value.strip()
-            forms, comments = [], []
+            forms = []
             while i < len(f):
                 match = comma_or_semicolon.match(f[i:])
                 if f[i] == "(":
-                    bracket_start = i
+                    bracket_level += 1
                     i += 1
                     continue
                 elif f[i] == ")":
-                    in_brackets = f[bracket_start + 1 : i]
-                    f = f[:bracket_start]
-                    i -= len(in_brackets)
-                    bracket_start = None
+                    bracket_level -= 1
+                    i += 1
                     continue
-                elif bracket_start is not None:
+                elif bracket_level:
                     i += 1
                     continue
                 elif match:
                     forms.append(f[:i].strip())
-                    comments.append(in_brackets)
                     i += match.span()[1]
-                    in_brackets = None
                     f = f[i:]
                     i = 0
                 else:
                     i += 1
 
             forms.append(f.strip())
-            comments.append(in_brackets)
 
             if type(cogset.value) == float:
                 cogsets = [str(int(cogset.value))]
             else:
-                cogsets = comma_or_semicolon.split(cogset.value.strip())
+                if isinstance(cogset.value, int):
+                    cogset = str(cogset.value)
+                else:
+                    cogset = cogset.value
+                cogsets = comma_or_semicolon.split(cogset.strip())
 
             if len(cogsets) == 1 or len(cogsets) == len(forms):
                 True
             else:
-                print(
+                logger.warning(
                     "{:}: Forms ({:}) did not match cognates ({:})".format(
                         entry.coordinate, ", ".join(forms), ", ".join(cogsets)
-                    ),
-                    file=sys.stderr,
+                    )
                 )
+            for form, cogset in zip(forms, cogsets + [None]):
+                yield [language_name, concepts[c], form, None, cogset]
 
-            for form, comment, cogset in zip(forms, comments, cogsets + [None]):
-                w.writerow([language_name, concepts[c], form, comment, cogset])
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("excel", type=Path, help="The Excel file to parse")
+    parser.add_argument(
+        "--directory",
+        type=Path,
+        default=Path(os.getcwd()),
+        help="Path to directory where forms.csv is created (default: current working directory)",
+    )
+    cli.add_log_controls(parser)
+    args = parser.parse_args()
+    logger = cli.setup_logging(args)
+
+    ws = openpyxl.load_workbook(args.excel)
+
+    w = csv.writer(open(Path(args.directory) / "forms.csv", "w", encoding="utf-8"))
+    w.writerow(["Language_ID", "Concept_ID", "Form", "Comment", "Cognateset"])
+
+    for sheet in ws.worksheets:
+        for row in import_interleaved(sheet, logger=logger):
+            w.writerow(row)

@@ -1,7 +1,8 @@
-from pathlib import Path
 import typing as t
 
 import pycldf
+
+import lexedata.cli as cli
 
 
 def add_status_column_to_table(dataset: pycldf.Dataset, table_name: str) -> None:
@@ -18,16 +19,9 @@ def status_column_to_table_list(
 
 
 if __name__ == "__main__":
-    import argparse
 
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="Add Status_Column to specified tables of the dataset"
-    )
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "--table-names",

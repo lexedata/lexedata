@@ -122,8 +122,8 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    cli.setup_logging(args)
+    logger = cli.setup_logging(args)
 
     import_cognates_from_excel(
-        args.cogsets, pycldf.Dataset.from_metadata(args.metadata)
+        args.cogsets, pycldf.Dataset.from_metadata(args.metadata), logger
     )

@@ -1,11 +1,12 @@
-import argparse
 import typing as t
 from pathlib import Path
 
 import pycldf
 
+import lexedata.cli as cli
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Summarise coverage data")
+    parser = cli.parser(description="Summarise coverage data")
     parser.add_argument(
         "--min-concepts",
         default=0,
@@ -18,12 +19,6 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="Only list matching languages, don't report statistics",
-    )
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "--metadata-or-forms",

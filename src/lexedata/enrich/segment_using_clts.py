@@ -1,7 +1,4 @@
-import logging
-import argparse
 import typing as t
-from pathlib import Path
 from collections import defaultdict
 
 from csvw.metadata import URITemplate
@@ -11,6 +8,8 @@ import pyclts
 import segments
 import cldfbench
 import cldfcatalog
+
+import lexedata.cli as cli
 
 clts_path = cldfcatalog.Config.from_file().get_clone("clts")
 clts = cldfbench.catalogs.CLTS(clts_path)
@@ -49,6 +48,7 @@ def segment_form(
     split_diphthongs: bool = True,
     context_for_warnings: str = "",
     report: t.Optional[t.Dict] = None,
+    logger: cli.logging.Logger = cli.logger,
 ) -> t.Iterable[pyclts.models.Symbol]:
     """Segment the form.
 
@@ -82,7 +82,7 @@ def segment_form(
     ]
     if system != bipa:
         if any(r.type == "unknownsound" for r in raw_tokens):
-            logging.warning(
+            logger.warning(
                 f"{context_for_warnings}Unknown sound encountered in {formstring:}"
             )
         return raw_tokens
@@ -100,7 +100,7 @@ def segment_form(
                 report[str(raw_tokens[i])]["count"] += 1
                 report[str(raw_tokens[i])]["comment"] = "illegal symbol"
             del raw_tokens[i]
-            logging.warning(
+            logger.warning(
                 f"{context_for_warnings}Impossible sound '/' encountered in {formstring} – "
                 f"You cannot use CLTS extended normalization "
                 f"with this script. The slash was not taken over into the segments."
@@ -122,7 +122,7 @@ def segment_form(
             continue
         if grapheme.endswith("ⁿ") or grapheme.endswith("ᵐ") or grapheme.endswith("ᵑ"):
             if raw_tokens[i + 1].preceding is not None:
-                logging.warning(
+                logger.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
                 if report:
@@ -135,7 +135,7 @@ def segment_form(
             continue
         if grapheme.endswith("ʰ"):
             if raw_tokens[i + 1].preceding is not None:
-                logging.warning(
+                logger.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
                 if report:
@@ -146,7 +146,7 @@ def segment_form(
             raw_tokens[i + 1] = bipa["pre-aspirated " + raw_tokens[i + 1].name]
             raw_tokens[i] = bipa[grapheme[:-1]]
             continue
-        logging.warning(
+        logger.warning(
             f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
         )
         if report:
@@ -162,6 +162,7 @@ def add_segments_to_dataset(
     transcription: str,
     overwrite_existing: bool,
     replace_form: bool,
+    logger: cli.logging.Logger = cli.logger,
 ):
     if dataset.column_names.forms.segments is None:
         # Create a Segments column in FormTable
@@ -201,6 +202,7 @@ def add_segments_to_dataset(
                     form,
                     context_for_warnings=f"In form {row[c_f_id]} (line {r}): ",
                     report=report[row[c_f_lan]],
+                    logger=logger,
                 )
             write_back.append(row)
     from tabulate import tabulate
@@ -222,14 +224,20 @@ def add_segments_to_dataset(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--metadata",
-        nargs="?",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the metadata.json. The metadata file describes the dataset. Default: ./Wordlist-metadata.json. "
-        "Segments will be added to the segments column of the formTable of this dataset.",
+    parser = cli.parser(
+        description="""Segment the form.
+
+    First, apply some pre-processing replacements. Forms supplied contain all
+    sorts of noise and lookalike symbols. This function comes with reasonable
+    defaults, but if you encounter other problems, or you actually want to be
+    strict about IPA transcriptions, pass a dictionary of your choice as
+    `pre_replace`.
+
+    Then, naïvely segment the form using the IPA tokenizer from the `segments`
+    package. Check each returned segment to see whether it is valid according
+    to CLTS's BIPA, and if not, try to fix some issues (in particular
+    pre-aspirated or pre-nasalized consonants showing up as post-aspirated
+    resp. post-nasalized vowels, which BIPA does not accept).)"""
     )
     parser.add_argument(
         "transcription",
@@ -250,7 +258,9 @@ if __name__ == "__main__":
         default=False,
         help="Apply the replacements performed on segments also to #form column of #FormTable",
     )
+    cli.add_log_controls(parser)
     args = parser.parse_args()
+    logger = cli.setup_logging(args)
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
@@ -258,5 +268,5 @@ if __name__ == "__main__":
         args.transcription = dataset.column_names.forms.form
     # add segments to FormTable
     add_segments_to_dataset(
-        dataset, args.transcription, args.overwrite, args.replace_form
+        dataset, args.transcription, args.overwrite, args.replace_form, logger=logger
     )

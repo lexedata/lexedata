@@ -2,7 +2,6 @@
 
 import csv
 import hashlib
-import argparse
 import typing as t
 from pathlib import Path
 
@@ -14,6 +13,8 @@ import cldfcatalog
 
 import lingpy
 import lingpy.compare.partial
+
+import lexedata.cli as cli
 
 clts_path = cldfcatalog.Config.from_file().get_clone("clts")
 clts = cldfbench.catalogs.CLTS(clts_path)
@@ -194,13 +195,7 @@ def cognate_code_to_file(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
+    parser = cli.parser(description=__doc__)
     parser.add_argument(
         "--output-file",
         "-o",

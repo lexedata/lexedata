@@ -552,6 +552,8 @@ def fill_beast(data_object: ET.Element):
 
 
 if __name__ == "__main__":
+    import xml.etree.ElementTree as ET
+
     parser = cli.parser(
         description="Export a CLDF dataset (or similar) to bioinformatics alignments"
     )

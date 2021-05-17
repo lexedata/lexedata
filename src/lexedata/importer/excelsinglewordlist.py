@@ -1,4 +1,3 @@
-import logging
 import typing as t
 from pathlib import Path
 from collections import defaultdict
@@ -17,15 +16,14 @@ from lexedata.util import (
 from lexedata.importer.fromexcel import DB
 from lexedata.types import Form
 from lexedata.enrich.add_status_column import add_status_column_to_table
+import lexedata.cli as cli
 from lexedata.util import KeyKeyDict
+
 
 try:
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
-
-logger = logging.getLogger(__file__)
-logger.setLevel(logging.INFO)
 
 
 @attr.s(auto_attribs=True)
@@ -94,6 +92,7 @@ def import_data_from_sheet(
 def read_single_excel_sheet(
     dataset: pycldf.Dataset,
     sheet: openpyxl.worksheet.worksheet.Worksheet,
+    logger: cli.logging.Logger = cli.logger,
     match_form: t.Optional[t.List[str]] = None,
     entries_to_concepts: t.Mapping[str, str] = KeyKeyDict(),
     concept_column: t.Optional[str] = None,
@@ -282,14 +281,15 @@ def add_single_languages(
     exclude_sheet,
     verbose: bool,
     status_update: t.Optional[str],
+    logger: cli.logging.Logger,
 ) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
     if verbose:
-        logging.basicConfig(level=logging.INFO)
+        logger.basicConfig(level=cli.logging.INFO)
     if not sheet:
         sheets = [sheet for sheet in excel.sheetnames if sheet not in exclude_sheet]
-        logging.info("No sheets specified. Parsing sheets: %s", sheet)
+        logger.info("No sheets specified. Parsing sheets: %s", sheet)
     # initiate data set from meta data or csv depending on command line arguments
     if metadata:
         if metadata.name == "forms.csv":
@@ -319,6 +319,7 @@ def add_single_languages(
         for lang, subreport in read_single_excel_sheet(
             dataset=dataset,
             sheet=excel[sheet],
+            logger=logger,
             match_form=match_form,
             entries_to_concepts=concepts,
             concept_column=concept_column,
@@ -331,17 +332,9 @@ def add_single_languages(
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Add forms from Excel file to dataset")
+    parser = cli.parser(description="Add forms from Excel file to dataset")
     parser.add_argument(
         "excel", type=openpyxl.load_workbook, help="The Excel file to parse"
-    )
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
     )
     parser.add_argument(
         "--concept-name",
@@ -403,7 +396,11 @@ if __name__ == "__main__":
         default=False,
         help="Prints report of newly added forms",
     )
+
+    cli.add_log_controls(parser)
     args = parser.parse_args()
+    logger = cli.setup_logging(args)
+
     report = add_single_languages(
         metadata=args.metadata,
         excel=args.excel,
@@ -415,6 +412,7 @@ if __name__ == "__main__":
         exclude_sheet=args.exclude_sheet,
         verbose=args.verbose,
         status_update=args.status_update,
+        logger=logger,
     )
     if args.report:
         report_data = [report(language) for language, report in report.items()]

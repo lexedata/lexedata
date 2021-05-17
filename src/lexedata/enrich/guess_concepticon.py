@@ -1,7 +1,5 @@
-import argparse
 import collections
 import typing as t
-from pathlib import Path
 
 from csvw.metadata import URITemplate
 
@@ -11,6 +9,7 @@ import cldfbench
 from pyconcepticon.glosses import concept_map2
 
 from lexedata.enrich.add_status_column import add_status_column_to_table
+import lexedata.cli as cli
 
 concepticon_path = cldfcatalog.Config.from_file().get_clone("concepticon")
 concepticon = cldfbench.catalogs.Concepticon(concepticon_path)
@@ -163,15 +162,7 @@ def create_concepticon_for_concepts(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Adds Concepticon reference to #parameterTable"
-    )
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
+    parser = cli.parser(description="Adds Concepticon reference to #parameterTable")
     parser.add_argument(
         "--overwrite",
         action="store_true",
