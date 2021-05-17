@@ -247,16 +247,3 @@ class KeyKeyDict(t.Mapping[str, str]):
 
     def __getitem__(self, key):
         return key
-
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="Recode all data in NFC unicode normalization"
-    )
-    parser.add_argument("file", nargs="+", type=Path)
-    args = parser.parse_args()
-    for file in args.file:
-        content = file.open().read()
-        file.open("w").write(unicodedata.normalize("NFC", content))
