@@ -1,14 +1,13 @@
 import sys
 import typing as t
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 import pycldf
 
 from lexedata import util
 from lexedata import types
 from lexedata import cli
-
-import xml.etree.ElementTree as ET
 
 try:
     from typing import Literal
@@ -51,8 +50,6 @@ def read_cldf_dataset(
 
     Examples
     --------
-
-    TODO: Create an example that does not depend on files in a specific relative location. (Data paths are fine.)
 
     >>> _size = open("forms.csv", "w").write('''
     ... ID,Language_ID,Parameter_ID,Form,Cognateset_ID
@@ -642,9 +639,10 @@ if __name__ == "__main__":
         args.output_file = args.output_file.open("w")
 
     # Step 2: Load the raw data.
+    dataset = pycldf.Dataset.from_metadata(args.metadata)
     ds: t.Mapping[
         Language_ID, t.Mapping[Language_ID, t.Set[Language_ID]]
-    ] = read_cldf_dataset(args.metadata, code_column=args.code_column)
+    ] = read_cldf_dataset(dataset, code_column=args.code_column)
 
     languages: t.Set[str]
     if args.languages_list:
@@ -710,7 +708,7 @@ if __name__ == "__main__":
         )
 
     elif args.format == "beast":
-        et = fill_beast(data_object)
+        fill_beast(data_object)
         et.write(args.output_file, encoding="unicode")
 
     # Step 5: Maybe print some statistics to file.
