@@ -89,7 +89,6 @@ def import_cognates_from_excel(
     excel_parser_cognate = CognateEditParser(
         dataset,
         top=2,
-        # TODO: @Gereon: What to do about this comment?
         # When the dataset has cognateset comments, that column is not a header
         # column, so this value is one higher than the actual number of header
         # columns, so actually correct for the 1-based indices. When there is
@@ -104,6 +103,7 @@ def import_cognates_from_excel(
     excel_parser_cognate.db.cache_dataset()
     excel_parser_cognate.db.drop_from_cache("CognatesetTable")
     excel_parser_cognate.db.drop_from_cache("CognateTable")
+    logger.info("Parsing cognate Excel…")
     excel_parser_cognate.parse_cells(ws, status_update=None)
     excel_parser_cognate.db.write_dataset_from_cache(
         ["CognateTable", "CognatesetTable"]

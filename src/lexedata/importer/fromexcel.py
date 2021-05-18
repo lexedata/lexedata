@@ -39,19 +39,33 @@ def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
 
 
 class DB:
+    """An in-memobry cache of a dataset.
+
+    The cache_dataset method is only called in the load_dataset method, but
+    also used for finer control by the cognates importer. This means that if
+    you would load the CognateParser directly, it doesn't work as the cache is
+    empty and the code will throw errors (e.g. when trying to look for
+    candidates we get a key error). If you use the CognateParser elsewhere,
+    make sure to cache the dataset explicitly, eg. by using DB.from_dataset!
+
+    """
+
     cache: t.Dict[str, t.Dict[t.Hashable, t.Dict[str, t.Any]]]
     source_ids: t.Set[str]
 
     def __init__(self, output_dataset: pycldf.Wordlist):
+        """Create a new *empty* cache associated with a dataset."""
         self.dataset = output_dataset
         self.cache = {}
         self.source_ids = set()
 
-    # TODO: @Gereon the cache_dataset method is only called in the load_dataset method.
-    # This means that if you would load the CognateParser directly,
-    # it doesn't work as the cache is empty and the code will throw errors
-    # (e.g. when trying to look for candidates we get a key error)
-    # TODO: I want to make sure, it is intended this way
+    @classmethod
+    def from_dataset(k, dataset, logger: cli.logging.Logger = cli.logger):
+        """Create a (filled) cache from a dataset."""
+        ds = k(dataset)
+        ds.cache_dataset(logger=logger)
+        return ds
+
     def cache_dataset(self, logger: cli.logging.Logger = cli.logger):
         logger.info("Caching dataset into memory…")
         for table in self.dataset.tables:
@@ -86,7 +100,7 @@ class DB:
             for table in self.dataset.tables
         }
 
-    def write_dataset_from_cache(self, tables: t.Optional[t.List[str]] = None):
+    def write_dataset_from_cache(self, tables: t.Optional[t.Iterable[str]] = None):
         if tables is None:
             tables = self.cache.keys()
         for table_type in tables:

@@ -391,7 +391,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--url-template",
         type=str,
-        default="https://example.org/lexicon/{:})",
+        default="https://example.org/lexicon/{:}",
         help="A template string for URLs pointing to individual forms. For example, to"
         " point to lexibank, you would use https://lexibank.clld.org/values/{:}."
         " (default: https://example.org/lexicon/{:})",

@@ -12,7 +12,7 @@ import logging
 import pycldf
 import typing as t
 
-from lexedata.util import parse_segment_slice, cache_table
+from lexedata.util import parse_segment_slices, cache_table
 
 
 def check_segmentslice_separator(dataset, log=None) -> bool:
@@ -125,7 +125,7 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
             if not judgement[c_sslice]:
                 log_or_raise("In {}, row {}: Empty segment slice".format(f, j), log=log)
                 continue
-            included_segments = list(parse_segment_slice(judgement[c_sslice]))
+            included_segments = list(parse_segment_slices(judgement[c_sslice]))
             if max(included_segments) >= len(form_segments):
                 log_or_raise(
                     "In {}, row {}: Segment slice {} is invalid for segments {}".format(
