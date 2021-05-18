@@ -148,6 +148,8 @@ def glue_in_alignment(
 
     if global_alignment.count("+") == len(cogsets):
         cogsets.append(None)
+    if global_alignment.count("+") + 2 == len(cogsets) and not cogsets[-1]:
+        del cogsets[-1]
 
 
 def forms_to_tsv(
