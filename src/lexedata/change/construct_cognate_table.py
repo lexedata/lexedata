@@ -44,6 +44,7 @@ def add_cognate_table(dataset: pycldf.Wordlist) -> None:
     forms = cache_table(dataset, columns)
     for f, form in forms.items():
         if form.get("cognatesetReference"):
+            # TODO: Accept a parameter which describes that cognatesets are per-concept, and need to be split here by adding the concept to the cognatesetReference.
             judgement = {
                 "ID": f,
                 "Form_ID": f,
