@@ -1,7 +1,7 @@
 import sys
 import typing as t
 from pathlib import Path
-import xml.etree.ElementTree as ET
+import lxml.etree as ET
 
 import pycldf
 
@@ -20,7 +20,7 @@ class Language_ID(str):
     pass
 
 
-class Parameter_ID(str):
+class Concept_ID(str):
     pass
 
 
@@ -29,7 +29,13 @@ class Cognateset_ID(str):
 
 
 def read_cldf_dataset(
-    dataset: pycldf.Dataset,
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
     code_column: t.Optional[str] = None,
     logger: cli.logging.Logger = cli.logger,
 ) -> t.Mapping[
@@ -105,7 +111,10 @@ def read_wordlist(
         # helpful KeyError when the column does not exist.
         cognatesets = util.cache_table(
             dataset,
-            {"form": col_map.forms.id, "code": dataset["FormTable", code_column].name},
+            columns={
+                "form": col_map.forms.id,
+                "code": dataset["FormTable", code_column].name,
+            },
         )
         target = col_map.forms.id
     else:
@@ -121,7 +130,7 @@ def read_wordlist(
                 "Your dataset has a cognatesetReference in the FormTable. Consider running lexedata.enrich.explict_cognate_judgements to create an explicit cognate table, if this is your dataset."
             )
             cognatesets = util.cache_table(
-                dataset, {"form": col_map.forms.id, "code": code_column}
+                dataset, columns={"form": col_map.forms.id, "code": code_column}
             )
             target = col_map.forms.id
         else:
@@ -143,8 +152,8 @@ def read_wordlist(
                 (target,) = foreign_key.reference.columnReference
                 cognatesets = util.cache_table(
                     dataset,
-                    {"form": form_reference, "code": code_column},
                     "CognateTable",
+                    {"form": form_reference, "code": code_column},
                 )
             else:
                 raise ValueError(
@@ -525,15 +534,13 @@ End;
     )
 
 
-def fill_beast(data_object: ET.Element):
+def fill_beast(data_object: ET.Element, languages, sequences):
     data_object.clear()
-    data_object.attrib = {
-        "id": "vocabulary",
-        "dataType": "integer",
-        "spec": "Alignment",
-    }
+    data_object.attrib["id"] = "vocabulary"
+    data_object.attrib["dataType"] = "integer"
+    data_object.attrib["spec"] = "Alignent"
     data_object.text = "\n"
-    for language, sequence in alignment.items():
+    for language, sequence in zip(languages, sequences):
         seq = "".join(sequence)
         ET.SubElement(
             data_object,
@@ -544,13 +551,47 @@ def fill_beast(data_object: ET.Element):
         ).tail = "\n"
 
     taxa = ET.SubElement(data_object, "taxonset", id="taxa", spec="TaxonSet")
-    for lang in alignment:
-        ET.SubElement(taxa, "taxon", id=f"{lang:}", spec="Taxon")
+    plate = ET.SubElement(taxa, "plate", var="language", range="{languages}")
+    ET.SubElement(plate, "taxon", id="$(language)", spec="Taxon")
+
+
+def compress_indices(indices: t.Set[int]) -> t.Iterator[slice]:
+    if not indices:
+        return
+    minimum = min(indices)
+    maximum = minimum
+    while maximum in indices:
+        indices.remove(maximum)
+        maximum += 1
+    yield slice(minimum, maximum)
+    for sl in compress_indices(indices):
+        yield sl
+
+
+def add_partitions(data_object: ET.Element, partitions):
+    previous_alignment = data_object
+    for name, indices in partitions.items():
+        indices_set = compress_indices(set(indices))
+        indices_string = ",".join(
+            "{:d}-{:d}".format(s.start, s.stop) for s in indices_set
+        )
+        previous_alignment.addnext(
+            data_object.makeelement(
+                "data",
+                {
+                    "id": name,
+                    "spec": "FilteredAlignment",
+                    "filter": "0," + indices_string,
+                    "data": "@" + data_object.attrib["id"],
+                    "ascertained": "true",
+                    "excludefrom": "0",
+                    "excludeto": "1",
+                },
+            )
+        )
 
 
 if __name__ == "__main__":
-    import xml.etree.ElementTree as ET
-
     parser = cli.parser(
         description="Export a CLDF dataset (or similar) to bioinformatics alignments"
     )
@@ -583,7 +624,7 @@ if __name__ == "__main__":
         help="Name of the code column for metadata-free wordlists",
     )
     parser.add_argument(
-        "--languages-list",
+        "--language-list",
         default=None,
         type=Path,
         help="File to load a list of languages from",
@@ -595,11 +636,10 @@ if __name__ == "__main__":
         help="Use this column as language identifiers, instead of language IDs.",
     )
     parser.add_argument(
-        "--exclude-concept",
-        "-x",
-        action="append",
-        default=[],
-        help="Exclude this concept (can be used multiple times)",
+        "--concept-list",
+        default=None,
+        type=Path,
+        help="File to load a list of concepts from",
     )
     parser.add_argument(
         "--coding",
@@ -619,17 +659,54 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
-    # Step 1: Prepare the output file. This only matters if the output is beast.
+    # Step 1: Load the raw data.
+    dataset = pycldf.Dataset.from_metadata(args.metadata)
+    ds: t.Mapping[
+        Language_ID, t.Mapping[Language_ID, t.Set[Language_ID]]
+    ] = read_cldf_dataset(dataset, code_column=args.code_column, logger=logger)
+
+    languages: t.Set[str]
+    if args.language_list:
+        languages = {lg.strip() for lg in args.language_list.open().read().split("\n")}
+    else:
+        languages = set(ds.keys())
+
+    concepts: t.Set[str]
+    if args.concept_list:
+        concepts = {
+            c.strip(): util.string_to_id(c.strip())
+            for c in args.concept_list.open().read().split("\n")
+        }
+    else:
+        concepts = {
+            c.strip(): util.string_to_id(c.strip()) for s in ds.values() for c in s
+        }
+
+    # Step 2: Filter and clean the data.
+    ds = {
+        language: {concepts[k]: v for k, v in sequence.items() if k in concepts}
+        for language, sequence in ds.items()
+        if (languages is None) or (language in languages)
+    }
+
+    # Step 3: Prepare the output file. This only matters if the output is beast.
     if args.format == "beast":
+        xmlparser = ET.XMLParser(remove_blank_text=True, resolve_entities=False)
         if args.output_file is None:
-            root = ET.fromstring("<beast><data /></beast>")
-            et = ET.ElementTree(root)
+            root = ET.fromstring(
+                """<beast><data /></beast> """,
+                parser=xmlparser,
+            )
         elif args.output_file.exists():
-            et = ET.parse(args.output_file)
-            root = et.getroot()
+            for line in args.output_file.open("rb"):
+                xmlparser.feed(line)
+            root = xmlparser.close()
         else:
-            root = ET.fromstring("<beast><data /></beast>")
-            et = ET.ElementTree(root)
+            root = ET.fromstring(
+                """<beast><data /></beast>""",
+                parser=xmlparser,
+            )
+        et = root.getroottree()
         datas = list(root.iter("data"))
         data_object = datas[0]
     # Otherwise, it's just making the file accessible.
@@ -638,29 +715,10 @@ if __name__ == "__main__":
     else:
         args.output_file = args.output_file.open("w")
 
-    # Step 2: Load the raw data.
-    dataset = pycldf.Dataset.from_metadata(args.metadata)
-    ds: t.Mapping[
-        Language_ID, t.Mapping[Language_ID, t.Set[Language_ID]]
-    ] = read_cldf_dataset(dataset, code_column=args.code_column, logger=logger)
-
-    languages: t.Set[str]
-    if args.languages_list:
-        languages = {lg.strip() for lg in args.languages_list.open().read().split("\n")}
-    else:
-        languages = set(ds.keys())
-
-    # Step 3: Filter the data.
-    ds = {
-        language: {k: v for k, v in sequence.items() if k not in args.exclude_concept}
-        for language, sequence in ds.items()
-        if (languages is None) or (language in languages)
-    }
-
     n_symbols, datatype = 2, "binary"
     partitions = None
 
-    # Step 3: Code the data
+    # Step 4: Code the data
     alignment: t.Mapping[Language_ID, str]
     if args.coding == "rootpresence":
         binal, cogset_indices = root_presence_code(ds, logger=logger)
@@ -684,7 +742,7 @@ if __name__ == "__main__":
     else:
         raise ValueError("Coding schema {:} unknown.".format(args.coding))
 
-    # Step 4: Format the data for output
+    # Step 5: Format the data for output
     if args.format == "raw":
         max_length = max([len(str(lang)) for lang in ds])
         for language, sequence in zip(ds, sequences):
@@ -708,8 +766,19 @@ if __name__ == "__main__":
         )
 
     elif args.format == "beast":
-        fill_beast(data_object)
-        et.write(args.output_file, encoding="unicode")
+        fill_beast(data_object, ds, sequences)
+        if partitions:
+            add_partitions(data_object, partitions)
+            for language_plate in root.iterfind(".//plate[@range='{partitions}']"):
+                language_plate.set("range", ",".join(partitions))
+        for language_plate in root.iterfind(".//plate[@range='{languages}']"):
+            language_plate.set("range", ",".join(languages))
+        et.write(
+            args.output_file.open("wb"),
+            pretty_print=True,
+            xml_declaration=True,
+            encoding=et.docinfo.encoding,
+        )
 
     # Step 5: Maybe print some statistics to file.
     if args.stats_file:
