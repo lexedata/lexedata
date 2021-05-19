@@ -74,5 +74,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     add_cognate_table(pycldf.Dataset.from_metadata(args.metadata))
-
-

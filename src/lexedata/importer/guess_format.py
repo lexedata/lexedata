@@ -1,7 +1,6 @@
 import os
 import re
 import shutil
-import argparse
 import typing as t
 import unicodedata
 from pathlib import Path
@@ -10,6 +9,9 @@ import platform
 import csvw
 import pycldf
 import openpyxl
+
+import lexedata.cli as cli
+
 
 if platform.system() != "Windows":
     import readline
@@ -426,7 +428,7 @@ def main() -> None:
     else:
         cognateset = False
 
-    data = pycldf.Wordlist(csvw.TableGroup(fname=args.json))
+    data = pycldf.Wordlist(csvw.TableGroup(fname=args.metadata))
     # TODO: Should this be necessary? Check with @xrotwang
     data.properties["dc:conformsTo"] = "http://cldf.clld.org/v1.0/terms.rdf#Wordlist"
 
