@@ -2,15 +2,26 @@
 # The first column needs to be 'ID', 1-based integers
 # Cognatesets IDs need to be 1-based integers
 
+import sys
 from pathlib import Path
 import csv
 import typing as t
+from enum import Enum
 
 import pycldf
 
 
 import lexedata.cli as cli
 from lexedata.util import parse_segment_slices
+
+
+# TODO: Maybe we should have these in cli and consolidate them between
+# different CLI scripts? Maybe we can even store the messages there, too, and
+# have a unified critical exit interface that needs only the name of the script
+# and the exit code and does everything?
+class Exit(Enum):
+    NO_COGNATETABLE = 3
+    NO_SEGMENTS = 4
 
 
 def rename(form_column, dataset):
@@ -55,12 +66,29 @@ def forms_to_tsv(
     logger: cli.logging.Logger = cli.logger,
 ):
     # required fields
-    c_cognate_cognateset = dataset["CognateTable", "cognatesetReference"].name
-    c_cognate_form = dataset["CognateTable", "formReference"].name
+    try:
+        c_cognate_cognateset = dataset["CognateTable", "cognatesetReference"].name
+        c_cognate_form = dataset["CognateTable", "formReference"].name
+    except KeyError:
+        logger.critical(
+            """Edictor export requires your dataset to have an explicit CognateTable containing the judgements.
+        Run `lexedata.change.construct_cognate_table` if you have cognate sets in your FormTable.
+        Run `lexedata.change.cognate_code_data` if you want to start from automatic cognate detection."""
+        )
+        sys.exit(Exit.NO_COGNATETABLE)
     c_form_language = dataset["FormTable", "languageReference"].name
     c_form_concept = dataset["FormTable", "parameterReference"].name
     c_form_id = dataset["FormTable", "id"].name
-    c_form_segments = dataset["FormTable", "segments"].name
+    try:
+        c_form_segments = dataset["FormTable", "segments"].name
+    except KeyError:
+        logger.critical(
+            """Edictor export requires your dataset to have segments in the FormTable.
+        Run `lexedata.enrich.segment_using_clts` to automatically add segments based on your forms."""
+        )
+        # TODO: Exit.NO_SEGMENTS is not an `int`, so the exit code of the
+        # python run is actually 1, not 4 as we wanted.
+        sys.exit(Exit.NO_SEGMENTS)
 
     # prepare the header for the tsv output
     # the first column must be named ID and contain 1-based integer IDs
@@ -86,7 +114,12 @@ def forms_to_tsv(
                 for c, d in delimiters.items():
                     if c == c_form_segments:
                         continue
-                    form[c] = d.join(form[c])
+                    try:
+                        form[c] = d.join(form[c])
+                    except TypeError:
+                        logger.warning(
+                            f"No segments found for form {form[c_form_id]}. You can generate segments using `lexedata.enrich.segment_using_clts`."
+                        )
                 # 2. No tabs, newlines in entries
                 for c, v in form.items():
                     if type(v) == str:
@@ -236,7 +269,6 @@ if __name__ == "__main__":
         default="cognate.tsv",
         help="Path to the output file",
     )
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
     forms_to_tsv(
