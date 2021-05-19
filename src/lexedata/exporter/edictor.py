@@ -203,6 +203,18 @@ def forms_to_tsv(
     # prepare the header for the tsv output
     # the first column must be named ID and contain 1-based integer IDs
     # set header for tsv
+    tsv_header = list(dataset["FormTable"].tableSchema.columndict.keys())
+
+    tsv_header.insert(0, "LINGPY_ID")
+    tsv_header.append("cognatesetReference")
+    if "alignment" not in tsv_header:
+        tsv_header.append("alignment")
+
+    delimiters = {
+        c.name: c.separator
+        for c in dataset["FormTable"].tableSchema.columns
+        if c.separator
+    }
 
     # select forms and cognates given restriction of languages and concepts, cognatesets respectively
     forms = {

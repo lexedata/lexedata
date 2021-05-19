@@ -12,6 +12,7 @@ from lexedata import cli
 
 
 def add_explicit_cognateset_table(dataset: pycldf.Wordlist) -> None:
+    breakpoint()
     if "CognatesetTable" in dataset:
         return
     dataset.add_component("CognatesetTable")
@@ -20,9 +21,9 @@ def add_explicit_cognateset_table(dataset: pycldf.Wordlist) -> None:
 
     cognatesets = set()
     for judgement in dataset["CognateTable"]:
-        cognatesets.add(c_cognateset)
+        cognatesets.add(judgement[c_cognateset])
 
-    dataset.write(CognatesetTable=[{"ID": id for id in sorted(cognatesets)}])
+    dataset.write(CognatesetTable=[{"ID": id} for id in sorted(cognatesets)])
 
 
 def add_cognate_table(
@@ -67,7 +68,9 @@ def add_cognate_table(
                         logger.warning(
                             "You seem to have morpheme annotations in your cognates. I will probably mess them up a bit, because I have not been taught properly how to deal with them. Sorry!"
                         )
-                    judgement["Segment_Slice"] = "1:{:d}".format(len(form["segments"]))
+                    judgement["Segment_Slice"] = [
+                        "1:{:d}".format(len(form["segments"]))
+                    ]
                 except (KeyError, TypeError):
                     logger.warning(
                         f"No segments found for form {f} ({form['form']}). You can generate segments using `lexedata.enrich.segment_using_clts`."
