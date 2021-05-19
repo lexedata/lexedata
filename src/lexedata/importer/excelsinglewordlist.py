@@ -378,7 +378,6 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--verbose",
-        "-v",
         action="store_true",
         default=False,
         help="Report existing forms",
@@ -397,7 +396,6 @@ if __name__ == "__main__":
         help="Prints report of newly added forms",
     )
 
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 

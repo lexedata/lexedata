@@ -258,7 +258,6 @@ if __name__ == "__main__":
         default=False,
         help="Apply the replacements performed on segments also to #form column of #FormTable",
     )
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 

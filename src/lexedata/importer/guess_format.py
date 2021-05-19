@@ -374,16 +374,10 @@ def add_table_with_columns(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="Generate a custom lexical dataset parser and dataset metadata for a particular dataset"
     )
     parser.add_argument("excel", type=Path, help="The Excel file to inspect")
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
     args = parser.parse_args()
 
     # STEP 1: Select a sheet
