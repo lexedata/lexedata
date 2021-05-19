@@ -97,6 +97,8 @@ def forms_to_tsv(
 
     tsv_header.insert(0, "LINGPY_ID")
     tsv_header.append("cognatesetReference")
+    if "alignment" not in tsv_header:
+        tsv_header.append("alignment")
 
     delimiters = {
         c.name: c.separator
@@ -143,9 +145,12 @@ def forms_to_tsv(
                 which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [
                     None for _ in form[c_form_segments]
                 ]
-            segments_judged = parse_segment_slices(
-                segments=form[c_form_segments], judgement=j
-            )
+            if ("CognateTable", "segmentSlice") in dataset:
+                segments_judged = parse_segment_slices(
+                    j[dataset["CognateTable", "segmentSlice"].name]
+                )
+            else:
+                segments_judged = range(len(form[c_form_segments]))
             for s in segments_judged:
                 if s >= len(
                     which_segment_belongs_to_which_cognateset[j[c_cognate_form]]

@@ -198,6 +198,7 @@ def add_segments_to_dataset(
     }
     for r, row in enumerate(dataset["FormTable"], 1):
         if row[c_f_segments] and not overwrite_existing:
+            write_back.append(row)
             continue
         else:
             if row[transcription]:
@@ -218,7 +219,7 @@ def add_segments_to_dataset(
                     report=report[row[c_f_lan]],
                     logger=logger,
                 )
-        write_back.append(row)
+            write_back.append(row)
     from tabulate import tabulate
 
     data = [
