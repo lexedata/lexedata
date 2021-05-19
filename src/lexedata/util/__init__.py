@@ -133,7 +133,8 @@ def edit_distance(text1: str, text2: str) -> float:
 
 def load_clics():
     gml_file = (
-        Path(__file__).parent / "data/clics-clics3-97832b5/clics3-network.gml.zip"
+        Path(__file__).parent.parent
+        / "data/clics-clics3-97832b5/clics3-network.gml.zip"
     )
     if not gml_file.exists():
         import urllib.request
@@ -262,3 +263,7 @@ class KeyKeyDict(t.Mapping[str, str]):
 
     def __getitem__(self, key):
         return key
+
+
+if __name__ == "__main__":
+    print(Path(__file__).parent.parent)
