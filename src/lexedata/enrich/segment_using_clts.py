@@ -1,5 +1,6 @@
 import typing as t
 from collections import defaultdict
+from tabulate import tabulate
 
 from csvw.metadata import URITemplate
 
@@ -8,6 +9,7 @@ import pyclts
 import segments
 import cldfbench
 import cldfcatalog
+import attr
 
 import lexedata.cli as cli
 
@@ -17,6 +19,21 @@ bipa = clts.api.bipa
 
 tokenizer = segments.Tokenizer()
 
+
+@attr.s(auto_attribs=True)
+class SegmentReport:
+    sounds: defaultdict = defaultdict(lambda: {"count": 0, "comment": ""})
+
+    def __call__(self, name: str) -> t.Tuple[str, str, int, str,]:
+        res = []
+        for k, v in self.sounds.items():
+            res.append((
+                name,
+                k,
+                v["count"],
+                v["comment"]
+                ))
+        return res
 
 def cleanup(form: str) -> str:
     form = form.split(";")[0].strip()
@@ -44,10 +61,10 @@ pre_replace = {
 
 def segment_form(
     formstring: str,
+    report: SegmentReport,
     system=bipa,
     split_diphthongs: bool = True,
     context_for_warnings: str = "",
-    report: t.Optional[t.Dict] = None,
     logger: cli.logging.Logger = cli.logger,
 ) -> t.Iterable[pyclts.models.Symbol]:
     """Segment the form.
@@ -81,11 +98,13 @@ def segment_form(
         ).split()
     ]
     if system != bipa:
-        if any(r.type == "unknownsound" for r in raw_tokens):
-            logger.warning(
-                f"{context_for_warnings}Unknown sound encountered in {formstring:}"
-            )
-        return raw_tokens
+        for r in raw_tokens:
+            if r.type == "unknownsound":
+                logger.warning(
+                    f"{context_for_warnings}Unknown sound encountered in {formstring:}"
+                )
+                report.sounds[str(r)]["count"] += 1
+                report.sounds[str(r)]["comment"] = "unknown sound"
     i = len(raw_tokens) - 1
     while i >= 0:
         if split_diphthongs and raw_tokens[i].type == "diphthong":
@@ -96,9 +115,8 @@ def segment_form(
             i -= 1
             continue
         if raw_tokens[i].source == "/":
-            if report:
-                report[str(raw_tokens[i])]["count"] += 1
-                report[str(raw_tokens[i])]["comment"] = "illegal symbol"
+            report.sounds[str(raw_tokens[i])]["count"] += 1
+            report.sounds[str(raw_tokens[i])]["comment"] = "illegal symbol"
             del raw_tokens[i]
             logger.warning(
                 f"{context_for_warnings}Impossible sound '/' encountered in {formstring} – "
@@ -125,9 +143,8 @@ def segment_form(
                 logger.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
-                if report:
-                    report[str(raw_tokens[i])]["count"] += 1
-                    report[str(raw_tokens[i])]["comment"] = "unknown pre-nasalization"
+                report.sounds[str(raw_tokens[i])]["count"] += 1
+                report.sounds[str(raw_tokens[i])]["comment"] = "unknown pre-nasalization"
                 i -= 1
                 continue
             raw_tokens[i + 1] = bipa["pre-nasalized " + raw_tokens[i + 1].name]
@@ -138,10 +155,8 @@ def segment_form(
                 logger.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
-
-                if report:
-                    report[str(raw_tokens[i])]["count"] += 1
-                    report[str(raw_tokens[i])]["comment"] = "unknown pre-aspiration"
+                report.sounds[str(raw_tokens[i])]["count"] += 1
+                report.sounds[str(raw_tokens[i])]["comment"] = "unknown pre-aspiration"
                 i -= 1
                 continue
             raw_tokens[i + 1] = bipa["pre-aspirated " + raw_tokens[i + 1].name]
@@ -150,9 +165,8 @@ def segment_form(
         logger.warning(
             f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
         )
-        if report:
-            report[str(raw_tokens[i])]["count"] += 1
-            report[str(raw_tokens[i])]["comment"] = "unknown sound"
+        report.sounds[str(raw_tokens[i])]["count"] += 1
+        report.sounds[str(raw_tokens[i])]["comment"] = "unknown sound"
         i -= 1
 
     return raw_tokens
@@ -180,7 +194,7 @@ def add_segments_to_dataset(
     c_f_form = dataset["FormTable", "form"].name
     # report = t.Dict[str, t.Dict[str, t.Dict[str, str]]] = {}
     report = {
-        f[c_f_lan]: defaultdict(lambda: {"count": 0, "comment": ""})
+        f[c_f_lan]: SegmentReport()
         for f in dataset["FormTable"]
     }
     for r, row in enumerate(dataset["FormTable"], 1):
@@ -194,8 +208,8 @@ def add_segments_to_dataset(
                 form = row[transcription].strip()
                 for wrong, right in pre_replace.items():
                     if wrong in form:
-                        report[row[c_f_lan]][wrong]["count"] += 1
-                        report[row[c_f_lan]][wrong][
+                        report[row[c_f_lan]].sounds[wrong]["count"] += 1
+                        report[row[c_f_lan]].sounds[wrong][
                             "comment"
                         ] = f"'{wrong}' replaced by '{right}'"
                         form = form.replace(wrong, right)
@@ -204,27 +218,13 @@ def add_segments_to_dataset(
                             row[c_f_form] = row[c_f_form].replace(wrong, right)
                 row[dataset.column_names.forms.segments] = segment_form(
                     form,
-                    context_for_warnings=f"In form {row[c_f_id]} (line {r}): ",
                     report=report[row[c_f_lan]],
+                    context_for_warnings=f"In form {row[c_f_id]} (line {r}): ",
                     logger=logger,
                 )
             write_back.append(row)
     dataset.write(FormTable=write_back)
-    from tabulate import tabulate
-
-    data = [
-        [k, kk] + list(values.values())
-        for k, v in report.items()
-        for kk, values in v.items()
-    ]
-    # Todo: move this print to __main__ part and make function return report
-    print(
-        tabulate(
-            data,
-            headers=["LanguageID", "Sound", "Occurrences", "Comment"],
-            tablefmt="orgtbl",
-        )
-    )
+    return report
 
 
 if __name__ == "__main__":
@@ -270,6 +270,18 @@ if __name__ == "__main__":
     if args.transcription is None:
         args.transcription = dataset.column_names.forms.form
     # add segments to FormTable
-    add_segments_to_dataset(
+    report = add_segments_to_dataset(
         dataset, args.transcription, args.overwrite, args.replace_form, logger=logger
     )
+    data = []
+    for lan, segment_report in report.items():
+        data.extend(segment_report(lan))
+
+    print(
+        tabulate(
+            data,
+            headers=["LanguageID", "Sound", "Occurrences", "Comment"],
+            tablefmt="orgtbl",
+        )
+    )
+
