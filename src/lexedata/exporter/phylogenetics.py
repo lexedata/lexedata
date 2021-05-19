@@ -538,7 +538,7 @@ def fill_beast(data_object: ET.Element, languages, sequences):
     data_object.clear()
     data_object.attrib["id"] = "vocabulary"
     data_object.attrib["dataType"] = "integer"
-    data_object.attrib["spec"] = "Alignent"
+    data_object.attrib["spec"] = "Alignment"
     data_object.text = "\n"
     for language, sequence in zip(languages, sequences):
         seq = "".join(sequence)
@@ -579,7 +579,7 @@ def add_partitions(data_object: ET.Element, partitions):
             data_object.makeelement(
                 "data",
                 {
-                    "id": name,
+                    "id": "concept:" + name,
                     "spec": "FilteredAlignment",
                     "filter": "0," + indices_string,
                     "data": "@" + data_object.attrib["id"],
@@ -772,7 +772,7 @@ if __name__ == "__main__":
             for language_plate in root.iterfind(".//plate[@range='{partitions}']"):
                 language_plate.set("range", ",".join(partitions))
         for language_plate in root.iterfind(".//plate[@range='{languages}']"):
-            language_plate.set("range", ",".join(languages))
+            language_plate.set("range", ",".join(ds))
         et.write(
             args.output_file.open("wb"),
             pretty_print=True,
