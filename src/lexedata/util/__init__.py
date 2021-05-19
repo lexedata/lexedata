@@ -263,7 +263,3 @@ class KeyKeyDict(t.Mapping[str, str]):
 
     def __getitem__(self, key):
         return key
-
-
-if __name__ == "__main__":
-    print(Path(__file__).parent.parent)
