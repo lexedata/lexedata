@@ -7,7 +7,9 @@ from lexedata.util import parse_segment_slices
 
 
 def segment_to_cognateset(
-    dataset: pycldf.Dataset, cognatesets_filter: t.Iterable, logger=None
+    dataset: pycldf.Dataset,
+    cognatesets: t.Optional[t.Iterable],
+    logger: cli.logging.Logger = cli.logger,
 ):
     # required fields
     c_cognate_cognateset = dataset.column_names.cognates.cognatesetReference
@@ -21,7 +23,7 @@ def segment_to_cognateset(
     cognateset_cache: t.Dict[t.Optional[str], int] = {
         cognateset["ID"]: c
         for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
-        if cognatesets_filter is None or cognateset["ID"] in cognatesets_filter
+        if cognatesets is None or cognateset["ID"] in cognatesets
     }
     cognateset_cache[None] = 0
 
@@ -79,6 +81,6 @@ if __name__ == "__main__":
     logger = cli.setup_logging(args)
     segment_to_cognateset(
         dataset=pycldf.Dataset.from_metadata(args.metadata),
-        cognatesets_filter=args.cognatesets,
+        cognatesets=args.cognatesets,
         logger=logger,
     )

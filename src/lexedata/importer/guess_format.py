@@ -1,7 +1,6 @@
 import os
 import re
 import shutil
-import argparse
 import typing as t
 import unicodedata
 from pathlib import Path
@@ -10,6 +9,9 @@ import platform
 import csvw
 import pycldf
 import openpyxl
+
+import lexedata.cli as cli
+
 
 if platform.system() != "Windows":
     import readline
@@ -374,16 +376,10 @@ def add_table_with_columns(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
+    parser = cli.parser(
         description="Generate a custom lexical dataset parser and dataset metadata for a particular dataset"
     )
     parser.add_argument("excel", type=Path, help="The Excel file to inspect")
-    parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
     args = parser.parse_args()
 
     # STEP 1: Select a sheet
@@ -432,7 +428,7 @@ def main() -> None:
     else:
         cognateset = False
 
-    data = pycldf.Wordlist(csvw.TableGroup(fname=args.json))
+    data = pycldf.Wordlist(csvw.TableGroup(fname=args.metadata))
     # TODO: Should this be necessary? Check with @xrotwang
     data.properties["dc:conformsTo"] = "http://cldf.clld.org/v1.0/terms.rdf#Wordlist"
 

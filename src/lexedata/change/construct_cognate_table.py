@@ -7,6 +7,7 @@ If the dataset has a cognatesetReference anywhere else, admit you don't know wha
 """
 
 import pycldf
+
 from lexedata.util import cache_table
 from lexedata import cli
 from lexedata import util
