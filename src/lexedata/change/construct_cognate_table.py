@@ -35,8 +35,9 @@ def add_cognate_table(
         return
     dataset.add_component("CognateTable")
 
-    # TODO: Check if that cognatesetReference is already a foreign key
-    # elsewhere, because then we need to transfer that knowledge.
+    # TODO: Check if that cognatesetReference is already a foreign key to
+    # elsewhere (could be a CognatesetTable, could be whatever), because then
+    # we need to transfer that knowledge.
 
     # Load anything that's useful for a cognate set table: Form IDs, segments,
     # segment slices, cognateset references, alignments
@@ -55,11 +56,11 @@ def add_cognate_table(
     for f, form in forms.items():
         if form.get("cognatesetReference"):
             if split:
-                cogset = form["cognatesetReference"]
-            else:
                 cogset = util.string_to_id(
                     "{:}-{:}".format(form["concept"], form["cognatesetReference"])
                 )
+            else:
+                cogset = form["cognatesetReference"]
             judgement = {
                 "ID": f,
                 "Form_ID": f,
@@ -88,7 +89,15 @@ def add_cognate_table(
             judgement["Alignment"] = form.get("alignment")
             cognate_judgements.append(judgement)
 
-    # TODO: Delete those moved columns
+    # Delete the cognateset column
+    try:
+        cols = dataset["FormTable"].tableSchema.columns
+        ix = cols.index(dataset["FormTable", "cognatesetReference"])
+        del cols[ix]
+        dataset.write(FormTable=list(dataset["FormTable"]))
+    except ValueError:
+        pass
+
     dataset.write(CognateTable=cognate_judgements)
 
     add_explicit_cognateset_table(dataset)

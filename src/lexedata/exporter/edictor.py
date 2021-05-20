@@ -210,12 +210,6 @@ def forms_to_tsv(
     if "alignment" not in tsv_header:
         tsv_header.append("alignment")
 
-    delimiters = {
-        c.name: c.separator
-        for c in dataset["FormTable"].tableSchema.columns
-        if c.separator
-    }
-
     # select forms and cognates given restriction of languages and concepts, cognatesets respectively
     forms = {
         form[c_form_id]: form
@@ -346,16 +340,27 @@ def add_edictor_settings(file, dataset):
     # maybe, but then we would have to clean up that alternative separator in
     # all out outputs.
 
-    c_language_id = dataset["LanguageTable", "id"].name
-    c_concept_id = dataset["ParameterTable", "id"].name
+    try:
+        c_language_id = dataset["LanguageTable", "id"].name
+        languages = "\n#@sorted_taxa={:s}".format(
+            "|".join(lang[c_language_id] for lang in dataset["LanguageTable"])
+        )
+    except KeyError:
+        languages = ""
+    try:
+        c_concept_id = dataset["ParameterTable", "id"].name
+        concepts = "\n#@sorted_concepts={:s}".format(
+            "|".join(concept[c_concept_id] for concept in dataset["ParameterTable"])
+        )
+    # @sorted_concepts={:s}
+    except KeyError:
+        concepts = ""
     file.write(
         """
 #@highlight=TOKENS|ALIGNMENT
 #@sampa=IPA|TOKENS
 #@css=menu:show|database:hide
-#@basics=COGID|CONCEPT|DOCULECT|IPA|TOKENS
-#@sorted_taxa={:s}
-#@sorted_concepts={:s}
+#@basics=COGID|CONCEPT|DOCULECT|IPA|TOKENS{:s}{:s}
 #@display=filedisplay|partial
 #@missing_marker=Ø
 #@separator=\t
@@ -369,8 +374,8 @@ def add_edictor_settings(file, dataset):
 #@filename={:s}
 #@navbar=true
 #@_morphology_mode=partial""".format(
-            "|".join(lang[c_language_id] for lang in dataset["LanguageTable"]),
-            "|".join(concept[c_concept_id] for concept in dataset["ParameterTable"]),
+            languages,
+            concepts,
             file.name,
         )
     )
