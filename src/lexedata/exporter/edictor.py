@@ -6,6 +6,9 @@ integers.
 
 """
 
+# TODO: Underscores are treated specially by Edictor in a way we cannot support yet.
+
+
 import sys
 from pathlib import Path
 import csv
