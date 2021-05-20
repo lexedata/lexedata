@@ -9,10 +9,10 @@ If the dataset has a cognatesetReference anywhere else, admit you don't know wha
 import pycldf
 from lexedata.util import cache_table
 from lexedata import cli
+from lexedata import util
 
 
 def add_explicit_cognateset_table(dataset: pycldf.Wordlist) -> None:
-    breakpoint()
     if "CognatesetTable" in dataset:
         return
     dataset.add_component("CognatesetTable")
@@ -27,7 +27,9 @@ def add_explicit_cognateset_table(dataset: pycldf.Wordlist) -> None:
 
 
 def add_cognate_table(
-    dataset: pycldf.Wordlist, logger: cli.logging.Logger = cli.logger
+    dataset: pycldf.Wordlist,
+    split: bool = True,
+    logger: cli.logging.Logger = cli.logger,
 ) -> None:
     if "CognateTable" in dataset:
         return
@@ -40,6 +42,7 @@ def add_cognate_table(
     # segment slices, cognateset references, alignments
     columns = {
         "id": dataset["FormTable", "id"].name,
+        "concept": dataset["FormTable", "parameterReference"].name,
         "form": dataset["FormTable", "form"].name,
     }
     for property in ["segments", "segmentSlice", "cognatesetReference", "alignment"]:
@@ -51,11 +54,16 @@ def add_cognate_table(
     forms = cache_table(dataset, columns=columns)
     for f, form in forms.items():
         if form.get("cognatesetReference"):
-            # TODO: Accept a parameter which describes that cognatesets are per-concept, and need to be split here by adding the concept to the cognatesetReference.
+            if split:
+                cogset = form["cognatesetReference"]
+            else:
+                cogset = util.string_to_id(
+                    "{:}-{:}".format(form["concept"], form["cognatesetReference"])
+                )
             judgement = {
                 "ID": f,
                 "Form_ID": f,
-                "Cognateset_ID": form["cognatesetReference"],
+                "Cognateset_ID": cogset,
             }
             try:
                 judgement["Segment_Slice"] = form["segmentSlice"]
@@ -88,8 +96,14 @@ def add_cognate_table(
 
 if __name__ == "__main__":
     parser = cli.parser(__doc__)
+    parser.add_argument(
+        "--split-cognatesets",
+        action="store_true",
+        default=False,
+        help="Assume that cognatesets are only uniquie within concepts, and make them globally unique in the process.",
+    )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
-    add_cognate_table(dataset)
+    add_cognate_table(dataset, split=args.split_cognatesets)
