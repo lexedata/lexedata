@@ -236,7 +236,6 @@ if __name__ == "__main__":
         default="cognate.tsv",
         help="Path to the output file",
     )
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
     forms_to_tsv(

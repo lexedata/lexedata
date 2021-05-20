@@ -7,7 +7,9 @@ If the dataset has a cognatesetReference anywhere else, admit you don't know wha
 """
 
 import pycldf
+
 from lexedata.util import cache_table
+import lexedata.cli as cli
 
 
 def add_explicit_cognateset_table(dataset: pycldf.Wordlist) -> None:
@@ -65,3 +67,10 @@ def add_cognate_table(dataset: pycldf.Wordlist) -> None:
 
     # TODO: Delete those moved columns
     dataset.write(CognateTable=cognate_judgements)
+
+
+if __name__ == "__main__":
+    parser = cli.parser(__doc__)
+    args = parser.parse_args()
+
+    add_cognate_table(pycldf.Dataset.from_metadata(args.metadata))
