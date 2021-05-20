@@ -133,7 +133,8 @@ def edit_distance(text1: str, text2: str) -> float:
 
 def load_clics():
     gml_file = (
-        Path(__file__).parent / "data/clics-clics3-97832b5/clics3-network.gml.zip"
+        Path(__file__).parent.parent
+        / "data/clics-clics3-97832b5/clics3-network.gml.zip"
     )
     if not gml_file.exists():
         import urllib.request
@@ -144,7 +145,7 @@ def load_clics():
         zfobj = zipfile.ZipFile(file_name)
         zfobj.extract(
             "clics-clics3-97832b5/clics3-network.gml.zip",
-            Path(__file__).parent / "data/",
+            Path(__file__).parent.parent / "data/",
         )
     gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "r")
     return networkx.parse_gml(line.decode("utf-8") for line in gml)

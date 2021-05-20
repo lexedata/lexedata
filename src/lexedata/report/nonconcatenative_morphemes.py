@@ -1,5 +1,4 @@
 import typing as t
-from pathlib import Path
 
 import pycldf
 
@@ -8,7 +7,11 @@ import lexedata.cli as cli
 from lexedata.util import parse_segment_slices
 
 
-def segment_to_cognateset(dataset: pycldf.Dataset, cognatesets: t.Iterable):
+def segment_to_cognateset(
+    dataset: pycldf.Dataset,
+    cognatesets: t.Iterable,
+    logger: cli.logging.Logger = cli.logger,
+):
     # required fields
     c_cognate_cognateset = dataset.column_names.cognates.cognatesetReference
     c_form_segments = dataset.column_names.forms.segments
@@ -40,8 +43,8 @@ def segment_to_cognateset(dataset: pycldf.Dataset, cognatesets: t.Iterable):
                         j[c_cognate_cognateset]
                     )
                 except IndexError:
-                    print(
-                        f"WARNING: In judgement {j}, segment slice point outside valid range 0:{len(form[c_form_segments])}."
+                    logger.warning(
+                        f"In judgement {j}, segment slice point outside valid range 0:{len(form[c_form_segments])}."
                     )
                     continue
     return which_segment_belongs_to_which_cognateset
@@ -52,12 +55,6 @@ if __name__ == "__main__":
         description="List segments that indicate non-concatenative morphology "
     )
     parser.add_argument(
-        "--metadata",
-        type=Path,
-        default="Wordlist-metadata.json",
-        help="Path to the JSON metadata file describing the dataset (default: ./Wordlist-metadata.json)",
-    )
-    parser.add_argument(
         "--cognatesets",
         type=str,
         nargs="*",
@@ -65,7 +62,9 @@ if __name__ == "__main__":
         help="",
     )
     args = parser.parse_args()
+    logger = cli.setup_logging(args)
     segment_to_cognateset(
         dataset=pycldf.Dataset.from_metadata(args.metadata),
         cognatesets=args.cognatesets,
+        logger=logger,
     )

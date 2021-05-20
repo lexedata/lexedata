@@ -617,7 +617,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--stats-file", type=Path, help="A file to write statistics to")
     args = parser.parse_args()
-    cli.setup_logging(args)
+    logger = cli.setup_logging(args)
 
     # Step 1: Prepare the output file. This only matters if the output is beast.
     if args.format == "beast":
@@ -642,7 +642,7 @@ if __name__ == "__main__":
     dataset = pycldf.Dataset.from_metadata(args.metadata)
     ds: t.Mapping[
         Language_ID, t.Mapping[Language_ID, t.Set[Language_ID]]
-    ] = read_cldf_dataset(dataset, code_column=args.code_column)
+    ] = read_cldf_dataset(dataset, code_column=args.code_column, logger=logger)
 
     languages: t.Set[str]
     if args.languages_list:
@@ -663,7 +663,7 @@ if __name__ == "__main__":
     # Step 3: Code the data
     alignment: t.Mapping[Language_ID, str]
     if args.coding == "rootpresence":
-        binal, cogset_indices = root_presence_code(ds)
+        binal, cogset_indices = root_presence_code(ds, logger=logger)
         n_characters = len(next(iter(binal.values())))
         alignment = {key: "".join(value) for key, value in binal.items()}
         sequences = raw_binary_alignment(alignment)
