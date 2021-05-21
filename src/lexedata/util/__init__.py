@@ -19,6 +19,13 @@ from lexedata.enrich.add_free_metadata import add_metadata
 ID_FORMAT = re.compile("[a-z0-9_]+")
 
 
+def ensure_list(maybe_string: t.Union[t.List[str], str]) -> t.List[str]:
+    if isinstance(maybe_string, list):
+        return maybe_string
+    else:
+        return [maybe_string]
+
+
 def cldf_property(url: csvw.metadata.URITemplate) -> t.Optional[str]:
     if url.uri.startswith("http://cldf.clld.org/v1.0/terms.rdf#"):
         # len("http://cldf.clld.org/v1.0/terms.rdf#") == 36

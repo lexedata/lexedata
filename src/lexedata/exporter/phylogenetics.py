@@ -1,4 +1,5 @@
 import sys
+import enum
 import typing as t
 from pathlib import Path
 import lxml.etree as ET
@@ -193,7 +194,7 @@ def read_wordlist(
 
 
 def read_structure_dataset(
-    dataset: pycldf.Wordlist, logger: cli.logging.Logger = cli.logger
+    dataset: pycldf.StructureDataset, logger: cli.logging.Logger = cli.logger
 ) -> t.MutableMapping[types.Language_ID, t.MutableMapping[types.Parameter_ID, t.Set]]:
     col_map = dataset.column_names
     data: t.MutableMapping[
@@ -212,7 +213,7 @@ def root_meaning_code(
     dataset: t.Mapping[
         types.Language_ID, t.Mapping[types.Parameter_ID, t.Set[types.Cognateset_ID]]
     ],
-    core_concepts: t.Optional[t.Set[types.Parameter_ID]] = None,
+    core_concepts: t.Set[types.Parameter_ID] = types.WorldSet(),
     ascertainment: t.Sequence[Literal["0", "1", "?"]] = ["0"],
 ) -> t.Tuple[
     t.Mapping[types.Language_ID, t.List[Literal["0", "1", "?"]]],
@@ -284,13 +285,16 @@ def root_meaning_code(
     return alignment, blocks
 
 
+class AbsenceHeuristic(enum.Enum):
+    TrustCentralConcept = 0
+    TrustHalfPrimaryConcepts = 1
+
+
 def root_presence_code(
     dataset: t.Mapping[
         types.Language_ID, t.Mapping[types.Parameter_ID, t.Set[types.Cognateset_ID]]
     ],
-    important: t.Callable[
-        [t.Set[types.Parameter_ID]], t.Set[types.Parameter_ID]
-    ] = lambda x: x,
+    relevant_concepts: t.Mapping[types.Cognateset_ID, t.Iterable[types.Parameter_ID]],
     ascertainment: t.Sequence[Literal["0", "1", "?"]] = ["0"],
     logger: cli.logging.Logger = cli.logger,
 ) -> t.Tuple[
@@ -302,7 +306,7 @@ def root_presence_code(
     Take the cognate code information from a wordlist, i.e. a mapping of the
     form {Language ID: {Concept ID: {Cognateset ID}}}, and generate a binary
     alignment from it that lists for every root whether it is present in that
-    language or not. Return it, and the association between cognatesets and
+    language or not. Return that, and the association between cognatesets and
     characters.
 
     >>> alignment, roots = root_presence_code({"Language": {"Meaning": {"Cognateset 1"}}})
@@ -315,13 +319,16 @@ def root_presence_code(
     form is absent from all languages is never observed, but always possible,
     so we add this entry for the purposes of ascertainment correction.
 
+    If a root is attested at all, in any concept, it is considered present.
     Because the word list is never a complete description of the language's
-    lexicon, the function employs the following heuristic: If a root is
-    attested at all, it is considered present. If a root is unattested, and
-    none of the concepts associated with this root is attested, the data on the
-    root's presence is considered missing. If all the concepts associated with
-    the root are present, but expressed by other roots, the root is assumed to
-    be absent in the target language.
+    lexicon, the function employs a heuristic to generate ‘absent’ states.
+
+    If a root is unattested, and at least half of the relevant concepts
+    associated with this root are attested, but each expressed by another root,
+    the root is assumed to be absent in the target language. (If there is
+    exactly one central concept, then that central concept being attested or
+    unknown is a special case of this general rule.) Otherwise the
+    presence/absence of the root is considered unknown.
 
     >>> alignment, roots = root_presence_code(
     ...     {"l1": {"m1": {"c1"}},
@@ -334,20 +341,8 @@ def root_presence_code(
     >>> list(zip(*sorted(zip(*alignment.values()))))
     [('0', '0', '1', '?'), ('0', '1', '1', '1')]
 
-    If only some concepts associated with the root in question are attested for
-    the target language, the function `important` is called on the concepts
-    associated with the root. The function returns a subset of the associated
-    concepts. If any of those concepts are attested, the root is assumed to be
-    absent.
-
-    By default, all concepts are considered ‘important’, that is, the function
-    `important` is the identity function.
-
     """
-    associated_concepts: t.MutableMapping[
-        types.Cognateset_ID, t.Set[types.Parameter_ID]
-    ] = t.DefaultDict(set)
-    all_roots: t.Set[types.Cognateset_ID] = set()
+    all_roots: t.Set[types.Cognateset_ID] = set(relevant_concepts)
     language_roots: t.MutableMapping[
         types.Language_ID, t.Set[types.Cognateset_ID]
     ] = t.DefaultDict(set)
@@ -358,29 +353,31 @@ def root_presence_code(
                     f"The root presence coder script got a language ({language}) with an improper lexicon: Concept {concept} is marked as present in the language, but no cognate sets are associated with it."
                 )
             for cognateset in cognatesets:
-                associated_concepts[cognateset].add(concept)
-                all_roots.add(cognateset)
                 language_roots[language].add(cognateset)
 
     all_roots_sorted: t.Sequence[types.Cognateset_ID] = sorted(all_roots, key=hash)
 
     alignment = {}
+    roots = {}
     for language, lexicon in dataset.items():
         alignment[language] = list(ascertainment)
         for root in all_roots_sorted:
+            roots[root] = len(alignment)
             if root in language_roots[language]:
                 alignment[language].append("1")
             else:
-                for concept in important(associated_concepts[root]):
+                n_concepts = 0
+                n_filled_concepts = 0
+                for concept in relevant_concepts[root]:
+                    n_concepts += 1
                     if lexicon.get(concept):
-                        alignment[language].append("0")
-                        break
+                        n_filled_concepts += 1
+                if 2 * n_filled_concepts >= n_concepts:
+                    alignment[language].append("0")
                 else:
                     alignment[language].append("?")
 
-    return alignment, {
-        root: r for r, root in enumerate(all_roots_sorted, len(ascertainment))
-    }
+    return alignment, roots
 
 
 def multistate_code(
@@ -642,6 +639,12 @@ if __name__ == "__main__":
         help="File to load a list of concepts from",
     )
     parser.add_argument(
+        "--cogset-list",
+        default=None,
+        type=Path,
+        help="File to load a list of cognate sets from",
+    )
+    parser.add_argument(
         "--coding",
         choices=("rootmeaning", "rootpresence", "multistate"),
         default="rootmeaning",
@@ -654,6 +657,13 @@ if __name__ == "__main__":
             meaning that root is attested in; And in the `multistate` coding,
             each character describes, possibly including uniform ambiguities,
             the cognate class of a meaning.""",
+    )
+    parser.add_argument(
+        "--heuristic",
+        type=AbsenceHeuristic.__getitem__,
+        choices=list(AbsenceHeuristic),
+        help="""In case of --coding=rootpresence, which heuristic should be used
+        the coding of absences?""",
     )
     parser.add_argument("--stats-file", type=Path, help="A file to write statistics to")
     args = parser.parse_args()
@@ -669,66 +679,83 @@ if __name__ == "__main__":
     if args.language_list:
         languages = {lg.strip() for lg in args.language_list.open().read().split("\n")}
     else:
-        languages = set(ds.keys())
+        languages = types.WorldSet()
 
     concepts: t.Set[str]
     if args.concept_list:
-        concepts = {
-            c.strip(): util.string_to_id(c.strip())
-            for c in args.concept_list.open().read().split("\n")
-        }
+        concepts = {c.strip() for c in args.concept_list.open().read().split("\n")}
     else:
-        concepts = {
-            c.strip(): util.string_to_id(c.strip()) for s in ds.values() for c in s
-        }
+        concepts = types.WorldSet()
 
-    # Step 2: Filter and clean the data.
-    ds = {
-        language: {concepts[k]: v for k, v in sequence.items() if k in concepts}
-        for language, sequence in ds.items()
-        if (languages is None) or (language in languages)
+    cogsets: t.Set[str]
+    if args.cogset_list:
+        cogsets = {c.strip() for c in args.cogset_list.open().read().split("\n")}
+    else:
+        cogsets = types.WorldSet()
+
+    # Step 1: Load the raw data.
+    dataset = pycldf.Dataset.from_metadata(args.metadata)
+    ds: t.Mapping[Language_ID, t.Mapping[Concept_ID, t.Set[Cognateset_ID]]] = {
+        language: {k: v for k, v in sequence.items() if k in concepts}
+        for language, sequence in read_cldf_dataset(
+            dataset, code_column=args.code_column
+        ).items()
+        if language in languages
     }
+    logger.info(f"Imported languages {set(ds)}.")
 
-    # Step 3: Prepare the output file. This only matters if the output is beast.
-    if args.format == "beast":
-        xmlparser = ET.XMLParser(remove_blank_text=True, resolve_entities=False)
-        if args.output_file is None:
-            root = ET.fromstring(
-                """<beast><data /></beast> """,
-                parser=xmlparser,
-            )
-        elif args.output_file.exists():
-            for line in args.output_file.open("rb"):
-                xmlparser.feed(line)
-            root = xmlparser.close()
-        else:
-            root = ET.fromstring(
-                """<beast><data /></beast>""",
-                parser=xmlparser,
-            )
-        et = root.getroottree()
-        datas = list(root.iter("data"))
-        data_object = datas[0]
-    # Otherwise, it's just making the file accessible.
-    elif args.output_file is None:
-        args.output_file = sys.stdout
-    else:
-        args.output_file = args.output_file.open("w")
-
+    # Step 2: Code the data
     n_symbols, datatype = 2, "binary"
     partitions = None
-
-    # Step 4: Code the data
     alignment: t.Mapping[Language_ID, str]
     if args.coding == "rootpresence":
-        binal, cogset_indices = root_presence_code(ds, logger=logger)
+        heuristic = (
+            args.heuristic
+            if args.heuristic
+            else (
+                AbsenceHeuristic.TrustCentralConcept
+                if ("CognatesetTable", "parameterReference") in dataset
+                else AbsenceHeuristic.TrustHalfPrimaryConcepts
+            )
+        )
+        if heuristic is AbsenceHeuristic.TrustHalfPrimaryConcepts:
+            relevant_concepts = t.DefaultDict(set())
+            for concept, cognatesets in ds.values():
+                for cognateset in cognatesets:
+                    if concept in concepts:
+                        relevant_concepts[cognateset].add(concept)
+        elif heuristic is AbsenceHeuristic.TrustCentralConcept:
+            c_cogset_id = dataset["CognatesetTable", "id"].name
+            c_cogset_concept = dataset["CognatesetTable", "parameterReference"].name
+            relevant_concepts = {
+                c[c_cogset_id]: util.ensure_list(c[c_cogset_concept])
+                for c in dataset["CognatesetTable"]
+            }
+        binal, cogset_indices = root_presence_code(
+            ds, relevant_concepts=relevant_concepts, logger=logger
+        )
+        exclude = {
+            index for cogset, index in cogset_indices.items() if cogset not in cogsets
+        }
         n_characters = len(next(iter(binal.values())))
-        alignment = {key: "".join(value) for key, value in binal.items()}
+        alignment = {
+            key: "".join([v for i, v in enumerate(value) if i not in exclude])
+            for key, value in binal.items()
+        }
         sequences = raw_binary_alignment(alignment)
     elif args.coding == "rootmeaning":
         binal, concept_cogset_indices = root_meaning_code(ds)
         n_characters = len(next(iter(binal.values())))
-        alignment = {key: "".join(value) for key, value in binal.items()}
+        exclude = {
+            index
+            for concept, cogset_indices in concept_cogset_indices
+            for cogset, index in cogset_indices.items()
+            if cogset not in cogsets
+        }
+        alignment = {
+            key: "".join([v for i, v in enumerate(value) if i not in exclude])
+            for key, value in binal.items()
+        }
         sequences = raw_binary_alignment(alignment)
         partitions = {
             concept: cogsets.values()
@@ -742,19 +769,29 @@ if __name__ == "__main__":
     else:
         raise ValueError("Coding schema {:} unknown.".format(args.coding))
 
-    # Step 5: Format the data for output
+    # Step 3: Format the data for output
     if args.format == "raw":
+        if args.output_file is None:
+            output_file = sys.stdout
+        else:
+            output_file = args.output_file.open("w")
+
         max_length = max([len(str(lang)) for lang in ds])
         for language, sequence in zip(ds, sequences):
             print(
                 language,
                 " " * (max_length - len(language)),
                 sequence,
-                file=args.output_file,
+                file=output_file,
             )
 
     elif args.format == "nexus":
-        args.output_file.write(
+        if args.output_file is None:
+            output_file = sys.stdout
+        else:
+            output_file = args.output_file.open("w")
+
+        output_file.write(
             format_nexus(
                 ds,
                 sequences,
@@ -766,6 +803,27 @@ if __name__ == "__main__":
         )
 
     elif args.format == "beast":
+        # Prepare the output file.
+        xmlparser = ET.XMLParser(remove_blank_text=True, resolve_entities=False)
+        if args.output_file is None:
+            root = ET.fromstring(
+                """<beast><data /></beast> """,
+                parser=xmlparser,
+            )
+
+        elif args.output_file.exists():
+            for line in args.output_file.open("rb"):
+                xmlparser.feed(line)
+            root = xmlparser.close()
+        else:
+            root = ET.fromstring(
+                """<beast><data /></beast>""",
+                parser=xmlparser,
+            )
+        et = root.getroottree()
+        datas = list(root.iter("data"))
+        data_object = datas[0]
+
         fill_beast(data_object, ds, sequences)
         if partitions:
             add_partitions(data_object, partitions)
@@ -773,14 +831,23 @@ if __name__ == "__main__":
                 language_plate.set("range", ",".join(partitions))
         for language_plate in root.iterfind(".//plate[@range='{languages}']"):
             language_plate.set("range", ",".join(ds))
-        et.write(
-            args.output_file.open("wb"),
-            pretty_print=True,
-            xml_declaration=True,
-            encoding=et.docinfo.encoding,
-        )
+        if args.output_file:
+            et.write(
+                args.output_file.open("wb"),
+                pretty_print=True,
+                xml_declaration=True,
+                encoding=et.docinfo.encoding,
+            )
+        else:
+            print(
+                ET.tostring(
+                    root,
+                    pretty_print=True,
+                    xml_declaration=True,
+                ).decode("utf-8")
+            )
 
-    # Step 5: Maybe print some statistics to file.
+    # Step 4: Maybe print some statistics to file.
     if args.stats_file:
         countlects = len(ds)
         countconcepts = len(next(iter(ds.values())))
