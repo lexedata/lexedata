@@ -309,7 +309,9 @@ def root_presence_code(
     language or not. Return that, and the association between cognatesets and
     characters.
 
-    >>> alignment, roots = root_presence_code({"Language": {"Meaning": {"Cognateset 1"}}})
+    >>> alignment, roots = root_presence_code(
+    ...     {"Language": {"Meaning": {"Cognateset 1"}}},
+    ...     relevant_concepts={"Cognateset 1": ["Meaning"]})
     >>> alignment
     {'Language': ['0', '1']}
     >>> roots
@@ -332,7 +334,8 @@ def root_presence_code(
 
     >>> alignment, roots = root_presence_code(
     ...     {"l1": {"m1": {"c1"}},
-    ...      "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}})
+    ...      "l2": {"m1": {"c2"}, "m2": {"c1", "c3"}}},
+    ...     relevant_concepts={"c1": ["m1"], "c2": ["m1"], "c3": ["m2"]})
     >>> sorted(roots)
     ['c1', 'c2', 'c3']
     >>> sorted_roots = sorted(roots.items())
@@ -362,7 +365,7 @@ def root_presence_code(
     for language, lexicon in dataset.items():
         alignment[language] = list(ascertainment)
         for root in all_roots_sorted:
-            roots[root] = len(alignment)
+            roots[root] = len(alignment[language])
             if root in language_roots[language]:
                 alignment[language].append("1")
             else:
