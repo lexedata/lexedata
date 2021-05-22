@@ -90,7 +90,7 @@ OTHER_KNOWN_COLUMNS = {
 }
 
 
-def add_metadata(fname: Path):
+def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
     if fname.name != "forms.csv":
         raise ValueError(
             "A metadata-free Wordlist must be in a file called 'forms.csv'."
@@ -104,6 +104,14 @@ def add_metadata(fname: Path):
     understood_colnames = {
         c.name for c in ds[ds.primary_table].tableSchema.columns if c.name in colnames
     }
+    more_columns = [
+        c
+        for c in ds[ds.primary_table].tableSchema.columns
+        if c.name not in understood_colnames
+    ]
+    logger.info(
+        f"CLDF freely understood the columns {understood_colnames} in your forms.csv."
+    )
 
     # Consider the columns that were not understood.
     columns_without_metadata = set(colnames) - understood_colnames
@@ -138,6 +146,11 @@ def add_metadata(fname: Path):
             )
 
         ds[ds.primary_table].tableSchema.columns.append(column)
+        summary = column.propertyUrl or column.datatype
+        logger.info(f"Column {column_name} seems to be a {summary} column.")
+
+    for column in more_columns:
+        logger.info(f"Also added column {column.name}, as expected from a FormTable.")
 
     ds[ds.primary_table].tableSchema.columns.sort(
         key=lambda k: colnames.index(k.name) if k.name in colnames else 1e10

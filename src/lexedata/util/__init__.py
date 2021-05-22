@@ -176,6 +176,8 @@ def parse_segment_slices(
         start, end = startend.split(":")
         start = int(start)
         end = int(end)
+        if end < start:
+            raise ValueError(f"Segment slice {startend} had start after end.")
         if enforce_ordered and start <= i:
             raise ValueError("Segment slices are not ordered as required.")
         for i in range(start - 1, end):
