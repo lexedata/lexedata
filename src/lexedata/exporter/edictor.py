@@ -19,8 +19,9 @@ import pycldf
 
 
 import lexedata.cli as cli
-from lexedata.util import parse_segment_slices
+from lexedata.util import parse_segment_slices, ensure_list
 import lexedata.report.nonconcatenative_morphemes
+from lexedata.types import WorldSet
 
 
 # TODO: Maybe we should have these in cli and consolidate them between
@@ -48,21 +49,6 @@ def rename(form_column, dataset):
         "LINGPY_ID": "ID",
         "ID": "CLDF_ID",
     }.get(function, form_column)
-
-
-class WorldSet:
-    def __contains__(self, thing: t.Any):
-        return True
-
-    def intersection(self, other: t.Iterable):
-        return other
-
-
-def ensure_list(maybe_string: t.Union[t.List[str], str]) -> t.List[str]:
-    if isinstance(maybe_string, list):
-        return maybe_string
-    else:
-        return [maybe_string]
 
 
 def glue_in_alignment(

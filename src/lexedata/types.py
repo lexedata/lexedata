@@ -3,6 +3,19 @@ import typing as t
 import abc
 
 
+H = t.TypeVar("H", bound=t.Hashable)
+
+
+class WorldSet(t.Generic[H]):
+    def __contains__(self, thing: H):
+        return True
+
+    def intersection(
+        self, other: t.Union["WorldSet[H]", t.Set[H]]
+    ) -> t.Union["WorldSet[H]", t.Set[H]]:
+        return other
+
+
 class Object(t.Dict[str, t.Any]):
     """Object"""
 
