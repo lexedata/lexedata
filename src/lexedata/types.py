@@ -99,3 +99,14 @@ class Wordlist(
     t.Generic[Language_ID, Form_ID, Parameter_ID, Cognate_ID, Cognateset_ID],
 ):
     pass
+
+
+class KeyKeyDict(t.Mapping[str, str]):
+    def __len__(self):
+        return 0
+
+    def __iter__(self):
+        return ()
+
+    def __getitem__(self, key):
+        return key

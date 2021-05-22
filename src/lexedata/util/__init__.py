@@ -16,9 +16,10 @@ import csvw
 from lexedata.cli import tq
 from lexedata.enrich.add_free_metadata import add_metadata
 
+from ..types import KeyKeyDict
 from . import fs
 
-__all__ = [fs]
+__all__ = [fs, KeyKeyDict]
 
 ID_FORMAT = re.compile("[a-z0-9_]+")
 
@@ -267,14 +268,3 @@ def cache_table(
             dataset[table], total=dataset[table].common_props.get("dc:extent")
         )
     }
-
-
-class KeyKeyDict(t.Mapping[str, str]):
-    def __len__(self):
-        return 0
-
-    def __iter__(self):
-        return ()
-
-    def __getitem__(self, key):
-        return key
