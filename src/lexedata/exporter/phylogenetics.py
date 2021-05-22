@@ -650,7 +650,20 @@ End;
     )
 
 
-def fill_beast(data_object: ET.Element, languages, sequences):
+def fill_beast(data_object: ET.Element, languages, sequences) -> None:
+    """Add sequences to BEAST as Alignment object.
+
+    >>> xml = ET.fromstring("<beast><data /></beast>")
+    >>> fill_beast(xml.find(".//data"), ["L1", "L2"], ["0110", "0011"])
+    >>> print(ET.tostring(xml).decode("utf-8"))
+    <beast><data id="vocabulary" dataType="integer" spec="Alignment">
+    <sequence id="language_data_vocabulary:L1" taxon="L1" value="0110"/>
+    <sequence id="language_data_vocabulary:L2" taxon="L2" value="0011"/>
+    <taxonset id="taxa" spec="TaxonSet"><plate var="language" range="{languages}"><taxon id="$(language)" spec="Taxon"/></plate></taxonset></data></beast>
+
+    """
+    # TODO: That doctest is a bit too harsh, it's not like line breaks are
+    # forbidden. Think about which guarantees we want to give.
     data_object.clear()
     data_object.attrib["id"] = "vocabulary"
     data_object.attrib["dataType"] = "integer"
