@@ -672,6 +672,14 @@ def fill_beast(data_object: ET.Element, languages, sequences):
 
 
 def compress_indices(indices: t.Set[int]) -> t.Iterator[slice]:
+    """Turn groups of largely contiguous indices into slices.
+
+    >>> list(compress_indices(set(range(10))))
+    [slice(0, 10, None)]
+
+    >>> list(compress_indices([1, 2, 5, 6, 7]))
+    [slice(1, 3, None), slice(5, 8, None)]
+    """
     if not indices:
         return
     minimum = min(indices)
