@@ -8,14 +8,23 @@ This funtionality is, without error reporting, in the CLI of lexedata.util
 from pathlib import Path
 import unicodedata
 
-if __name__ == "__main__":
-    import argparse
+from lexedata import cli
 
-    parser = argparse.ArgumentParser(
-        description="Recode all data in NFC unicode normalization"
-    )
-    parser.add_argument("file", nargs="+", type=Path)
+
+def normalize(file):
+    # TODO: If this ever takes more than a second, add a cli.tq progress bar
+    content = file.open().read()
+    file.open("w").write(unicodedata.normalize("NFC", content))
+
+
+if __name__ == "__main__":
+    parser = cli.parser(__doc__)
+    parser.add_argument("file", nargs="*", type=Path)
     args = parser.parse_args()
+    logger = cli.setup_logging(args)
+    if not args.file:
+        # TODO: Check CLDF for how to properly get table URLs as path
+        args.file = [Path(table.url.string) for table in args.metadata.tables]
     for file in args.file:
-        content = file.open().read()
-        file.open("w").write(unicodedata.normalize("NFC", content))
+        logger.info(f"Normalizing {file}…")
+        normalize(file)
