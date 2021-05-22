@@ -16,11 +16,17 @@ import csvw
 from lexedata.cli import tq
 from lexedata.enrich.add_free_metadata import add_metadata
 
+from . import fs
+
+__all__ = [fs]
+
 ID_FORMAT = re.compile("[a-z0-9_]+")
 
 
-def ensure_list(maybe_string: t.Union[t.List[str], str]) -> t.List[str]:
-    if isinstance(maybe_string, list):
+def ensure_list(maybe_string: t.Union[t.List[str], str, None]) -> t.List[str]:
+    if maybe_string is None:
+        return []
+    elif isinstance(maybe_string, list):
         return maybe_string
     else:
         return [maybe_string]

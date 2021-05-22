@@ -21,7 +21,7 @@ class Language_ID(str):
     pass
 
 
-class Concept_ID(str):
+class Parameter_ID(str):
     pass
 
 
@@ -64,6 +64,7 @@ def read_cldf_dataset(
     >>> ds = pycldf.Wordlist.from_data("forms.csv")
 
     {'autaa': defaultdict(<class 'set'>, {'Woman': {'WOMAN1'}, 'Person': {'PERSON1'}})}
+    TODO: FIXME THIS EXAMPLE IS INCOMPLETE
 
     Parameters
     ----------
@@ -288,6 +289,121 @@ def root_meaning_code(
 class AbsenceHeuristic(enum.Enum):
     TrustCentralConcept = 0
     TrustHalfPrimaryConcepts = 1
+
+
+# TODO: Maybe this would make sense tied closer to AbsenceHeuristic?
+def apply_heuristics(
+    dataset: types.Wordlist,
+    heuristic: t.Optional[AbsenceHeuristic] = None,
+    primary_concepts: t.Union[
+        types.WorldSet[types.Parameter_ID], t.AbstractSet[types.Parameter_ID]
+    ] = types.WorldSet(),
+    logger: cli.logging.Logger = cli.logger,
+) -> t.Mapping[types.Cognateset_ID, t.Set[types.Parameter_ID]]:
+    """Compute the relevant concepts for cognatesets, depending on the heuristic.
+
+    These concepts will be considered when deciding whether a root is deemed
+    absent in a language.
+
+    For the TrustCentralConcept heuristic, the relevant concepts are the
+    central concept of a cognateset, as given by the #parameterReference column
+    of the CognatesetTable. A central concept not included in the
+    primary_concepts is ignored with a warning.
+
+    >>> ds = util.fs.new_wordlist()
+    >>> cst = ds.add_component("CognatesetTable")
+    >>> ds["CognatesetTable"].tableSchema.columns.append(
+    ...     pycldf.dataset.Column(
+    ...         name="Central_Concept",
+    ...         propertyUrl="http://cldf.clld.org/v1.0/terms.rdf#parameterReference"))
+    >>> ds.auto_constraints(cst)
+    >>> ds.write(CognatesetTable=[
+    ...     {"ID": "cogset1", "Central_Concept": "concept1"}
+    ... ])
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustCentralConcept) == {'cogset1': {'concept1'}}
+    True
+
+    This extends to the case where a cognateset may have more than one central concept.
+
+    >>> ds = util.fs.new_wordlist()
+    >>> cst = ds.add_component("CognatesetTable")
+    >>> ds["CognatesetTable"].tableSchema.columns.append(
+    ...     pycldf.dataset.Column(
+    ...         name="Central_Concepts",
+    ...         propertyUrl="http://cldf.clld.org/v1.0/terms.rdf#parameterReference",
+    ...         separator=","))
+    >>> ds.auto_constraints(cst)
+    >>> ds.write(CognatesetTable=[
+    ...     {"ID": "cogset1", "Central_Concepts": ["concept1", "concept2"]}
+    ... ])
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustCentralConcept) == {
+    ...     'cogset1': {'concept1', 'concept2'}}
+    True
+
+    For the TrustHalfPrimaryConcepts heurisitc, the relevant concepts are all
+    primary concepts connected to a cognateset.
+
+    >>> ds = util.fs.new_wordlist(
+    ...     FormTable=[
+    ...         {"ID": "f1", "Parameter_ID": "c1", "Language_ID": "l1", "Form": "x"},
+    ...         {"ID": "f2", "Parameter_ID": "c2", "Language_ID": "l1", "Form": "x"}],
+    ...     CognateTable=[
+    ...         {"ID": "1", "Form_ID": "f1", "Cognateset_ID": "s1"},
+    ...         {"ID": "2", "Form_ID": "f2", "Cognateset_ID": "s1"}])
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustHalfPrimaryConcepts) == {
+    ...     's1': {'c1', 'c2'}}
+    True
+
+
+    NOTE: This function cannot guarantee that every concept has at least one relevant
+    concept, there may be cognatesets without!
+
+    """
+    heuristic = (
+        heuristic
+        if heuristic is not None
+        else (
+            AbsenceHeuristic.TrustCentralConcept
+            if ("CognatesetTable", "parameterReference") in dataset
+            else AbsenceHeuristic.TrustHalfPrimaryConcepts
+        )
+    )
+
+    relevant_concepts: t.MutableMapping[
+        types.Cognateset_ID, t.Set[types.Parameter_ID]
+    ] = t.DefaultDict(set)
+
+    if heuristic is AbsenceHeuristic.TrustHalfPrimaryConcepts:
+        c_f = dataset["CognateTable", "formReference"].name
+        c_s = dataset["CognateTable", "cognatesetReference"].name
+        concepts = util.cache_table(
+            dataset,
+            "FormTable",
+            {"concepts": dataset["FormTable", "parameterReference"].name},
+        )
+        for j in dataset["CognateTable"]:
+            form = concepts[j[c_f]]
+            for concept in util.ensure_list(form["concepts"]):
+                relevant_concepts[j[c_s]].add(concept)
+
+    elif heuristic is AbsenceHeuristic.TrustCentralConcept:
+        c_cogset_concept = dataset["CognatesetTable", "parameterReference"].name
+        c_id = dataset["CognatesetTable", "id"].name
+        for c in dataset["CognatesetTable"]:
+            for concept in util.ensure_list(c[c_cogset_concept]):
+                if concept not in primary_concepts:
+                    logger.warning(
+                        f"The central concept {concept} of cognateset {c[c_id]} was not part of your list of primary concepts to be included in the coding."
+                    )
+                else:
+                    relevant_concepts[c[c_id]].add(concept)
+
+    else:
+        raise TypeError(
+            f"Value of heuristic, {heuristic}, did not correspond to a known AbsenceHeuristic."
+        )
+
+    return relevant_concepts
 
 
 def root_presence_code(
@@ -652,21 +768,29 @@ if __name__ == "__main__":
         choices=("rootmeaning", "rootpresence", "multistate"),
         default="rootmeaning",
         help="""Binarization method: In the `rootmeaning` coding system, every character
-            describes the presence or absence of a particular root morpheme or
-            cognate class in the word(s) for a given meaning; In the
-            `rootpresence`, every character describes (up to the limitations of
-            the data, which might not contain marginal forms) the presence or
-            absence of a root (morpheme) in the language, independet of which
-            meaning that root is attested in; And in the `multistate` coding,
-            each character describes, possibly including uniform ambiguities,
-            the cognate class of a meaning.""",
+        describes the presence or absence of a particular root morpheme or
+        cognate class in the word(s) for a given meaning; In the
+        `rootpresence`, every character describes (up to the limitations of the
+        data, which might not contain marginal forms) the presence or absence
+        of a root (morpheme) in the language, independet of which meaning that
+        root is attested in; And in the `multistate` coding, each character
+        describes, possibly including uniform ambiguities, the cognate class of
+        a meaning.""",
     )
     parser.add_argument(
         "--heuristic",
         type=AbsenceHeuristic.__getitem__,
+        default=None,
         choices=list(AbsenceHeuristic),
-        help="""In case of --coding=rootpresence, which heuristic should be used
-        the coding of absences?""",
+        help="""In case of --coding=rootpresence, which heuristic should be used for the
+        coding of absences? The default depends on whether the dataset contains
+        a #parameterReference column in its CognatesetTable: If there is one,
+        or for --heuristic=TrustCentralConcept, a root is considered absent
+        when that concept (or at least half of them, if it is multi-valued) are
+        attested with other roots. In the other case, or for
+        --heuristic=TrustHalfPrimaryConcepts, a root is considered absent when
+        at least half the the concepts it is connected to are attested with
+        other roots in the language.""",
     )
     parser.add_argument("--stats-file", type=Path, help="A file to write statistics to")
     args = parser.parse_args()
@@ -698,7 +822,7 @@ if __name__ == "__main__":
 
     # Step 1: Load the raw data.
     dataset = pycldf.Dataset.from_metadata(args.metadata)
-    ds: t.Mapping[Language_ID, t.Mapping[Concept_ID, t.Set[Cognateset_ID]]] = {
+    ds: t.Mapping[Language_ID, t.Mapping[Parameter_ID, t.Set[Cognateset_ID]]] = {
         language: {k: v for k, v in sequence.items() if k in concepts}
         for language, sequence in read_cldf_dataset(
             dataset, code_column=args.code_column
@@ -712,28 +836,9 @@ if __name__ == "__main__":
     partitions = None
     alignment: t.Mapping[Language_ID, str]
     if args.coding == "rootpresence":
-        heuristic = (
-            args.heuristic
-            if args.heuristic
-            else (
-                AbsenceHeuristic.TrustCentralConcept
-                if ("CognatesetTable", "parameterReference") in dataset
-                else AbsenceHeuristic.TrustHalfPrimaryConcepts
-            )
+        relevant_concepts = apply_heuristics(
+            dataset, args.heuristic, primary_concepts=concepts
         )
-        if heuristic is AbsenceHeuristic.TrustHalfPrimaryConcepts:
-            relevant_concepts = t.DefaultDict(set())
-            for concept, cognatesets in ds.values():
-                for cognateset in cognatesets:
-                    if concept in concepts:
-                        relevant_concepts[cognateset].add(concept)
-        elif heuristic is AbsenceHeuristic.TrustCentralConcept:
-            c_cogset_id = dataset["CognatesetTable", "id"].name
-            c_cogset_concept = dataset["CognatesetTable", "parameterReference"].name
-            relevant_concepts = {
-                c[c_cogset_id]: util.ensure_list(c[c_cogset_concept])
-                for c in dataset["CognatesetTable"]
-            }
         binal, cogset_indices = root_presence_code(
             ds, relevant_concepts=relevant_concepts, logger=logger
         )
