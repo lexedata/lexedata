@@ -16,7 +16,21 @@ import csvw
 from lexedata.cli import tq
 from lexedata.enrich.add_free_metadata import add_metadata
 
+from ..types import KeyKeyDict
+from . import fs
+
+__all__ = [fs, KeyKeyDict]
+
 ID_FORMAT = re.compile("[a-z0-9_]+")
+
+
+def ensure_list(maybe_string: t.Union[t.List[str], str, None]) -> t.List[str]:
+    if maybe_string is None:
+        return []
+    elif isinstance(maybe_string, list):
+        return maybe_string
+    else:
+        return [maybe_string]
 
 
 def cldf_property(url: csvw.metadata.URITemplate) -> t.Optional[str]:
@@ -176,6 +190,8 @@ def parse_segment_slices(
         start, end = startend.split(":")
         start = int(start)
         end = int(end)
+        if end < start:
+            raise ValueError(f"Segment slice {startend} had start after end.")
         if enforce_ordered and start <= i:
             raise ValueError("Segment slices are not ordered as required.")
         for i in range(start - 1, end):
@@ -252,14 +268,3 @@ def cache_table(
             dataset[table], total=dataset[table].common_props.get("dc:extent")
         )
     }
-
-
-class KeyKeyDict(t.Mapping[str, str]):
-    def __len__(self):
-        return 0
-
-    def __iter__(self):
-        return ()
-
-    def __getitem__(self, key):
-        return key

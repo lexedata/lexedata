@@ -384,12 +384,6 @@ if __name__ == "__main__":
         help="Sheets not to parse",
     )
     parser.add_argument(
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Report existing forms",
-    )
-    parser.add_argument(
         "--status-update",
         type=str,
         default="new import",

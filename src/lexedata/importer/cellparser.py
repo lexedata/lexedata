@@ -510,9 +510,9 @@ def alignment_from_braces(text, start=0):
     count towards the segment slices.
 
     >>> alignment_from_braces("t{e x}t")
-    ([(1, 3)], ['e', 'x'])
+    ([(2, 3)], ['e', 'x'])
     >>> alignment_from_braces("{ t - e } x { t }")
-    ([(0, 2), (3, 4)], ['t', '-', 'e', 't'])
+    ([(1, 2), (4, 4)], ['t', '-', 'e', 't'])
 
     """
     before, remainder = text.split("{", 1)
@@ -520,7 +520,7 @@ def alignment_from_braces(text, start=0):
     content = content.strip()
     i = len(before.strip())
     j = len([s for s in content.split() if s != "-"])
-    slice = (start + i, start + i + j)
+    slice = (start + i + 1, start + i + j)
     if "{" in remainder:
         slices, alignment = alignment_from_braces(remainder, start + i + j)
         slices.insert(0, slice)
