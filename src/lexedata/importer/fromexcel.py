@@ -62,10 +62,14 @@ class DB:
             (id,) = table.tableSchema.primaryKey
             # Extent may be wrong, but it's usually at least roughly correct
             # and a better indication of the table size than none at all.
-            self.cache[table_type] = {
-                row[id]: row
-                for row in cli.tq(table, total=table.common_props.get("dc:extent"))
-            }
+            try:
+                self.cache[table_type] = {
+                    row[id]: row
+                    for row in cli.tq(table, total=table.common_props.get("dc:extent"))
+                }
+            except FileNotFoundError:
+                self.cache[table_type] = {}
+
         for source in self.dataset.sources:
             self.source_ids.add(source.id)
 
