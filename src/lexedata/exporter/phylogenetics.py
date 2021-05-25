@@ -825,19 +825,28 @@ if __name__ == "__main__":
 
     languages: t.Set[str]
     if args.language_list:
-        languages = {lg.strip() for lg in args.language_list.open().read().split("\n")}
+        languages = {
+            lg.strip()
+            for lg in args.language_list.open(encoding="utf-8").read().split("\n")
+        }
     else:
         languages = types.WorldSet()
 
     concepts: t.Set[str]
     if args.concept_list:
-        concepts = {c.strip() for c in args.concept_list.open().read().split("\n")}
+        concepts = {
+            c.strip()
+            for c in args.concept_list.open(encoding="utf-8").read().split("\n")
+        }
     else:
         concepts = types.WorldSet()
 
     cogsets: t.Set[str]
     if args.cogset_list:
-        cogsets = {c.strip() for c in args.cogset_list.open().read().split("\n")}
+        cogsets = {
+            c.strip()
+            for c in args.cogset_list.open(encoding="utf-8").read().split("\n")
+        }
     else:
         cogsets = types.WorldSet()
 
@@ -903,7 +912,7 @@ if __name__ == "__main__":
         if args.output_file is None:
             output_file = sys.stdout
         else:
-            output_file = args.output_file.open("w")
+            output_file = args.output_file.open("w", encoding="utf-8")
 
         max_length = max([len(str(lang)) for lang in ds])
         for language, sequence in zip(ds, sequences):
@@ -918,7 +927,7 @@ if __name__ == "__main__":
         if args.output_file is None:
             output_file = sys.stdout
         else:
-            output_file = args.output_file.open("w")
+            output_file = args.output_file.open("w", encoding="utf-8")
 
         output_file.write(
             format_nexus(
@@ -980,7 +989,7 @@ if __name__ == "__main__":
     if args.stats_file:
         countlects = len(ds)
         countconcepts = len(next(iter(ds.values())))
-        with args.stats_file.open("w") as s:
+        with args.stats_file.open("w", encoding="utf-8") as s:
             print(
                 f"""
             \\newcommand{{\\countlects}}{{{countlects}}}

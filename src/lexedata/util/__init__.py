@@ -123,7 +123,7 @@ def load_clics():
             "clics-clics3-97832b5/clics3-network.gml.zip",
             Path(__file__).parent.parent / "data/",
         )
-    gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "r")
+    gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "rb")
     return networkx.parse_gml(line.decode("utf-8") for line in gml)
 
 
@@ -163,7 +163,7 @@ def parse_segment_slices(
 def make_temporary_dataset(form_table):
     directory = Path(tempfile.mkdtemp())
     form_table_file_name = directory / "forms.csv"
-    with form_table_file_name.open("w") as form_table_file:
+    with form_table_file_name.open("w", encoding="utf-8") as form_table_file:
         form_table_file.write(form_table)
     dataset = add_metadata(form_table_file_name)
     dataset.write(directory / "Wordlist-metadata.json")

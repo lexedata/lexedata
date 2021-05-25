@@ -111,7 +111,7 @@ class DB:
             ].write(self.retrieve(table_type))
         self.dataset.write_metadata()
         # TODO: Write BIB file, without pycldf
-        with open(self.dataset.bibpath, "w") as bibfile:
+        with self.dataset.bibpath.open("w", encoding="utf-8") as bibfile:
             for source in self.source_ids:
                 print("@misc{" + source + ", title={" + source + "} }", file=bibfile)
 
