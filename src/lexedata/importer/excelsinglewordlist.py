@@ -273,20 +273,16 @@ def read_single_excel_sheet(
 
 def add_single_languages(
     metadata: Path,
-    excel: str,
     sheets: t.Iterable[openpyxl.worksheet.worksheet.Worksheet],
     match_form: t.Optional[t.List[str]],
     concept_name: t.Optional[str],
     ignore_missing: bool,
     ignore_superfluous: bool,
-    verbose: bool,
     status_update: t.Optional[str],
     logger: cli.logging.Logger,
 ) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
-    if verbose:
-        logger.basicConfig(level=cli.logging.INFO)
     # initiate data set from meta data or csv depending on command line arguments
     if metadata:
         if metadata.name == "forms.csv":
@@ -315,7 +311,7 @@ def add_single_languages(
     for sheet in sheets:
         for lang, subreport in read_single_excel_sheet(
             dataset=dataset,
-            sheet=excel[sheet],
+            sheet=sheet,
             logger=logger,
             match_form=match_form,
             entries_to_concepts=concepts,
@@ -402,13 +398,11 @@ if __name__ == "__main__":
 
     report = add_single_languages(
         metadata=args.metadata,
-        excel=args.excel,
         sheets=args.sheet,
         match_form=args.match_form,
         concept_name=args.concept_name,
         ignore_missing=args.ignore_missing_excel_columns,
         ignore_superfluous=args.ignore_superfluous_excel_columns,
-        verbose=args.verbose,
         status_update=args.status_update,
         logger=logger,
     )
