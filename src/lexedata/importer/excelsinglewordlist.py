@@ -9,15 +9,16 @@ import pycldf
 
 from lexedata.util import (
     string_to_id,
-    clean_cell_value,
-    normalize_header,
     normalize_string,
 )
+from lexedata.util.excel import (
+    clean_cell_value,
+    normalize_header,
+)
 from lexedata.importer.fromexcel import DB
-from lexedata.types import Form
+from lexedata.types import Form, KeyKeyDict
 from lexedata.enrich.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
-from lexedata.util import KeyKeyDict
 
 
 try:

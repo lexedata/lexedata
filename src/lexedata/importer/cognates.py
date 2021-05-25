@@ -7,7 +7,7 @@ from lexedata import cli
 from lexedata.types import Language, RowObject, CogSet
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.importer.fromexcel import ExcelCognateParser
-from lexedata.util import clean_cell_value, get_cell_comment
+from lexedata.util.excel import clean_cell_value, get_cell_comment
 
 
 class CognateEditParser(ExcelCognateParser):

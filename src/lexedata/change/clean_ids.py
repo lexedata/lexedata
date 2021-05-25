@@ -53,6 +53,47 @@ def clean_mapping(rows: t.Mapping[str, t.Mapping[str, str]]) -> t.Mapping[str, s
     return mapping
 
 
+def update_integer_ids(ds: pycldf.Dataset, table: csvw.metadata.Table):
+    """Update all IDs of the table in the database, also in foreign keys."""
+    c_id = table.get_column("http://cldf.clld.org/v1.0/terms.rdf#id")
+    rows = []
+    for row in cli.tq(ds[table], total=ds[table].common_props.get("dc:extent")):
+        row[c_id.name] = mapping.get(row[c_id.name], row[c_id.name])
+        rows.append(row)
+    logger.info(f"Writing {table.url.string} back to file…")
+    table.write(rows)
+
+    c_id.datatype.format = ID_FORMAT.pattern
+
+    foreign_keys_to_here = {
+        other_table.url.string: {
+            foreign_key.columnReference[
+                foreign_key.reference.columnReference.index(c_id.name)
+            ]
+            for foreign_key in other_table.tableSchema.foreignKeys
+            if foreign_key.reference.resource == table.url
+            if c_id.name in foreign_key.reference.columnReference
+        }
+        for other_table in ds.tables
+    }
+    for other_table, columns in foreign_keys_to_here.items():
+        if not columns:
+            continue
+        logger.info(f"Applying changed foreign key to {other_table}…")
+        rows = []
+        for row in cli.tq(
+            ds[other_table], total=ds[other_table].common_props.get("dc:extent")
+        ):
+            for column in columns:
+                row[column] = mapping.get(row[column], row[column])
+            rows.append(row)
+        logger.info(f"Writing {other_table} back to file…")
+        ds[other_table].write(rows)
+
+        for column in columns:
+            ds[other_table, column].datatype = c_id.datatype
+
+
 def update_ids(
     ds: pycldf.Dataset, table: csvw.metadata.Table, mapping: t.Mapping[str, str]
 ):
@@ -114,8 +155,11 @@ if __name__ == "__main__":
         ttype = ds.get_tabletype(table)
         c_id = table.get_column("http://cldf.clld.org/v1.0/terms.rdf#id")
         if c_id.datatype.base == "string":
-            ...
+            # Temporarily open up the datatype format, otherwise we may be unable to read
+            c_id.datatype.format = None
         elif c_id.datatype.base == "integer":
+            c_id.datatype = "string"
+            update_integer_ids(ds, table)
             continue
         else:
             logger.warning(

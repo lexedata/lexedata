@@ -8,7 +8,6 @@ from pathlib import Path
 import unicodedata
 import unidecode as uni
 import pycldf
-import openpyxl as op
 import networkx
 from lingpy.compare.strings import ldn_swap
 
@@ -66,45 +65,8 @@ def string_to_id(string: str) -> str:
     return "_".join(ID_FORMAT.findall(uni.unidecode(string.lower()).lower()))
 
 
-def clean_cell_value(cell: op.cell.cell.Cell):
-    if cell.value is None:
-        return ""
-    if type(cell.value) == float:
-        if cell.value == int(cell.value):
-            return int(cell.value)
-        return cell.value
-    v = unicodedata.normalize("NFC", (cell.value or "").strip())
-    if type(v) == float:
-        if v == int(v):
-            return int(v)
-        return v
-    if type(v) == int:
-        return v
-    try:
-        return v.replace("\n", ";\t")
-    except TypeError:
-        return str(v)
-
-
 def normalize_string(text: str):
     return unicodedata.normalize("NFC", text.strip())
-
-
-def get_cell_comment(cell: op.cell.Cell) -> str:
-    raw_comment = cell.comment.text.strip() if cell.comment else ""
-    lines = [
-        line for line in raw_comment.split("\n") if line.strip() != "-lexedata.exporter"
-    ]
-    return " ".join(lines)
-
-
-def normalize_header(row: t.Iterable[op.cell.Cell]) -> t.Iterable[str]:
-    header = [unicodedata.normalize("NFKC", (n.value or "").strip()) for n in row]
-    header = [h.replace(" ", "_") for h in header]
-    header = [h.replace("(", "") for h in header]
-    header = [h.replace(")", "") for h in header]
-
-    return header
 
 
 def get_dataset(fname: Path) -> pycldf.Dataset:
@@ -187,9 +149,9 @@ def parse_segment_slices(
     """
     i = -1  # Set it to the value before the first possible segment slice start
     for startend in segment_slices:
-        start, end = startend.split(":")
-        start = int(start)
-        end = int(end)
+        start_str, end_str = startend.split(":")
+        start = int(start_str)
+        end = int(end_str)
         if end < start:
             raise ValueError(f"Segment slice {startend} had start after end.")
         if enforce_ordered and start <= i:

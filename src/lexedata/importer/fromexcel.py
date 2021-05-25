@@ -21,9 +21,11 @@ from lexedata.types import (
 )
 from lexedata.util import (
     string_to_id,
+    edit_distance,
+)
+from lexedata.util.excel import (
     clean_cell_value,
     get_cell_comment,
-    edit_distance,
 )
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.enrich.add_status_column import add_status_column_to_table

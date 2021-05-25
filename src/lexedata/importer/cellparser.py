@@ -6,7 +6,8 @@ import typing as t
 import openpyxl
 import pycldf
 
-from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
+from lexedata.util import string_to_id
+from lexedata.util.excel import clean_cell_value, get_cell_comment
 from lexedata.types import Form, Judgement
 import lexedata.cli as cli
 
