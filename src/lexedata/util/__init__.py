@@ -123,7 +123,7 @@ def load_clics():
             "clics-clics3-97832b5/clics3-network.gml.zip",
             Path(__file__).parent.parent / "data/",
         )
-    gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "rb")
+    gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "r")
     return networkx.parse_gml(line.decode("utf-8") for line in gml)
 
 
