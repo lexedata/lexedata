@@ -274,12 +274,11 @@ def read_single_excel_sheet(
 def add_single_languages(
     metadata: Path,
     excel: str,
-    sheet: t.Optional[t.List[str]],
+    sheets: t.Iterable[openpyxl.worksheet.worksheet.Worksheet],
     match_form: t.Optional[t.List[str]],
     concept_name: t.Optional[str],
     ignore_missing: bool,
     ignore_superfluous: bool,
-    exclude_sheet,
     verbose: bool,
     status_update: t.Optional[str],
     logger: cli.logging.Logger,
@@ -288,9 +287,6 @@ def add_single_languages(
         status_update = None
     if verbose:
         logger.basicConfig(level=cli.logging.INFO)
-    if not sheet:
-        sheets = [sheet for sheet in excel.sheetnames if sheet not in exclude_sheet]
-        logger.info("No sheets specified. Parsing sheets: %s", sheet)
     # initiate data set from meta data or csv depending on command line arguments
     if metadata:
         if metadata.name == "forms.csv":
@@ -346,7 +342,11 @@ if __name__ == "__main__":
         "switch if you have concept Names in the wordlist instead.",
     )
     parser.add_argument(
-        "--sheet", type=str, action="append", help="Sheets to parse. (default: all)"
+        "--sheet",
+        action="append",
+        type=str,
+        default=[],
+        help="Sheet to parse. Use multiple --sheet=Name arguments for multiple sheets. (default: all)",
     )
     parser.add_argument(
         "--match-form",
@@ -394,15 +394,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
+    if not args.sheets:
+        args.sheets = [
+            sheet for sheet in args.excel.sheetnames if sheet not in args.exclude_sheet
+        ]
+        logger.info("No sheets specified explicitly. Parsing sheets: %s", args.sheets)
+
     report = add_single_languages(
         metadata=args.metadata,
         excel=args.excel,
-        sheet=args.sheet,
+        sheets=args.sheet,
         match_form=args.match_form,
         concept_name=args.concept_name,
         ignore_missing=args.ignore_missing_excel_columns,
         ignore_superfluous=args.ignore_superfluous_excel_columns,
-        exclude_sheet=args.exclude_sheet,
         verbose=args.verbose,
         status_update=args.status_update,
         logger=logger,
