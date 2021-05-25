@@ -221,8 +221,8 @@ def add_segments_to_dataset(
                 form = row[transcription].strip()
                 for wrong, right in pre_replace.items():
                     if wrong in form:
-                        report[row[c_f_lan]][wrong]["count"] += form.count(wrong)
-                        report[row[c_f_lan]][wrong][
+                        report[row[c_f_lan]].sounds[wrong]["count"] += form.count(wrong)
+                        report[row[c_f_lan]].sounds[wrong][
                             "comment"
                         ] = f"'{wrong}' replaced by '{right}' – run with `--replace-form` to apply this also to the forms."
                         form = form.replace(wrong, right)
