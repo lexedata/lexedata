@@ -838,5 +838,5 @@ if __name__ == "__main__":
     if args.status_update == "None":
         args.status_update = None
     load_dataset(
-        args.metadata, args.lexicon, args.cogsets, args.status_update, logger=logger
+        args.metadata, args.wordlist, args.cogsets, args.status_update, logger=logger
     )

@@ -357,14 +357,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--ignore-superfluous-excel-columns",
-        "->",
+        "-s",
         action="store_true",
         default=False,
         help="Ignore columns in the Excel table which are not in the dataset",
     )
     parser.add_argument(
         "--ignore-missing-excel-columns",
-        "-<",
+        "-m",
         action="store_true",
         default=False,
         help="Ignore columns missing from the Excel table compared to the dataset",
