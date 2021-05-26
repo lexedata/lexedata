@@ -371,7 +371,7 @@ if __name__ == "__main__":
         type=str,
         nargs="*",
         default=[],
-        help="Sheets not to parse",
+        help="Sheets not to parse. Overrides --sheet if you mention the same sheet in both.",
     )
     parser.add_argument(
         "--status-update",
