@@ -15,7 +15,7 @@ from lexedata.util.excel import (
     clean_cell_value,
     normalize_header,
 )
-from lexedata.importer.fromexcel import DB
+from lexedata.importer.excel_matrix import DB
 from lexedata.types import Form, KeyKeyDict
 from lexedata.enrich.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
@@ -391,14 +391,18 @@ if __name__ == "__main__":
     logger = cli.setup_logging(args)
 
     if not args.sheet:
-        args.sheet = [
-            sheet for sheet in args.excel.sheetnames if sheet not in args.exclude_sheet
+        sheets = [
+            sheet
+            for sheet in args.excel.worksheets
+            if sheet.title not in args.exclude_sheet
         ]
-        logger.info("No sheets specified explicitly. Parsing sheets: %s", args.sheets)
+        logger.info("No sheets specified explicitly. Parsing sheets: %s", args.sheet)
+    else:
+        sheets = [args.excel[s] for s in args.sheet]
 
     report = add_single_languages(
         metadata=args.metadata,
-        sheets=args.sheet,
+        sheets=sheets,
         match_form=args.match_form,
         concept_name=args.concept_name,
         ignore_missing=args.ignore_missing_excel_columns,
