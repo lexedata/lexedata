@@ -12,7 +12,7 @@ from lexedata.importer.excelsinglewordlist import (
     ImportLanguageReport,
 )
 
-from test_form_matcher import MockSingleExcelSheet
+from fixtures import MockSingleExcelSheet
 
 
 def copy_cldf_wordlist_no_bib(cldf_wordlist):

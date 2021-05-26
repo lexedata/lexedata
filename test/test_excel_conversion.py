@@ -8,6 +8,7 @@ import pycldf
 import openpyxl
 
 import lexedata.importer.fromexcel as f
+from fixtures import copy_to_temp
 from lexedata.exporter.cognates import ExcelWriter
 from lexedata.importer.cognates import import_cognates_from_excel
 
@@ -56,29 +57,6 @@ def excel_wordlist(request):
         Path(__file__).parent / request.param[1],
         empty_copy_of_cldf_wordlist(Path(__file__).parent / request.param[2]),
     )
-
-
-def copy_to_temp(cldf_wordlist):
-    """Copy the dataset to a different temporary location, so that editing the dataset will not change it."""
-    original = cldf_wordlist
-    dataset = pycldf.Dataset.from_metadata(original)
-    orig_bibpath = dataset.bibpath
-
-    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
-    target = dirname / original.name
-    shutil.copyfile(original, target)
-    dataset = pycldf.Dataset.from_metadata(target)
-    for table in dataset.tables:
-        link = Path(str(table.url))
-        o = original.parent / link
-        t = target.parent / link
-        shutil.copyfile(o, t)
-    link = dataset.bibpath.name
-    o = original.parent / link
-    t = target.parent / link
-    shutil.copyfile(o, t)
-    shutil.copyfile(orig_bibpath, dataset.bibpath)
-    return dataset, target
 
 
 def copy_to_temp_no_bib(cldf_wordlist):
