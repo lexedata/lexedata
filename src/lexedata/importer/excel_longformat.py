@@ -390,8 +390,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
-    if not args.sheets:
-        args.sheets = [
+    if not args.sheet:
+        args.sheet = [
             sheet for sheet in args.excel.sheetnames if sheet not in args.exclude_sheet
         ]
         logger.info("No sheets specified explicitly. Parsing sheets: %s", args.sheets)
