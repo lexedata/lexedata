@@ -91,11 +91,11 @@ def segment_form(
     pre-aspirated or pre-nasalized consonants showing up as post-aspirated
     resp. post-nasalized vowels, which BIPA does not accept).
 
-    >>> [str(x) for x in segment_form("iɾũndɨ")]
+    >>> [str(x) for x in segment_form("iɾũndɨ", report=SegmentReport())]
     ['i', 'ɾ', 'ũ', 'n', 'd', 'ɨ']
-    >>> [str(x) for x in segment_form("mokõi")]
+    >>> [str(x) for x in segment_form("mokõi", report=SegmentReport())]
     ['m', 'o', 'k', 'õ', 'i']
-    >>> segment_form("pan̥onoót͡síkoːʔú")  # doctest: +ELLIPSIS
+    >>> segment_form("pan̥onoót͡síkoːʔú", , report=SegmentReport())  # doctest: +ELLIPSIS
     [<pyclts.models.Consonant: voiceless bilabial stop consonant>, <pyclts.models.Vowel: unrounded open front vowel>, <pyclts.models.Consonant: devoiced voiced alveolar nasal consonant>, <pyclts.models.Vowel: rounded close-mid back vowel>, <pyclts.models.Consonant: voiced alveolar nasal consonant>, <pyclts.models.Vowel: rounded close-mid back vowel>, <pyclts.models.Vowel: rounded close-mid back ... vowel>, <pyclts.models.Consonant: voiceless alveolar sibilant affricate consonant>, <pyclts.models.Vowel: unrounded close front ... vowel>, <pyclts.models.Consonant: voiceless velar stop consonant>, <pyclts.models.Vowel: long rounded close-mid back vowel>, <pyclts.models.Consonant: voiceless glottal stop consonant>, <pyclts.models.Vowel: rounded close back ... vowel>]
 
     """
