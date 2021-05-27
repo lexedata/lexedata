@@ -306,7 +306,9 @@ def add_single_languages(
             concept_column = concept_name
     except (KeyError, FileNotFoundError) as err:
         if isinstance(err, KeyError):
-            logger.warning("Did not find a well-formed ParameterTable. Importing all forms independent of concept")
+            logger.warning(
+                "Did not find a well-formed ParameterTable. Importing all forms independent of concept"
+            )
         elif isinstance(err, FileNotFoundError):
             logger.warning(
                 f"Did not find {dataset['ParameterTable'].url.string}. "

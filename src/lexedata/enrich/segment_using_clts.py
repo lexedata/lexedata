@@ -38,16 +38,14 @@ tokenizer = segments.Tokenizer()
 class SegmentReport:
     sounds: defaultdict = defaultdict(lambda: {"count": 0, "comment": ""})
 
-    def __call__(self, name: str) -> t.Tuple[str, str, int, str,]:
+    def __call__(
+        self, name: str
+    ) -> t.Tuple[str, str, int, str]:
         res = []
         for k, v in self.sounds.items():
-            res.append((
-                name,
-                k,
-                v["count"],
-                v["comment"]
-                ))
+            res.append((name, k, v["count"], v["comment"]))
         return res
+
 
 def cleanup(form: str) -> str:
     form = form.split(";")[0].strip()
@@ -158,7 +156,9 @@ def segment_form(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
                 report.sounds[str(raw_tokens[i])]["count"] += 1
-                report.sounds[str(raw_tokens[i])]["comment"] = "unknown pre-nasalization"
+                report.sounds[str(raw_tokens[i])][
+                    "comment"
+                ] = "unknown pre-nasalization"
                 i -= 1
                 continue
             raw_tokens[i + 1] = bipa["pre-nasalized " + raw_tokens[i + 1].name]
@@ -207,10 +207,7 @@ def add_segments_to_dataset(
     c_f_lan = dataset["FormTable", "languageReference"].name
     c_f_form = dataset["FormTable", "form"].name
     # report = t.Dict[str, t.Dict[str, t.Dict[str, str]]] = {}
-    report = {
-        f[c_f_lan]: SegmentReport()
-        for f in dataset["FormTable"]
-    }
+    report = {f[c_f_lan]: SegmentReport() for f in dataset["FormTable"]}
     for r, row in enumerate(dataset["FormTable"], 1):
         if row[c_f_segments] and not overwrite_existing:
             write_back.append(row)
@@ -283,4 +280,3 @@ if __name__ == "__main__":
             tablefmt="orgtbl",
         )
     )
-
