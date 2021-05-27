@@ -38,9 +38,7 @@ tokenizer = segments.Tokenizer()
 class SegmentReport:
     sounds: defaultdict = defaultdict(lambda: {"count": 0, "comment": ""})
 
-    def __call__(
-        self, name: str
-    ) -> t.Tuple[str, str, int, str]:
+    def __call__(self, name: str) -> t.Tuple[str, str, int, str]:
         res = []
         for k, v in self.sounds.items():
             res.append((name, k, v["count"], v["comment"]))
