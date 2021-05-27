@@ -279,14 +279,11 @@ def add_single_languages(
     ignore_missing: bool,
     ignore_superfluous: bool,
     exclude_sheet,
-    verbose: bool,
     status_update: t.Optional[str],
     logger: cli.logging.Logger,
 ) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
-    if verbose:
-        logger.basicConfig(level=cli.logging.INFO)
     if not sheet:
         sheets = [sheet for sheet in excel.sheetnames if sheet not in exclude_sheet]
         logger.info("No sheets specified. Parsing sheets: %s", sheet)
@@ -409,7 +406,6 @@ if __name__ == "__main__":
         ignore_missing=args.ignore_missing_excel_columns,
         ignore_superfluous=args.ignore_superfluous_excel_columns,
         exclude_sheet=args.exclude_sheet,
-        verbose=args.verbose,
         status_update=args.status_update,
         logger=logger,
     )
