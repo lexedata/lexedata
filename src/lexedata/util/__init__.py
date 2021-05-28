@@ -13,7 +13,7 @@ from lingpy.compare.strings import ldn_swap
 
 import csvw
 from lexedata.cli import tq
-from lexedata.edit.add_free_metadata import add_metadata
+from lexedata.util.add_metadata import add_metadata
 
 from ..types import KeyKeyDict
 from . import fs
