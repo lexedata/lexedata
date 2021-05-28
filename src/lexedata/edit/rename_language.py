@@ -4,7 +4,7 @@ import typing as t
 from lexedata.enrich.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
-# TODO: use lexedata.change.clean_ids.update_ids
+# TODO: use lexedata.edit.clean_ids.update_ids
 # TODO: share more functionality with rename_concept
 
 

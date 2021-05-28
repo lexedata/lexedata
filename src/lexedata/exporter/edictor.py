@@ -171,8 +171,8 @@ def forms_to_tsv(
         logger.critical(
             """Edictor export requires your dataset to have an explicit CognateTable containing the judgements,
             with all of IDs, forms, cognatesets, segment slices and alignments.
-            Run `lexedata.change.construct_cognate_table` if you have cognate sets in your FormTable.
-            Run `lexedata.change.cognate_code_data` if you want to start from automatic cognate detection."""
+            Run `lexedata.edit.construct_cognate_table` if you have cognate sets in your FormTable.
+            Run `lexedata.edit.cognate_code_data` if you want to start from automatic cognate detection."""
         )
         sys.exit(Exit.NO_COGNATETABLE)
     c_form_language = dataset["FormTable", "languageReference"].name
