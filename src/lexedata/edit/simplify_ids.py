@@ -168,8 +168,28 @@ if __name__ == "__main__":
         default=False,
         help="Generate transparent IDs.",
     )
+    parser.add_argument(
+        "--uppercase",
+        action="store_true",
+        default=False,
+        help="Normalize to uppercase letters, instead of the default lowercase.",
+    )
+    parser.add_argument(
+        "--table",
+        action="append",
+        default=[],
+        help="Only fix the IDs of this table.",
+    )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
+
+    if args.uppercase:
+        # TODO: implement this
+        raise NotImplementedError
+
+    if args.table:
+        # TODO: implement this
+        raise NotImplementedError
 
     ds = pycldf.Wordlist.from_metadata(args.metadata)
 
