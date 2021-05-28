@@ -8,7 +8,7 @@ import cldfcatalog
 import cldfbench
 from pyconcepticon.glosses import concept_map2
 
-from lexedata.enrich.add_status_column import add_status_column_to_table
+from lexedata.edit.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
 concepticon_path = cldfcatalog.Config.from_file().get_clone("concepticon")

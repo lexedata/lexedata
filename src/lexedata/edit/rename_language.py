@@ -1,7 +1,7 @@
 import pycldf
 import typing as t
 
-from lexedata.enrich.add_status_column import add_status_column_to_table
+from lexedata.edit.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
 # TODO: use lexedata.edit.clean_ids.update_ids

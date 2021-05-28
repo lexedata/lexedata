@@ -17,7 +17,7 @@ from lexedata.util.excel import (
 )
 from lexedata.importer.excel_matrix import DB
 from lexedata.types import Form, KeyKeyDict
-from lexedata.enrich.add_status_column import add_status_column_to_table
+from lexedata.edit.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
 

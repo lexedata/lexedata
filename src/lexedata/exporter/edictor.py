@@ -183,7 +183,7 @@ def forms_to_tsv(
     except KeyError:
         logger.critical(
             """Edictor export requires your dataset to have segments in the FormTable.
-        Run `lexedata.enrich.segment_using_clts` to automatically add segments based on your forms."""
+        Run `lexedata.edit.segment_using_clts` to automatically add segments based on your forms."""
         )
         # TODO: Exit.NO_SEGMENTS is not an `int`, so the exit code of the
         # python run is actually 1, not 4 as we wanted.

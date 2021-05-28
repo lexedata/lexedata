@@ -13,7 +13,7 @@ from lingpy.compare.strings import ldn_swap
 
 import csvw
 from lexedata.cli import tq
-from lexedata.enrich.add_free_metadata import add_metadata
+from lexedata.edit.add_free_metadata import add_metadata
 
 from ..types import KeyKeyDict
 from . import fs
@@ -160,6 +160,7 @@ def parse_segment_slices(
             yield i
 
 
+# XXX Wait, didn't I have a better version of this function?
 def make_temporary_dataset(form_table):
     directory = Path(tempfile.mkdtemp())
     form_table_file_name = directory / "forms.csv"

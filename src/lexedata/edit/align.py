@@ -7,7 +7,7 @@ If possible, align using existing lexstat scorer.
 import typing as t
 import pycldf
 
-from lexedata.enrich.add_status_column import add_status_column_to_table
+from lexedata.edit.add_status_column import add_status_column_to_table
 from lexedata import cli
 
 

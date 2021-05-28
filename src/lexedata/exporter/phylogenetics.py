@@ -129,7 +129,7 @@ def read_wordlist(
         if code_column:
             # This is not the CLDF way, warn the user.
             logger.warning(
-                "Your dataset has a cognatesetReference in the FormTable. Consider running lexedata.enrich.explict_cognate_judgements to create an explicit cognate table, if this is your dataset."
+                "Your dataset has a cognatesetReference in the FormTable. Consider running lexedata.edit.explict_cognate_judgements to create an explicit cognate table, if this is your dataset."
             )
             cognatesets = util.cache_table(
                 dataset, columns={"form": col_map.forms.id, "code": code_column}
