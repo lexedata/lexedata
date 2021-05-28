@@ -7,11 +7,12 @@ import openpyxl
 
 import lexedata.importer.fromexcel as f
 from fixtures import copy_metadata, copy_to_temp
+import json
 
 
 def test_no_wordlist_and_no_cogsets(fs):
     with pytest.raises(argparse.ArgumentError) as err:
-        #mock empty json file
+        # mock empty json file
         fs.create_file("invented_path", contents="{}")
         f.load_dataset(
             metadata="invented_path",
@@ -26,7 +27,7 @@ def test_no_wordlist_and_no_cogsets(fs):
 
 @pytest.fixture
 def empty_excel():
-    return Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx""
+    return Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
 
 
 def test_no_dialect_excel_parser(fs, caplog, empty_excel):
@@ -36,8 +37,7 @@ def test_no_dialect_excel_parser(fs, caplog, empty_excel):
         fs.create_file("invented_path", contents="{}")
         f.load_dataset(
             metadata="invented_path",
-            lexicon=empty_excel
-            ,
+            lexicon=empty_excel,
         )
         assert caplog.text.endswith(
             "User-defined format specification in the json-file was missing, falling back to default parser"
@@ -50,9 +50,7 @@ def test_no_dialect_excel_cognate_parser(fs, caplog, empty_excel):
         # mock empty json file
         fs.create_file("invented_path", contents="{}")
         f.load_dataset(
-            metadata="invented_path",
-            lexicon=None,
-            cognate_lexicon=empty_excel
+            metadata="invented_path", lexicon=None, cognate_lexicon=empty_excel
         )
         assert caplog.text.endswith(
             "User-defined format specification in the json-file was missing, falling back to default parser"
@@ -62,9 +60,7 @@ def test_no_dialect_excel_cognate_parser(fs, caplog, empty_excel):
 def test_dialect_missing_key_excel_parser(fs, caplog, empty_excel):
     # ExcelParser
     with pytest.raises(ValueError):
-        fs.create_file(
-            "invented_path", contents="""{"special:fromexcel": {}}"""
-        )
+        fs.create_file("invented_path", contents="""{"special:fromexcel": {}}""")
         f.load_dataset("invented_path", lexicon=empty_excel)
     assert caplog.text.endswith(
         "User-defined format specification in the json-file was missing the key lang_cell_regexes, "
@@ -72,12 +68,10 @@ def test_dialect_missing_key_excel_parser(fs, caplog, empty_excel):
     )
 
 
-def test_dialect_missing_key_excel_cognate_parser(caplog, empty_excel):
+def test_dialect_missing_key_excel_cognate_parser(fs, caplog, empty_excel):
     # CognateExcelParser
     with pytest.raises(ValueError):
-        fs.create_file(
-            "invented_path", contents="""{"special:fromexcel": {}}"""
-        )
+        fs.create_file("invented_path", contents="""{"special:fromexcel": {}}""")
         f.load_dataset("invented_path", lexicon=None, cognate_lexicon=empty_excel)
     assert caplog.text.endswith(
         "User-defined format specification in the json-file was missing the key lang_cell_regexes, "
@@ -89,10 +83,7 @@ def test_no_first_row_in_excel(empty_excel):
     original = Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     copy = copy_metadata(original=original)
     with pytest.raises(AssertionError) as err:
-        f.load_dataset(
-            metadata=copy,
-            lexicon=empty_excel
-        )
+        f.load_dataset(metadata=copy, lexicon=empty_excel)
     assert (
         str(err.value) == "Your first data row didn't have a name. "
         "Please check your format specification or ensure the first row has a name."
@@ -135,7 +126,28 @@ def test_language_comment_regex_error():
     lexicon_wb = openpyxl.load_workbook(excel).active
     dialect.lang_comment_regexes = [r"\[.*", ".*"]
 
-    EP = f.excel_parser_from_dialect(dataset, dialect, cognate=False)
+    EP = f.excel_parser_from_dialect(
+        dataset,
+        argparse.Namespace(
+            lang_cell_regexes=[r"\[.*", ".*"],
+            lang_comment_regexes=[".*"],
+            row_cell_regexes=["(?P<Name>.*)"],
+            row_comment_regexes=[".*"],
+            cell_parser={
+                "form_separator": ",",
+                "variant_separator": "~",
+                "name": "CellParser",
+                "cell_parser_semantics": [
+                    ["<", ">", "Form", True],
+                    ["{", "}", "Source", False],
+                ],
+            },
+            check_for_match=["Form"],
+            check_for_row_match=["Name"],
+            check_for_language_match=["Name"],
+        ),
+        cognate=False,
+    )
     EP = EP(dataset)
     with pytest.raises(ValueError) as err:
         EP.parse_cells(lexicon_wb)
