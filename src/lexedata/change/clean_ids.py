@@ -53,17 +53,36 @@ def clean_mapping(rows: t.Mapping[str, t.Mapping[str, str]]) -> t.Mapping[str, s
     return mapping
 
 
-def update_integer_ids(ds: pycldf.Dataset, table: csvw.metadata.Table):
+def update_integer_ids(
+    ds: pycldf.Dataset,
+    table: csvw.metadata.Table,
+    logger: cli.logging.Logger = cli.logger,
+):
     """Update all IDs of the table in the database, also in foreign keys."""
     c_id = table.get_column("http://cldf.clld.org/v1.0/terms.rdf#id")
-    rows = []
+    max_id = 0
+    no_integer_rows: t.Set[str] = set()
+    logger.info("Checking IDs that are already integers…")
     for row in cli.tq(ds[table], total=ds[table].common_props.get("dc:extent")):
-        row[c_id.name] = mapping.get(row[c_id.name], row[c_id.name])
+        try:
+            max_id = max(int(row[c_id.name]), max_id)
+        except ValueError:
+            no_integer_rows.add(row[c_id.name])
+    logger.info("Adding integer IDs to other rows…")
+
+    mapping: t.Dict[str, int]
+    rows: t.List[t.Dict[str, t.Any]] = []
+    for row in cli.tq(ds[table], total=ds[table].common_props.get("dc:extent")):
+        original = row[c_id.name]
+        if row[c_id.name] in no_integer_rows:
+            max_id += 1
+            row[c_id.name] = max_id
+        else:
+            row[c_id.name] = int(row[c_id.name])
+        mapping[original] = row[c_id.name]
         rows.append(row)
     logger.info(f"Writing {table.url.string} back to file…")
     table.write(rows)
-
-    c_id.datatype.format = ID_FORMAT.pattern
 
     foreign_keys_to_here = {
         other_table.url.string: {
@@ -85,13 +104,17 @@ def update_integer_ids(ds: pycldf.Dataset, table: csvw.metadata.Table):
             ds[other_table], total=ds[other_table].common_props.get("dc:extent")
         ):
             for column in columns:
-                row[column] = mapping.get(row[column], row[column])
+                row[column] = mapping[str(row[column])]
             rows.append(row)
-        logger.info(f"Writing {other_table} back to file…")
-        ds[other_table].write(rows)
 
         for column in columns:
             ds[other_table, column].datatype = c_id.datatype
+
+        logger.info(f"Writing {other_table} back to file…")
+        for column in columns:
+            ds[other_table, column].datatype = c_id.datatype
+
+        ds[other_table].write(rows)
 
 
 def update_ids(
@@ -158,8 +181,10 @@ if __name__ == "__main__":
             # Temporarily open up the datatype format, otherwise we may be unable to read
             c_id.datatype.format = None
         elif c_id.datatype.base == "integer":
+            # Temporarily open up the datatype format, otherwise we may be unable to read
             c_id.datatype = "string"
             update_integer_ids(ds, table)
+            c_id.datatype = "integer"
             continue
         else:
             logger.warning(
