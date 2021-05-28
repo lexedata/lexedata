@@ -4,10 +4,10 @@ import shutil
 import pytest
 import pycldf
 
-from lexedata.edit.guess_concept_for_cognateset import (
+from lexedata.edit.add_central_concepts import (
     add_central_concepts_to_cognateset_table,
 )
-from lexedata.edit.guess_concepticon import create_concepticon_for_concepts
+from lexedata.edit.add_concepticon import create_concepticon_for_concepts
 
 
 @pytest.fixture(params=["data/cldf/smallmawetiguarani/cldf-metadata.json"])
