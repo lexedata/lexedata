@@ -68,6 +68,7 @@ def test_concepticon_id_of_concepts_correct(copy_wordlist_add_concepticons):
         "1500",
         "None",
         "493",
+        "1277",
     ]
 
 

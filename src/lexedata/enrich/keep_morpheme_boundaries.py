@@ -6,12 +6,12 @@ import csv
 
 def morpheme_boundaries_to_csv(judgements: Path, alignments: Path, output_file: Path):
     cognatesets_new = {}
-    for line in csv.DictReader(judgements.open()):
+    for line in csv.DictReader(judgements.open(encoding="utf-8")):
         cognatesets_new.setdefault(line["Cognateset_ID"], set()).add(line["Form_ID"])
 
     cognatesets_old = {}
     old_judgements = {}
-    for line in csv.DictReader(alignments.open()):
+    for line in csv.DictReader(alignments.open(encoding="utf-8")):
         cognatesets_old.setdefault(line["Cognateset_ID"], set()).add(line["Form_ID"])
         old_judgements[line["Form_ID"], line["Cognateset_ID"]] = line
 
@@ -19,10 +19,10 @@ def morpheme_boundaries_to_csv(judgements: Path, alignments: Path, output_file: 
         frozenset(forms): id for id, forms in cognatesets_old.items()
     }
 
-    with judgements.open() as judgements_file:
+    with judgements.open(encoding="utf-8") as judgements_file:
         judgements = csv.DictReader(judgements_file)
         out = csv.DictWriter(
-            output_file.open("w"),
+            output_file.open("w", encoding="utf-8"),
             judgements.fieldnames,
             dialect=judgements.dialect,
         )

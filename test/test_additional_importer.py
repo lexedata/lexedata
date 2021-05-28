@@ -7,7 +7,7 @@ import re
 import pycldf
 import openpyxl
 
-from lexedata.importer.excelsinglewordlist import (
+from lexedata.importer.excel_long_format import (
     read_single_excel_sheet,
     ImportLanguageReport,
 )

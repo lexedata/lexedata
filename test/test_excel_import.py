@@ -7,7 +7,7 @@ import argparse
 import pycldf
 import openpyxl
 
-import lexedata.importer.fromexcel as f
+import lexedata.importer.excel_matrix as f
 from test_excel_conversion import copy_to_temp
 
 
