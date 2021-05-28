@@ -155,6 +155,11 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
     ds[ds.primary_table].tableSchema.columns.sort(
         key=lambda k: colnames.index(k.name) if k.name in colnames else 1e10
     )
+
+    # TODO: Once lexedata is properly published, we can give a better URL.
+    ds.properties["dc:contributor"] = [
+        "https://github.com/Anaphory/lexedata/blob/master/src/lexedata/edit/add_metadata.py"
+    ]
     return ds
 
 
