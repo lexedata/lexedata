@@ -7,8 +7,8 @@ from pathlib import Path
 import pycldf
 import openpyxl
 
-import lexedata.importer.fromexcel as f
 from fixtures import copy_to_temp
+import lexedata.importer.excel_matrix as f
 from lexedata.exporter.cognates import ExcelWriter
 from lexedata.importer.cognates import import_cognates_from_excel
 

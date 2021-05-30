@@ -8,7 +8,9 @@ import pycldf
 import cldfbench
 import cldfcatalog
 
-from lexedata.importer.fromexcel import excel_parser_from_dialect
+from lexedata.importer.excel_matrix import excel_parser_from_dialect
+
+from mock_excel import MockSingleExcelSheet
 
 from fixtures import MockSingleExcelSheet
 

@@ -8,7 +8,6 @@ from pathlib import Path
 import unicodedata
 import unidecode as uni
 import pycldf
-import openpyxl as op
 import networkx
 from lingpy.compare.strings import ldn_swap
 
@@ -66,45 +65,8 @@ def string_to_id(string: str) -> str:
     return "_".join(ID_FORMAT.findall(uni.unidecode(string.lower()).lower()))
 
 
-def clean_cell_value(cell: op.cell.cell.Cell):
-    if cell.value is None:
-        return ""
-    if type(cell.value) == float:
-        if cell.value == int(cell.value):
-            return int(cell.value)
-        return cell.value
-    v = unicodedata.normalize("NFC", (cell.value or "").strip())
-    if type(v) == float:
-        if v == int(v):
-            return int(v)
-        return v
-    if type(v) == int:
-        return v
-    try:
-        return v.replace("\n", ";\t")
-    except TypeError:
-        return str(v)
-
-
 def normalize_string(text: str):
     return unicodedata.normalize("NFC", text.strip())
-
-
-def get_cell_comment(cell: op.cell.Cell) -> str:
-    raw_comment = cell.comment.text.strip() if cell.comment else ""
-    lines = [
-        line for line in raw_comment.split("\n") if line.strip() != "-lexedata.exporter"
-    ]
-    return " ".join(lines)
-
-
-def normalize_header(row: t.Iterable[op.cell.Cell]) -> t.Iterable[str]:
-    header = [unicodedata.normalize("NFKC", (n.value or "").strip()) for n in row]
-    header = [h.replace(" ", "_") for h in header]
-    header = [h.replace("(", "") for h in header]
-    header = [h.replace(")", "") for h in header]
-
-    return header
 
 
 def get_dataset(fname: Path) -> pycldf.Dataset:
@@ -187,9 +149,9 @@ def parse_segment_slices(
     """
     i = -1  # Set it to the value before the first possible segment slice start
     for startend in segment_slices:
-        start, end = startend.split(":")
-        start = int(start)
-        end = int(end)
+        start_str, end_str = startend.split(":")
+        start = int(start_str)
+        end = int(end_str)
         if end < start:
             raise ValueError(f"Segment slice {startend} had start after end.")
         if enforce_ordered and start <= i:
@@ -201,7 +163,7 @@ def parse_segment_slices(
 def make_temporary_dataset(form_table):
     directory = Path(tempfile.mkdtemp())
     form_table_file_name = directory / "forms.csv"
-    with form_table_file_name.open("w") as form_table_file:
+    with form_table_file_name.open("w", encoding="utf-8") as form_table_file:
         form_table_file.write(form_table)
     dataset = add_metadata(form_table_file_name)
     dataset.write(directory / "Wordlist-metadata.json")
@@ -257,8 +219,7 @@ def cache_table(
     ), "If your dataset has no primary table, you must specify which table to cache."
     if columns is None:
         columns = {
-            (cldf_property(c.propertyUrl) if c.propertyUrl else c.name)
-            or c.name: c.name
+            (cldf_property(c.propertyUrl) if c.propertyUrl else c.name): c.name
             for c in dataset[table].tableSchema.columns
         }
     c_id = dataset[table, index_column].name

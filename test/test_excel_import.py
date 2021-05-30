@@ -7,7 +7,7 @@ import openpyxl
 
 import lexedata.importer.fromexcel as f
 from fixtures import copy_metadata, copy_to_temp
-import json
+import lexedata.importer.excel_matrix as f
 
 
 def test_no_wordlist_and_no_cogsets(fs):

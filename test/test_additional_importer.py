@@ -7,12 +7,11 @@ import re
 import pycldf
 import openpyxl
 
-from lexedata.importer.excelsinglewordlist import (
+from lexedata.importer.excel_long_format import (
     read_single_excel_sheet,
     ImportLanguageReport,
 )
-
-from fixtures import MockSingleExcelSheet
+from mock_excel import MockSingleExcelSheet
 
 
 def copy_cldf_wordlist_no_bib(cldf_wordlist):
