@@ -21,9 +21,11 @@ from lexedata.types import (
 )
 from lexedata.util import (
     string_to_id,
+    edit_distance,
+)
+from lexedata.util.excel import (
     clean_cell_value,
     get_cell_comment,
-    edit_distance,
 )
 import lexedata.importer.cellparser as cell_parsers
 from lexedata.enrich.add_status_column import add_status_column_to_table
@@ -113,7 +115,7 @@ class DB:
             ].write(self.retrieve(table_type))
         self.dataset.write_metadata()
         # TODO: Write BIB file, without pycldf
-        with open(self.dataset.bibpath, "w") as bibfile:
+        with self.dataset.bibpath.open("w", encoding="utf-8") as bibfile:
             for source in self.source_ids:
                 print("@misc{" + source + ", title={" + source + "} }", file=bibfile)
 
@@ -840,5 +842,5 @@ if __name__ == "__main__":
     if args.status_update == "None":
         args.status_update = None
     load_dataset(
-        args.metadata, args.lexicon, args.cogsets, args.status_update, logger=logger
+        args.metadata, args.wordlist, args.cogsets, args.status_update, logger=logger
     )

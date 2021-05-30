@@ -165,7 +165,9 @@ def cognate_code_to_file(
     except ValueError:
         ...
 
-    read_back = csv.DictReader(open(output_file + ".tsv"), delimiter="\t")
+    read_back = csv.DictReader(
+        open(output_file + ".tsv", encoding="utf-8"), delimiter="\t"
+    )
     cognatesets = {}
     judgements = []
     i = 1
