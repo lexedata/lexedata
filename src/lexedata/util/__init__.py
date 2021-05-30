@@ -219,8 +219,7 @@ def cache_table(
     ), "If your dataset has no primary table, you must specify which table to cache."
     if columns is None:
         columns = {
-            (cldf_property(c.propertyUrl) if c.propertyUrl else c.name)
-            or c.name: c.name
+            (cldf_property(c.propertyUrl) if c.propertyUrl else c.name): c.name
             for c in dataset[table].tableSchema.columns
         }
     c_id = dataset[table, index_column].name
