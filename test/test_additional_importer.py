@@ -14,6 +14,7 @@ from lexedata.importer.excel_long_format import (
 from mock_excel import MockSingleExcelSheet
 
 
+# Todo: check whether we can use copy dataset with bib here
 def copy_cldf_wordlist_no_bib(cldf_wordlist):
     # Copy the dataset metadata file to a temporary directory.
     original = Path(__file__).parent / cldf_wordlist

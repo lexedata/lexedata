@@ -10,6 +10,7 @@ from lexedata.enrich.guess_concept_for_cognateset import (
 from lexedata.enrich.guess_concepticon import create_concepticon_for_concepts
 
 
+# TODO: Discuss this with Gereon. This fixture seems dangerous as we call a function that we test at another place
 @pytest.fixture(params=["data/cldf/smallmawetiguarani/cldf-metadata.json"])
 def copy_wordlist_add_concepticons(request):
     original = Path(__file__).parent / request.param
