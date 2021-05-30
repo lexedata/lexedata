@@ -120,7 +120,6 @@ if __name__ == "__main__":
         help="Text written to Status_Column. Set to 'None' for no status update. "
         "(default: Replaced column {original} by column {replacement}",
     )
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 

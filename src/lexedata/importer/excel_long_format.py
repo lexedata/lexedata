@@ -9,15 +9,16 @@ import pycldf
 
 from lexedata.util import (
     string_to_id,
-    clean_cell_value,
-    normalize_header,
     normalize_string,
 )
-from lexedata.importer.fromexcel import DB
-from lexedata.types import Form
+from lexedata.util.excel import (
+    clean_cell_value,
+    normalize_header,
+)
+from lexedata.importer.excel_matrix import DB
+from lexedata.types import Form, KeyKeyDict
 from lexedata.enrich.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
-from lexedata.util import KeyKeyDict
 
 
 try:
@@ -272,24 +273,16 @@ def read_single_excel_sheet(
 
 def add_single_languages(
     metadata: Path,
-    excel: str,
-    sheet: t.Optional[t.List[str]],
+    sheets: t.Iterable[openpyxl.worksheet.worksheet.Worksheet],
     match_form: t.Optional[t.List[str]],
     concept_name: t.Optional[str],
     ignore_missing: bool,
     ignore_superfluous: bool,
-    exclude_sheet,
-    verbose: bool,
     status_update: t.Optional[str],
     logger: cli.logging.Logger,
 ) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
-    if verbose:
-        logger.basicConfig(level=cli.logging.INFO)
-    if not sheet:
-        sheets = [sheet for sheet in excel.sheetnames if sheet not in exclude_sheet]
-        logger.info("No sheets specified. Parsing sheets: %s", sheet)
     # initiate data set from meta data or csv depending on command line arguments
     if metadata:
         if metadata.name == "forms.csv":
@@ -318,7 +311,7 @@ def add_single_languages(
     for sheet in sheets:
         for lang, subreport in read_single_excel_sheet(
             dataset=dataset,
-            sheet=excel[sheet],
+            sheet=sheet,
             logger=logger,
             match_form=match_form,
             entries_to_concepts=concepts,
@@ -345,7 +338,11 @@ if __name__ == "__main__":
         "switch if you have concept Names in the wordlist instead.",
     )
     parser.add_argument(
-        "--sheet", type=str, action="append", help="Sheets to parse. (default: all)"
+        "--sheet",
+        action="append",
+        type=str,
+        default=[],
+        help="Sheet to parse. Use multiple --sheet=Name arguments for multiple sheets. (default: all)",
     )
     parser.add_argument(
         "--match-form",
@@ -356,14 +353,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--ignore-superfluous-excel-columns",
-        "->",
+        "-s",
         action="store_true",
         default=False,
         help="Ignore columns in the Excel table which are not in the dataset",
     )
     parser.add_argument(
         "--ignore-missing-excel-columns",
-        "-<",
+        "-m",
         action="store_true",
         default=False,
         help="Ignore columns missing from the Excel table compared to the dataset",
@@ -374,14 +371,7 @@ if __name__ == "__main__":
         type=str,
         nargs="*",
         default=[],
-        help="Sheets not to parse",
-    )
-    parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        default=False,
-        help="Report existing forms",
+        help="Sheets not to parse. Does not affect sheets explicitly added using --sheets.",
     )
     parser.add_argument(
         "--status-update",
@@ -397,20 +387,26 @@ if __name__ == "__main__":
         help="Prints report of newly added forms",
     )
 
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
+    if not args.sheet:
+        sheets = [
+            sheet
+            for sheet in args.excel.worksheets
+            if sheet.title not in args.exclude_sheet
+        ]
+        logger.info("No sheets specified explicitly. Parsing sheets: %s", args.sheet)
+    else:
+        sheets = [args.excel[s] for s in args.sheet]
+
     report = add_single_languages(
         metadata=args.metadata,
-        excel=args.excel,
-        sheet=args.sheet,
+        sheets=sheets,
         match_form=args.match_form,
         concept_name=args.concept_name,
         ignore_missing=args.ignore_missing_excel_columns,
         ignore_superfluous=args.ignore_superfluous_excel_columns,
-        exclude_sheet=args.exclude_sheet,
-        verbose=args.verbose,
         status_update=args.status_update,
         logger=logger,
     )

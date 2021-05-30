@@ -8,7 +8,6 @@ from pathlib import Path
 import unicodedata
 import unidecode as uni
 import pycldf
-import openpyxl as op
 import networkx
 from lingpy.compare.strings import ldn_swap
 
@@ -16,7 +15,21 @@ import csvw
 from lexedata.cli import tq
 from lexedata.enrich.add_free_metadata import add_metadata
 
+from ..types import KeyKeyDict
+from . import fs
+
+__all__ = [fs, KeyKeyDict]
+
 ID_FORMAT = re.compile("[a-z0-9_]+")
+
+
+def ensure_list(maybe_string: t.Union[t.List[str], str, None]) -> t.List[str]:
+    if maybe_string is None:
+        return []
+    elif isinstance(maybe_string, list):
+        return maybe_string
+    else:
+        return [maybe_string]
 
 
 def cldf_property(url: csvw.metadata.URITemplate) -> t.Optional[str]:
@@ -52,45 +65,8 @@ def string_to_id(string: str) -> str:
     return "_".join(ID_FORMAT.findall(uni.unidecode(string.lower()).lower()))
 
 
-def clean_cell_value(cell: op.cell.cell.Cell):
-    if cell.value is None:
-        return ""
-    if type(cell.value) == float:
-        if cell.value == int(cell.value):
-            return int(cell.value)
-        return cell.value
-    v = unicodedata.normalize("NFC", (cell.value or "").strip())
-    if type(v) == float:
-        if v == int(v):
-            return int(v)
-        return v
-    if type(v) == int:
-        return v
-    try:
-        return v.replace("\n", ";\t")
-    except TypeError:
-        return str(v)
-
-
 def normalize_string(text: str):
     return unicodedata.normalize("NFC", text.strip())
-
-
-def get_cell_comment(cell: op.cell.Cell) -> str:
-    raw_comment = cell.comment.text.strip() if cell.comment else ""
-    lines = [
-        line for line in raw_comment.split("\n") if line.strip() != "-lexedata.exporter"
-    ]
-    return " ".join(lines)
-
-
-def normalize_header(row: t.Iterable[op.cell.Cell]) -> t.Iterable[str]:
-    header = [unicodedata.normalize("NFKC", (n.value or "").strip()) for n in row]
-    header = [h.replace(" ", "_") for h in header]
-    header = [h.replace("(", "") for h in header]
-    header = [h.replace(")", "") for h in header]
-
-    return header
 
 
 def get_dataset(fname: Path) -> pycldf.Dataset:
@@ -133,7 +109,8 @@ def edit_distance(text1: str, text2: str) -> float:
 
 def load_clics():
     gml_file = (
-        Path(__file__).parent / "data/clics-clics3-97832b5/clics3-network.gml.zip"
+        Path(__file__).parent.parent
+        / "data/clics-clics3-97832b5/clics3-network.gml.zip"
     )
     if not gml_file.exists():
         import urllib.request
@@ -144,7 +121,7 @@ def load_clics():
         zfobj = zipfile.ZipFile(file_name)
         zfobj.extract(
             "clics-clics3-97832b5/clics3-network.gml.zip",
-            Path(__file__).parent / "data/",
+            Path(__file__).parent.parent / "data/",
         )
     gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "r")
     return networkx.parse_gml(line.decode("utf-8") for line in gml)
@@ -172,9 +149,11 @@ def parse_segment_slices(
     """
     i = -1  # Set it to the value before the first possible segment slice start
     for startend in segment_slices:
-        start, end = startend.split(":")
-        start = int(start)
-        end = int(end)
+        start_str, end_str = startend.split(":")
+        start = int(start_str)
+        end = int(end_str)
+        if end < start:
+            raise ValueError(f"Segment slice {startend} had start after end.")
         if enforce_ordered and start <= i:
             raise ValueError("Segment slices are not ordered as required.")
         for i in range(start - 1, end):
@@ -184,7 +163,7 @@ def parse_segment_slices(
 def make_temporary_dataset(form_table):
     directory = Path(tempfile.mkdtemp())
     form_table_file_name = directory / "forms.csv"
-    with form_table_file_name.open("w") as form_table_file:
+    with form_table_file_name.open("w", encoding="utf-8") as form_table_file:
         form_table_file.write(form_table)
     dataset = add_metadata(form_table_file_name)
     dataset.write(directory / "Wordlist-metadata.json")
@@ -250,14 +229,3 @@ def cache_table(
             dataset[table], total=dataset[table].common_props.get("dc:extent")
         )
     }
-
-
-class KeyKeyDict(t.Mapping[str, str]):
-    def __len__(self):
-        return 0
-
-    def __iter__(self):
-        return ()
-
-    def __getitem__(self, key):
-        return key

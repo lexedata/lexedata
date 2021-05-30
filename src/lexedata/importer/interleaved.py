@@ -7,19 +7,22 @@ multiple forms), while the odd columns contain the associated cognate codes
 
 """
 import re
+import os
 import csv
 import logging
+import typing as t
 from pathlib import Path
-import os
 
 import openpyxl
 
 import lexedata.cli as cli
+import lexedata.util as util
 
 
 def import_interleaved(
     ws: openpyxl.worksheet.worksheet.Worksheet,
     logger: logging.Logger = cli.logger,
+    ids: t.Set[str] = set(),
 ) -> list:
     comma_or_semicolon = re.compile("[,;]\\W*")
 
@@ -35,7 +38,10 @@ def import_interleaved(
         language_name = language[0].value
         for c, (entry, cogset) in enumerate(zip(language[1::2], language[2::2])):
             if not entry.value:
-                assert not cogset.value
+                if cogset.value:
+                    logger.warning(
+                        f"Cell {entry.coordinate} was empty, but cognatesets {cogset.value} were given in {cogset.coordinate}."
+                    )
                 continue
             bracket_level = 0
             i = 0
@@ -82,7 +88,14 @@ def import_interleaved(
                     )
                 )
             for form, cogset in zip(forms, cogsets + [None]):
-                yield [language_name, concepts[c], form, None, cogset]
+                base_id = util.string_to_id(f"{language_name}_{concepts[c]}")
+                id = base_id
+                synonym = 1
+                while id in ids:
+                    synonym += 1
+                    id = f"{base_id}_s{synonym:d}"
+                yield [id, language_name, concepts[c], form, None, cogset]
+                ids.add(id)
 
 
 if __name__ == "__main__":
@@ -90,6 +103,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("excel", type=Path, help="The Excel file to parse")
+    parser.add_argument(
+        "--sheet", action="append", default=[], help="Excel sheet name(s) to import"
+    )
     parser.add_argument(
         "--directory",
         type=Path,
@@ -103,8 +119,15 @@ if __name__ == "__main__":
     ws = openpyxl.load_workbook(args.excel)
 
     w = csv.writer(open(Path(args.directory) / "forms.csv", "w", encoding="utf-8"))
-    w.writerow(["Language_ID", "Concept_ID", "Form", "Comment", "Cognateset"])
+    w.writerow(
+        ["ID", "Language_ID", "Parameter_ID", "Form", "Comment", "Cognateset_ID"]
+    )
 
-    for sheet in ws.worksheets:
-        for row in import_interleaved(sheet, logger=logger):
+    if not args.sheet:
+        args.sheet = ws.get_sheet_names()
+
+    ids = set()
+    for sheetname in args.sheet:
+        sheet = ws[sheetname]
+        for row in import_interleaved(sheet, logger=logger, ids=ids):
             w.writerow(row)

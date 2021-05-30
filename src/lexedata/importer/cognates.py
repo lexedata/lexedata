@@ -6,8 +6,8 @@ import openpyxl
 from lexedata import cli
 from lexedata.types import Language, RowObject, CogSet
 import lexedata.importer.cellparser as cell_parsers
-from lexedata.importer.fromexcel import ExcelCognateParser
-from lexedata.util import clean_cell_value, get_cell_comment
+from lexedata.importer.excel_matrix import ExcelCognateParser
+from lexedata.util.excel import clean_cell_value, get_cell_comment
 
 
 class CognateEditParser(ExcelCognateParser):
@@ -89,7 +89,6 @@ def import_cognates_from_excel(
     excel_parser_cognate = CognateEditParser(
         dataset,
         top=2,
-        # TODO: @Gereon: What to do about this comment?
         # When the dataset has cognateset comments, that column is not a header
         # column, so this value is one higher than the actual number of header
         # columns, so actually correct for the 1-based indices. When there is
@@ -104,6 +103,7 @@ def import_cognates_from_excel(
     excel_parser_cognate.db.cache_dataset()
     excel_parser_cognate.db.drop_from_cache("CognatesetTable")
     excel_parser_cognate.db.drop_from_cache("CognateTable")
+    logger.info("Parsing cognate Excel…")
     excel_parser_cognate.parse_cells(ws, status_update=None)
     excel_parser_cognate.db.write_dataset_from_cache(
         ["CognateTable", "CognatesetTable"]

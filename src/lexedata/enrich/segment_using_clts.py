@@ -1,3 +1,17 @@
+"""Segment the form.
+
+    First, apply some pre-processing replacements. Forms supplied contain all
+    sorts of noise and lookalike symbols. This function comes with reasonable
+    defaults, but if you encounter other problems, or you actually want to be
+    strict about IPA transcriptions, pass a dictionary of your choice as
+    `pre_replace`.
+
+    Then, naïvely segment the form using the IPA tokenizer from the `segments`
+    package. Check each returned segment to see whether it is valid according
+    to CLTS's BIPA, and if not, try to fix some issues (in particular
+    pre-aspirated or pre-nasalized consonants showing up as post-aspirated
+    resp. post-nasalized vowels, which BIPA does not accept).)"""
+
 import typing as t
 from collections import defaultdict
 
@@ -184,16 +198,17 @@ def add_segments_to_dataset(
     }
     for r, row in enumerate(dataset["FormTable"], 1):
         if row[c_f_segments] and not overwrite_existing:
+            write_back.append(row)
             continue
         else:
             if row[transcription]:
                 form = row[transcription].strip()
                 for wrong, right in pre_replace.items():
                     if wrong in form:
-                        report[row[c_f_lan]][wrong]["count"] += 1
+                        report[row[c_f_lan]][wrong]["count"] += form.count(wrong)
                         report[row[c_f_lan]][wrong][
                             "comment"
-                        ] = f"'{wrong}' replaced by '{right}'"
+                        ] = f"'{wrong}' replaced by '{right}' – run with `--replace-form` to apply this also to the forms."
                         form = form.replace(wrong, right)
                         # also replace symbol in #FormTable *form
                         if replace_form:
@@ -224,21 +239,7 @@ def add_segments_to_dataset(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(
-        description="""Segment the form.
-
-    First, apply some pre-processing replacements. Forms supplied contain all
-    sorts of noise and lookalike symbols. This function comes with reasonable
-    defaults, but if you encounter other problems, or you actually want to be
-    strict about IPA transcriptions, pass a dictionary of your choice as
-    `pre_replace`.
-
-    Then, naïvely segment the form using the IPA tokenizer from the `segments`
-    package. Check each returned segment to see whether it is valid according
-    to CLTS's BIPA, and if not, try to fix some issues (in particular
-    pre-aspirated or pre-nasalized consonants showing up as post-aspirated
-    resp. post-nasalized vowels, which BIPA does not accept).)"""
-    )
+    parser = cli.parser(description=__doc__)
     parser.add_argument(
         "transcription",
         nargs="?",
@@ -258,7 +259,6 @@ if __name__ == "__main__":
         default=False,
         help="Apply the replacements performed on segments also to #form column of #FormTable",
     )
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
