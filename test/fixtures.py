@@ -3,7 +3,6 @@ import tempfile
 from pathlib import Path
 
 import pycldf
-import pytest
 
 
 class C:

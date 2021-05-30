@@ -5,7 +5,6 @@ import argparse
 import pycldf
 import openpyxl
 
-import lexedata.importer.fromexcel as f
 from fixtures import copy_metadata, copy_to_temp
 import lexedata.importer.excel_matrix as f
 
