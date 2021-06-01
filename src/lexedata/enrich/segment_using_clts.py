@@ -211,7 +211,6 @@ def add_segments_to_dataset(
             write_back.append(row)
             continue
         else:
-            print(row)
             if row[transcription]:
                 form = row[transcription].strip()
                 for wrong, right in pre_replace.items():
