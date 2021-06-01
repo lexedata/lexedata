@@ -1,7 +1,66 @@
 import unicodedata
+import pytest
 
 from mock_excel import MockSingleExcelSheet
-from fixtures import minimal_parser_with_dialect, bipa
+
+
+@pytest.fixture
+def bipa():
+    clts_path = cldfcatalog.Config.from_file().get_clone("clts")
+    clts = cldfbench.catalogs.CLTS(clts_path)
+    bipa = clts.api.bipa
+    return bipa
+
+
+@pytest.fixture
+def minimal_parser_with_dialect():
+    tmpdir = Path(mkdtemp("", "fromexcel"))
+    forms = tmpdir / "forms.csv"
+    with (forms).open("w") as f:
+        f.write("ID,Form,Language_ID,Parameter_ID")
+
+    dataset = pycldf.Wordlist.from_data(forms)
+    dataset["FormTable"].tableSchema.columns.append(
+        pycldf.dataset.Column(
+            {
+                "name": "Value",
+                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#value",
+            }
+        )
+    )
+    dataset["FormTable", "parameterReference"].separator = ";"
+    dataset.add_component("ParameterTable")
+    dataset.add_component("LanguageTable")
+    dataset._fname = tmpdir / "Wordlist-metadata.json"
+    dataset.write_metadata()
+    dataset = pycldf.Wordlist.from_metadata(dataset._fname)
+
+    EP = excel_parser_from_dialect(
+        dataset,
+        argparse.Namespace(
+            lang_cell_regexes=["(?P<Name>.*)"],
+            lang_comment_regexes=[".*"],
+            row_cell_regexes=["(?P<Name>.*)"],
+            row_comment_regexes=[".*"],
+            cell_parser={
+                "form_separator": ",",
+                "variant_separator": "~",
+                "name": "CellParser",
+                "cell_parser_semantics": [
+                    ["<", ">", "Form", True],
+                    ["{", "}", "Source", False],
+                ],
+            },
+            check_for_match=["Form"],
+            check_for_row_match=["Name"],
+            check_for_language_match=["Name"],
+        ),
+        cognate=False,
+    )
+
+    EP = EP(dataset)
+    EP.db.write_dataset_from_cache()
+    return EP
 
 
 def test_form_association(minimal_parser_with_dialect):

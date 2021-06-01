@@ -5,8 +5,13 @@ import argparse
 import pycldf
 import openpyxl
 
-from fixtures import copy_metadata, copy_to_temp, empty_excel
+from fixtures import copy_metadata, copy_to_temp
 import lexedata.importer.excel_matrix as f
+
+
+@pytest.fixture
+def empty_excel():
+    return Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
 
 
 def test_no_wordlist_and_no_cogsets(fs):

@@ -6,10 +6,47 @@ from pathlib import Path
 import pycldf
 import openpyxl
 
-from fixtures import copy_to_temp, copy_to_temp_no_bib, copy_to_temp_bad_bib, cldf_wordlist, excel_wordlist
+from fixtures import (
+    copy_to_temp,
+    copy_to_temp_no_bib,
+    copy_to_temp_bad_bib,
+)
 import lexedata.importer.excel_matrix as f
 from lexedata.exporter.cognates import ExcelWriter
 from lexedata.importer.cognates import import_cognates_from_excel
+
+
+@pytest.fixture(
+    params=[
+        "data/cldf/minimal/cldf-metadata.json",
+        "data/cldf/smallmawetiguarani/cldf-metadata.json",
+    ]
+)
+def cldf_wordlist(request):
+    return Path(__file__).parent / request.param
+
+
+@pytest.fixture(
+    params=[
+        (
+            "data/excel/small.xlsx",
+            "data/excel/small_cog.xlsx",
+            "data/cldf/smallmawetiguarani/cldf-metadata.json",
+        ),
+        (
+            "data/excel/minimal.xlsx",
+            "data/excel/minimal_cog.xlsx",
+            "data/cldf/minimal/cldf-metadata.json",
+        ),
+    ]
+)
+def excel_wordlist(request):
+    return (
+        Path(__file__).parent / request.param[0],
+        Path(__file__).parent / request.param[1],
+        empty_copy_of_cldf_wordlist(Path(__file__).parent / request.param[2]),
+    )
+
 
 
 @pytest.fixture(
