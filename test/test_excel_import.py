@@ -18,6 +18,23 @@ def copy_metadata(original: Path):
     return copy
 
 
+# TODO: have a look at this test. just trying to pass codecov
+def test_db_chache():
+    copy = copy_metadata(
+        r"C:\Users\walter.fuchs\Desktop\outofasia\tupiguarani-data\test\data\cldf\minimal\cldf-metadata.json"
+    )
+    res = dict()
+    dataset = pycldf.Dataset.from_metadata(copy)
+    db = f.DB(output_dataset=dataset)
+    db.cache_dataset()
+    for table in dataset.tables:
+        table_type = (
+            table.common_props.get("dc:conformsTo", "").rsplit("#", 1)[1] or table.url
+        )
+        res[table_type] = {}
+    assert db.cache == res
+
+
 def test_no_wordlist_and_no_cogsets():
 
     with pytest.raises(argparse.ArgumentError) as err:
