@@ -186,7 +186,17 @@ def read_wordlist(
 
     data: t.MutableMapping[
         types.Language_ID, t.MutableMapping[types.Parameter_ID, t.Set]
-    ] = t.DefaultDict(lambda: t.DefaultDict(set))
+    ]
+    if "LanguageTable" in dataset:
+        (langref_target,) = [
+            key
+            for key in dataset["FormTable"].tableSchema.foreignKeys
+            if key.columnReference == [dataset["FormTable", "languageReference"].name]
+        ]
+        ref_col = langref_target.reference.columnReference[0]
+        data = {lang[ref_col]: t.DefaultDict(set) for lang in dataset["LanguageTable"]}
+    else:
+        data = t.DefaultDict(lambda: t.DefaultDict(set))
     for row in dataset["FormTable"].iterdicts():
         language = row[col_map.forms.languageReference]
         for parameter in all_parameters(row[parameter_column]):
