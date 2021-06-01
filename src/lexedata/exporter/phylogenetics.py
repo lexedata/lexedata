@@ -886,7 +886,7 @@ if __name__ == "__main__":
         n_characters = len(next(iter(binal.values())))
         exclude = {
             index
-            for concept, cogset_indices in concept_cogset_indices
+            for concept, cogset_indices in concept_cogset_indices.items()
             for cogset, index in cogset_indices.items()
             if cogset not in cogsets
         }
