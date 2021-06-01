@@ -21,7 +21,7 @@ def copy_metadata(original: Path):
 # TODO: have a look at this test. just trying to pass codecov
 def test_db_chache():
     copy = copy_metadata(
-        r"C:\Users\walter.fuchs\Desktop\outofasia\tupiguarani-data\test\data\cldf\minimal\cldf-metadata.json"
+        Path(__file__).parent / r"\data\cldf\minimal\cldf-metadata.json"
     )
     res = dict()
     dataset = pycldf.Dataset.from_metadata(copy)
