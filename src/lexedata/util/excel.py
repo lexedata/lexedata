@@ -618,7 +618,9 @@ class CellParserHyperlink(CellParser):
             else:
                 slice, alignment = alignment_from_braces(text)
             properties = {
-                self.c["c_id"]: url.split("/")[-1],
+                self.c["c_id"]: url.split("/")[-1].strip(
+                    ")"
+                ),  # TODO: Only here to fix an error in the last Arawak export, which added erroneous brackets after form IDs. (But hopefully harmless if you still see it here now.)
                 self.c.get("c_segments"): ["{:}:{:}".format(i, j) for i, j in slice],
                 self.c.get("c_alignment"): alignment,
                 self.c.get("c_comment"): comment,
