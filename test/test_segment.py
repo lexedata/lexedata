@@ -38,3 +38,9 @@ def test_illegal_symbol(caplog):
     assert re.search(
         "Impossible sound '/' encountered in woh/", caplog.text
     )  # and report3("language") == [("language", "/", 1, "illegal symbol")]
+
+
+def test_deleting_symbols():
+    form = "abːcd-ef.gh"
+    form = segment_form(form, SegmentReport())
+    assert "".join(str(s) for s in form) == "abːcdefgh"
