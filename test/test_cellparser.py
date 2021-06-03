@@ -11,7 +11,7 @@ import logging
 import pycldf
 
 
-from lexedata.importer import cellparser as c
+from lexedata.util import excel as c
 
 
 # test throwing errors with wrong dataset
