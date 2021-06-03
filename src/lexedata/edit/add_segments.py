@@ -46,6 +46,16 @@ class SegmentReport:
 
 
 def cleanup(form: str) -> str:
+    """
+    >>> cleanup("dummy;form")
+    'dummy'
+    >>> cleanup("dummy,form")
+    'dummy'
+    >>> cleanup("(dummy)")
+    'dummy'
+    >>> cleanup("dummy-form")
+    'dummy+form'
+    """
     form = form.split(";")[0].strip()
     form = form.split(",")[0].strip()
     form = form.replace("(", "").replace(")", "")
