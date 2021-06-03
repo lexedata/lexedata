@@ -171,8 +171,8 @@ def forms_to_tsv(
         logger.critical(
             """Edictor export requires your dataset to have an explicit CognateTable containing the judgements,
             with all of IDs, forms, cognatesets, segment slices and alignments.
-            Run `lexedata.change.construct_cognate_table` if you have cognate sets in your FormTable.
-            Run `lexedata.change.cognate_code_data` if you want to start from automatic cognate detection."""
+            Run `lexedata.edit.construct_cognate_table` if you have cognate sets in your FormTable.
+            Run `lexedata.edit.cognate_code_data` if you want to start from automatic cognate detection."""
         )
         sys.exit(Exit.NO_COGNATETABLE)
     c_form_language = dataset["FormTable", "languageReference"].name
@@ -183,7 +183,7 @@ def forms_to_tsv(
     except KeyError:
         logger.critical(
             """Edictor export requires your dataset to have segments in the FormTable.
-        Run `lexedata.enrich.segment_using_clts` to automatically add segments based on your forms."""
+        Run `lexedata.edit.segment_using_clts` to automatically add segments based on your forms."""
         )
         # TODO: Exit.NO_SEGMENTS is not an `int`, so the exit code of the
         # python run is actually 1, not 4 as we wanted.

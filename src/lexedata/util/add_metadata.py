@@ -155,18 +155,9 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
     ds[ds.primary_table].tableSchema.columns.sort(
         key=lambda k: colnames.index(k.name) if k.name in colnames else 1e10
     )
+
+    # TODO: Once lexedata is properly published, we can give a better URL.
+    ds.properties["dc:contributor"] = [
+        "https://github.com/Anaphory/lexedata/blob/master/src/lexedata/edit/add_metadata.py"
+    ]
     return ds
-
-
-if __name__ == "__main__":
-    parser = cli.parser(__doc__)
-    args = parser.parse_args()
-    logger = cli.setup_logging(args)
-
-    fname = Path("forms.csv")
-
-    ds = add_metadata(fname)
-
-    ds.write_metadata(args.metadata)
-
-    ds.validate(log=logger)

@@ -83,7 +83,7 @@ def add_cognate_table(
                     ]
                 except (KeyError, TypeError):
                     logger.warning(
-                        f"No segments found for form {f} ({form['form']}). You can generate segments using `lexedata.enrich.segment_using_clts`."
+                        f"No segments found for form {f} ({form['form']}). You can generate segments using `lexedata.edit.segment_using_clts`."
                     )
             # What does an alignment mean without segments or their slices?
             # Doesn't matter, if we were given one, we take it.
