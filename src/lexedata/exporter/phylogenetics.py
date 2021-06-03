@@ -129,7 +129,7 @@ def read_wordlist(
         if code_column:
             # This is not the CLDF way, warn the user.
             logger.warning(
-                "Your dataset has a cognatesetReference in the FormTable. Consider running lexedata.enrich.explict_cognate_judgements to create an explicit cognate table, if this is your dataset."
+                "Your dataset has a cognatesetReference in the FormTable. Consider running lexedata.edit.explict_cognate_judgements to create an explicit cognate table, if this is your dataset."
             )
             cognatesets = util.cache_table(
                 dataset, columns={"form": col_map.forms.id, "code": code_column}
@@ -186,7 +186,17 @@ def read_wordlist(
 
     data: t.MutableMapping[
         types.Language_ID, t.MutableMapping[types.Parameter_ID, t.Set]
-    ] = t.DefaultDict(lambda: t.DefaultDict(set))
+    ]
+    if "LanguageTable" in dataset:
+        (langref_target,) = [
+            key
+            for key in dataset["FormTable"].tableSchema.foreignKeys
+            if key.columnReference == [dataset["FormTable", "languageReference"].name]
+        ]
+        ref_col = langref_target.reference.columnReference[0]
+        data = {lang[ref_col]: t.DefaultDict(set) for lang in dataset["LanguageTable"]}
+    else:
+        data = t.DefaultDict(lambda: t.DefaultDict(set))
     for row in dataset["FormTable"].iterdicts():
         language = row[col_map.forms.languageReference]
         for parameter in all_parameters(row[parameter_column]):
@@ -886,7 +896,7 @@ if __name__ == "__main__":
         n_characters = len(next(iter(binal.values())))
         exclude = {
             index
-            for concept, cogset_indices in concept_cogset_indices
+            for concept, cogset_indices in concept_cogset_indices.items()
             for cogset, index in cogset_indices.items()
             if cogset not in cogsets
         }
