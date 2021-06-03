@@ -63,6 +63,7 @@ pre_replace = {
     # "'": "ˈ",  # But this could also be marking ejective consonants, so don't guess
     "͡ts": "t͡s",
     "ts͡": "t͡s",
+    "ts͜": "t͡s",
     "tʃ͡": "t͡ʃ",
     "͡tʃ": "t͡ʃ",
     "t͡ç": "c͡ç",
