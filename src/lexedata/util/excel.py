@@ -592,7 +592,7 @@ def alignment_from_braces(text, start=0):
         return [slice], content.split()
 
 
-class CellParserHyperlink(CellParser):
+class CellParserHyperlink(NaiveCellParser):
     def __init__(self, dataset: pycldf.Dataset):
         super().__init__(dataset=dataset)
         self.cc(short="c_id", long=("CognateTable", "formReference"), dataset=dataset)
