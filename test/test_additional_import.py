@@ -11,9 +11,17 @@ import openpyxl
 from lexedata.importer.excel_long_format import (
     read_single_excel_sheet,
     ImportLanguageReport,
+    add_single_languages,
 )
 
 from test_form_matcher import MockSingleExcelSheet
+
+
+def copy_metadata(original: Path):
+    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    target = dirname / "cldf-metadata.json"
+    copy = shutil.copyfile(original, target)
+    return copy
 
 
 def copy_cldf_wordlist_no_bib(cldf_wordlist):
@@ -48,6 +56,26 @@ def single_import_parameters(request):
     excel = Path(__file__).parent / request.param[1]
     concept_name = request.param[2]
     return dataset, original, excel, concept_name
+
+
+def test_concept_file_not_found(caplog):
+    from lexedata.cli import logger
+
+    copy = copy_metadata(Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json")
+    add_single_languages(
+        metadata=copy,
+        sheets=[],
+        match_form=None,
+        concept_name=None,
+        ignore_missing=True,
+        ignore_superfluous=True,
+        status_update=None,
+        logger=logger,
+    )
+    assert re.search(
+        "Did not find concepts.csv. Importing all forms independent of concept",
+        caplog.text,
+    )
 
 
 def test_add_new_forms_maweti(single_import_parameters):
