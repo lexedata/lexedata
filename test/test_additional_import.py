@@ -1,5 +1,6 @@
 import pytest
 import shutil
+import logging
 import tempfile
 from pathlib import Path
 import re
@@ -10,11 +11,12 @@ import openpyxl
 from lexedata.importer.excel_long_format import (
     read_single_excel_sheet,
     ImportLanguageReport,
+    add_single_languages,
 )
 from mock_excel import MockSingleExcelSheet
+from util import copy_metadata
 
 
-# Todo: check whether we can use copy dataset with bib here
 def copy_cldf_wordlist_no_bib(cldf_wordlist):
     # Copy the dataset metadata file to a temporary directory.
     original = Path(__file__).parent / cldf_wordlist
@@ -47,6 +49,26 @@ def single_import_parameters(request):
     excel = Path(__file__).parent / request.param[1]
     concept_name = request.param[2]
     return dataset, original, excel, concept_name
+
+
+def test_concept_file_not_found(caplog):
+    from lexedata.cli import logger
+
+    copy = copy_metadata(Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json")
+    add_single_languages(
+        metadata=copy,
+        sheets=[],
+        match_form=None,
+        concept_name=None,
+        ignore_missing=True,
+        ignore_superfluous=True,
+        status_update=None,
+        logger=logger,
+    )
+    assert re.search(
+        "Did not find concepts.csv. Importing all forms independent of concept",
+        caplog.text,
+    )
 
 
 def test_add_new_forms_maweti(single_import_parameters):
@@ -123,8 +145,7 @@ def test_missing_columns1(single_import_parameters):
     )
     with pytest.raises(
         ValueError,
-        match=".* Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}.* "
-        ".* use --ignore-missing-excel-columns .*",
+        match=".*sheet MockSingleExcelSheet.*missing col.*{[^a-z]*orthographic[^a-z]*}.*--ignore-missing-excel-columns",
     ):
         read_single_excel_sheet(
             dataset=dataset,
@@ -150,13 +171,15 @@ def test_missing_columns2(single_import_parameters, caplog):
                 "Source",
                 "phonetic",
                 "phonemic",
-                "superfluous",
+                "undescribed",
                 "superfluous2",
             ],
             [],
         ]
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match=".*sheet MockSingleExcelSheet.*unexpected col.*"
+    ) as ex_info:
         read_single_excel_sheet(
             dataset=dataset,
             sheet=sheet,
@@ -164,10 +187,9 @@ def test_missing_columns2(single_import_parameters, caplog):
             concept_column="English",
             ignore_missing=True,
         )
-    assert re.search(
-        "Excel sheet MockSingleExcelSheet is missing columns {'orthographic'}",
-        caplog.text,
-    )
+    assert "undescribed" in ex_info.value.args[0]
+    assert "superfluous2" in ex_info.value.args[0]
+    assert "--ignore-superfluous-excel-columns" in ex_info.value.args[0]
 
 
 def test_superfluous_columns1(single_import_parameters):
@@ -205,7 +227,7 @@ def test_superfluous_columns1(single_import_parameters):
         )
 
 
-def test_superfluous_columns2(single_import_parameters, caplog):
+def test_missing_concept(single_import_parameters, caplog):
     dataset, original, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
@@ -227,8 +249,41 @@ def test_superfluous_columns2(single_import_parameters, caplog):
             [],
         ]
     )
+    concept_column_name = "Concept_Column_Name"
     # AssertionError on concept column not in excel header
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError, match=f".*{concept_column_name}.*"):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column=concept_column_name,
+            ignore_superfluous=True,
+        )
+
+
+def test_superfluous_columns2(single_import_parameters, caplog):
+    dataset, original, excel, concept_name = single_import_parameters
+    concepts = {"Concept": "c_id_1"}
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "Form",
+                "Segments",
+                "English",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "phonemic",
+                "variants",
+                "orthographic",
+                "superfluous",
+            ],
+            ["test form", "t e s t", "Concept"],
+        ]
+    )
+    # AssertionError on concept column not in excel header
+    with caplog.at_level(logging.INFO):
         read_single_excel_sheet(
             dataset=dataset,
             sheet=sheet,
@@ -352,34 +407,6 @@ def test_no_concept_separator(single_import_parameters, caplog):
     )
 
 
-def test_missing_column(single_import_parameters, caplog):
-    dataset, original, excel, concept_name = single_import_parameters
-    concepts = dict()
-    sheet = MockSingleExcelSheet(
-        [
-            [
-                "variants",
-                "Form",
-                "Segments",
-                "procedural_comment",
-                "Comment",
-                "Source",
-                "phonetic",
-                "phonemic",
-            ],
-            [],
-        ]
-    )
-    # ValueError on missing column
-    with pytest.raises(ValueError):
-        read_single_excel_sheet(
-            dataset=dataset,
-            sheet=sheet,
-            entries_to_concepts=concepts,
-            concept_column="English",
-        )
-
-
 def test_concept_separator(single_import_parameters, caplog):
     dataset, original, excel, concept_name = single_import_parameters
     c_f_concept = dataset["FormTable", "parameterReference"].name
@@ -388,7 +415,7 @@ def test_concept_separator(single_import_parameters, caplog):
     sheet = MockSingleExcelSheet(
         [
             [
-                "variants",
+                "English",
                 "Form",
                 "Segments",
                 "procedural_comment",
@@ -396,12 +423,25 @@ def test_concept_separator(single_import_parameters, caplog):
                 "Source",
                 "phonetic",
                 "phonemic",
+                "orthographic",
+                "variants",
             ],
-            [],
+            [
+                "three",
+                "form",
+                "f o r m",
+                "auto-generated",
+                "",
+                "source[10]",
+                "phonetic",
+                "phonemic",
+                "orthographic",
+                "",
+            ],
         ]
     )
     # ValueError on missing column
-    with pytest.raises(ValueError):
+    with caplog.at_level(logging.INFO):
         read_single_excel_sheet(
             dataset=dataset,
             sheet=sheet,
@@ -410,8 +450,7 @@ def test_concept_separator(single_import_parameters, caplog):
             concept_column="English",
         )
     assert re.search(
-        r"Matching by concept enabled.* run lexedata\.report\.list_homophones",
-        caplog.text,
+        r"[mM]atch.*concept.*lexedata\.report\.list_homophones", caplog.text
     )
 
 
@@ -492,17 +531,16 @@ def test_form_exists(single_import_parameters, caplog):
         ]
     )
     mocksheet.title = "ache"
-    read_single_excel_sheet(
-        dataset=dataset,
-        sheet=mocksheet,
-        entries_to_concepts=concepts,
-        concept_column=concept_name,
-    )
-    # Test form already exists
-    # Todo: Find possibly a better way to catch the correct logger warning instead of magic index '-2'
+    with caplog.at_level(logging.INFO):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=mocksheet,
+            entries_to_concepts=concepts,
+            concept_column=concept_name,
+        )
     assert re.search(
         r"two.*e\.ta\.'kɾã.*was already in data set",
-        [rec.message for rec in caplog.records][-2],
+        caplog.text,
     )
 
 
@@ -540,15 +578,16 @@ def test_new_concept_association(single_import_parameters, caplog):
         ]
     )
     mocksheet.title = "ache"
-    read_single_excel_sheet(
-        dataset=dataset,
-        sheet=mocksheet,
-        entries_to_concepts=concepts,
-        concept_column=concept_name,
-    )
+    with caplog.at_level(logging.INFO):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=mocksheet,
+            entries_to_concepts=concepts,
+            concept_column=concept_name,
+        )
     # Test new concept association
     assert re.search(
-        r"Concept \['two'] was added to existing form ache_one\.",
+        r"two.*added to.*ache_one",
         caplog.text,
     )
 

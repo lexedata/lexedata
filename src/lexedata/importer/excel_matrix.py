@@ -27,8 +27,8 @@ from lexedata.util.excel import (
     clean_cell_value,
     get_cell_comment,
 )
-import lexedata.importer.cellparser as cell_parsers
-from lexedata.enrich.add_status_column import add_status_column_to_table
+import lexedata.util.excel as cell_parsers
+from lexedata.edit.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
 Ob = t.TypeVar("O", bound=Object)
@@ -78,10 +78,14 @@ class DB:
             (id,) = table.tableSchema.primaryKey
             # Extent may be wrong, but it's usually at least roughly correct
             # and a better indication of the table size than none at all.
-            self.cache[table_type] = {
-                row[id]: row
-                for row in cli.tq(table, total=table.common_props.get("dc:extent"))
-            }
+            try:
+                self.cache[table_type] = {
+                    row[id]: row
+                    for row in cli.tq(table, total=table.common_props.get("dc:extent"))
+                }
+            except FileNotFoundError:
+                self.cache[table_type] = {}
+
         for source in self.dataset.sources:
             self.source_ids.add(source.id)
 

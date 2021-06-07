@@ -4,10 +4,10 @@ import shutil
 import pytest
 import pycldf
 
-from lexedata.enrich.guess_concept_for_cognateset import (
+from lexedata.edit.add_central_concepts import (
     add_central_concepts_to_cognateset_table,
 )
-from lexedata.enrich.guess_concepticon import create_concepticon_for_concepts
+from lexedata.edit.add_concepticon import create_concepticon_for_concepts
 
 
 # TODO: Discuss this with Gereon. This fixture seems dangerous as we call a function that we test at another place

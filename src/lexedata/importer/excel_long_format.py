@@ -17,7 +17,7 @@ from lexedata.util.excel import (
 )
 from lexedata.importer.excel_matrix import DB
 from lexedata.types import Form, KeyKeyDict
-from lexedata.enrich.add_status_column import add_status_column_to_table
+from lexedata.edit.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
 
@@ -300,7 +300,16 @@ def add_single_languages(
             name = dataset["ParameterTable", "name"].name
             concepts = {c[name]: c[cid] for c in dataset["ParameterTable"]}
             concept_column = concept_name
-    except KeyError:
+    except (KeyError, FileNotFoundError) as err:
+        if isinstance(err, KeyError):
+            logger.warning(
+                "Did not find a well-formed ParameterTable. Importing all forms independent of concept"
+            )
+        elif isinstance(err, FileNotFoundError):
+            logger.warning(
+                f"Did not find {dataset['ParameterTable'].url.string}. "
+                f"Importing all forms independent of concept"
+            )
         concepts = KeyKeyDict()
         concept_column = dataset["FormTable", "parameterReference"].name
     # add Status_Column if not existing and status_update given

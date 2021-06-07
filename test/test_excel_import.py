@@ -5,7 +5,7 @@ import argparse
 import pycldf
 import openpyxl
 
-from fixtures import copy_metadata, copy_to_temp
+from util import copy_metadata, copy_to_temp
 import lexedata.importer.excel_matrix as f
 
 
@@ -14,7 +14,22 @@ def empty_excel():
     return Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
 
 
-def test_no_wordlist_and_no_cogsets(fs):
+# TODO: have a look at this test. just trying to pass codecov
+def test_db_chache():
+    copy = copy_metadata(Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json")
+    res = dict()
+    dataset = pycldf.Dataset.from_metadata(copy)
+    db = f.DB(output_dataset=dataset)
+    db.cache_dataset()
+    for table in dataset.tables:
+        table_type = (
+            table.common_props.get("dc:conformsTo", "").rsplit("#", 1)[1] or table.url
+        )
+        res[table_type] = {}
+    assert db.cache == res
+
+
+def test_no_wordlist_and_no_cogsets():
     with pytest.raises(argparse.ArgumentError) as err:
         # mock empty json file
         fs.create_file("invented_path", contents="{}")
