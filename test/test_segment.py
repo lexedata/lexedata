@@ -14,7 +14,6 @@ def test_unkown_aspiration(caplog):
     form = "-á:muaʰ"
     report = SegmentReport()
     segment_form(form, report)
-    print(caplog.text)
     assert re.search(
         "Unknown sound aʰ encountered in -á:muaʰ", caplog.text
     ) and report("language") == [("language", "aʰ", 1, "unknown pre-aspiration")]
