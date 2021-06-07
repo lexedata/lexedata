@@ -34,7 +34,7 @@ def copy_wordlist_add_concepticons(request):
     return target, dataset
 
 
-def test_value_error_no_concepticonReferenc_for_concepts():
+def test_value_error_no_concepticon_referenc_for_concepts():
     with pytest.raises(ValueError):
         add_central_concepts_to_cognateset_table(
             pycldf.Dataset.from_metadata(
@@ -45,7 +45,7 @@ def test_value_error_no_concepticonReferenc_for_concepts():
         )
 
 
-def test_value_error_no_parameterReference_for_cognateset(
+def test_value_error_no_parameter_reference_for_cognateset(
     copy_wordlist_add_concepticons,
 ):
     target, dataset = copy_wordlist_add_concepticons

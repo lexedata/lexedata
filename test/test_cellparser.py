@@ -309,7 +309,7 @@ def test_parser_variant_lands_in_comment(caplog):
     }
 
 
-def test_cellparser_missmatching(parser, caplog):
+def test_cellparser_missmatching(parser):
     with pytest.raises(
         ValueError, match="34: .* [mbohaˈpɨ had mismatching delimiters ]"
     ):

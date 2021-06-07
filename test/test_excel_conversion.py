@@ -6,10 +6,11 @@ from pathlib import Path
 import pycldf
 import openpyxl
 
-from fixtures import (
+from helper_functions import (
     copy_to_temp,
     copy_to_temp_no_bib,
     copy_to_temp_bad_bib,
+    empty_copy_of_cldf_wordlist,
 )
 import lexedata.importer.excel_matrix as f
 from lexedata.exporter.cognates import ExcelWriter
@@ -46,7 +47,6 @@ def excel_wordlist(request):
         Path(__file__).parent / request.param[1],
         empty_copy_of_cldf_wordlist(Path(__file__).parent / request.param[2]),
     )
-
 
 
 @pytest.fixture(

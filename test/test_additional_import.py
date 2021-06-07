@@ -14,7 +14,7 @@ from lexedata.importer.excel_long_format import (
     add_single_languages,
 )
 from mock_excel import MockSingleExcelSheet
-from util import copy_metadata
+from helper_functions import copy_metadata
 
 
 def copy_cldf_wordlist_no_bib(cldf_wordlist):

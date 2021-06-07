@@ -5,7 +5,7 @@ import argparse
 import pycldf
 import openpyxl
 
-from util import copy_metadata, copy_to_temp
+from helper_functions import copy_metadata, copy_to_temp
 import lexedata.importer.excel_matrix as f
 
 
@@ -29,7 +29,7 @@ def test_db_chache():
     assert db.cache == res
 
 
-def test_no_wordlist_and_no_cogsets():
+def test_no_wordlist_and_no_cogsets(fs):
     with pytest.raises(argparse.ArgumentError) as err:
         # mock empty json file
         fs.create_file("invented_path", contents="{}")
