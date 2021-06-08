@@ -4,29 +4,30 @@ import unicodedata
 import argparse
 from pathlib import Path
 import json
-import tempfile
-import shutil
 import logging
 
 import pycldf
 
 
 from lexedata.util import excel as c
+from helper_functions import copy_metadata
 
-
-# test throwing errors with wrong dataset
-def test_fields_of_formtable():
+@pytest.fixture(
+    params=[
+        ("data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json")
+    ]
+)
+def no_dialect(request):
     # Copy the dataset metadata file to a temporary directory.
-    original = (
-        Path(__file__).parent
-        / "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json"
-    )
-    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
-    target = dirname / original.name
-    shutil.copyfile(original, target)
+    target = copy_metadata(Path(__file__).parent / request.param)
     dataset = pycldf.Dataset.from_metadata(target)
+    return dataset
+
+
+def test_fields_of_formtable_no_value(no_dialect):
+    dataset = no_dialect
     # missing field #value
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(ValueError, match="") as err:
 
         c.NaiveCellParser(dataset=dataset)
     assert (
@@ -34,6 +35,10 @@ def test_fields_of_formtable():
         "Your cell parser NaiveCellParser expects a #value column (usually named 'value') "
         "in FormTable, but your metadata defines no such column."
     )
+
+
+def test_fields_of_formtable_no_form(no_dialect):
+    dataset = no_dialect
     dataset.add_columns("FormTable", "value")
 
     # missing field #form
@@ -44,6 +49,11 @@ def test_fields_of_formtable():
         "Your cell parser NaiveCellParser expects a #form column (usually named 'form') "
         "in FormTable, but your metadata defines no such column."
     )
+
+
+def test_fields_of_formtable_no_language_reference(no_dialect):
+    dataset = no_dialect
+    dataset.add_columns("FormTable", "value")
     dataset.add_columns("FormTable", "form")
 
     # missing field #languageReference
@@ -54,6 +64,12 @@ def test_fields_of_formtable():
         "Your cell parser NaiveCellParser expects a #languageReference column (usually named 'languageReference')"
         " in FormTable, but your metadata defines no such column."
     )
+
+
+def test_fields_of_formtable_no_comment(no_dialect):
+    dataset = no_dialect
+    dataset.add_columns("FormTable", "value")
+    dataset.add_columns("FormTable", "form")
     dataset.add_columns("FormTable", "languageReference")
 
     # test required fields of FormTable from CellParser
@@ -65,6 +81,13 @@ def test_fields_of_formtable():
         "Your cell parser CellParser expects a #comment column (usually named 'comment') "
         "in FormTable, but your metadata defines no such column."
     )
+
+
+def test_fields_of_formtable_no_source(no_dialect):
+    dataset = no_dialect
+    dataset.add_columns("FormTable", "value")
+    dataset.add_columns("FormTable", "form")
+    dataset.add_columns("FormTable", "languageReference")
     dataset.add_columns("FormTable", "comment")
 
     # missing field #source
@@ -75,6 +98,14 @@ def test_fields_of_formtable():
         "Your cell parser CellParser expects a #source column (usually named 'source') "
         "in FormTable, but your metadata defines no such column."
     )
+
+
+def test_fields_of_formtable_no_transcription(no_dialect):
+    dataset = no_dialect
+    dataset.add_columns("FormTable", "value")
+    dataset.add_columns("FormTable", "form")
+    dataset.add_columns("FormTable", "languageReference")
+    dataset.add_columns("FormTable", "comment")
     dataset.add_columns("FormTable", "source")
 
     # missing transcription element
@@ -98,6 +129,7 @@ def test_fields_of_formtable():
     )
 
 
+# TODO: discuss with Gereon, these function might be deprecated
 def n(s: str):
     return unicodedata.normalize("NFKC", s)
 
@@ -110,7 +142,7 @@ def naive_parser():
     return c.NaiveCellParser(dataset)
 
 
-def test_cellparser_error(naive_parser):
+def test_cellparser_default(naive_parser):
     assert naive_parser.parse_form("form ", "language") == {
         "Form": "form",
         "Language_ID": "language",
@@ -135,13 +167,16 @@ def parser():
     )
 
 
-def test_source_from_source_string(parser, caplog):
+def test_source_from_source_string1(parser):
     assert parser.source_from_source_string("{1}", "abui") == "abui_s1"
     assert parser.source_from_source_string("", "abui") == "abui_s"
     assert (
         parser.source_from_source_string("{Gul2020: p. 4}", "abui")
         == "abui_sgul2020[p. 4]"
     )
+
+
+def test_misshaped_source(parser, caplog):
     # catch warning for misshaped source
     parser.source_from_source_string("{1:", "abui")
     assert caplog.text.endswith(
@@ -179,9 +214,12 @@ def test_cellparser_separate_2(parser):
     assert len(list(parser.separate("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]"))) == 1
 
 
-def test_cellparser_empty(parser):
+def test_cellparser_empty1(parser):
     # white spaces in excel cell
     assert parser.parse_form(" ", "language") is None
+
+
+def test_cellparser_empty2(parser):
     assert parser.parse_form(" \t", "abui") is None
 
 

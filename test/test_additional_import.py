@@ -1,11 +1,8 @@
 import pytest
-import shutil
 import logging
-import tempfile
 from pathlib import Path
 import re
 
-import pycldf
 import openpyxl
 
 from lexedata.importer.excel_long_format import (
@@ -14,24 +11,7 @@ from lexedata.importer.excel_long_format import (
     add_single_languages,
 )
 from mock_excel import MockSingleExcelSheet
-from helper_functions import copy_metadata
-
-
-def copy_cldf_wordlist_no_bib(cldf_wordlist):
-    # Copy the dataset metadata file to a temporary directory.
-    original = Path(__file__).parent / cldf_wordlist
-    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
-    target = dirname / original.name
-    shutil.copyfile(original, target)
-    # Create empty (because of the empty row list passed) csv files for the
-    # dataset, one for each table, with only the appropriate headers in there.
-    dataset = pycldf.Dataset.from_metadata(target)
-    for table in dataset.tables:
-        shutil.copyfile(
-            original.parent / str(table.url), target.parent / str(table.url)
-        )
-    # Return the dataset API handle, which knows the metadata and tables.
-    return dataset, original
+from helper_functions import copy_metadata, copy_cldf_wordlist_no_bib
 
 
 @pytest.fixture(
@@ -155,7 +135,8 @@ def test_missing_columns1(single_import_parameters):
         )
 
 
-def test_missing_columns2(single_import_parameters, caplog):
+# TODO: Discuss with Gereon, Test has multiple asserts
+def test_missing_columns2(single_import_parameters):
     dataset, original, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
@@ -297,6 +278,7 @@ def test_superfluous_columns2(single_import_parameters, caplog):
     )
 
 
+# TODO: Discuss. Too manny asserts
 def test_no_concept_separator(single_import_parameters, caplog):
     dataset, original, excel, concept_name = single_import_parameters
     dataset["FormTable", "parameterReference"].separator = None
@@ -758,6 +740,7 @@ def test_import_report_skipped(single_import_parameters):
     }
 
 
+# TODO: Multiply asserts
 def test_import_report_add_concept(single_import_parameters):
     dataset, original, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
