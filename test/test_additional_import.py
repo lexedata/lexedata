@@ -11,7 +11,7 @@ from lexedata.importer.excel_long_format import (
     add_single_languages,
 )
 from mock_excel import MockSingleExcelSheet
-from helper_functions import copy_metadata, copy_cldf_wordlist_no_bib
+from helper_functions import copy_metadata, copy_to_temp_no_bib
 
 
 @pytest.fixture(
@@ -25,10 +25,10 @@ from helper_functions import copy_metadata, copy_cldf_wordlist_no_bib
 )
 def single_import_parameters(request):
     original = Path(__file__).parent / request.param[0]
-    dataset, original = copy_cldf_wordlist_no_bib(original)
+    dataset, target = copy_to_temp_no_bib(original)
     excel = Path(__file__).parent / request.param[1]
     concept_name = request.param[2]
-    return dataset, original, excel, concept_name
+    return dataset, target, excel, concept_name
 
 
 def test_concept_file_not_found(caplog):
@@ -72,7 +72,7 @@ def test_add_new_forms_maweti(single_import_parameters):
 
 
 def test_import_error_missing_parameter_column(single_import_parameters):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -104,7 +104,7 @@ def test_import_error_missing_parameter_column(single_import_parameters):
 
 
 def test_missing_columns1(single_import_parameters):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -137,7 +137,7 @@ def test_missing_columns1(single_import_parameters):
 
 # TODO: Discuss with Gereon, Test has multiple asserts
 def test_missing_columns2(single_import_parameters):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -174,7 +174,7 @@ def test_missing_columns2(single_import_parameters):
 
 
 def test_superfluous_columns1(single_import_parameters):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -209,7 +209,7 @@ def test_superfluous_columns1(single_import_parameters):
 
 
 def test_missing_concept(single_import_parameters, caplog):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -243,7 +243,7 @@ def test_missing_concept(single_import_parameters, caplog):
 
 
 def test_superfluous_columns2(single_import_parameters, caplog):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     concepts = {"Concept": "c_id_1"}
     sheet = MockSingleExcelSheet(
         [
@@ -280,7 +280,7 @@ def test_superfluous_columns2(single_import_parameters, caplog):
 
 # TODO: Discuss. Too manny asserts
 def test_no_concept_separator(single_import_parameters, caplog):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     dataset["FormTable", "parameterReference"].separator = None
     dataset.write_metadata()
 
@@ -390,7 +390,7 @@ def test_no_concept_separator(single_import_parameters, caplog):
 
 
 def test_concept_separator(single_import_parameters, caplog):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_f_concept = dataset["FormTable", "parameterReference"].name
     match_form = [c_f_concept]
     concepts = dict()
@@ -437,7 +437,7 @@ def test_concept_separator(single_import_parameters, caplog):
 
 
 def test_concept_not_found(single_import_parameters, caplog):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -480,7 +480,7 @@ def test_concept_not_found(single_import_parameters, caplog):
 
 
 def test_form_exists(single_import_parameters, caplog):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -527,7 +527,7 @@ def test_form_exists(single_import_parameters, caplog):
 
 
 def test_new_concept_association(single_import_parameters, caplog):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -580,7 +580,7 @@ def test_new_concept_association(single_import_parameters, caplog):
 
 
 def test_import_report_new_language(single_import_parameters):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -627,7 +627,7 @@ def test_import_report_new_language(single_import_parameters):
 
 
 def test_import_report_existing_form(single_import_parameters):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -691,7 +691,7 @@ def test_import_report_existing_form(single_import_parameters):
 
 
 def test_import_report_skipped(single_import_parameters):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -742,7 +742,7 @@ def test_import_report_skipped(single_import_parameters):
 
 # TODO: Multiply asserts
 def test_import_report_add_concept(single_import_parameters):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -842,7 +842,7 @@ def test_import_report_add_concept(single_import_parameters):
 
 
 def test_add_concept_to_existing_form(single_import_parameters):
-    dataset, original, excel, concept_name = single_import_parameters
+    dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
