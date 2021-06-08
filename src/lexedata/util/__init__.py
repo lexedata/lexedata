@@ -161,6 +161,8 @@ def parse_segment_slices(
 
 
 # XXX Wait, didn't I have a better version of this function?
+# TODO: we have similar functions, but this one is distinct.
+# This function creates metadata given a forms.csv and returns a copy of the dataset (only forms and .json, isn't it?)
 def make_temporary_dataset(form_table):
     directory = Path(tempfile.mkdtemp())
     form_table_file_name = directory / "forms.csv"
@@ -171,7 +173,7 @@ def make_temporary_dataset(form_table):
     return dataset
 
 
-# TODO: Is this logic sound?
+# TODO: Is this logic sound? -> Yes, function good for usage
 def cache_table(
     dataset,
     table: t.Optional[str] = None,
