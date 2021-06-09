@@ -8,7 +8,6 @@ integers.
 
 # TODO: Underscores are treated specially by Edictor in a way we cannot support yet.
 
-import io
 import csv
 import sys
 import typing as t
@@ -295,8 +294,8 @@ def write_edictor_file(
         types.Cognate_ID,
         types.Cognateset_ID,
     ],
-    file: io.TextIOBase,
-    forms,
+    file: t.TextIO,
+    forms: t.Mapping[types.Form_ID, t.Mapping[str, t.Any]],
     judgements_about_form,
     cognateset_numbers,
 ):
@@ -322,19 +321,21 @@ def write_edictor_file(
     )
     out.writerow({column: rename(column, dataset) for column in tsv_header})
     out_cognatesets: t.List[t.Optional[str]]
-    for c, (id, form) in enumerate(forms.items(), 1):
+    for f, (id, form) in enumerate(forms.items(), 1):
         # store original form id in other field and get cogset integer id
-        this_form = form
-        this_form["LINGPY_ID"] = c
+        this_form = dict(form)
+        this_form["LINGPY_ID"] = f
 
         # Normalize the form:
         # 1. No list-valued entries
-        for c, d in delimiters.items():
-            form[c] = d.join(form[c])
+        for col, d in delimiters.items():
+            this_form[col] = d.join(form[col])
         # 2. No tabs, newlines in entries, they make Edictor mad.
         for c, v in form.items():
             if type(v) == str:
-                form[c] = form[c].replace("\t", "  ;t  ").replace("\n", "    ;n    ")
+                this_form[c] = (
+                    form[c].replace("\t", "  ;t  ").replace("\n", "    ;n    ")
+                )
 
         # if there is a cogset, add its integer id. otherwise set id to 0
         judgement = judgements_about_form[this_form[c_form_id]]

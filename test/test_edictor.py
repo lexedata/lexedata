@@ -48,13 +48,48 @@ def test_write_edictor_empty_dataset():
     )
 
 
-def test_write_edictor_small_dataset():
-    dataset = lexedata.util.fs.new_wordlist(FormTable=[])
+def test_write_edictor_singleton_dataset():
+    forms = {
+        "form1": {
+            "ID": "form1",
+            "Language_ID": "axav1032",
+            "Parameter_ID": "one",
+            "Form": "the form",
+            "Segments": list("ðəfom"),
+            "Source": [],
+        }
+    }
+    dataset = lexedata.util.fs.new_wordlist(
+        FormTable=forms.values(),
+        CognateTable=[
+            {
+                "ID": "1-1",
+                "Form_ID": "form1",
+                "Cognateset_ID": "c1",
+                "Segment_Slice": "1:1",
+                "Alignment": ["ð"],
+            }
+        ],
+    )
     file = io.StringIO()
     file.name = "<memory>"
-    forms = {}
-    judgements_about_form = {}
-    cognateset_numbers = {}
+    judgements_about_form = {"form1": (["ð", "(ə)", "(f)", "(o)", "(m)"], ["c1"])}
+    cognateset_numbers = {"c1": 2}
     exporter.write_edictor_file(
         dataset, file, forms, judgements_about_form, cognateset_numbers
     )
+    rows = [line.strip().split("\t") for line in file.getvalue().split("\n")[:3]]
+    assert rows[2] == [""]
+    assert dict(zip(rows[0], rows[1])) == {
+        "ID": "1",
+        "CONCEPT": "one",
+        "DOCULECT": "axav1032",
+        "IPA": "the form",
+        "CLDF_id": "form1",
+        "TOKENS": "ð ə f o m",
+        "Source": "",
+        "Comment": "",
+        "COGID": "2",
+        "ALIGNMENT": "ð ( ə f o m )",
+    }
+    assert "<memory>" in file.getvalue()
