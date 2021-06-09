@@ -151,7 +151,7 @@ def cache_table(
     ...  "Language_ID": "ache",
     ...  "Parameter_ID": "one",
     ...  "Form": "e.ta.'kɾã",
-    ...  "Variants": "~[test phonetic variant]"
+    ...  "Variants": ["~[test phonetic variant]"]
     ... }])
     >>> forms = cache_table(ds)
     >>> forms["ache_one"]["languageReference"]
