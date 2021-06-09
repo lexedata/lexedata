@@ -30,8 +30,9 @@ def test_match_cognatesets_2():
 
 
 def test_write_edictor_empty_dataset():
-    dataset = lexedata.util.fs.make_dataset(FormTable=[])
+    dataset = lexedata.util.fs.new_wordlist(FormTable=[])
     file = io.StringIO()
+    file.name = "<memory>"
     forms = {}
     judgements_about_form = {}
     cognateset_numbers = {}
@@ -41,8 +42,9 @@ def test_write_edictor_empty_dataset():
 
 
 def test_write_edictor_small_dataset():
-    dataset = lexedata.util.fs.make_dataset(FormTable=[])
+    dataset = lexedata.util.fs.new_wordlist(FormTable=[])
     file = io.StringIO()
+    file.name = "<memory>"
     forms = {}
     judgements_about_form = {}
     cognateset_numbers = {}
