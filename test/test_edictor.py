@@ -39,6 +39,13 @@ def test_write_edictor_empty_dataset():
     exporter.write_edictor_file(
         dataset, file, forms, judgements_about_form, cognateset_numbers
     )
+    assert (
+        file.getvalue()
+        .upper()
+        .startswith(
+            "ID\tCLDF_ID\tDOCULECT\tCONCEPT\tIPA\tTOKENS\tCOMMENT\tSOURCE\tCOGID\tALIGNMENT"
+        )
+    )
 
 
 def test_write_edictor_small_dataset():

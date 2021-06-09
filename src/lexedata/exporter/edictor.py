@@ -8,11 +8,12 @@ integers.
 
 # TODO: Underscores are treated specially by Edictor in a way we cannot support yet.
 
-import sys
-from pathlib import Path
+import io
 import csv
+import sys
 import typing as t
 from enum import Enum
+from pathlib import Path
 
 import pycldf
 
@@ -286,7 +287,19 @@ def forms_to_tsv(
         )
 
 
-def write_edictor_file(dataset, file, forms, judgements_about_form, cognateset_numbers):
+def write_edictor_file(
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+    file: io.TextIOBase,
+    forms,
+    judgements_about_form,
+    cognateset_numbers,
+):
     """Write the judgements of a dataset to file, in edictor format."""
     c_form_id = dataset["FormTable", "id"].name
     delimiters = {
