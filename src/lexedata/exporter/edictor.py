@@ -287,6 +287,7 @@ def forms_to_tsv(
 
 
 def write_edictor_file(dataset, file, forms, judgements_about_form, cognateset_numbers):
+    """Write the judgements of a dataset to file, in edictor format."""
     c_form_id = dataset["FormTable", "id"].name
     delimiters = {
         c.name: c.separator
