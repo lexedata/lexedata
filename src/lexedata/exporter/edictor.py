@@ -280,14 +280,13 @@ def forms_to_tsv(
                 )
                 continue
 
-    write_edictor_file(
-        dataset, output_file, forms, judgements_about_form, cognateset_cache
-    )
+    with output_file.open("w", encoding="utf-8") as file:
+        write_edictor_file(
+            dataset, file, forms, judgements_about_form, cognateset_cache
+        )
 
 
-def write_edictor_file(
-    dataset, output_file, forms, judgements_about_form, cognateset_numbers
-):
+def write_edictor_file(dataset, file, forms, judgements_about_form, cognateset_numbers):
     c_form_id = dataset["FormTable", "id"].name
     delimiters = {
         c.name: c.separator
@@ -302,45 +301,42 @@ def write_edictor_file(
     tsv_header.append("alignment")
 
     # write output to tsv
-    with output_file.open("w", encoding="utf-8") as file:
-        out = csv.DictWriter(
-            file,
-            fieldnames=tsv_header,
-            delimiter="\t",
+    out = csv.DictWriter(
+        file,
+        fieldnames=tsv_header,
+        delimiter="\t",
+    )
+    out.writerow({column: rename(column, dataset) for column in tsv_header})
+    out_cognatesets: t.List[t.Optional[str]]
+    for c, (id, form) in enumerate(forms.items(), 1):
+        # store original form id in other field and get cogset integer id
+        this_form = form
+        this_form["LINGPY_ID"] = c
+
+        # Normalize the form:
+        # 1. No list-valued entries
+        for c, d in delimiters.items():
+            form[c] = d.join(form[c])
+        # 2. No tabs, newlines in entries, they make Edictor mad.
+        for c, v in form.items():
+            if type(v) == str:
+                form[c] = form[c].replace("\t", "  ;t  ").replace("\n", "    ;n    ")
+
+        # if there is a cogset, add its integer id. otherwise set id to 0
+        judgement = judgements_about_form[this_form[c_form_id]]
+        this_form["cognatesetReference"] = " ".join(
+            str(cognateset_numbers.get(e, 0)) for e in (judgement[1] or [None])
         )
-        out.writerow({column: rename(column, dataset) for column in tsv_header})
-        out_cognatesets: t.List[t.Optional[str]]
-        for c, (id, form) in enumerate(forms.items(), 1):
-            # store original form id in other field and get cogset integer id
-            this_form = form
-            this_form["LINGPY_ID"] = c
+        this_form["alignment"] = (
+            " ".join(judgement[0])
+            .replace("(", "( ")
+            .replace(")", " )")
+            .replace(" ) ( ", " ")
+        )
 
-            # Normalize the form:
-            # 1. No list-valued entries
-            for c, d in delimiters.items():
-                form[c] = d.join(form[c])
-            # 2. No tabs, newlines in entries, they make Edictor mad.
-            for c, v in form.items():
-                if type(v) == str:
-                    form[c] = (
-                        form[c].replace("\t", "  ;t  ").replace("\n", "    ;n    ")
-                    )
-
-            # if there is a cogset, add its integer id. otherwise set id to 0
-            judgement = judgements_about_form[this_form[c_form_id]]
-            this_form["cognatesetReference"] = " ".join(
-                str(cognateset_numbers.get(e, 0)) for e in (judgement[1] or [None])
-            )
-            this_form["alignment"] = (
-                " ".join(judgement[0])
-                .replace("(", "( ")
-                .replace(")", " )")
-                .replace(" ) ( ", " ")
-            )
-
-            # add integer form id
-            out.writerow(this_form)
-        add_edictor_settings(file, dataset)
+        # add integer form id
+        out.writerow(this_form)
+    add_edictor_settings(file, dataset)
 
 
 def add_edictor_settings(file, dataset):
