@@ -3,6 +3,19 @@ import typing as t
 import abc
 
 
+H = t.TypeVar("H", bound=t.Hashable)
+
+
+class WorldSet(t.Generic[H]):
+    def __contains__(self, thing: H):
+        return True
+
+    def intersection(
+        self, other: t.Union["WorldSet[H]", t.Set[H]]
+    ) -> t.Union["WorldSet[H]", t.Set[H]]:
+        return other
+
+
 class Object(t.Dict[str, t.Any]):
     """Object"""
 
@@ -86,3 +99,14 @@ class Wordlist(
     t.Generic[Language_ID, Form_ID, Parameter_ID, Cognate_ID, Cognateset_ID],
 ):
     pass
+
+
+class KeyKeyDict(t.Mapping[str, str]):
+    def __len__(self):
+        return 0
+
+    def __iter__(self):
+        return ()
+
+    def __getitem__(self, key):
+        return key

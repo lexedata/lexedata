@@ -15,6 +15,7 @@ if __name__ == "__main__":
         metavar="M",
     )
     parser.add_argument(
+        "--languages-only",
         "-l",
         action="store_true",
         default=False,

@@ -62,7 +62,6 @@ def list_homophones(
 if __name__ == "__main__":
 
     parser = cli.parser(description=__doc__)
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
     list_homophones(dataset=pycldf.Dataset.from_metadata(args.metadata), logger=logger)

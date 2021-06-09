@@ -21,12 +21,14 @@ from lexedata.types import (
 )
 from lexedata.util import (
     string_to_id,
-    clean_cell_value,
-    get_cell_comment,
     edit_distance,
 )
-import lexedata.importer.cellparser as cell_parsers
-from lexedata.enrich.add_status_column import add_status_column_to_table
+from lexedata.util.excel import (
+    clean_cell_value,
+    get_cell_comment,
+)
+import lexedata.util.excel as cell_parsers
+from lexedata.edit.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
 Ob = t.TypeVar("O", bound=Object)
@@ -39,19 +41,33 @@ def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
 
 
 class DB:
+    """An in-memobry cache of a dataset.
+
+    The cache_dataset method is only called in the load_dataset method, but
+    also used for finer control by the cognates importer. This means that if
+    you would load the CognateParser directly, it doesn't work as the cache is
+    empty and the code will throw errors (e.g. when trying to look for
+    candidates we get a key error). If you use the CognateParser elsewhere,
+    make sure to cache the dataset explicitly, eg. by using DB.from_dataset!
+
+    """
+
     cache: t.Dict[str, t.Dict[t.Hashable, t.Dict[str, t.Any]]]
     source_ids: t.Set[str]
 
     def __init__(self, output_dataset: pycldf.Wordlist):
+        """Create a new *empty* cache associated with a dataset."""
         self.dataset = output_dataset
         self.cache = {}
         self.source_ids = set()
 
-    # TODO: @Gereon the cache_dataset method is only called in the load_dataset method.
-    # This means that if you would load the CognateParser directly,
-    # it doesn't work as the cache is empty and the code will throw errors
-    # (e.g. when trying to look for candidates we get a key error)
-    # TODO: I want to make sure, it is intended this way
+    @classmethod
+    def from_dataset(k, dataset, logger: cli.logging.Logger = cli.logger):
+        """Create a (filled) cache from a dataset."""
+        ds = k(dataset)
+        ds.cache_dataset(logger=logger)
+        return ds
+
     def cache_dataset(self, logger: cli.logging.Logger = cli.logger):
         logger.info("Caching dataset into memory…")
         for table in self.dataset.tables:
@@ -62,10 +78,14 @@ class DB:
             (id,) = table.tableSchema.primaryKey
             # Extent may be wrong, but it's usually at least roughly correct
             # and a better indication of the table size than none at all.
-            self.cache[table_type] = {
-                row[id]: row
-                for row in cli.tq(table, total=table.common_props.get("dc:extent"))
-            }
+            try:
+                self.cache[table_type] = {
+                    row[id]: row
+                    for row in cli.tq(table, total=table.common_props.get("dc:extent"))
+                }
+            except FileNotFoundError:
+                self.cache[table_type] = {}
+
         for source in self.dataset.sources:
             self.source_ids.add(source.id)
 
@@ -86,7 +106,7 @@ class DB:
             for table in self.dataset.tables
         }
 
-    def write_dataset_from_cache(self, tables: t.Optional[t.List[str]] = None):
+    def write_dataset_from_cache(self, tables: t.Optional[t.Iterable[str]] = None):
         if tables is None:
             tables = self.cache.keys()
         for table_type in tables:
@@ -95,7 +115,7 @@ class DB:
             ].write(self.retrieve(table_type))
         self.dataset.write_metadata()
         # TODO: Write BIB file, without pycldf
-        with open(self.dataset.bibpath, "w") as bibfile:
+        with self.dataset.bibpath.open("w", encoding="utf-8") as bibfile:
             for source in self.source_ids:
                 print("@misc{" + source + ", title={" + source + "} }", file=bibfile)
 
@@ -816,12 +836,11 @@ if __name__ == "__main__":
         help="Text written to Status_Column. Set to 'None' for no status update. "
         "(default: initial import)",
     )
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
     if args.status_update == "None":
         args.status_update = None
     load_dataset(
-        args.metadata, args.lexicon, args.cogsets, args.status_update, logger=logger
+        args.metadata, args.wordlist, args.cogsets, args.status_update, logger=logger
     )

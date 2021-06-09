@@ -2,13 +2,76 @@ from pathlib import Path
 import csv
 from tqdm import tqdm
 import collections
+import typing as t
 
 import pycldf
 
 import lexedata.cli as cli
+import lexedata.types as types
 
 
-def load_forms_from_tsv(dataset: pycldf.Dataset, input_file: Path):
+def extract_partial_judgements(
+    segments: t.Sequence[str],
+    cognatesets: t.Sequence[types.Cognateset_ID],
+    global_alignment: t.Sequence[str],
+    logger: cli.logging.Logger = cli.logger,
+) -> t.Iterator[t.Tuple[range, types.Cognateset_ID, t.Sequence[str]]]:
+    """Extract the different partial cognate judgements.
+
+    Segments has no morpheme boundary markers, they are inferred from
+    global_alignment. The number of cognatesets and marked segments in
+    global_alignment must match.
+
+    >>> next(extract_partial_judgements("t e s t".split(), [3], "t e s t".split()))
+    (range(0, 4), 3, ['t', 'e', 's', 't'])
+
+    >>> partial = extract_partial_judgements("t e s t".split(), [0, 1, 2], "( t ) + e - s + - t -".split())
+    >>> next(partial)
+    (range(1, 3), 1, ['e', '-', 's'])
+    >>> next(partial)
+    (range(3, 4), 2, ['-', 't', '-'])
+
+    """
+    morpheme_boundary = 0
+    alignment_morpheme_boundary = 0
+    a, s, c = 0, 0, 0
+
+    while a < len(global_alignment):
+        if global_alignment[a] == "+":
+            if cognatesets[c]:
+                yield range(morpheme_boundary, s), cognatesets[c], global_alignment[
+                    alignment_morpheme_boundary:a
+                ]
+            c += 1
+            morpheme_boundary = s
+            alignment_morpheme_boundary = a + 1
+        elif global_alignment[a] in {"-", "(", ")"}:
+            pass
+        else:
+            s += 1
+        a += 1
+    yield range(morpheme_boundary, s), cognatesets[c], global_alignment[
+        alignment_morpheme_boundary:a
+    ]
+
+
+def load_forms_from_tsv(
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+    input_file: Path,
+    logger: cli.logging.Logger = cli.logger,
+) -> t.Mapping[str, t.Sequence[t.Tuple[types.Form_ID, range, t.Sequence[str]]]]:
+    """
+
+    Side effects
+    ============
+    This function overwrites dataset's FormTable
+    """
     input = csv.DictReader(
         input_file.open(encoding="utf-8"),
         delimiter="\t",
@@ -16,13 +79,14 @@ def load_forms_from_tsv(dataset: pycldf.Dataset, input_file: Path):
 
     c_form_id = dataset["FormTable", "id"].name
     c_form_segments = dataset["FormTable", "segments"].name
-    forms = {
-        # These days, all dicts are ordered by default. Still, maybe make this explicit.
-        form[c_form_id]: form
-        for form in dataset["FormTable"]
-    }
+    # These days, all dicts are ordered by default. Still, better make this explicit.
+    forms = collections.OrderedDict(
+        (form[c_form_id], form) for form in dataset["FormTable"]
+    )
 
-    edictor_cognatesets = collections.defaultdict(list)
+    edictor_cognatesets: t.Dict[
+        str, t.List[t.Tuple[types.Form_ID, range, t.Sequence[str]]]
+    ] = collections.defaultdict(list)
 
     form_table_upper = {
         column.name.upper(): column.name
@@ -40,11 +104,16 @@ def load_forms_from_tsv(dataset: pycldf.Dataset, input_file: Path):
             "ID": "",
         }
     )
-    separators = [None for _ in input.fieldnames]
+    separators: t.List[t.Optional[str]] = [None for _ in input.fieldnames]
     for i in range(len(input.fieldnames) - 1, -1, -1):
+        if i == 0 and input.fieldnames[0] != "ID":
+            raise ValueError(
+                f"When importing from Edictor, expected the first column to be named 'ID', but found {input.fieldnames['ID']}"
+            )
+
         lingpy = input.fieldnames[i]
         try:
-            input.fieldnames[i] = form_table_upper[lingpy]
+            input.fieldnames[i] = form_table_upper[lingpy.upper()]
         except KeyError:
             pass
 
@@ -58,7 +127,9 @@ def load_forms_from_tsv(dataset: pycldf.Dataset, input_file: Path):
         except KeyError:
             pass
 
-    for line in tqdm(input, total=len(forms)):
+    logger.info("Importing form rows from edictor…")
+    for line in cli.tq(input, total=len(forms)):
+        # Column "" is the re-named Lingpy-ID column, so the first one.
         if line[""].startswith("#"):
             # One of Edictor's comment rows, storing settings
             continue
@@ -70,69 +141,42 @@ def load_forms_from_tsv(dataset: pycldf.Dataset, input_file: Path):
                 else:
                     line[key] = value.split(sep)
 
-        morpheme_boundary = 0
-        alignment_morpheme_boundary = 0
-        for cognateset in line["cognatesetReference"][:-1]:
-            next_morpheme_boundary = line[c_form_segments].index("+", morpheme_boundary)
-            del line[c_form_segments][next_morpheme_boundary]
-            if line["alignment"]:
-                next_alignment_morpheme_boundary = line["alignment"].index(
-                    "+", alignment_morpheme_boundary
+        try:
+            for segments, cognateset, alignment in extract_partial_judgements(
+                line[c_form_segments],
+                line["cognatesetReference"],
+                line["alignment"],
+                logger,
+            ):
+                edictor_cognatesets[cognateset].append(
+                    (line[c_form_id], segments, alignment)
                 )
-                alignment = line["alignment"][
-                    alignment_morpheme_boundary:next_alignment_morpheme_boundary
-                ]
-                if line[c_form_segments][morpheme_boundary:next_morpheme_boundary] != [
-                    c for c in alignment if c != "-"
-                ]:
-                    print(
-                        "Alignment {:} did not match segments {:}".format(
-                            alignment,
-                            line[c_form_segments][
-                                morpheme_boundary:next_morpheme_boundary
-                            ],
-                        )
-                    )
-                alignment_morpheme_boundary = next_alignment_morpheme_boundary + 1
-            else:
-                alignment = None
-            edictor_cognatesets[cognateset].append(
-                (line[c_form_id], morpheme_boundary, next_morpheme_boundary, alignment)
+            forms[line[c_form_id]] = line
+        except IndexError:
+            logger.warning(
+                f"In form with Lingpy-ID {line['']}: Cognateset judgements {line['cognatesetReference']} and alignment {line['alignment']} did not match. At least one morpheme skipped."
             )
-            morpheme_boundary = next_morpheme_boundary
-        next_morpheme_boundary = len(line[c_form_segments])
-        if line["alignment"]:
-            next_alignment_morpheme_boundary = len(line["alignment"])
-            alignment = line["alignment"][
-                alignment_morpheme_boundary:next_alignment_morpheme_boundary
-            ]
-            if line[c_form_segments][morpheme_boundary:next_morpheme_boundary] != [
-                c for c in alignment if c != "-"
-            ]:
-                print(
-                    "Alignment {:} did not match segments {:}".format(
-                        alignment,
-                        line[c_form_segments][morpheme_boundary:next_morpheme_boundary],
-                    )
-                )
-        else:
-            alignment = None
-        edictor_cognatesets[line["cognatesetReference"][-1]].append(
-            (line[c_form_id], morpheme_boundary, next_morpheme_boundary, alignment)
-        )
+    edictor_cognatesets.pop("0", None)
 
-        forms[line[c_form_id]] = line
-    del edictor_cognatesets["0"]
-
+    # Deliberately make use of the property of `write` to discard any entries
+    # that don't correspond to existing columns. Otherwise, we'd still have to
+    # get rid of the alignment, cognatesetReference and Lingpy-ID columns.
     dataset["FormTable"].write(forms.values())
     return edictor_cognatesets
 
 
-def match_cognatesets(new_cognatesets, reference_cognatesets):
+def match_cognatesets(
+    new_cognatesets: t.Mapping[
+        int, t.Sequence[t.Tuple[types.Form_ID, range, t.Sequence[str]]]
+    ],
+    reference_cognatesets: t.Mapping[
+        types.Cognateset_ID, t.Sequence[t.Tuple[types.Form_ID, range, t.Sequence[str]]]
+    ],
+) -> t.Mapping[int, t.Optional[types.Cognateset_ID]]:
     new_cognateset_ids = sorted(
         new_cognatesets, key=lambda x: len(new_cognatesets[x]), reverse=True
     )
-    matching = {}
+    matching: t.Dict[int, t.Optional[types.Cognateset_ID]] = {}
     unassigned_reference_cognateset_ids = [
         (len(forms), c) for c, forms in reference_cognatesets.items()
     ]

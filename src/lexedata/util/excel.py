@@ -1,18 +1,71 @@
 # -*- coding: utf-8 -*-
-import re
-import logging
-import typing as t
+"""Various helper functions for Excel file parsing
 
-import openpyxl
+"""
+
+import re
+import typing as t
+import unicodedata
+
+import openpyxl as op
+
 import pycldf
 
-from lexedata.util import string_to_id, clean_cell_value, get_cell_comment
+from lexedata.util import string_to_id
 from lexedata.types import Form, Judgement
 import lexedata.cli as cli
 
 
-logger = cli.logger
-logger.setLevel(logging.INFO)
+def clean_cell_value(cell: op.cell.cell.Cell):
+    if cell.value is None:
+        return ""
+    if type(cell.value) == float:
+        if cell.value == int(cell.value):
+            return int(cell.value)
+        return cell.value
+    elif type(cell.value) == int:
+        return cell.value
+    v = unicodedata.normalize("NFC", (cell.value or "").strip())
+    try:
+        return v.replace("\n", ";\t")
+    except TypeError:
+        return str(v)
+
+
+def get_cell_comment(cell: op.cell.Cell) -> str:
+    """Get the comment of a cell.
+
+    Get the normalized comment of a cell: Guaranteed to be a string (empty if
+    no comment), with lines joined by spaces instead and all 'lexedata' author
+    annotations stripped.
+
+
+    >>> from openpyxl.comments import Comment
+    >>> wb = op.Workbook()
+    >>> ws = wb.active
+    >>> ws["A1"].comment = Comment('''This comment
+    ... contains a linebreak and a signature.
+    ...   -lexedata.exporter''',
+    ... 'lexedata')
+    >>> get_cell_comment(ws["A1"])
+    'This comment contains a linebreak and a signature.'
+    >>> get_cell_comment(ws["A2"])
+    ''
+    """
+    raw_comment = cell.comment.text.strip() if cell.comment else ""
+    lines = [
+        line for line in raw_comment.split("\n") if line.strip() != "-lexedata.exporter"
+    ]
+    return " ".join(lines)
+
+
+def normalize_header(row: t.Iterable[op.cell.Cell]) -> t.Iterable[str]:
+    header = [unicodedata.normalize("NFKC", (n.value or "").strip()) for n in row]
+    header = [h.replace(" ", "_") for h in header]
+    header = [h.replace("(", "") for h in header]
+    header = [h.replace(")", "") for h in header]
+
+    return header
 
 
 def check_brackets(string, bracket_pairs):
@@ -176,7 +229,7 @@ class NaiveCellParser:
         )
 
     def parse(
-        self, cell: openpyxl.cell.Cell, language_id: str, cell_identifier: str = ""
+        self, cell: op.cell.Cell, language_id: str, cell_identifier: str = ""
     ) -> t.Iterable[Form]:
         """Return form properties for every form in the cell"""
         # cell_identifier format: sheet.cell_coordinate
@@ -211,6 +264,7 @@ class CellParser(NaiveCellParser):
         separation_pattern: str = r"([;,])",
         variant_separator: t.Optional[t.List[str]] = ["~", "%"],
         add_default_source: t.Optional[str] = "{1}",
+        logger: cli.logging.Logger = cli.logger,
     ):
         super().__init__(dataset)
 
@@ -258,7 +312,10 @@ class CellParser(NaiveCellParser):
         self.add_default_source = add_default_source
 
     def source_from_source_string(
-        self, source_string: str, language_id: t.Optional[str]
+        self,
+        source_string: str,
+        language_id: t.Optional[str],
+        logger: cli.logging.Logger = cli.logger,
     ) -> str:
         """Parse a string referencing a language-specific source"""
         context: t.Optional[str]
@@ -299,7 +356,12 @@ class CellParser(NaiveCellParser):
             ]
             return self._transcriptions
 
-    def separate(self, values: str, context: str = "") -> t.Iterable[str]:
+    def separate(
+        self,
+        values: str,
+        context: str = "",
+        logger: cli.logging.Logger = cli.logger,
+    ) -> t.Iterable[str]:
         """Separate different form descriptions in one string.
 
         Separate forms separated by comma or semicolon, unless the comma or
@@ -341,6 +403,7 @@ class CellParser(NaiveCellParser):
         form_string: str,
         language_id: str,
         cell_identifier: str = "",
+        logger: cli.logging.Logger = cli.logger,
     ) -> t.Optional[Form]:
         """Create a dictionary of columns from a form description.
 
@@ -510,9 +573,9 @@ def alignment_from_braces(text, start=0):
     count towards the segment slices.
 
     >>> alignment_from_braces("t{e x}t")
-    ([(1, 3)], ['e', 'x'])
+    ([(2, 3)], ['e', 'x'])
     >>> alignment_from_braces("{ t - e } x { t }")
-    ([(0, 2), (3, 4)], ['t', '-', 'e', 't'])
+    ([(1, 2), (4, 4)], ['t', '-', 'e', 't'])
 
     """
     before, remainder = text.split("{", 1)
@@ -520,7 +583,7 @@ def alignment_from_braces(text, start=0):
     content = content.strip()
     i = len(before.strip())
     j = len([s for s in content.split() if s != "-"])
-    slice = (start + i, start + i + j)
+    slice = (start + i + 1, start + i + j)
     if "{" in remainder:
         slices, alignment = alignment_from_braces(remainder, start + i + j)
         slices.insert(0, slice)
@@ -529,7 +592,7 @@ def alignment_from_braces(text, start=0):
         return [slice], content.split()
 
 
-class CellParserHyperlink(CellParser):
+class CellParserHyperlink(NaiveCellParser):
     def __init__(self, dataset: pycldf.Dataset):
         super().__init__(dataset=dataset)
         self.cc(short="c_id", long=("CognateTable", "formReference"), dataset=dataset)
@@ -544,7 +607,7 @@ class CellParserHyperlink(CellParser):
             pass
 
     def parse(
-        self, cell: openpyxl.cell.Cell, language_id: str, cell_identifier: str = ""
+        self, cell: op.cell.Cell, language_id: str, cell_identifier: str = ""
     ) -> t.Iterable[Judgement]:
         try:
             url = cell.hyperlink.target
@@ -555,7 +618,9 @@ class CellParserHyperlink(CellParser):
             else:
                 slice, alignment = alignment_from_braces(text)
             properties = {
-                self.c["c_id"]: url.split("/")[-1],
+                self.c["c_id"]: url.split("/")[-1].strip(
+                    ")"
+                ),  # TODO: Only here to fix an error in the last Arawak export, which added erroneous brackets after form IDs. (But hopefully harmless if you still see it here now.)
                 self.c.get("c_segments"): ["{:}:{:}".format(i, j) for i, j in slice],
                 self.c.get("c_alignment"): alignment,
                 self.c.get("c_comment"): comment,

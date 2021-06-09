@@ -1,10 +1,11 @@
 import pycldf
 import typing as t
 
-from lexedata.enrich.add_status_column import add_status_column_to_table
+from lexedata.edit.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
-# TODO: use lexedata.change.clean_ids.update_ids
+# TODO: use lexedata.edit.clean_ids.update_ids
+# TODO: share more functionality with rename_concept
 
 
 def substitute_many(
@@ -30,19 +31,19 @@ def rename(
     logger: cli.logging.Logger,
     status_update: t.Optional[str],
 ):
-    concepts = ds["ParameterTable"]
+    languages = ds["LanguageTable"]
 
     for table in ds.tables:
-        if table == concepts:
+        if table == languages:
             continue
         _, component = table.common_props["dc:conformsTo"].split("#")
         try:
-            c_concept = ds[component, "parameterReference"]
-            columns = {c_concept.name}
+            c_language = ds[component, "languageReference"]
+            columns = {c_language.name}
         except KeyError:
             columns = set()
         for reference in table.tableSchema.foreignKeys:
-            if reference.reference.resource.string == concepts.url.string:
+            if reference.reference.resource.string == languages.url.string:
                 (column,) = reference.columnReference
                 columns.add(column)
         if columns:
@@ -73,40 +74,40 @@ def replace_column(
 ) -> None:
     # add Status_column if not existing and status update given
     if status_update:
-        add_status_column_to_table(dataset=dataset, table_name="ParameterTable")
+        add_status_column_to_table(dataset=dataset, table_name="LanguageTable")
 
     if column_replace:
         assert (
-            original == "id" or original == dataset["ParameterTable", "id"].name
-        ), f"Replacing an entire column is only meaningful when you change the #id column ({dataset['ParameterTable', 'id'].name}) of the ConceptTable."
+            original == "id" or original == dataset["LanguageTable", "id"].name
+        ), f"Replacing an entire column is only meaningful when you change the #id column ({dataset['LanguageTable', 'id'].name}) of the LanguageTable."
 
-        c_id = dataset["ParameterTable", original].name
-        c_new = dataset["ParameterTable", replacement].name
+        c_id = dataset["LanguageTable", original].name
+        c_new = dataset["LanguageTable", replacement].name
         mapping = {
-            concept[c_id]: concept[c_new] for concept in dataset["ParameterTable"]
+            language[c_id]: language[c_new] for language in dataset["LanguageTable"]
         }
         assert smush or len(mapping) == len(
             set(mapping.values())
-        ), "Would collapse some concepts that were distinct before! Add '--smush' if that is intended."
-        # dataset["ParameterTable"].tableSchema.columns["c_id"]
+        ), "Would collapse some languages that were distinct before! Add '--smush' if that is intended."
+        # dataset["LanguageTable"].tableSchema.columns["c_id"]
         rename(dataset, mapping, logger, status_update=status_update)
     else:
-        concepts = dataset["ParameterTable"]
+        languages = dataset["LanguageTable"]
 
-        c_id = dataset["ParameterTable", "id"].name
+        c_id = dataset["LanguageTable", "id"].name
 
-        logger.info(f"Changing {c_id:} of ParameterTable…")
+        logger.info(f"Changing {c_id:} of LanguageTable")
         dataset.write(
-            ParameterTable=[
+            LanguageTable=[
                 substitute_many(r, [c_id], {original: replacement}, status_update=None)
-                for r in concepts
+                for r in languages
             ]
         )
         rename(dataset, {original: replacement}, logger, status_update=status_update)
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description="Change the ID of a concept in the wordlist")
+    parser = cli.parser(description="Change the ID of a language in the wordlist")
     parser.add_argument(
         "original", type=str, help="Name of the original column to be replaced"
     )
@@ -120,7 +121,6 @@ if __name__ == "__main__":
         help="Text written to Status_Column. Set to 'None' for no status update. "
         "(default: Replaced column {original} by column {replacement}",
     )
-    cli.add_log_controls(parser)
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
