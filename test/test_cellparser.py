@@ -14,7 +14,7 @@ from helper_functions import copy_metadata
 
 @pytest.fixture(
     params=[
-        ("data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json")
+        "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json"
     ]
 )
 def no_dialect(request):
@@ -186,13 +186,32 @@ def test_misshaped_source(parser, caplog):
     )
 
 
-def test_cellparser_separate(parser, caplog):
+def test_cellparser_separate_1(parser):
+    assert list(
+        parser.separate("[iɾũndɨ] (H.F.) (parir), (GIVE BIRTH) [mbohaˈpɨ]")
+    ) == ["[iɾũndɨ] (H.F.) (parir)", "(GIVE BIRTH) [mbohaˈpɨ]"]
+
+
+def test_cellparser_separate_2(parser):
+    assert len(list(parser.separate("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]"))) == 1
+
+
+def test_cellparser_separate_3(parser):
     assert list(parser.separate("hic, haec, hoc")) == ["hic", "haec", "hoc"]
+
+
+def test_cellparser_separate_4(parser):
     assert list(parser.separate("hic (this, also: here); hoc")) == [
         "hic (this, also: here)",
         "hoc",
     ]
+
+
+def test_cellparser_separate_5(parser):
     assert list(parser.separate("illic,")) == ["illic"]
+
+
+def test_cellparser_separate_warning(parser, caplog):
     # catch logger warning for mismatching delimiters after separation
     assert list(parser.separate("hic (this, also: here", "B6: ")) == [
         "hic (this, also: here"
@@ -202,16 +221,6 @@ def test_cellparser_separate(parser, caplog):
         "hic (this, also: here: Encountered mismatched closing delimiters. "
         "Please check that the separation of the cell into multiple entries, for different forms, was correct.\n"
     )
-
-
-def test_cellparser_separate_1(parser):
-    assert list(
-        parser.separate("[iɾũndɨ] (H.F.) (parir), (GIVE BIRTH) [mbohaˈpɨ]")
-    ) == ["[iɾũndɨ] (H.F.) (parir)", "(GIVE BIRTH) [mbohaˈpɨ]"]
-
-
-def test_cellparser_separate_2(parser):
-    assert len(list(parser.separate("<tɨ̈nɨmpɨ̈'ä>[tɨ̃nɨ̃mpɨ̃ã; hɨnampɨʔa]"))) == 1
 
 
 def test_cellparser_empty1(parser):
