@@ -163,9 +163,9 @@ Assuming that there are not any errors or warnings you need to take care of, you
 2. Export the Cognate Table
 Type 
 ```
-python -m lexedata.exporter.cognates
+python -m lexedata.exporter.cognates [filename]
 ```
-The Cognate Table will be written to the excel file `Cognates.xlsx`.
+The Cognate Table will be written to an excel file with the specified name.
 
 3. Open and edit the Cognate Table in a spreadsheet editor
 (You are, of course, able to upload the cognate excel into Google Sheets, and
