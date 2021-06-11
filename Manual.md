@@ -6,14 +6,20 @@ Lexedata is a set of tools for managing, editing, and annotating large lexical d
 <!-- TODO: add links for online resources for git and command line -->
 
 ### 1.1 The CLDF format
-The CLDF format is designed for sharing and reusing comparative linguistic data. A CLDF lexical dataset consists of a series of .csv files, a .json file describing the structure of each .csv file and their inter-relationships, and a .bib file containing the relevant sources. A typical CLDF lexical dataset consists of the following .csv files: languages.csv, concepts.csv, forms.csv, cognatesets.csv, and cognates.csv. Each .csv file has an ID column There is the possibility to add further files depending on your needs. For more information on the CLDF format, you can refer to https://cldf.clld.org/. Below, we will briefly describe the typical files of a lexical CLDF dataset and how they interact with Lexedata when necessary.
+The CLDF format is designed for sharing and reusing comparative linguistic data. A CLDF lexical dataset consists of a series of .csv files, a .json file describing the structure of each .csv file and their inter-relationships, and a .bib file containing the relevant sources. A typical CLDF lexical dataset consists of the following .csv files: languages.csv, concepts.csv, forms.csv, cognatesets.csv, and cognates.csv. However, not all files are necessary, the bare minimum is forms.csv. Each .csv file has an ID column. There is the possibility to add further files depending on your needs. For more information on the CLDF format, you can refer to https://cldf.clld.org/. Below, we will briefly describe the typical files of a lexical CLDF dataset and how they interact with Lexedata when necessary. For each file, you can find below the necessary columns and typical columns. You can always add any custom columns as needed for your dataset.
 
 We recommend that you keep all these files in one folder which is versioned with git. You can use Github or Gitlab for this purpose, see section 1.3 below.
 
 #### 1.1.1 Languages.csv
-Languages.csv contains the different varieties included in the lexical dataset and their metadata. Every row is a variety. Columns must include: LanguageID
+Languages.csv contains the different varieties included in your lexical dataset and their metadata. Every row is a variety.
+Necessary columns: LanguageID
+Typical columns: Language name
+
 
 #### 1.1.2 Concepts.csv
+Concepts.csv contains the different concepts (meanings) included in your lexical dataset. Every row is a concept.
+Necessary columns: ConceptID
+Typical columns: Concept name, Definition
 
 #### 1.1.3 Forms.csv
 
@@ -21,9 +27,11 @@ Languages.csv contains the different varieties included in the lexical dataset a
 
 #### 1.1.5 Cognates.csv
 
-#### 1.1.6 Wordlist-metadata.json
+#### 1.1.6 sources.bib
 
-#### 1.1.7 sources.bib
+#### 1.1.7 Wordlist-metadata.json
+
+##### 1.1.7.1 How to read your metadata file
 
 ### 1.2 Navigation using the command line
 On a MacOS computer you can navigate to a specific folder using the command line on your terminal as follows: 
@@ -76,8 +84,8 @@ repository from GitHub. Now you should be ready to use lexedata!
 ## 3. Importing data (lexedata.importer)
 
 ### 3.1 Importing a lexical dataset to CLDF from excel
-Lexedata has two ways of creating a lexical dataset from raw data depending on the format the raw data are in ("long" or "matrix"). 
-The "long" format assumes that every field in CLDF is a different column in your spreadsheet, and that each sheet of your spreadsheet is a different language. In other words, it assumes that you have a wordlist per language. The "matrix" format assumes that your spreadsheet is a comparative wordlist with different languages as different columns. You may have different kind of information in each cell (e.g. forms and translations), as long as they are machine readable.
+Lexedata has different ways of creating a lexical dataset from raw data depending on the format the raw data are in ("long format", "matrix", "interleaved"). 
+The "long format" assumes that every field in CLDF is a different column in your spreadsheet, and that each sheet of your spreadsheet is a different language. In other words, it assumes that you have a wordlist per language. The "matrix" format assumes that your spreadsheet is a comparative wordlist with different languages as different columns. You may have different kinds of information in each cell (e.g. forms and translations), as long as they are machine readable. The "interleaved" format assumes that you have alternating rows of data and cognate coding. It is similar to the "matrix" format, with the addition that under every row there is an extra row with numerical codes representing cognate classes.
 
 #### 3.1.1 Importing a lexical dataset using the "long" format
 In order to import a lexical dataset in a "long" excel format you use the following command.
@@ -94,7 +102,7 @@ You can exclude individual sheets from being imported by using the option `--exc
 ### 3.2 Adding a new language/new data to an existing lexical dataset
 
 
-## 4. Enriching data (lexedata.enrich)
+## 4. Editing data (lexedata.edit)
 
 ### 4.1 Linking concepts to concepticon
 Lexedata can automatically link the concepts of a dataset with concept sets in the Concepticon (https://concepticon.clld.org/). In order to use this functionality, navigate to your depository and type ```python -m lexedata.enrich.guess_concepticon Wordlist-metadata.json```.
@@ -120,8 +128,13 @@ Optional arguments:
 
 <!-- Should this section be before the automatic cognate detection? Or when the automatic cognate detection is done it automatically segments as well? Finally, should we add more info about CLTS? Do you like this way of listing stuff? should I do it everywhere?-->
 
-## 5. Making batch changes with lexedata (lexedata.change)
-### 5.1. How to merge concepts
+### 4.5 How to merge concepts
+
+## 5. Reporting and checking data integrity (lexedata.report)
+### 5.1 CLDF format validation
+### 5.2 non-concatenative morphology
+### 5.3 potential synonyms and homophones
+### 5.4 Phonemic inventories and transcription errors
 
 ## 6. Exporting data (lexedata.exporter)
 ### 6.1 Cognate Table export-import loop
@@ -182,14 +195,8 @@ editing of cognate steps, start again at step 1.
 
 ### 6.4 Exporting coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)
 
-## 7. Reporting and checking data integrity (lexedata.report)
-### 7.1 CLDF format validation
-### 7.2 non-concatenative morphology
-### 7.3 potential synonyms and homophones
-### 7.4 Phonemic inventories and transcription errors
 
-
-## 8. How to edit data
+## 7. How to edit data
 There are two ways to edit data: through the web interface (under
 construction) and through editing the .csv files in your corresponding GitHub
 repository.
