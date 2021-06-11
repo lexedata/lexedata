@@ -1,9 +1,7 @@
 name: Python Tox
 
 on:
-  push:
-    paths:
-      '**.py'
+  push
   pull_request:
     branches: [ $default-branch ]
 
