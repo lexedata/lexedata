@@ -42,9 +42,9 @@ This is a typical .bib file containing references to all sources used in the dat
 #### 1.1.7 Wordlist-metadata.json
 The Wordlist-metadata.json file contains a detailed description of all the .csv files, their columns and their interrelationships. For an example of a simple .json file, see XXX. Every change to the structure of the dataset (e.g. insertion or deletion of a column in any file) needs to be reflected in the .json file for the dataset to be a valid cldf dataset.
 <!-- TO DO: add a reference to sample files and sample datasets --> 
+Below you can see a typical description of a .csv file in the .json file.
 
-##### 1.1.7.1 How to read a .json file
-!()
+![](https://github.com/Anaphory/lexedata/blob/nataliacp-patch-1/Manual/figures/json.png)
 
 ### 1.2 Navigation using the command line
 On a MacOS computer you can navigate to a specific folder using the command line on your terminal as follows: 
