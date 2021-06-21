@@ -149,7 +149,7 @@ def read_wordlist(
                 (foreign_key,) = [
                     key
                     for key in dataset["CognateTable"].tableSchema.foreignKeys
-                    if key.columnReference == [code_column]
+                    if key.columnReference == [form_reference]
                 ]
                 (target,) = foreign_key.reference.columnReference
                 cognatesets = util.cache_table(
