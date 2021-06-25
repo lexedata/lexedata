@@ -76,7 +76,7 @@ Below we are going to describe the use of the most basic git commands. We assume
 
 `git push`: This command will push (or publish) your local commits to the remote repository, which will be updated to reflect these new changes.
 
-To ensure dataset integrity, we recommend running `cldf validate Wordlist-metadata.json` before committing and pushing, so that any cldf errors are caught and corrected (see section [5.1](5.1-cldf-format-validation)).
+To ensure dataset integrity, we recommend running `cldf validate Wordlist-metadata.json` before committing and pushing, so that any cldf errors are caught and corrected (see section [5.1](#5.1-cldf-format-validation)).
 
 <!--TODO: how do you set up git for the command line in the first place??? Natalia doesn't remember. -->
 
