@@ -55,12 +55,28 @@ At any point you can see the contents of your current directory by typing `ls`.
 <!-- Is navigation any different in different operating systems??? -->
 
 ### 1.3 Working with git
+Git is a version control system. It keeps track of changes so you can easily revert to an earlier version or store a snapshot of your project (e.g. the state of the dataset for a particular article you published). While you could use Lexedata without git, we highly recommend storing your data in a repository (folder) versioned with git.
+In this manual we are going to cover some basic commands to get you started. You can find more detailed instructions and more information on how to begin with git [here](https://product.hubspot.com/blog/git-and-github-tutorial-for-beginners) and also in the [tutorials](https://guides.github.com/) by Github. You can also download and use the GitHub Desktop application if you prefer to not use the command line to interact with GitHub. However, you do need to use the command line with Lexedata.
+
 #### 1.3.1 How to set up git on your computer
+<!--- Natalia: if somebody follows the tutorials say on github, like this one https://guides.github.com/introduction/git-handbook/, do they need to do something special to get git running on their computer? -->
+
 #### 1.3.2 Basic git commands
-<!-- Natalia: this section needs review by someone else! -->
-You can use the following git commands in your terminal or you can use the GitHub Desktop application.
-In order to get the latest version of a repository, navigate to the corresponding folder and type `git pull`. If the version on GitHub is different from the one on your computer, it will be updated to match the version on GitHub. If you have made changes on your local version that are not yet committed, and that affect the same files modified by someone else on GitHub (eg. both you and they edited the forms.csv), the `git pull` will abort, allowing you to commit changes before you pull.
-In order to push your local version to GitHub, so it is updated, you need to first commit and then push your changes. Type `git commit` while in the repository you have modified and you will be prompted to add a commit message describing your latest changes. Then type `git push` and your local version will become the current version on GitHub (assuming that there are no conflicts to resolve). For lexical data repositories we recommend running `cldf validate Wordlist-metadata.json` before committing and pushing, so that any cldf errors are caught and corrected.
+Below we are going to describe the use of the most basic git commands. We assume a setup with a local git repository (on your computer) and a remote repository (e.g. on GitHub).
+
+`git fetch`: This command "informs" the git on your computer about the status of the remote repository. It does *not* update or change any files in your local repository.
+
+`git status`: This commands gives you a detailed report of the status of your local repository, and also in relation to your remote repository. In the report you can see any changes that you have done to your local repository, and if they are commited or not, as well as any committed changes that have happened in the remote repository in the meantime.
+
+`git pull`: With this command you can update your local repository to be identical to the remote one. This will not work if you have uncommitted changes to protect your work.
+
+`git add [filename]`: This command adds new or modified files to git, or it "stages" the changes to be committed.
+
+`git commit -m "[commit message]"`: After adding (or staging) all the changes that you want to commit, you can use this command to commit the changes to your local repository with an associated commit message. Typically the commit message contains a summary of the changes. This command will *not* update the remote repository.
+
+`git push`: This command will push (or publish) your local commits to the remote repository, which will be updated to reflect these new changes.
+
+To ensure dataset integrity, we recommend running `cldf validate Wordlist-metadata.json` before committing and pushing, so that any cldf errors are caught and corrected (see section [5.1](5.1-cldf-format-validation)).
 
 <!--TODO: how do you set up git for the command line in the first place??? Natalia doesn't remember. -->
 
