@@ -1,5 +1,45 @@
 # `lexedata` Manual
 
+  * [1. Introduction](#1-introduction)
+    + [1.1 The CLDF format](#11-the-cldf-format)
+      - [1.1.1 Languages.csv](#111-languagescsv)
+      - [1.1.2 Concepts.csv](#112-conceptscsv)
+      - [1.1.3 Forms.csv](#113-formscsv)
+      - [1.1.4 Cognatesets.csv](#114-cognatesetscsv)
+      - [1.1.5 Cognates.csv](#115-cognatescsv)
+      - [1.1.6 sources.bib](#116-sourcesbib)
+      - [1.1.7 Wordlist-metadata.json](#117-wordlist-metadatajson)
+    + [1.2 Navigation using the command line](#12-navigation-using-the-command-line)
+    + [1.3 Working with git](#13-working-with-git)
+      - [1.3.1 How to set up git on your computer](#131-how-to-set-up-git-on-your-computer)
+      - [1.3.2 Basic git commands](#132-basic-git-commands)
+    + [1.4 Some terminology](#14-some-terminology)
+  * [2. Lexedata installation instructions](#2-lexedata-installation-instructions)
+  * [3. Importing data (lexedata.importer)](#3-importing-data-lexedataimporter)
+    + [3.1 Importing a lexical dataset to CLDF from excel](#31-importing-a-lexical-dataset-to-cldf-from-excel)
+      - [3.1.1 Importing a lexical dataset using the "long" format](#311-importing-a-lexical-dataset-using-the-long-format)
+      - [3.1.2 Importing a lexical dataset using the "matrix" format](#312-importing-a-lexical-dataset-using-the-matrix-format)
+      - [3.1.3 Importing a lexical dataset using the "interleaved" format](#313-importing-a-lexical-dataset-using-the-interleaved-format)
+    + [3.2 Adding a new language/new data to an existing lexical dataset](#32-adding-a-new-languagenew-data-to-an-existing-lexical-dataset)
+  * [4. Editing data (lexedata.edit)](#4-editing-data-lexedataedit)
+    + [4.1 Linking concepts to concepticon](#41-linking-concepts-to-concepticon)
+    + [4.2 Automatic cognate detection](#42-automatic-cognate-detection)
+    + [4.3 Adding central concepts to cognate sets](#43-adding-central-concepts-to-cognate-sets)
+    + [4.4 Segment forms using CLTS](#44-segment-forms-using-clts)
+    + [4.5 How to merge concepts](#45-how-to-merge-concepts)
+  * [5. Reporting and checking data integrity (lexedata.report)](#5-reporting-and-checking-data-integrity-lexedatareport)
+    + [5.1 CLDF format validation](#51-cldf-format-validation)
+    + [5.2 non-concatenative morphology](#52-non-concatenative-morphology)
+    + [5.3 potential synonyms and homophones](#53-potential-synonyms-and-homophones)
+    + [5.4 Phonemic inventories and transcription errors](#54-phonemic-inventories-and-transcription-errors)
+  * [6. Exporting data (lexedata.exporter)](#6-exporting-data-lexedataexporter)
+    + [6.1 Cognate Table export-import loop](#61-cognate-table-export-import-loop)
+    + [6.2 Edictor export-import loop](#62-edictor-export-import-loop)
+    + [6.3 Comparative Wordlist export](#63-comparative-wordlist-export)
+    + [6.4 Exporting coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)](#64-exporting-coded-data-for-phylogenetic-analyses-lexedataexporterphylogenetics)
+  * [7. How to edit data](#7-how-to-edit-data)
+    + [7.1 Editing raw data through GitHub](#71-editing-raw-data-through-github)
+
 ## 1. Introduction
 Lexedata is a set of tools for managing, editing, and annotating large lexical datasets in CLDF. In order to use lexedata you need to be somewhat familiar with the command line and git. Below we give the basics you need to get started, as well as some useful links for more information.
 
@@ -230,7 +270,7 @@ There are two ways to edit data: through the web interface (under
 construction) and through editing the .csv files in your corresponding GitHub
 repository.
 
-### 8.1 Editing raw data through GitHub
+### 7.1 Editing raw data through GitHub
 This section describes how to edit raw data through GitHub. By raw data we mean any part of the data that are not cognate set judgements, alignments and related annotations. While it is possible to edit cognate set assignments and annotations this way as well, we recommend that you use the cognate table for this purpose (see section XXX). 
 Raw data are contained in three .csv files in the cldf format: concepts.csv, forms.csv, and languages.csv. Note that for small .csv files, instead of following the steps below, you can edit them directly through GitHub's web interface. 
 
