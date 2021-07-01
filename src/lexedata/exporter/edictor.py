@@ -162,7 +162,6 @@ def forms_to_tsv(
     languages: t.Iterable[str],
     concepts: t.Set[str],
     cognatesets: t.Iterable[str],
-    output_file: Path,
     logger: cli.logging.Logger = cli.logger,
 ):
     # required fields
@@ -280,10 +279,7 @@ def forms_to_tsv(
                 )
                 continue
 
-    with output_file.open("w", encoding="utf-8") as file:
-        write_edictor_file(
-            dataset, file, forms, judgements_about_form, cognateset_cache
-        )
+    return forms, judgements_about_form, cognateset_cache
 
 
 def write_edictor_file(
@@ -443,11 +439,16 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    forms_to_tsv(
-        dataset=pycldf.Dataset.from_metadata(args.metadata),
+    dataset = pycldf.Dataset.from_metadata(args.metadata)
+    forms, judgements_about_form, cognateset_mapping = forms_to_tsv(
+        dataset=dataset,
         languages=args.languages or types.WorldSet(),
         concepts=args.concepts or types.WorldSet(),
         cognatesets=args.cognatesets or types.WorldSet(),
-        output_file=args.output_file,
         logger=logger,
     )
+
+    with args.output_file.open("w", encoding="utf-8") as file:
+        write_edictor_file(
+            dataset, file, forms, judgements_about_form, cognateset_mapping
+        )
