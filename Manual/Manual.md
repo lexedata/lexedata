@@ -288,3 +288,42 @@ This command will perform tests to ensure that your cldf database has no errors.
 4. commit and push your dataset to GitHub
 While in the dataset repository, type `git commit` and add a commit message describing your latest changes. Then type  `git push` to publish the latest version to GitHub.
 
+## Command Reference
+`edit/add_central_concepts.py
+edit/simplify_ids.py
+edit/detect_cognates.py
+edit/add_judgement_table.py
+edit/add_concepticon.py
+edit/__init__.py
+edit/change_id_column.py
+edit/align.py
+edit/add_metadata.py
+edit/_cognate_code_language.py
+edit/add_segments.py
+edit/add_singleton_cognatesets.py
+edit/unicode_normalize.py
+edit/add_status_column.py
+edit/_rename_language.py
+edit/add_table.py
+exporter/__init__.py
+exporter/cognates.py
+exporter/phylogenetics.py
+exporter/edictor.py
+importer/__init__.py
+importer/cognates.py
+importer/excel_interleaved.py
+importer/excel_long_format.py
+importer/excel_matrix.py
+importer/edictor.py
+report/homophones.py
+report/extended_cldf_validate.py
+report/coverage.py
+report/__init__.py
+report/judgements.py
+report/nonconcatenative_morphemes.py
+report/filter.py
+report/segments_inventories.py
+util/__init__.py
+util/add_metadata.py
+util/fs.py
+util/excel.py`
