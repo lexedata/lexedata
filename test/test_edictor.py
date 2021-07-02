@@ -48,6 +48,49 @@ def test_write_edictor_empty_dataset():
     )
 
 
+def test_forms_to_csv():
+    forms = {
+        "form1": {
+            "ID": "form1",
+            "Language_ID": "axav1032",
+            "Parameter_ID": "one",
+            "Form": "the form",
+            "Segments": list("ðəfom"),
+            "Source": [],
+        }
+    }
+    dataset = lexedata.util.fs.new_wordlist(
+        FormTable=forms.values(),
+        CognateTable=[
+            {
+                "ID": "1-1",
+                "Form_ID": "form1",
+                "Cognateset_ID": "c1",
+                "Segment_Slice": ["1:1"],
+                "Alignment": ["ð"],
+            }
+        ],
+    )
+    forms, judgements, cognateset_cache = exporter.forms_to_tsv(
+        dataset, languages=["axav1032"], concepts={"one"}, cognatesets=["c1"]
+    )
+    assert forms == {
+        "form1": {
+            "Language_ID": "axav1032",
+            "Parameter_ID": "one",
+            "Form": "the form",
+            "Segments": ["ð", "ə", "f", "o", "m"],
+            "ID": "form1",
+            "Source": "",
+            "Comment": None,
+        }
+    }
+    assert judgements == {
+        "form1": (["ð", "+", "(ə)", "(f)", "(o)", "(m)"], ["c1", None])
+    }
+    assert cognateset_cache == {"c1": 1}
+
+
 def test_write_edictor_singleton_dataset():
     forms = {
         "form1": {
@@ -66,7 +109,7 @@ def test_write_edictor_singleton_dataset():
                 "ID": "1-1",
                 "Form_ID": "form1",
                 "Cognateset_ID": "c1",
-                "Segment_Slice": "1:1",
+                "Segment_Slice": ["1:1"],
                 "Alignment": ["ð"],
             }
         ],

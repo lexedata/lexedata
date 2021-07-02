@@ -848,9 +848,7 @@ if __name__ == "__main__":
     # Step 1: Load the raw data.
     ds: t.Mapping[Language_ID, t.Mapping[Parameter_ID, t.Set[Cognateset_ID]]] = {
         language: {k: v for k, v in sequence.items() if k in concepts}
-        for language, sequence in read_cldf_dataset(
-            dataset, code_column=args.code_column
-        ).items()
+        for language, sequence in read_cldf_dataset(dataset).items()
         if language in languages
     }
     logger.info(f"Imported languages {set(ds)}.")

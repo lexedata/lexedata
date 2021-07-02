@@ -10,6 +10,7 @@ integers.
 
 import csv
 import sys
+import itertools
 import typing as t
 from enum import Enum
 from pathlib import Path
@@ -231,11 +232,18 @@ def forms_to_tsv(
                         form[c] = form[c].replace("\t", "!t").replace("\n", "!n")
                 forms[form[c_form_id]] = form
 
-    cognateset_cache: t.Dict[t.Optional[str], int] = {
-        cognateset["ID"]: c
-        for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
-        if cognateset["ID"] in cognatesets
-    }
+    cognateset_cache: t.Mapping[t.Optional[str], int]
+    if "CognatesetTable" in dataset:
+        cognateset_cache = {
+            cognateset["ID"]: c
+            for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
+            if cognateset["ID"] in cognatesets
+        }
+    else:
+        if cognatesets is None:
+            cognateset_cache = t.DefaultDict(itertools.count().__next__)
+        else:
+            cognateset_cache = {c: i for i, c in enumerate(cognatesets, 1)}
 
     # Warn about unexpected non-concatenative ‘morphemes’
     lexedata.report.nonconcatenative_morphemes.segment_to_cognateset(
@@ -250,7 +258,7 @@ def forms_to_tsv(
     }
     # Compose all judgements, last-one-rules mode.
     for j in dataset["CognateTable"]:
-        if j[c_cognate_form] in forms and j[c_cognate_cognateset] in cognateset_cache:
+        if j[c_cognate_form] in forms and cognateset_cache.get(j[c_cognate_cognateset]):
             j[c_alignment] = [s or "" for s in j[c_alignment]]
             try:
                 segments_judged = list(

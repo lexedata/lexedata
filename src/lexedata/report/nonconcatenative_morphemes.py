@@ -1,3 +1,4 @@
+import itertools
 import typing as t
 
 import pycldf
@@ -20,16 +21,24 @@ def segment_to_cognateset(
     c_cognate_slice = dataset.column_names.cognates.segmentSlice
 
     forms = {f[c_form_id]: f for f in dataset["FormTable"]}
-    cognateset_cache: t.Dict[t.Optional[str], int] = {
-        cognateset["ID"]: c
-        for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
-        if cognatesets is None or cognateset["ID"] in cognatesets
-    }
+    cognateset_cache: t.Mapping[t.Optional[str], int]
+    if "CognatesetTable" in dataset:
+        cognateset_cache = {
+            cognateset["ID"]: c
+            for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
+            if cognatesets is None or cognateset["ID"] in cognatesets
+        }
+    else:
+        if cognatesets is None:
+            cognateset_cache = t.DefaultDict(itertools.count().__next__)
+        else:
+            cognateset_cache = {c: i for i, c in enumerate(cognatesets, 1)}
+
     cognateset_cache[None] = 0
 
     which_segment_belongs_to_which_cognateset: t.Dict[str, t.List[t.Set[str]]] = {}
     for j in dataset["CognateTable"]:
-        if j[c_cognate_form] in forms and j[c_cognate_cognateset] in cognateset_cache:
+        if j[c_cognate_form] in forms and cognateset_cache.get(j[c_cognate_cognateset]):
             form = forms[j[c_cognate_form]]
             if j[c_cognate_form] not in which_segment_belongs_to_which_cognateset:
                 which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [
