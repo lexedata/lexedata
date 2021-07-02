@@ -8,20 +8,20 @@ integers.
 
 # TODO: Underscores are treated specially by Edictor in a way we cannot support yet.
 
-
-import sys
-from pathlib import Path
 import csv
+import sys
+import itertools
 import typing as t
 from enum import Enum
+from pathlib import Path
 
 import pycldf
 
 
 import lexedata.cli as cli
-from lexedata.util import parse_segment_slices, ensure_list
+import lexedata.types as types
 import lexedata.report.nonconcatenative_morphemes
-from lexedata.types import WorldSet
+from lexedata.util import parse_segment_slices, ensure_list
 
 
 # TODO: Maybe we should have these in cli and consolidate them between
@@ -153,11 +153,16 @@ def glue_in_alignment(
 
 
 def forms_to_tsv(
-    dataset: pycldf.Dataset,
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
     languages: t.Iterable[str],
     concepts: t.Set[str],
     cognatesets: t.Iterable[str],
-    output_file: Path,
     logger: cli.logging.Logger = cli.logger,
 ):
     # required fields
@@ -199,32 +204,61 @@ def forms_to_tsv(
     if "alignment" not in tsv_header:
         tsv_header.append("alignment")
 
-    # select forms and cognates given restriction of languages and concepts, cognatesets respectively
-    forms = {
-        form[c_form_id]: form
-        for form in dataset["FormTable"]
-        if form[c_form_language] in languages
-        if concepts.intersection(ensure_list(form[c_form_concept]))
+    delimiters = {
+        c.name: c.separator
+        for c in dataset["FormTable"].tableSchema.columns
+        if c.separator
     }
 
-    cognateset_cache: t.Dict[t.Optional[str], int] = {
-        cognateset["ID"]: c
-        for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
-        if cognateset["ID"] in cognatesets
-    }
+    # select forms and cognates given restriction of languages and concepts, cognatesets respectively
+    forms = {}
+    for form in dataset["FormTable"]:
+        if form[c_form_language] in languages:
+            if concepts.intersection(ensure_list(form[c_form_concept])):
+                # Normalize the form:
+                # 1. No list-valued entries
+                for c, d in delimiters.items():
+                    if c == c_form_segments:
+                        continue
+                    try:
+                        form[c] = d.join(form[c])
+                    except TypeError:
+                        logger.warning(
+                            f"No segments found for form {form[c_form_id]}. You can generate segments using `lexedata.enrich.segment_using_clts`."
+                        )
+                # 2. No tabs, newlines in entries
+                for c, v in form.items():
+                    if type(v) == str:
+                        form[c] = form[c].replace("\t", "!t").replace("\n", "!n")
+                forms[form[c_form_id]] = form
+
+    cognateset_cache: t.Mapping[t.Optional[str], int]
+    if "CognatesetTable" in dataset:
+        cognateset_cache = {
+            cognateset["ID"]: c
+            for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
+            if cognateset["ID"] in cognatesets
+        }
+    else:
+        if cognatesets is None:
+            cognateset_cache = t.DefaultDict(itertools.count().__next__)
+        else:
+            cognateset_cache = {c: i for i, c in enumerate(cognatesets, 1)}
 
     # Warn about unexpected non-concatenative ‘morphemes’
     lexedata.report.nonconcatenative_morphemes.segment_to_cognateset(
         dataset, cognatesets, logger
     )
 
-    judgements_about_form = {
+    judgements_about_form: t.Mapping[
+        types.Form_ID, t.Tuple[t.List[str], t.List[int]]
+    ] = {
         id: ([f"({s})" for s in form[c_form_segments]], [])
         for id, form in forms.items()
     }
     # Compose all judgements, last-one-rules mode.
     for j in dataset["CognateTable"]:
-        if j[c_cognate_form] in forms and j[c_cognate_cognateset] in cognateset_cache:
+        if j[c_cognate_form] in forms and cognateset_cache.get(j[c_cognate_cognateset]):
             j[c_alignment] = [s or "" for s in j[c_alignment]]
             try:
                 segments_judged = list(
@@ -253,14 +287,23 @@ def forms_to_tsv(
                 )
                 continue
 
-    write_edictor_file(
-        dataset, output_file, forms, judgements_about_form, cognateset_cache
-    )
+    return forms, judgements_about_form, cognateset_cache
 
 
 def write_edictor_file(
-    dataset, output_file, forms, judgements_about_form, cognateset_numbers
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+    file: t.TextIO,
+    forms: t.Mapping[types.Form_ID, t.Mapping[str, t.Any]],
+    judgements_about_form,
+    cognateset_numbers,
 ):
+    """Write the judgements of a dataset to file, in edictor format."""
     c_form_id = dataset["FormTable", "id"].name
     delimiters = {
         c.name: c.separator
@@ -275,45 +318,44 @@ def write_edictor_file(
     tsv_header.append("alignment")
 
     # write output to tsv
-    with output_file.open("w", encoding="utf-8") as file:
-        out = csv.DictWriter(
-            file,
-            fieldnames=tsv_header,
-            delimiter="\t",
+    out = csv.DictWriter(
+        file,
+        fieldnames=tsv_header,
+        delimiter="\t",
+    )
+    out.writerow({column: rename(column, dataset) for column in tsv_header})
+    out_cognatesets: t.List[t.Optional[str]]
+    for f, (id, form) in enumerate(forms.items(), 1):
+        # store original form id in other field and get cogset integer id
+        this_form = dict(form)
+        this_form["LINGPY_ID"] = f
+
+        # Normalize the form:
+        # 1. No list-valued entries
+        for col, d in delimiters.items():
+            this_form[col] = d.join(form[col])
+        # 2. No tabs, newlines in entries, they make Edictor mad.
+        for c, v in form.items():
+            if type(v) == str:
+                this_form[c] = (
+                    form[c].replace("\t", "  ;t  ").replace("\n", "    ;n    ")
+                )
+
+        # if there is a cogset, add its integer id. otherwise set id to 0
+        judgement = judgements_about_form[this_form[c_form_id]]
+        this_form["cognatesetReference"] = " ".join(
+            str(cognateset_numbers.get(e, 0)) for e in (judgement[1] or [None])
         )
-        out.writerow({column: rename(column, dataset) for column in tsv_header})
-        out_cognatesets: t.List[t.Optional[str]]
-        for c, (id, form) in enumerate(forms.items(), 1):
-            # store original form id in other field and get cogset integer id
-            this_form = form
-            this_form["LINGPY_ID"] = c
+        this_form["alignment"] = (
+            " ".join(judgement[0])
+            .replace("(", "( ")
+            .replace(")", " )")
+            .replace(" ) ( ", " ")
+        )
 
-            # Normalize the form:
-            # 1. No list-valued entries
-            for c, d in delimiters.items():
-                form[c] = d.join(form[c])
-            # 2. No tabs, newlines in entries, they make Edictor mad.
-            for c, v in form.items():
-                if type(v) == str:
-                    form[c] = (
-                        form[c].replace("\t", "  ;t  ").replace("\n", "    ;n    ")
-                    )
-
-            # if there is a cogset, add its integer id. otherwise set id to 0
-            judgement = judgements_about_form[this_form[c_form_id]]
-            this_form["cognatesetReference"] = " ".join(
-                str(cognateset_numbers.get(e, 0)) for e in (judgement[1] or [None])
-            )
-            this_form["alignment"] = (
-                " ".join(judgement[0])
-                .replace("(", "( ")
-                .replace(")", " )")
-                .replace(" ) ( ", " ")
-            )
-
-            # add integer form id
-            out.writerow(this_form)
-        add_edictor_settings(file, dataset)
+        # add integer form id
+        out.writerow(this_form)
+    add_edictor_settings(file, dataset)
 
 
 def add_edictor_settings(file, dataset):
@@ -405,11 +447,16 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    forms_to_tsv(
-        dataset=pycldf.Dataset.from_metadata(args.metadata),
-        languages=args.languages or WorldSet(),
-        concepts=args.concepts or WorldSet(),
-        cognatesets=args.cognatesets or WorldSet(),
-        output_file=args.output_file,
+    dataset = pycldf.Dataset.from_metadata(args.metadata)
+    forms, judgements_about_form, cognateset_mapping = forms_to_tsv(
+        dataset=dataset,
+        languages=args.languages or types.WorldSet(),
+        concepts=args.concepts or types.WorldSet(),
+        cognatesets=args.cognatesets or types.WorldSet(),
         logger=logger,
     )
+
+    with args.output_file.open("w", encoding="utf-8") as file:
+        write_edictor_file(
+            dataset, file, forms, judgements_about_form, cognateset_mapping
+        )

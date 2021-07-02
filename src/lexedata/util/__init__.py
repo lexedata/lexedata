@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
 import re
 import zipfile
-import tempfile
 import typing as t
 from pathlib import Path
 
 import unicodedata
 import unidecode as uni
-import pycldf
 import networkx
 from lingpy.compare.strings import ldn_swap
 
 import csvw
 from lexedata.cli import tq
-from lexedata.util.add_metadata import add_metadata
 
 from ..types import KeyKeyDict
 from . import fs
@@ -67,34 +64,6 @@ def string_to_id(string: str) -> str:
 
 def normalize_string(text: str):
     return unicodedata.normalize("NFC", text.strip())
-
-
-def get_dataset(fname: Path) -> pycldf.Dataset:
-    """Load a CLDF dataset.
-
-    Load the file as `json` CLDF metadata description file, or as metadata-free
-    dataset contained in a single csv file.
-
-    The distinction is made depending on the file extension: `.json` files are
-    loaded as metadata descriptions, all other files are matched against the
-    CLDF module specifications. Directories are checked for the presence of
-    any CLDF datasets in undefined order of the dataset types.
-
-    Parameters
-    ----------
-    fname : str or Path
-        Path to a CLDF dataset
-
-    Returns
-    -------
-    Dataset
-    """
-    fname = Path(fname)
-    if not fname.exists():
-        raise FileNotFoundError("{:} does not exist".format(fname))
-    if fname.suffix == ".json":
-        return pycldf.dataset.Dataset.from_metadata(fname)
-    return pycldf.dataset.Dataset.from_data(fname)
 
 
 def edit_distance(text1: str, text2: str) -> float:
@@ -160,17 +129,6 @@ def parse_segment_slices(
             yield i
 
 
-# XXX Wait, didn't I have a better version of this function?
-def make_temporary_dataset(form_table):
-    directory = Path(tempfile.mkdtemp())
-    form_table_file_name = directory / "forms.csv"
-    with form_table_file_name.open("w", encoding="utf-8") as form_table_file:
-        form_table_file.write(form_table)
-    dataset = add_metadata(form_table_file_name)
-    dataset.write(directory / "Wordlist-metadata.json")
-    return dataset
-
-
 # TODO: Is this logic sound?
 def cache_table(
     dataset,
@@ -188,9 +146,13 @@ def cache_table(
     Examples
     ========
 
-    >>> ds = make_temporary_dataset('''ID,Language_ID,Parameter_ID,Form,Variants
-    ... ache_one,ache,one,"e.ta.'kɾã",~[test phonetic variant]
-    ... ''')
+    >>> ds = fs.new_wordlist(FormTable=[{
+    ...  "ID": "ache_one",
+    ...  "Language_ID": "ache",
+    ...  "Parameter_ID": "one",
+    ...  "Form": "e.ta.'kɾã",
+    ...  "Variants": ["~[test phonetic variant]"]
+    ... }])
     >>> forms = cache_table(ds)
     >>> forms["ache_one"]["languageReference"]
     'ache'
