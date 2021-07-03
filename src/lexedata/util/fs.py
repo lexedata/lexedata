@@ -1,8 +1,11 @@
+import csv
 import tempfile
 import typing as t
 from pathlib import Path
 
 import pycldf
+
+from lexedata.util.add_metadata import add_metadata
 
 
 def new_wordlist(path: t.Optional[Path] = None, **data):
@@ -35,9 +38,47 @@ def new_wordlist(path: t.Optional[Path] = None, **data):
     """
     if path is None:
         path = Path(tempfile.mkdtemp())
-    dataset = pycldf.Wordlist.from_metadata(path)
+
+    if data.get("FormTable"):
+        forms = data["FormTable"]
+        keys = set().union(*forms)
+        with (path / "forms.csv").open("w") as form_table_file:
+            writer = csv.DictWriter(form_table_file, fieldnames=keys)
+            writer.writeheader()
+            writer.writerows(forms)
+        dataset = add_metadata((path / "forms.csv"))
+    else:
+        dataset = pycldf.Wordlist.from_metadata(path)
     for component in data:
         if component not in dataset:
             dataset.add_component(component)
     dataset.write(**data)
     return dataset
+
+
+def get_dataset(fname: Path) -> pycldf.Dataset:
+    """Load a CLDF dataset.
+
+    Load the file as `json` CLDF metadata description file, or as metadata-free
+    dataset contained in a single csv file.
+
+    The distinction is made depending on the file extension: `.json` files are
+    loaded as metadata descriptions, all other files are matched against the
+    CLDF module specifications. Directories are checked for the presence of
+    any CLDF datasets in undefined order of the dataset types.
+
+    Parameters
+    ----------
+    fname : str or Path
+        Path to a CLDF dataset
+
+    Returns
+    -------
+    Dataset
+    """
+    fname = Path(fname)
+    if not fname.exists():
+        raise FileNotFoundError("{:} does not exist".format(fname))
+    if fname.suffix == ".json":
+        return pycldf.dataset.Dataset.from_metadata(fname)
+    return pycldf.dataset.Dataset.from_data(fname)

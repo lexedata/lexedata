@@ -2,13 +2,13 @@ from pathlib import Path
 
 import openpyxl as op
 import tempfile
-import pycldf
 
 from lexedata.exporter.cognates import ExcelWriter
+from lexedata.util.fs import get_dataset
 
 
 def test_adding_central_concepts():
-    dataset = pycldf.Dataset.from_metadata(
+    dataset = get_dataset(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
@@ -40,7 +40,7 @@ def test_adding_central_concepts():
 
 
 def test_adding_singleton_cognatesets():
-    dataset = pycldf.Dataset.from_metadata(
+    dataset = get_dataset(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))

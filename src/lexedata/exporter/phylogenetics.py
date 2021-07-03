@@ -57,7 +57,6 @@ def read_cldf_dataset(
 
     Examples
     --------
-
     >>> _size = open("forms.csv", "w").write('''
     ... ID,Language_ID,Parameter_ID,Form,Cognateset_ID
     ... '''.strip())
@@ -149,7 +148,7 @@ def read_wordlist(
                 (foreign_key,) = [
                     key
                     for key in dataset["CognateTable"].tableSchema.foreignKeys
-                    if key.columnReference == [code_column]
+                    if key.columnReference == [form_reference]
                 ]
                 (target,) = foreign_key.reference.columnReference
                 cognatesets = util.cache_table(
@@ -766,21 +765,10 @@ if __name__ == "__main__":
             first `data` tag in there.) (default: Write to stdout)""",
     )
     parser.add_argument(
-        "--code-column",
-        type=str,
-        help="Name of the code column for metadata-free wordlists",
-    )
-    parser.add_argument(
         "--language-list",
         default=None,
         type=Path,
         help="File to load a list of languages from",
-    )
-    parser.add_argument(
-        "--language-identifiers",
-        type=str,
-        default=None,
-        help="Use this column as language identifiers, instead of language IDs.",
     )
     parser.add_argument(
         "--concept-list",
@@ -812,7 +800,7 @@ if __name__ == "__main__":
         "--heuristic",
         type=AbsenceHeuristic.__getitem__,
         default=None,
-        choices=list(AbsenceHeuristic),
+        choices=list(AbsenceHeuristic.__members__),
         help="""In case of --coding=rootpresence, which heuristic should be used for the
         coding of absences? The default depends on whether the dataset contains
         a #parameterReference column in its CognatesetTable: If there is one,
@@ -829,10 +817,6 @@ if __name__ == "__main__":
 
     # Step 1: Load the raw data.
     dataset = pycldf.Dataset.from_metadata(args.metadata)
-    ds: t.Mapping[
-        Language_ID, t.Mapping[Language_ID, t.Set[Language_ID]]
-    ] = read_cldf_dataset(dataset, code_column=args.code_column, logger=logger)
-
     languages: t.Set[str]
     if args.language_list:
         languages = {
@@ -861,12 +845,9 @@ if __name__ == "__main__":
         cogsets = types.WorldSet()
 
     # Step 1: Load the raw data.
-    dataset = pycldf.Dataset.from_metadata(args.metadata)
     ds: t.Mapping[Language_ID, t.Mapping[Parameter_ID, t.Set[Cognateset_ID]]] = {
         language: {k: v for k, v in sequence.items() if k in concepts}
-        for language, sequence in read_cldf_dataset(
-            dataset, code_column=args.code_column
-        ).items()
+        for language, sequence in read_cldf_dataset(dataset).items()
         if language in languages
     }
     logger.info(f"Imported languages {set(ds)}.")
