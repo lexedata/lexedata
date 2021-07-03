@@ -56,7 +56,7 @@ if __name__ == "__main__":
             "path/to/forms.csv) or a valid metadata file (--metadata "
             "path/to/Filename-metadata.json)."
         )
-        sys.exit(cli.ExitCode.CLI_ARGUMENT_ERROR)
+        cli.ExitCode.CLI_ARGUMENT_ERROR()
 
     languages = {}
     try:

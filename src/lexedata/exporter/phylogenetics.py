@@ -822,6 +822,7 @@ if __name__ == "__main__":
 
     # Step 1: Load the raw data.
     dataset = pycldf.Dataset.from_metadata(args.metadata)
+
     languages: t.Set[str]
     if args.language_list:
         languages = {
