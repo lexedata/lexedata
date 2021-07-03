@@ -42,7 +42,7 @@ def new_wordlist(path: t.Optional[Path] = None, **data):
     if data.get("FormTable"):
         forms = data["FormTable"]
         keys = set().union(*forms)
-        with (path / "forms.csv").open("w") as form_table_file:
+        with (path / "forms.csv").open("w", encoding="utf8") as form_table_file:
             writer = csv.DictWriter(form_table_file, fieldnames=keys)
             writer.writeheader()
             writer.writerows(forms)
