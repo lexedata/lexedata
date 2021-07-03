@@ -120,7 +120,7 @@ def read_wordlist(
                 "code": dataset["FormTable", code_column].name,
             },
         )
-        target = col_map.forms.id
+        form_table_column = col_map.forms.id
     else:
         # We search for cognatesetReferences in the FormTable or a separate
         # CognateTable.
@@ -136,7 +136,7 @@ def read_wordlist(
             cognatesets = util.cache_table(
                 dataset, columns={"form": col_map.forms.id, "code": code_column}
             )
-            target = col_map.forms.id
+            form_table_column = col_map.forms.id
         else:
             # There was no cognatesetReference in the form table. If we
             # find them in CognateTable (I mean, they should be there!), we
@@ -153,7 +153,7 @@ def read_wordlist(
                     for key in dataset["CognateTable"].tableSchema.foreignKeys
                     if key.columnReference == [form_reference]
                 ]
-                (target,) = foreign_key.reference.columnReference
+                (form_table_column,) = foreign_key.reference.columnReference
                 cognatesets = util.cache_table(
                     dataset,
                     "CognateTable",
@@ -202,7 +202,7 @@ def read_wordlist(
     for row in dataset["FormTable"].iterdicts():
         language = row[col_map.forms.languageReference]
         for parameter in all_parameters(row[parameter_column]):
-            data[language][parameter] |= cognates_by_form[row[target]]
+            data[language][parameter] |= cognates_by_form[row[form_table_column]]
     return data
 
 
@@ -722,7 +722,7 @@ def add_partitions(data_object: ET.Element, partitions):
     for name, indices in partitions.items():
         indices_set = compress_indices(set(indices))
         indices_string = ",".join(
-            "{:d}-{:d}".format(s.start, s.stop) for s in indices_set
+            "{:d}-{:d}".format(s.start + 1, s.stop) for s in indices_set
         )
         previous_alignment.addnext(
             data_object.makeelement(
@@ -730,7 +730,7 @@ def add_partitions(data_object: ET.Element, partitions):
                 {
                     "id": "concept:" + name,
                     "spec": "FilteredAlignment",
-                    "filter": "0," + indices_string,
+                    "filter": "1," + indices_string,
                     "data": "@" + data_object.attrib["id"],
                     "ascertained": "true",
                     "excludefrom": "0",

@@ -1,3 +1,4 @@
+import sys
 import typing as t
 from pathlib import Path
 
@@ -22,11 +23,10 @@ if __name__ == "__main__":
         help="Only list matching languages, don't report statistics",
     )
     parser.add_argument(
-        "--metadata-or-forms",
+        "--forms",
         type=Path,
-        default="forms.csv",
-        help="Path to the JSON metadata or forms.csv file, i.e. metadata-free wordlist "
-        "(default: ./forms.csv)",
+        default=None,
+        help="Metadata-free mode: report on this `forms.csv`, ignore the METADATA argument.",
     )
     parser.add_argument(
         "--with-concept",
@@ -44,11 +44,19 @@ if __name__ == "__main__":
         help="Ignore missing forms, i.e. FormTable entries with CLDF #form '?'",
     )
     args = parser.parse_args()
+    logger = cli.setup_logging(args)
 
-    if args.metadata_or_forms.name == "forms.csv":
+    if args.forms is None:
+        dataset = pycldf.Wordlist.from_metadata(args.metadata)
+    elif args.forms.name == "forms.csv":
         dataset = pycldf.Wordlist.from_data(args.metadata_or_forms)
     else:
-        dataset = pycldf.Wordlist.from_metadata(args.metadata)
+        logger.error(
+            "You must either specify the parth to a valid metadata-free form table (--forms "
+            "path/to/forms.csv) or a valid metadata file (--metadata "
+            "path/to/Filename-metadata.json)."
+        )
+        sys.exit(cli.ExitCode.CLI_ARGUMENT_ERROR)
 
     languages = {}
     try:
@@ -84,7 +92,7 @@ if __name__ == "__main__":
                 include = False
         if not include:
             continue
-        if args.l:
+        if args.languages_only:
             print(language)
         else:
             print(metadata, len(conceptlist), synonyms)
