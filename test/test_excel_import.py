@@ -65,7 +65,7 @@ def test_no_dialect_excel_cognate_parser(fs, caplog, empty_excel):
         f.load_dataset(
             metadata="invented_path", lexicon=None, cognate_lexicon=empty_excel
         )
-        re.search(
+        assert re.search(
             "User-defined format specification in the json-file was missing, falling back to default parser",
                   caplog.text
         )
@@ -76,7 +76,7 @@ def test_dialect_missing_key_excel_parser(fs, caplog, empty_excel):
     with pytest.raises(ValueError):
         fs.create_file("invented_path", contents="""{"special:fromexcel": {}}""")
         f.load_dataset("invented_path", lexicon=empty_excel)
-    re.search(
+    assert re.search(
         "User-defined format specification in the json-file was missing the key lang_cell_regexes, "
         "falling back to default parser",
         caplog.text
@@ -89,7 +89,7 @@ def test_dialect_missing_key_excel_cognate_parser(fs, caplog, empty_excel):
     with pytest.raises(ValueError):
         fs.create_file("invented_path", contents="""{"special:fromexcel": {}}""")
         f.load_dataset("invented_path", lexicon=None, cognate_lexicon=empty_excel)
-    re.search(
+    assert re.search(
         r"User-defined format specification in the json-file was missing the key .*falling back to default parser.*",
         caplog.text
     )
