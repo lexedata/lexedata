@@ -46,7 +46,7 @@ def test_concept_file_not_found(caplog):
         logger=logger,
     )
     assert re.search(
-        "Did not find concepts.csv. Importing all forms independent of concept",
+        "Did not find concepts\.csv\. Importing all forms independent of concept",
         caplog.text,
     )
 
@@ -371,20 +371,10 @@ def test_no_concept_separator(single_import_parameters, caplog):
             is_new_language=True, new=1, existing=0, skipped=0, concepts=0
         )
     }
-    # Test messages mention the solutuons
+    # Test messages mention the solutions
+    print(caplog.text)
     assert re.search(
-        r"no.* polysemous forms",
-        caplog.text,
-    )
-    assert re.search(
-        r"lexedata\.report\.list_homophones",
-        caplog.text,
-    )
-    assert re.search(
-        "separator.*FormTable.*parameterReference.*json",
-        caplog.text,
-    ) or re.search(
-        "FormTable.*parameterReference.*separator.*json",
+        r"not.* polysemous forms.*separator.*FormTable.*parameterReference.*json.*lexedata\.report\.list_homophones",
         caplog.text,
     )
 
