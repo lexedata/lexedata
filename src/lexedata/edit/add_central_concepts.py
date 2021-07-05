@@ -176,11 +176,13 @@ def add_central_concepts_to_cognateset_table(
     dataset: pycldf.Dataset,
     add_column: bool = True,
     overwrite_existing: bool = True,
+    logger: logging.Logger = cli.logger
 ) -> pycldf.Dataset:
     # create mapping cognateset to central concept
     try:
         clics: t.Optional[networkx.Graph] = load_clics()
     except FileNotFoundError:
+        logger.info("Clics could not be loaded.")
         clics = None
     concepts_of_cognateset: t.Mapping[
         CognatesetID, t.Counter[ConceptID]
@@ -193,6 +195,7 @@ def add_central_concepts_to_cognateset_table(
                 concepts, concept_to_concepticon, clics
             )
     else:
+        logger.info(f"Dataset {dataset:} had no concepticonReference in a ParamterTable.")
         for cognateset, concepts in concepts_of_cognateset.items():
             central[cognateset] = central_concept(concepts, {}, None)
     dataset = reshape_dataset(dataset, add_column=add_column)
@@ -243,10 +246,12 @@ if __name__ == "__main__":
         help="Overwrite #parameterReference values of cognate sets already given in the dataset",
     )
     args = parser.parse_args()
+    logger = cli.setup_logging(args)
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
     add_central_concepts_to_cognateset_table(
         dataset,
         add_column=args.add_column,
         overwrite_existing=args.overwrite,
+        logger=logger
     )
