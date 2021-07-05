@@ -1,5 +1,6 @@
 import typing as t
 import collections
+import logging
 
 from csvw.metadata import URITemplate
 import pycldf

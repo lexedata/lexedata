@@ -3,6 +3,7 @@ import tempfile
 import shutil
 import pytest
 import pycldf
+import re
 
 from lexedata.edit.add_central_concepts import (
     add_central_concepts_to_cognateset_table,
@@ -34,22 +35,29 @@ def copy_wordlist_add_concepticons(request):
     return target, dataset
 
 
-def test_value_error_no_concepticon_referenc_for_concepts():
-    with pytest.raises(ValueError):
-        add_central_concepts_to_cognateset_table(
-            pycldf.Dataset.from_metadata(
+def test_value_error_no_concepticon_reference_for_concepts(caplog):
+    dataset = pycldf.Dataset.from_metadata(
                 Path(__file__).parent
                 / "data/cldf/smallmawetiguarani/cldf-metadata.json"
-            ),
+            )
+    with pytest.raises(
+        ValueError,
+    ):
+        add_central_concepts_to_cognateset_table(
+            dataset=dataset,
             add_column=False,
         )
+    assert re.search(r"Dataset .* had no concepticonReference in a ParamterTable.*", caplog)
 
 
 def test_value_error_no_parameter_reference_for_cognateset(
     copy_wordlist_add_concepticons,
 ):
     target, dataset = copy_wordlist_add_concepticons
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="Dataset .* had no parameterReference column in a CognatesetTable.*"
+    ):
         add_central_concepts_to_cognateset_table(dataset, add_column=False)
 
 
