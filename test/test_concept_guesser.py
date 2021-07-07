@@ -37,9 +37,8 @@ def copy_wordlist_add_concepticons(request):
 
 def test_value_error_no_concepticon_reference_for_concepts(caplog):
     dataset = pycldf.Dataset.from_metadata(
-                Path(__file__).parent
-                / "data/cldf/smallmawetiguarani/cldf-metadata.json"
-            )
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
     with pytest.raises(
         ValueError,
     ):
@@ -47,7 +46,9 @@ def test_value_error_no_concepticon_reference_for_concepts(caplog):
             dataset=dataset,
             add_column=False,
         )
-    assert re.search(r"Dataset .* had no concepticonReference in a ParamterTable.*", caplog.text)
+    assert re.search(
+        r"Dataset .* had no concepticonReference in a ParamterTable.*", caplog.text
+    )
 
 
 def test_value_error_no_parameter_reference_for_cognateset(
@@ -56,7 +57,7 @@ def test_value_error_no_parameter_reference_for_cognateset(
     target, dataset = copy_wordlist_add_concepticons
     with pytest.raises(
         ValueError,
-        match="Dataset .* had no parameterReference column in a CognatesetTable.*"
+        match="Dataset .* had no parameterReference column in a CognatesetTable.*",
     ):
         add_central_concepts_to_cognateset_table(dataset, add_column=False)
 

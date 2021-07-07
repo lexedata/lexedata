@@ -46,7 +46,7 @@ def test_concept_file_not_found(caplog):
         logger=logger,
     )
     assert re.search(
-        "Did not find concepts\.csv\. Importing all forms independent of concept",
+        r"Did not find concepts\.csv\. Importing all forms independent of concept",
         caplog.text,
     )
 

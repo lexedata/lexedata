@@ -18,8 +18,11 @@ class C:
 class MockSingleExcelSheet:
     def __init__(self, data):
         self.data = [
-            [C(d["value"], i, j, d["comment"]) if isinstance(d, dict) else C(d, i, j)
-             for j, d in enumerate(dr, 1)] for i, dr in enumerate(data, 1)
+            [
+                C(d["value"], i, j, d["comment"]) if isinstance(d, dict) else C(d, i, j)
+                for j, d in enumerate(dr, 1)
+            ]
+            for i, dr in enumerate(data, 1)
         ]
         self.title = "MockSingleExcelSheet"
 

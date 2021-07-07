@@ -62,4 +62,3 @@ def copy_metadata(original: Path):
     target = dirname / "cldf-metadata.json"
     copy = shutil.copyfile(original, target)
     return copy
-
