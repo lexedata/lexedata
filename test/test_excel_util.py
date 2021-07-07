@@ -7,6 +7,7 @@ from lexedata.util.excel import clean_cell_value, normalize_header
 from mock_excel import MockSingleExcelSheet
 
 
+# TODO: discuss these multiple asserts
 def test_cell_value():
     wb = op.Workbook()
     ws = wb.active
