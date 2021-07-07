@@ -15,12 +15,35 @@ from helper_functions import copy_metadata
 
 @pytest.fixture(
     params=[
-        "data/cldf/defective_dataset/wordlist-metadata_minimal_no_dialect.json"
+        r"data\cldf\smallmawetiguarani\cldf-metadata.json"
     ]
 )
 def no_dialect(request):
     # Copy the dataset metadata file to a temporary directory.
     target = copy_metadata(Path(__file__).parent / request.param)
+    with open(target, "r+", encoding="utf8") as file:
+        j = json.load(file)
+        j["special:fromexcel"] = {}
+        j["tables"][0] = {
+            "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
+            "dc:extent": 2,
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "string",
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+                        "name": "ID"
+                    }
+                ],
+                "primaryKey": [
+                    "ID"
+                ]
+            },
+            "url": "forms.csv"
+        }
+
+    with open(target, 'w') as file:
+        json.dump(j, file, indent=4)
     dataset = pycldf.Dataset.from_metadata(target)
     return dataset
 
@@ -101,8 +124,8 @@ def test_fields_of_formtable_no_transcription(no_dialect):
     # missing transcription element
     with pytest.raises(
         AssertionError,
-        match="Your metadata json file and your cell parser don’t match.*transcriptions \(at least one of "
-              "'orthographic', 'phonemic', and 'phonetic'\) to derive a #form.*"
+        match=r"Your metadata json file and your cell parser don’t match.*transcriptions \(at least one of "
+              r"'orthographic', 'phonemic', and 'phonetic'\) to derive a #form.*"
     ):
         c.CellParser(
             dataset=dataset,
@@ -200,11 +223,10 @@ def test_cellparser_separate_5(parser):
     assert list(parser.separate("illic,")) == ["illic"]
 
 
-# TODO: this is very strange, if I don't put list() the test fails
 def test_cellparser_separate_warning(parser, caplog):
     # catch logger warning for mismatching delimiters after separation
     list(parser.separate("hic (this, also: here", "B6: "))
-    assert re.search(".*hic \(this, also: here: Encountered mismatched closing delimiters.*", caplog.text)
+    assert re.search(r".*hic \(this, also: here: Encountered mismatched closing delimiters.*", caplog.text)
 
 
 def test_cellparser_empty1(parser):
@@ -314,11 +336,12 @@ def test_cellparser_unexpected_variant(parser, caplog):
 
 def test_parser_variant_lands_in_comment(caplog):
     caplog.set_level(logging.INFO)
+    dataset = pycldf.Dataset.from_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset.remove_columns("FormTable", "variants")
     parser = c.CellParser(
-        dataset=pycldf.Dataset.from_metadata(
-            Path(__file__).parent
-            / "data/cldf/defective_dataset/wordlist_maweti_no_variants.json"
-        ),
+        dataset=dataset,
         element_semantics=[
             ("/", "/", "phonemic", True),
             ("[", "]", "phonetic", True),

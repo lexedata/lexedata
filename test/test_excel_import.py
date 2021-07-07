@@ -12,7 +12,7 @@ import lexedata.importer.excel_matrix as f
 
 @pytest.fixture
 def empty_excel():
-    return Path(__file__).parent / "data/cldf/defective_dataset/empty_excel.xlsx"
+    return Path(__file__).parent / "data/excel/empty_excel.xlsx"
 
 
 # TODO: have a look at this test. just trying to pass codecov
@@ -109,7 +109,7 @@ def test_no_first_row_in_excel(empty_excel):
 def test_language_regex_error():
     excel = (
         Path(__file__).parent
-        / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+        / "data/excel/small_defective_no_regexes.xlsx"
     )
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     copy = copy_metadata(original=original)
@@ -118,7 +118,11 @@ def test_language_regex_error():
     dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     lexicon_wb = openpyxl.load_workbook(excel).active
     dialect.lang_cell_regexes = [r"(?P<Name>\[.*)", "(?P<Curator>.*)"]
-    EP = f.excel_parser_from_dialect(dataset, dialect, cognate=False)
+    EP = f.excel_parser_from_dialect(
+        dataset,
+        dialect,
+        cognate=False
+    )
     EP = EP(dataset)
 
     with pytest.raises(
@@ -131,7 +135,7 @@ def test_language_regex_error():
 def test_language_comment_regex_error():
     excel = (
         Path(__file__).parent
-        / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+        / "data/excel/small_defective_no_regexes.xlsx"
     )
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     copy = copy_metadata(original=original)
@@ -139,39 +143,21 @@ def test_language_comment_regex_error():
     dataset = pycldf.Dataset.from_metadata(copy)
     dialect = argparse.Namespace(**dataset.tablegroup.common_props["special:fromexcel"])
     lexicon_wb = openpyxl.load_workbook(excel).active
-    dialect.lang_comment_regexes = [r"\[.*", ".*"]
-
+    dialect.lang_comment_regexes = [r"(\[.*)"]
     EP = f.excel_parser_from_dialect(
         dataset,
-        argparse.Namespace(
-            lang_cell_regexes=[r"\[.*", ".*"],
-            lang_comment_regexes=[".*"],
-            row_cell_regexes=["(?P<Name>.*)"],
-            row_comment_regexes=[".*"],
-            cell_parser={
-                "form_separator": ",",
-                "variant_separator": "~",
-                "name": "CellParser",
-                "cell_parser_semantics": [
-                    ["<", ">", "Form", True],
-                    ["{", "}", "Source", False],
-                ],
-            },
-            check_for_match=["Form"],
-            check_for_row_match=["Name"],
-            check_for_language_match=["Name"],
-        ),
-        cognate=False,
+        dialect,
+        cognate=False
     )
     EP = EP(dataset)
-    with pytest.raises(ValueError, match="In cell B1: Expected to encounter match for .*, but found .*"):
+    with pytest.raises(ValueError, match="In cell G1: Expected to encounter match for .*, but found no_lan_comment.*"):
         EP.parse_cells(lexicon_wb)
 
 
 def test_properties_regex_error():
     excel = (
         Path(__file__).parent
-        / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+        / "data/excel/small_defective_no_regexes.xlsx"
     )
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     copy = copy_metadata(original=original)
@@ -181,6 +167,7 @@ def test_properties_regex_error():
     lexicon_wb = openpyxl.load_workbook(excel).active
     dialect.row_cell_regexes = [
         "(?P<set>.*)",
+        # wrong regex
         r"(?P<Name>\[.*)",
         "(?P<English>.*)",
         "(?P<Spanish>.*)",
@@ -200,7 +187,7 @@ def test_properties_regex_error():
 def test_properties_comment_regex_error():
     excel = (
         Path(__file__).parent
-        / "data/cldf/defective_dataset/small_defective_no_regexes.xlsx"
+        / "data/excel/small_defective_no_regexes.xlsx"
     )
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     copy = copy_metadata(original=original)

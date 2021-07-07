@@ -47,7 +47,7 @@ def test_value_error_no_concepticon_reference_for_concepts(caplog):
             dataset=dataset,
             add_column=False,
         )
-    assert re.search(r"Dataset .* had no concepticonReference in a ParamterTable.*", caplog)
+    assert re.search(r"Dataset .* had no concepticonReference in a ParamterTable.*", caplog.text)
 
 
 def test_value_error_no_parameter_reference_for_cognateset(
