@@ -14,7 +14,7 @@ from lexedata.util import excel as c
 from helper_functions import copy_metadata
 
 
-@pytest.fixture(params=[r"data\cldf\smallmawetiguarani\cldf-metadata.json"])
+@pytest.fixture(params=[r"data/cldf/smallmawetiguarani/cldf-metadata.json"])
 def no_dialect(request):
     # Copy the dataset metadata file to a temporary directory.
     target = copy_metadata(Path(__file__).parent / request.param)
