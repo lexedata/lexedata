@@ -30,53 +30,52 @@ def test_db_chache():
     assert db.cache == res
 
 
-def test_no_wordlist_and_no_cogsets(fs):
+def test_no_wordlist_and_no_cogsets(tmp_path):
+    # mock empty json file
+    path = tmp_path / "invented_path"
+    path.open("w").write("{}")
     with pytest.raises(
         argparse.ArgumentError,
         match="At least one of WORDLIST and COGNATESETS excel files must be specified.*",
     ):
-        # mock empty json file
-        fs.create_file("invented_path", contents="{}")
         f.load_dataset(
-            metadata="invented_path",
+            metadata=path,
             lexicon=None,
             cognate_lexicon=None,
         )
 
 
-def test_no_dialect_excel_parser(fs, caplog, empty_excel):
+def test_no_dialect_excel_parser(tmp_path, caplog, empty_excel):
     # ExcelParser
+    path = tmp_path / "invented_path"
+    path.open("w").write("{}")
     with pytest.raises(ValueError):
         # mock empty json file
-        fs.create_file("invented_path", contents="{}")
         f.load_dataset(
-            metadata="invented_path",
+            metadata=path,
             lexicon=empty_excel,
         )
-        assert caplog.text.endswith(
-            "User-defined format specification in the json-file was missing, falling back to default parser"
-        )
+    assert re.search("User-defined format specification .* missing", caplog.text)
+    assert re.search("default parser", caplog.text)
 
 
-def test_no_dialect_excel_cognate_parser(fs, caplog, empty_excel):
+def test_no_dialect_excel_cognate_parser(tmp_path, caplog, empty_excel):
     # ExcelCognateParser
+    path = tmp_path / "invented_path"
+    path.open("w").write("{}")
     with pytest.raises(ValueError):
         # mock empty json file
-        fs.create_file("invented_path", contents="{}")
-        f.load_dataset(
-            metadata="invented_path", lexicon=None, cognate_lexicon=empty_excel
-        )
-        assert re.search(
-            "User-defined format specification in the json-file was missing, falling back to default parser",
-            caplog.text,
-        )
+        f.load_dataset(metadata=path, lexicon=None, cognate_lexicon=empty_excel)
+    assert re.search("User-defined format specification .* missing", caplog.text)
+    assert re.search("default parser", caplog.text)
 
 
-def test_dialect_missing_key_excel_parser(fs, caplog, empty_excel):
+def test_dialect_missing_key_excel_parser(tmp_path, caplog, empty_excel):
     # ExcelParser
+    path = tmp_path / "invented_path"
+    path.open("w").write("""{"special:fromexcel": {}}""")
     with pytest.raises(ValueError):
-        fs.create_file("invented_path", contents="""{"special:fromexcel": {}}""")
-        f.load_dataset("invented_path", lexicon=empty_excel)
+        f.load_dataset(path, lexicon=empty_excel)
     assert re.search(
         "User-defined format specification in the json-file was missing the key lang_cell_regexes, "
         "falling back to default parser",
@@ -84,11 +83,12 @@ def test_dialect_missing_key_excel_parser(fs, caplog, empty_excel):
     )
 
 
-def test_dialect_missing_key_excel_cognate_parser(fs, caplog, empty_excel):
+def test_dialect_missing_key_excel_cognate_parser(tmp_path, caplog, empty_excel):
+    path = tmp_path / "invented_path"
+    path.open("w").write("""{"special:fromexcel": {}}""")
     # CognateExcelParser
     with pytest.raises(ValueError):
-        fs.create_file("invented_path", contents="""{"special:fromexcel": {}}""")
-        f.load_dataset("invented_path", lexicon=None, cognate_lexicon=empty_excel)
+        f.load_dataset(path, lexicon=None, cognate_lexicon=empty_excel)
     assert re.search(
         r"User-defined format specification in the json-file was missing the key .*falling back to default parser.*",
         caplog.text,

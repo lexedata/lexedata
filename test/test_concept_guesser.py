@@ -1,4 +1,5 @@
 from pathlib import Path
+import logging
 import tempfile
 import shutil
 import pytest
@@ -42,13 +43,12 @@ def test_value_error_no_concepticon_reference_for_concepts(caplog):
     with pytest.raises(
         ValueError,
     ):
-        add_central_concepts_to_cognateset_table(
-            dataset=dataset,
-            add_column=False,
-        )
-    assert re.search(
-        r"Dataset .* had no concepticonReference in a ParamterTable.*", caplog.text
-    )
+        with caplog.at_level(logging.INFO):
+            add_central_concepts_to_cognateset_table(
+                dataset=dataset,
+                add_column=False,
+            )
+    assert re.search(r"Dataset .* .*", caplog.text)
 
 
 def test_value_error_no_parameter_reference_for_cognateset(
