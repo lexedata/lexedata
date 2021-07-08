@@ -170,18 +170,24 @@ if __name__ == "__main__":
         help="Set concepticon reference even if one exists already",
     )
     parser.add_argument(
-        "--concepticon-glosses",
+        "--add-concept-set-names",
         action="store_true",
         default=False,
-        help="Add a column containing Concepticon's concept names (glosses)",
+        help="Add/update a column containing Concepticon's concept set names (glosses)",
     )
     parser.add_argument(
-        "--language",
+        "--add-definitions",
+        action="store_true",
+        default=False,
+        help="Add/update a column containing Concepticon's concept set definitions, for quick disambiguation",
+    )
+    parser.add_argument(
+        "--gloss-language",
         "-l",
         action="append",
         default=[],
         type=equal_separated,
-        help="Maps from column names to language codes, eg. '-l GLOSS=en'. "
+        help="Maps from column names to language codes, eg. '-l GLOSS=en -l PORTUGUESE=pt'. "
         "If no language mappings are given, try to understand the #id column in English.",
     )
     parser.add_argument(
@@ -195,7 +201,6 @@ if __name__ == "__main__":
     if args.status_update == "None":
         args.status_update = None
 
-    # TODO: @Gereon is pycldf.Wordlist instead of pycldf.Dataset correct?
     create_concepticon_for_concepts(
         dataset=pycldf.Wordlist.from_metadata(args.metadata),
         language=args.language,

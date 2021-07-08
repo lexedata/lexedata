@@ -106,13 +106,20 @@ def replace_column(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description="Change the ID of a concept in the wordlist")
+    parser = cli.parser(
+        description="Replace the ID of an object (eg. a language ID) in the wordlist"
+    )
+    parser.add_argument("table", type=str, help="The table to apply the replacement to")
     parser.add_argument(
         "original", type=str, help="Name of the original column to be replaced"
     )
     parser.add_argument("replacement", type=str, help="Name of the replacement column")
-    parser.add_argument("--column-replace", action="store_true", default=False)
-    parser.add_argument("--smush", action="store_true", default=False)
+    parser.add_argument(
+        "--merge",
+        action="store_true",
+        default=False,
+        help="When the replacement would lead to two IDs being merged, warn, but proceed.",
+    )
     parser.add_argument(
         "--status-update",
         type=str,
