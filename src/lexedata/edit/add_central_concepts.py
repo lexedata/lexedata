@@ -237,12 +237,6 @@ if __name__ == "__main__":
         after you heavily edited the cognate sets afterwards."""
     )
     parser.add_argument(
-        "--add-column",
-        default=False,
-        action="store_true",
-        help="Add column 'Core_Concept_ID' as new #parameterReference to #CognatesetTable (default)",
-    )
-    parser.add_argument(
         "--overwrite",
         action="store_true",
         default=False,
@@ -254,7 +248,8 @@ if __name__ == "__main__":
 
     add_central_concepts_to_cognateset_table(
         dataset,
-        add_column=args.add_column,
+        # TODO: Add column if it doesn't exist
+        add_column=True,
         overwrite_existing=args.overwrite,
         logger=logger,
     )
