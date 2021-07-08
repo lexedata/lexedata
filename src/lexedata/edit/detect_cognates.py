@@ -207,7 +207,7 @@ if __name__ == "__main__":
         " without extension .tsv (automatically added) (default: aligned)",
     )
     parser.add_argument(
-        "--soundclass",
+        "--sound-class",
         default="sca",
         choices=["sca", "dolgo", "asjp", "art"],
         help="Sound class model to use (default: sca)",
@@ -257,7 +257,7 @@ if __name__ == "__main__":
         metadata=args.metadata,
         ratio=args.ratio,
         cluster_method=args.clustering_method,
-        soundclass=args.soundclass,
+        soundclass=args.sound_class,
         mode=args.mode,
         threshold=args.threshold,
         initial_threshold=args.initial_threshold,
