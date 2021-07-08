@@ -330,9 +330,9 @@ def apply_heuristics(
     ...         propertyUrl="http://cldf.clld.org/v1.0/terms.rdf#parameterReference"))
     >>> ds.auto_constraints(cst)
     >>> ds.write(CognatesetTable=[
-    ...     {"ID": "cogset1", "Central_Concept": "concept1"}
+    ...     {"ID": "cognateset1", "Central_Concept": "concept1"}
     ... ])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustCentralConcept) == {'cogset1': {'concept1'}}
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustCentralConcept) == {'cognateset1': {'concept1'}}
     True
 
     This extends to the case where a cognateset may have more than one central concept.
@@ -346,10 +346,10 @@ def apply_heuristics(
     ...         separator=","))
     >>> ds.auto_constraints(cst)
     >>> ds.write(CognatesetTable=[
-    ...     {"ID": "cogset1", "Central_Concepts": ["concept1", "concept2"]}
+    ...     {"ID": "cognateset1", "Central_Concepts": ["concept1", "concept2"]}
     ... ])
     >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustCentralConcept) == {
-    ...     'cogset1': {'concept1', 'concept2'}}
+    ...     'cognateset1': {'concept1', 'concept2'}}
     True
 
     For the TrustHalfPrimaryConcepts heurisitc, the relevant concepts are all
@@ -399,10 +399,10 @@ def apply_heuristics(
                 relevant_concepts[j[c_s]].add(concept)
 
     elif heuristic is AbsenceHeuristic.TrustCentralConcept:
-        c_cogset_concept = dataset["CognatesetTable", "parameterReference"].name
+        c_cognateset_concept = dataset["CognatesetTable", "parameterReference"].name
         c_id = dataset["CognatesetTable", "id"].name
         for c in dataset["CognatesetTable"]:
-            for concept in util.ensure_list(c[c_cogset_concept]):
+            for concept in util.ensure_list(c[c_cognateset_concept]):
                 if concept not in primary_concepts:
                     logger.warning(
                         f"The central concept {concept} of cognateset {c[c_id]} was not part of your list of primary concepts to be included in the coding."
@@ -841,14 +841,14 @@ if __name__ == "__main__":
     else:
         concepts = types.WorldSet()
 
-    cogsets: t.Set[str]
-    if args.cogset_list:
-        cogsets = {
+    cognatesets: t.Set[str]
+    if args.cognateset_list:
+        cognatesets = {
             c.strip()
-            for c in args.cogset_list.open(encoding="utf-8").read().split("\n")
+            for c in args.cognateset_list.open(encoding="utf-8").read().split("\n")
         }
     else:
-        cogsets = types.WorldSet()
+        cognatesets = types.WorldSet()
 
     # Step 1: Load the raw data.
     ds: t.Mapping[Language_ID, t.Mapping[Parameter_ID, t.Set[Cognateset_ID]]] = {
@@ -866,11 +866,13 @@ if __name__ == "__main__":
         relevant_concepts = apply_heuristics(
             dataset, args.heuristic, primary_concepts=concepts
         )
-        binal, cogset_indices = root_presence_code(
+        binal, cognateset_indices = root_presence_code(
             ds, relevant_concepts=relevant_concepts, logger=logger
         )
         exclude = {
-            index for cogset, index in cogset_indices.items() if cogset not in cogsets
+            index
+            for cognateset, index in cognateset_indices.items()
+            if cognateset not in cognatesets
         }
         n_characters = len(next(iter(binal.values())))
         alignment = {
@@ -879,13 +881,13 @@ if __name__ == "__main__":
         }
         sequences = raw_binary_alignment(alignment)
     elif args.coding == "rootmeaning":
-        binal, concept_cogset_indices = root_meaning_code(ds)
+        binal, concept_cognateset_indices = root_meaning_code(ds)
         n_characters = len(next(iter(binal.values())))
         exclude = {
             index
-            for concept, cogset_indices in concept_cogset_indices.items()
-            for cogset, index in cogset_indices.items()
-            if cogset not in cogsets
+            for concept, cognateset_indices in concept_cognateset_indices.items()
+            for cognateset, index in cognateset_indices.items()
+            if cognateset not in cognatesets
         }
         alignment = {
             key: "".join([v for i, v in enumerate(value) if i not in exclude])
@@ -893,8 +895,8 @@ if __name__ == "__main__":
         }
         sequences = raw_binary_alignment(alignment)
         partitions = {
-            concept: cogsets.values()
-            for concept, cogsets in concept_cogset_indices.items()
+            concept: cognatesets.values()
+            for concept, cognatesets in concept_cognateset_indices.items()
         }
     elif args.coding == "multistate":
         multial, concept_indices = multistate_code(ds)
