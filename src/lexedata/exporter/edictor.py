@@ -12,7 +12,6 @@ import csv
 import sys
 import itertools
 import typing as t
-from enum import Enum
 from pathlib import Path
 
 import pycldf
@@ -22,15 +21,6 @@ import lexedata.cli as cli
 import lexedata.types as types
 import lexedata.report.nonconcatenative_morphemes
 from lexedata.util import parse_segment_slices, ensure_list
-
-
-# TODO: Maybe we should have these in cli and consolidate them between
-# different CLI scripts? Maybe we can even store the messages there, too, and
-# have a unified critical exit interface that needs only the name of the script
-# and the exit code and does everything?
-class Exit(Enum):
-    NO_COGNATETABLE = 3
-    NO_SEGMENTS = 4
 
 
 def rename(form_column, dataset):
@@ -179,7 +169,7 @@ def forms_to_tsv(
             Run `lexedata.edit.construct_cognate_table` if you have cognate sets in your FormTable.
             Run `lexedata.edit.cognate_code_data` if you want to start from automatic cognate detection."""
         )
-        sys.exit(Exit.NO_COGNATETABLE)
+        sys.exit(cli.Exit.NO_COGNATETABLE)
     c_form_language = dataset["FormTable", "languageReference"].name
     c_form_concept = dataset["FormTable", "parameterReference"].name
     c_form_id = dataset["FormTable", "id"].name
@@ -192,7 +182,7 @@ def forms_to_tsv(
         )
         # TODO: Exit.NO_SEGMENTS is not an `int`, so the exit code of the
         # python run is actually 1, not 4 as we wanted.
-        sys.exit(Exit.NO_SEGMENTS)
+        sys.exit(cli.Exit.NO_SEGMENTS)
 
     # prepare the header for the tsv output
     # the first column must be named ID and contain 1-based integer IDs

@@ -1,12 +1,23 @@
-from pathlib import Path
 import logging
 import argparse
 import typing as t
+from enum import Enum
+from pathlib import Path
 
 import tqdm
 
 logger = logging.getLogger("lexedata")
 logging.basicConfig(level=logging.INFO)
+
+
+# TODO: Maybe we should have these in cli and consolidate them between
+# different CLI scripts? Maybe we can even store the messages there, too, and
+# have a unified critical exit interface that needs only the name of the script
+# and the exit code and does everything?
+class Exit(Enum):
+    CLI_ARGUMENT_ERROR = 2
+    NO_COGNATETABLE = 3
+    NO_SEGMENTS = 4
 
 
 def tq(iter, logger=logger, total: t.Optional[t.Union[int, float]] = None):
