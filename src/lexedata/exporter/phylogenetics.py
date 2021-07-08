@@ -299,8 +299,8 @@ def root_meaning_code(
 
 
 class AbsenceHeuristic(enum.Enum):
-    TrustCentralConcept = 0
-    TrustHalfPrimaryConcepts = 1
+    CentralConcept = 0
+    HalfPrimaryConcepts = 1
 
 
 # TODO: Maybe this would make sense tied closer to AbsenceHeuristic?
@@ -771,18 +771,21 @@ if __name__ == "__main__":
         "--language-list",
         default=None,
         type=Path,
+        metavar="LANGUAGE_FILE",
         help="File to load a list of languages from",
     )
     parser.add_argument(
         "--concept-list",
         default=None,
         type=Path,
+        metavar="CONCEPT_FILE",
         help="File to load a list of concepts from",
     )
     parser.add_argument(
-        "--cogset-list",
+        "--cognateset-list",
         default=None,
         type=Path,
+        metavar="COGNATESETFILE_FILE",
         help="File to load a list of cognate sets from",
     )
     parser.add_argument(
@@ -800,7 +803,7 @@ if __name__ == "__main__":
         a meaning.""",
     )
     parser.add_argument(
-        "--heuristic",
+        "--absence-heuristic",
         type=AbsenceHeuristic.__getitem__,
         default=None,
         choices=list(AbsenceHeuristic.__members__),
