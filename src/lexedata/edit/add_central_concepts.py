@@ -1,6 +1,5 @@
 import typing as t
 import collections
-import logging
 
 from csvw.metadata import URITemplate
 import pycldf
@@ -177,7 +176,7 @@ def add_central_concepts_to_cognateset_table(
     dataset: pycldf.Dataset,
     add_column: bool = True,
     overwrite_existing: bool = True,
-    logger: logging.Logger = cli.logger,
+    logger: cli.logging.Logger = cli.logger,
 ) -> pycldf.Dataset:
     # create mapping cognateset to central concept
     try:
