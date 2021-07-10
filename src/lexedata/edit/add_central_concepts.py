@@ -182,7 +182,7 @@ def add_central_concepts_to_cognateset_table(
     try:
         clics: t.Optional[networkx.Graph] = load_clics()
     except FileNotFoundError:
-        logger.info("Clics could not be loaded.")
+        logger.warning("Clics could not be loaded.")
         clics = None
     concepts_of_cognateset: t.Mapping[
         CognatesetID, t.Counter[ConceptID]
@@ -195,7 +195,7 @@ def add_central_concepts_to_cognateset_table(
                 concepts, concept_to_concepticon, clics
             )
     else:
-        logger.info(
+        logger.warning(
             f"Dataset {dataset:} had no concepticonReference in a ParamterTable."
         )
         for cognateset, concepts in concepts_of_cognateset.items():
