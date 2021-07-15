@@ -177,7 +177,7 @@ def add_central_concepts_to_cognateset_table(
     dataset: pycldf.Dataset,
     add_column: bool = True,
     overwrite_existing: bool = True,
-    status_update: t.Optional = None
+    status_update: t.Optional = None,
 ) -> pycldf.Dataset:
     # create mapping cognateset to central concept
     try:
@@ -262,5 +262,5 @@ if __name__ == "__main__":
         dataset,
         add_column=args.add_column,
         overwrite_existing=args.overwrite,
-        status_update=args.status_update
+        status_update=args.status_update,
     )
