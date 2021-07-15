@@ -126,10 +126,41 @@ def add_concepticon_references(
     dataset.write(ParameterTable=write_back)
 
 
+def add_concepticon_definitions(
+    dataset: pycldf.Dataset,
+    column_name: str = "Concepticon_Definition",
+):
+    # Create a concepticon_definition column
+    try:
+        dataset.add_columns("ParameterTable", column_name)
+        dataset.write_metadata()
+    except ValueError:
+        raise ValueError(
+            f"{column_name} could not be added to ParameterTable of {dataset}."
+        )
+
+    # add Status_Column if status update
+    if status_update:
+        add_status_column_to_table(dataset=dataset, table_name="ParameterTable")
+
+    write_back = []
+    for row in dataset["ParameterTable"]:
+        try:
+            row[column_name] = concepticon.api.conceptsets[
+                row[dataset.column_names.parameters.concepticonReference]
+            ].definition
+        except KeyError:
+            pass
+        write_back.append(row)
+
+    dataset.write(ParameterTable=write_back)
+
+
 def create_concepticon_for_concepts(
     dataset: pycldf.Dataset,
     language: t.Iterable,
     concepticon_glosses: bool,
+    concepticon_definition: bool,
     overwrite: bool,
     status_update: t.Optional[str],
 ):
@@ -159,6 +190,8 @@ def create_concepticon_for_concepts(
 
     if concepticon_glosses:
         add_concepticon_names(dataset)
+    if concepticon_definition:
+        add_concepticon_definitions(dataset=dataset)
 
 
 if __name__ == "__main__":
@@ -174,6 +207,12 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="Add a column containing Concepticon's concept names (glosses)",
+    )
+    parser.add_argument(
+        "--concepticon-definition",
+        action="store_true",
+        default=False,
+        help="Add a column containing Concepticon's concept definition",
     )
     parser.add_argument(
         "--language",
@@ -200,6 +239,7 @@ if __name__ == "__main__":
         dataset=pycldf.Wordlist.from_metadata(args.metadata),
         language=args.language,
         concepticon_glosses=args.concepticon_glosses,
+        concepticon_definition=args.concepticon_definition,
         overwrite=args.overwrite,
         status_update=args.status_update,
     )
