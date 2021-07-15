@@ -9,8 +9,10 @@ from csvw.metadata import URITemplate
 from lexedata.edit.add_central_concepts import (
     add_central_concepts_to_cognateset_table,
 )
-from lexedata.edit.add_concepticon import create_concepticon_for_concepts
-from lexedata.edit.add_concepticon_definition import add_concepticon_definitions
+from lexedata.edit.add_concepticon import (
+    create_concepticon_for_concepts,
+    add_concepticon_definitions,
+)
 
 
 @pytest.fixture(params=["data/cldf/smallmawetiguarani/cldf-metadata.json"])
@@ -31,6 +33,7 @@ def copy_wordlist_add_concepticons(request):
         language=[],
         overwrite=False,
         concepticon_glosses=False,
+        concepticon_definition=False,
         status_update=None,
     )
     return target, dataset
@@ -87,19 +90,6 @@ def test_add_concepts_to_maweti_cognatesets(copy_wordlist_add_concepticons):
 
 
 # concepticon definition
-def test_no_concepticon_reference():
-    with pytest.raises(
-        ValueError,
-        match="This script requires a column ConcepticonReference. Run add_concepticon first",
-    ):
-        add_concepticon_definitions(
-            dataset=pycldf.Dataset.from_metadata(
-                Path(__file__).parent
-                / "data/cldf/smallmawetiguarani/cldf-metadata.json"
-            )
-        )
-
-
 def test_no_concepticon_definition_column_added():
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
@@ -115,7 +105,6 @@ def test_no_concepticon_definition_column_added():
     )
     dataset.write_metadata()
     dataset.write_metadata()
-    print(dataset.column_names)
     with pytest.raises(
         ValueError,
         match="Concepticon_Definition could not be added to ParameterTable of .*",
@@ -127,25 +116,22 @@ def test_concepticon_definitions(copy_wordlist_add_concepticons):
     target, dataset = copy_wordlist_add_concepticons
     column_name = "Concepticon_Definition"
     add_concepticon_definitions(
-        dataset=dataset, column_name=column_name, status_update="Test_status_Update"
+        dataset=dataset,
+        column_name=column_name,
     )
 
     concepticon_definitions = [
-        (str(row[column_name]), str(row["Status_Column"]))
-        for row in dataset["ParameterTable"]
+        str(row[column_name]) for row in dataset["ParameterTable"]
     ]
     assert concepticon_definitions == [
-        ("The natural number one (1).", "Test_status_Update"),
-        ("None", "Test_status_Update"),
-        ("The natural number two (2).", "Test_status_Update"),
-        ("None", "Test_status_Update"),
-        ("The natural number three (3).", "Test_status_Update"),
-        ("None", "Test_status_Update"),
-        ("The natural number four (4).", "Test_status_Update"),
-        ("None", "Test_status_Update"),
-        ("The natural number five (5).", "Test_status_Update"),
-        (
-            "That part of the fore limb below the forearm or wrist in primates (including humans).",
-            "Test_status_Update",
-        ),
+        "The natural number one (1).",
+        "None",
+        "The natural number two (2).",
+        "None",
+        "The natural number three (3).",
+        "None",
+        "The natural number four (4).",
+        "None",
+        "The natural number five (5).",
+        "That part of the fore limb below the forearm or wrist in primates (including humans).",
     ]

@@ -139,10 +139,6 @@ def add_concepticon_definitions(
             f"{column_name} could not be added to ParameterTable of {dataset}."
         )
 
-    # add Status_Column if status update
-    if status_update:
-        add_status_column_to_table(dataset=dataset, table_name="ParameterTable")
-
     write_back = []
     for row in dataset["ParameterTable"]:
         try:
