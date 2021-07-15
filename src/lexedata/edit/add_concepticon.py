@@ -138,7 +138,7 @@ def add_concepticon_definitions(
         raise ValueError(
             f"{column_name} could not be added to ParameterTable of {dataset}."
         )
-
+    # write concepticon definitions
     write_back = []
     for row in dataset["ParameterTable"]:
         try:
