@@ -278,8 +278,8 @@ def root_meaning_code(
     blocks = {}
     sorted_roots: t.Dict[types.Parameter_ID, t.List[types.Cognateset_ID]] = {}
     c = len(ascertainment)
-    for concept in sorted(roots, key=hash):
-        possible_roots = sorted(roots[concept], key=hash)
+    for concept in sorted(roots):
+        possible_roots = sorted(roots[concept])
         sorted_roots[concept] = possible_roots
         blocks[concept] = {root: r for r, root in enumerate(possible_roots, c)}
         c += len(possible_roots)
@@ -486,7 +486,7 @@ def root_presence_code(
             for cognateset in cognatesets:
                 language_roots[language].add(cognateset)
 
-    all_roots_sorted: t.Sequence[types.Cognateset_ID] = sorted(all_roots, key=hash)
+    all_roots_sorted: t.Sequence[types.Cognateset_ID] = sorted(all_roots)
 
     alignment = {}
     roots = {}
@@ -551,8 +551,7 @@ def multistate_code(
         for concept, cognatesets in lexicon.items():
             roots[concept].update(cognatesets)
     sorted_roots: t.Mapping[types.Parameter_ID, t.Sequence[types.Cognateset_ID]] = {
-        concept: sorted(cognatesets, key=hash)
-        for concept, cognatesets in sorted(roots.items())
+        concept: sorted(cognatesets) for concept, cognatesets in sorted(roots.items())
     }
 
     states: t.List[int] = [len(roots) for _, roots in sorted_roots.items()]
