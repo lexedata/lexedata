@@ -416,6 +416,7 @@ if __name__ == "__main__":
     # 'https://{special:domain}/values/{{:}}'? It would work for Lexibank and
     # for LexiRumah, is it robust enough?
     args = parser.parse_args()
+    cli.setup_logging(args)
     if args.status_update == "None":
         args.status_update = None
     E = ExcelWriter(
