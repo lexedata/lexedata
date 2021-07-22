@@ -129,21 +129,31 @@ def add_concepticon_references(
 def add_concepticon_definitions(
     dataset: pycldf.Dataset,
     column_name: str = "Concepticon_Definition",
-):
+    logger: cli.logging.Logger = cli.logger,
+) -> None:
+    concepticon_ids = dataset.column_names.parameters.concepticonReference
+    if concepticon_ids is None:
+        logger.error(
+            "Your concepts table has no concepticonReference, so I cannot add any definitions from Concepticon to it. Try running lexedata.edit.add_conception to have me guess those references."
+        )
+        return
+
     # Create a concepticon_definition column
-    try:
+    if column_name in dataset["ParameterTable"]:
+        logger.info(
+            "Overwriting existing {:} column in concepts table".format(column_name)
+        )
+    else:
         dataset.add_columns("ParameterTable", column_name)
         dataset.write_metadata()
-    except ValueError:
-        raise ValueError(
-            f"{column_name} could not be added to ParameterTable of {dataset}."
-        )
+        # Now if this throws an exception, it's an unexpected exception.
+
     # write concepticon definitions
     write_back = []
     for row in dataset["ParameterTable"]:
         try:
             row[column_name] = concepticon.api.conceptsets[
-                row[dataset.column_names.parameters.concepticonReference]
+                row[concepticon_ids]
             ].definition
         except KeyError:
             pass
