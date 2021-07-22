@@ -1,3 +1,5 @@
+import re
+import logging
 from pathlib import Path
 import tempfile
 import shutil
@@ -90,7 +92,7 @@ def test_add_concepts_to_maweti_cognatesets(copy_wordlist_add_concepticons):
 
 
 # concepticon definition
-def test_no_concepticon_definition_column_added():
+def test_no_concepticon_definition_column_added(caplog):
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / original.name
@@ -105,8 +107,9 @@ def test_no_concepticon_definition_column_added():
     dataset.add_columns("ParameterTable", "Concepticon_Definition")
     dataset.write_metadata()
     dataset.write(ParameterTable=[])
-    add_concepticon_definitions(dataset=dataset)
-    # TODO: Check warning!
+    with caplog.at_level(logging.INFO):
+        add_concepticon_definitions(dataset=dataset)
+    assert re.match("overwrit.*exising Concepticon_Definition", caplog.text)
 
 
 def test_concepticon_definitions(copy_wordlist_add_concepticons):

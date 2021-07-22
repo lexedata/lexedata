@@ -139,11 +139,12 @@ def add_concepticon_definitions(
         return
 
     # Create a concepticon_definition column
-    if column_name in dataset["ParameterTable"]:
+    try:
+        dataset["ParameterTable", column_name]
         logger.info(
             "Overwriting existing {:} column in concepts table".format(column_name)
         )
-    else:
+    except KeyError:
         dataset.add_columns("ParameterTable", column_name)
         dataset.write_metadata()
         # Now if this throws an exception, it's an unexpected exception.
