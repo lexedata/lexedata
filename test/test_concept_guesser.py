@@ -41,25 +41,6 @@ def copy_wordlist_add_concepticons(request):
     return target, dataset
 
 
-def test_value_error_no_concepticonReferenc_for_concepts():
-    with pytest.raises(ValueError):
-        add_central_concepts_to_cognateset_table(
-            pycldf.Dataset.from_metadata(
-                Path(__file__).parent
-                / "data/cldf/smallmawetiguarani/cldf-metadata.json"
-            ),
-            add_column=False,
-        )
-
-
-def test_value_error_no_parameterReference_for_cognateset(
-    copy_wordlist_add_concepticons,
-):
-    target, dataset = copy_wordlist_add_concepticons
-    with pytest.raises(ValueError):
-        add_central_concepts_to_cognateset_table(dataset, add_column=False)
-
-
 def test_concepticon_id_of_concepts_correct(copy_wordlist_add_concepticons):
     target, dataset = copy_wordlist_add_concepticons
     c_concepticon = dataset["ParameterTable", "concepticonReference"].name

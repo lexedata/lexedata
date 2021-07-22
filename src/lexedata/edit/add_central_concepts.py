@@ -7,6 +7,7 @@ import networkx
 
 from lexedata.util import load_clics
 from lexedata import cli
+from lexedata.edit.add_status_column import add_status_column_to_table
 
 FormID = str
 ConceptID = str
@@ -176,6 +177,7 @@ def add_central_concepts_to_cognateset_table(
     dataset: pycldf.Dataset,
     add_column: bool = True,
     overwrite_existing: bool = True,
+    status_update: t.Optional = None,
 ) -> pycldf.Dataset:
     # create mapping cognateset to central concept
     try:
@@ -202,7 +204,9 @@ def add_central_concepts_to_cognateset_table(
             f"Dataset {dataset:} had no parameterReference column in a CognatesetTable"
             " and is thus not compatible with this script."
         )
-
+    # if status update given, add status column
+    if status_update:
+        add_status_column_to_table(dataset=dataset, table_name="CognatesetTable")
     # write cognatesets with central concepts
     write_back = []
     for row in cli.tq(
@@ -212,6 +216,7 @@ def add_central_concepts_to_cognateset_table(
         if not overwrite_existing and row[c_core_concept]:
             continue
         row[c_core_concept] = central.get(row[dataset.column_names.cognatesets.id])
+        row["Status_Column"] = status_update
         write_back.append(row)
     dataset.write(CognatesetTable=write_back)
     return dataset
@@ -242,11 +247,20 @@ if __name__ == "__main__":
         default=False,
         help="Overwrite #parameterReference values of cognate sets already given in the dataset",
     )
+    parser.add_argument(
+        "--status-update",
+        type=str,
+        default="automatic central concepts",
+        help="Text written to Status_Column. Set to 'None' for no status update. "
+        "(default: automatic central concepts)",
+    )
     args = parser.parse_args()
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
-
+    if args.status_update == "None":
+        args.status_update = None
     add_central_concepts_to_cognateset_table(
         dataset,
         add_column=args.add_column,
         overwrite_existing=args.overwrite,
+        status_update=args.status_update,
     )
