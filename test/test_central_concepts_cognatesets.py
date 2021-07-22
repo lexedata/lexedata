@@ -29,6 +29,7 @@ def copy_wordlist_add_concepticons(request):
         language=[],
         overwrite=False,
         concepticon_glosses=False,
+        concepticon_definition=False,
         status_update=None,
     )
     return target, dataset
