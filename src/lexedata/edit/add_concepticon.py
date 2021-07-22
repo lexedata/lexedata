@@ -134,7 +134,7 @@ def add_concepticon_definitions(
     concepticon_ids = dataset.column_names.parameters.concepticonReference
     if concepticon_ids is None:
         logger.error(
-            "Your concepts table has no concepticonReference, so I cannot add any definitions from Concepticon to it. Try running lexedata.edit.add_conception to have me guess those references."
+            "Your concepts table has no #concepticonReference column, so I cannot add any definitions from Concepticon to it. Try running lexedata.edit.add_conception to have me guess those references."
         )
         return
 

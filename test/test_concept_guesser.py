@@ -91,7 +91,16 @@ def test_add_concepts_to_maweti_cognatesets(copy_wordlist_add_concepticons):
     assert all(c[0] in c[1] for c in concepts_for_cognatesets)
 
 
-# concepticon definition
+def test_concepticon_reference_missing():
+    original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    target = dirname / original.name
+    shutil.copyfile(original, target)
+    dataset = pycldf.Dataset.from_metadata(target)
+    with pytest.raises(ValueError, match="no #concepticonReference"):
+        add_concepticon_definitions(dataset=dataset)
+
+
 def test_no_concepticon_definition_column_added(caplog):
     original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
@@ -109,7 +118,7 @@ def test_no_concepticon_definition_column_added(caplog):
     dataset.write(ParameterTable=[])
     with caplog.at_level(logging.INFO):
         add_concepticon_definitions(dataset=dataset)
-    assert re.match("overwrit.*exising Concepticon_Definition", caplog.text)
+    assert re.match("[oO]verwrit.*exising Concepticon_Definition", caplog.text)
 
 
 def test_concepticon_definitions(copy_wordlist_add_concepticons):
