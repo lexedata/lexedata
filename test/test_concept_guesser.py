@@ -96,20 +96,17 @@ def test_no_concepticon_definition_column_added():
     target = dirname / original.name
     shutil.copyfile(original, target)
     dataset = pycldf.Dataset.from_metadata(target)
-    dataset.add_columns("ParameterTable", "Concepticon_Definition")
     dataset.add_columns("ParameterTable", "Concepticon_ID")
     c = dataset["ParameterTable"].tableSchema.columns[-1]
     c.valueUrl = "http://concepticon.clld.org/parameters/{Concepticon_ID}"
     c.propertyUrl = URITemplate(
         "http://cldf.clld.org/v1.0/terms.rdf#concepticonReference"
     )
+    dataset.add_columns("ParameterTable", "Concepticon_Definition")
     dataset.write_metadata()
-    dataset.write_metadata()
-    with pytest.raises(
-        ValueError,
-        match="Concepticon_Definition could not be added to ParameterTable of .*",
-    ):
-        add_concepticon_definitions(dataset=dataset)
+    dataset.write(ParameterTable=[])
+    add_concepticon_definitions(dataset=dataset)
+    # TODO: Check warning!
 
 
 def test_concepticon_definitions(copy_wordlist_add_concepticons):
