@@ -25,28 +25,17 @@ CognatesetID = str
 class ExcelWriter:
     """Class logic for cognateset Excel export."""
 
-    header = [("ID", "CogSet")]  # Add columns here for other datasets.
+    header: t.List[t.Tuple[str, str]]
 
     def __init__(
         self,
         dataset: pycldf.Dataset,
         database_url: t.Optional[str] = None,
-        add_central_concepts: bool = False,
         singleton_cognate: bool = False,
     ):
         self.dataset = dataset
-        self.add_concept = add_central_concepts
         self.singleton = singleton_cognate
         self.set_header()
-        # set column for concept reference
-        if self.add_concept:
-            try:
-                c_cogset_concept = self.dataset[
-                    "CognatesetTable", "parameterReference"
-                ].name
-                self.header.insert(1, (c_cogset_concept, "Central_Concept"))
-            except KeyError:
-                self.header.insert(1, ("", "Central_Concept"))
         if database_url:
             self.URL_BASE = database_url
         else:
@@ -73,6 +62,7 @@ class ExcelWriter:
         size_sort: bool = False,
         language_order="name",
         status_update: t.Optional[str] = None,
+        logger: cli.logging.Logger = cli.logger,
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -98,10 +88,11 @@ class ExcelWriter:
         """
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
-        # if status update, add column to self.header
-        # TODO: This should only be done if the CognatesetTable has a status column!
-        if status_update and self.singleton:
-            self.header.append(("", "Status_Column"))
+        if status_update is not None:
+            if ("Status_Column", "Status_Column") not in self.header:
+                logger.warning(
+                    f"You requested that I set the status of new singleton cognate sets to {status_update}, but your CognatesetTable has no Status_Column to write it to."
+                )
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
@@ -228,10 +219,6 @@ class ExcelWriter:
                     if db_name == c_cogset_id:
                         value = f"X{i+1}_{form[c_language]}"
                     elif db_name == c_cogset_name:
-                        value = concept_id_by_form_id[form_id]
-                    # or the header was set to Central_Concept by switch add_concepts
-                    # or cognateset dataset contains concept reference
-                    elif header == "Central_Concept":
                         value = concept_id_by_form_id[form_id]
                     elif db_name == c_cogset_concept:
                         value = concept_id_by_form_id[form_id]
