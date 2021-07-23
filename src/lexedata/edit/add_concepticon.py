@@ -126,10 +126,48 @@ def add_concepticon_references(
     dataset.write(ParameterTable=write_back)
 
 
+def add_concepticon_definitions(
+    dataset: pycldf.Dataset,
+    column_name: str = "Concepticon_Definition",
+    logger: cli.logging.Logger = cli.logger,
+) -> None:
+    concepticon_ids = dataset.column_names.parameters.concepticonReference
+    if concepticon_ids is None:
+        logger.error(
+            "Your concepts table has no #concepticonReference column, so I cannot add any definitions from Concepticon to it. Try running lexedata.edit.add_conception to have me guess those references."
+        )
+        return
+
+    # Create a concepticon_definition column
+    try:
+        dataset["ParameterTable", column_name]
+        logger.info(
+            "Overwriting existing {:} column in concepts table".format(column_name)
+        )
+    except KeyError:
+        dataset.add_columns("ParameterTable", column_name)
+        dataset.write_metadata()
+        # Now if this throws an exception, it's an unexpected exception.
+
+    # write concepticon definitions
+    write_back = []
+    for row in dataset["ParameterTable"]:
+        try:
+            row[column_name] = concepticon.api.conceptsets[
+                row[concepticon_ids]
+            ].definition
+        except KeyError:
+            pass
+        write_back.append(row)
+
+    dataset.write(ParameterTable=write_back)
+
+
 def create_concepticon_for_concepts(
     dataset: pycldf.Dataset,
     language: t.Iterable,
     concepticon_glosses: bool,
+    concepticon_definition: bool,
     overwrite: bool,
     status_update: t.Optional[str],
 ):
@@ -159,6 +197,8 @@ def create_concepticon_for_concepts(
 
     if concepticon_glosses:
         add_concepticon_names(dataset)
+    if concepticon_definition:
+        add_concepticon_definitions(dataset=dataset)
 
 
 if __name__ == "__main__":
@@ -205,6 +245,7 @@ if __name__ == "__main__":
         dataset=pycldf.Wordlist.from_metadata(args.metadata),
         language=args.language,
         concepticon_glosses=args.concepticon_glosses,
+        concepticon_definition=args.concepticon_definition,
         overwrite=args.overwrite,
         status_update=args.status_update,
     )
