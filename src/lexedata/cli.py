@@ -1,7 +1,8 @@
+import sys
 import logging
 import argparse
 import typing as t
-from enum import Enum
+from enum import IntEnum
 from pathlib import Path
 
 import tqdm
@@ -14,10 +15,15 @@ logging.basicConfig(level=logging.INFO)
 # different CLI scripts? Maybe we can even store the messages there, too, and
 # have a unified critical exit interface that needs only the name of the script
 # and the exit code and does everything?
-class Exit(Enum):
+class Exit(IntEnum):
     CLI_ARGUMENT_ERROR = 2
     NO_COGNATETABLE = 3
     NO_SEGMENTS = 4
+    INVALID_ID = 5
+
+    def __call__(self):
+        logger.error(self.name)
+        sys.exit(self)
 
 
 def tq(iter, logger=logger, total: t.Optional[t.Union[int, float]] = None):

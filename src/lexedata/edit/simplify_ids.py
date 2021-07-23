@@ -118,7 +118,10 @@ def update_integer_ids(
 
 
 def update_ids(
-    ds: pycldf.Dataset, table: csvw.metadata.Table, mapping: t.Mapping[str, str]
+    ds: pycldf.Dataset,
+    table: csvw.metadata.Table,
+    mapping: t.Mapping[str, str],
+    logger: cli.logging.Logger = cli.logger,
 ):
     """Update all IDs of the table in the database, also in foreign keys."""
     c_id = table.get_column("http://cldf.clld.org/v1.0/terms.rdf#id")
@@ -145,7 +148,9 @@ def update_ids(
     for other_table, columns in foreign_keys_to_here.items():
         if not columns:
             continue
-        logger.info(f"Applying changed foreign key to {other_table}…")
+        logger.info(
+            f"Applying changed foreign key to columns {columns:} in {other_table:}…"
+        )
         rows = []
         for row in cli.tq(
             ds[other_table], total=ds[other_table].common_props.get("dc:extent")
