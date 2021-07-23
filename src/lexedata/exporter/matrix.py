@@ -5,10 +5,6 @@ import pycldf
 
 from lexedata import cli
 
-raise NotImplementedError(
-    "This script is a stub, the core functionality is not implemented yet."
-)
-
 
 class ExcelWriter:
     """Class logic for Excel matrix export."""
@@ -17,6 +13,10 @@ class ExcelWriter:
 
 
 if __name__ == "__main__":
+    raise NotImplementedError(
+        "This script is a stub, the core functionality is not implemented yet."
+    )
+
     parser = cli.parser(description="Create an Excel matrix view from a CLDF dataset")
     parser.add_argument(
         "excel",

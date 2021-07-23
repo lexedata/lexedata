@@ -1,7 +1,7 @@
 import pycldf
 
-import cli
-from replace_id import replace_column
+from lexedata import cli
+from lexedata.edit.replace_id import replace_column
 
 
 if __name__ == "__main__":

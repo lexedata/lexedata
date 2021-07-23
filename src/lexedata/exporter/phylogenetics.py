@@ -317,7 +317,7 @@ def apply_heuristics(
     These concepts will be considered when deciding whether a root is deemed
     absent in a language.
 
-    For the TrustCentralConcept heuristic, the relevant concepts are the
+    For the CentralConcept heuristic, the relevant concepts are the
     central concept of a cognateset, as given by the #parameterReference column
     of the CognatesetTable. A central concept not included in the
     primary_concepts is ignored with a warning.
@@ -332,7 +332,7 @@ def apply_heuristics(
     >>> ds.write(CognatesetTable=[
     ...     {"ID": "cognateset1", "Central_Concept": "concept1"}
     ... ])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustCentralConcept) == {'cognateset1': {'concept1'}}
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CentralConcept) == {'cognateset1': {'concept1'}}
     True
 
     This extends to the case where a cognateset may have more than one central concept.
@@ -348,11 +348,11 @@ def apply_heuristics(
     >>> ds.write(CognatesetTable=[
     ...     {"ID": "cognateset1", "Central_Concepts": ["concept1", "concept2"]}
     ... ])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustCentralConcept) == {
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CentralConcept) == {
     ...     'cognateset1': {'concept1', 'concept2'}}
     True
 
-    For the TrustHalfPrimaryConcepts heurisitc, the relevant concepts are all
+    For the HalfPrimaryConcepts heurisitc, the relevant concepts are all
     primary concepts connected to a cognateset.
 
     >>> ds = util.fs.new_wordlist(
@@ -362,7 +362,7 @@ def apply_heuristics(
     ...     CognateTable=[
     ...         {"ID": "1", "Form_ID": "f1", "Cognateset_ID": "s1"},
     ...         {"ID": "2", "Form_ID": "f2", "Cognateset_ID": "s1"}])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustHalfPrimaryConcepts) == {
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.HalfPrimaryConcepts) == {
     ...     's1': {'c1', 'c2'}}
     True
 
@@ -375,9 +375,9 @@ def apply_heuristics(
         heuristic
         if heuristic is not None
         else (
-            AbsenceHeuristic.TrustCentralConcept
+            AbsenceHeuristic.CentralConcept
             if ("CognatesetTable", "parameterReference") in dataset
-            else AbsenceHeuristic.TrustHalfPrimaryConcepts
+            else AbsenceHeuristic.HalfPrimaryConcepts
         )
     )
 
@@ -385,7 +385,7 @@ def apply_heuristics(
         types.Cognateset_ID, t.Set[types.Parameter_ID]
     ] = t.DefaultDict(set)
 
-    if heuristic is AbsenceHeuristic.TrustHalfPrimaryConcepts:
+    if heuristic is AbsenceHeuristic.HalfPrimaryConcepts:
         c_f = dataset["CognateTable", "formReference"].name
         c_s = dataset["CognateTable", "cognatesetReference"].name
         concepts = util.cache_table(
@@ -398,7 +398,7 @@ def apply_heuristics(
             for concept in util.ensure_list(form["concepts"]):
                 relevant_concepts[j[c_s]].add(concept)
 
-    elif heuristic is AbsenceHeuristic.TrustCentralConcept:
+    elif heuristic is AbsenceHeuristic.CentralConcept:
         c_cognateset_concept = dataset["CognatesetTable", "parameterReference"].name
         c_id = dataset["CognatesetTable", "id"].name
         for c in dataset["CognatesetTable"]:
@@ -809,10 +809,10 @@ if __name__ == "__main__":
         help="""In case of --coding=rootpresence, which heuristic should be used for the
         coding of absences? The default depends on whether the dataset contains
         a #parameterReference column in its CognatesetTable: If there is one,
-        or for --heuristic=TrustCentralConcept, a root is considered absent
+        or for --heuristic=CentralConcept, a root is considered absent
         when that concept (or at least half of them, if it is multi-valued) are
         attested with other roots. In the other case, or for
-        --heuristic=TrustHalfPrimaryConcepts, a root is considered absent when
+        --heuristic=HalfPrimaryConcepts, a root is considered absent when
         at least half the the concepts it is connected to are attested with
         other roots in the language.""",
     )
