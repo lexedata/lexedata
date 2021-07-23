@@ -129,7 +129,6 @@ def parse_segment_slices(
             yield i
 
 
-# TODO: Is this logic sound?
 def cache_table(
     dataset,
     table: t.Optional[str] = None,

@@ -1,8 +1,8 @@
 import re
-import logging
-from pathlib import Path
-import tempfile
 import shutil
+import logging
+import tempfile
+from pathlib import Path
 
 import pytest
 import pycldf
@@ -17,6 +17,7 @@ from lexedata.edit.add_concepticon import (
 )
 
 
+# TODO: Discuss this with Gereon. This fixture seems dangerous as we call a function that we test at another place
 @pytest.fixture(params=["data/cldf/smallmawetiguarani/cldf-metadata.json"])
 def copy_wordlist_add_concepticons(request):
     original = Path(__file__).parent / request.param
@@ -39,6 +40,32 @@ def copy_wordlist_add_concepticons(request):
         status_update=None,
     )
     return target, dataset
+
+
+def test_value_error_no_concepticon_reference_for_concepts(caplog):
+    dataset = pycldf.Dataset.from_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    with pytest.raises(
+        ValueError,
+    ):
+        with caplog.at_level(logging.INFO):
+            add_central_concepts_to_cognateset_table(
+                dataset=dataset,
+                add_column=False,
+            )
+    assert re.search(r"Dataset .* .*", caplog.text)
+
+
+def test_value_error_no_parameter_reference_for_cognateset(
+    copy_wordlist_add_concepticons,
+):
+    target, dataset = copy_wordlist_add_concepticons
+    with pytest.raises(
+        ValueError,
+        match="Dataset .* had no parameterReference column in a CognatesetTable.*",
+    ):
+        add_central_concepts_to_cognateset_table(dataset, add_column=False)
 
 
 def test_concepticon_id_of_concepts_correct(copy_wordlist_add_concepticons):

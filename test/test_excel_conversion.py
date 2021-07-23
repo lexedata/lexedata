@@ -1,5 +1,4 @@
 import pytest
-import shutil
 import tempfile
 import itertools
 from pathlib import Path
@@ -7,6 +6,12 @@ from pathlib import Path
 import pycldf
 import openpyxl
 
+from helper_functions import (
+    copy_to_temp,
+    copy_to_temp_no_bib,
+    copy_to_temp_bad_bib,
+    empty_copy_of_cldf_wordlist,
+)
 import lexedata.importer.excel_matrix as f
 from lexedata.exporter.cognates import ExcelWriter
 from lexedata.importer.cognates import import_cognates_from_excel
@@ -20,20 +25,6 @@ from lexedata.importer.cognates import import_cognates_from_excel
 )
 def cldf_wordlist(request):
     return Path(__file__).parent / request.param
-
-
-def empty_copy_of_cldf_wordlist(cldf_wordlist):
-    # Copy the dataset metadata file to a temporary directory.
-    original = Path(__file__).parent / cldf_wordlist
-    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
-    target = dirname / original.name
-    shutil.copyfile(original, target)
-    # Create empty (because of the empty row list passed) csv files for the
-    # dataset, one for each table, with only the appropriate headers in there.
-    dataset = pycldf.Dataset.from_metadata(target)
-    dataset.write(**{str(table.url): [] for table in dataset.tables})
-    # Return the dataset API handle, which knows the metadata and tables.
-    return dataset, original
 
 
 @pytest.fixture(
@@ -56,44 +47,6 @@ def excel_wordlist(request):
         Path(__file__).parent / request.param[1],
         empty_copy_of_cldf_wordlist(Path(__file__).parent / request.param[2]),
     )
-
-
-def copy_to_temp(cldf_wordlist):
-    """Copy the dataset to a different temporary location, so that editing the dataset will not change it."""
-    original = cldf_wordlist
-    dataset = pycldf.Dataset.from_metadata(original)
-    orig_bibpath = dataset.bibpath
-
-    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
-    target = dirname / original.name
-    shutil.copyfile(original, target)
-    dataset = pycldf.Dataset.from_metadata(target)
-    for table in dataset.tables:
-        link = Path(str(table.url))
-        o = original.parent / link
-        t = target.parent / link
-        shutil.copyfile(o, t)
-    link = dataset.bibpath.name
-    o = original.parent / link
-    t = target.parent / link
-    shutil.copyfile(o, t)
-    shutil.copyfile(orig_bibpath, dataset.bibpath)
-    return dataset, target
-
-
-def copy_to_temp_no_bib(cldf_wordlist):
-    """Copy the dataset to a temporary location, then delete the sources file."""
-    dataset, target = copy_to_temp(cldf_wordlist)
-    dataset.bibpath.unlink()
-    return dataset, target
-
-
-def copy_to_temp_bad_bib(cldf_wordlist):
-    """Copy the dataset to a temporary location, then mess with the source file syntax."""
-    dataset, target = copy_to_temp(cldf_wordlist)
-    with dataset.bibpath.open("a") as bibfile:
-        bibfile.write("\n { \n")
-    return dataset, target
 
 
 @pytest.fixture(

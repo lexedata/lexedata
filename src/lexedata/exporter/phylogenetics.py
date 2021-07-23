@@ -57,11 +57,13 @@ def read_cldf_dataset(
 
     Examples
     --------
-
-    >>> _size = open("forms.csv", "w").write('''
+    >>> import tempfile
+    >>> dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    >>> target = dirname / "forms.csv"
+    >>> _size = open(target, "w").write('''
     ... ID,Language_ID,Parameter_ID,Form,Cognateset_ID
     ... '''.strip())
-    >>> ds = pycldf.Wordlist.from_data("forms.csv")
+    >>> ds = pycldf.Wordlist.from_data(target)
 
     {'autaa': defaultdict(<class 'set'>, {'Woman': {'WOMAN1'}, 'Person': {'PERSON1'}})}
     TODO: FIXME THIS EXAMPLE IS INCOMPLETE
