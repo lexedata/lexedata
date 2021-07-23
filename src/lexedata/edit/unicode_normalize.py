@@ -11,12 +11,14 @@ import unicodedata
 from lexedata import cli
 
 
+def n(s: str) -> str:
+    return unicodedata.normalize("NFC", s)
+
+
 def normalize(file, original_encoding="utf-8"):
     # TODO: If this ever takes more than a second, add a cli.tq progress bar
     content = file.open(encoding=original_encoding).read()
-    file.open("w", encoding=original_encoding).write(
-        unicodedata.normalize("NFC", content)
-    )
+    file.open("w", encoding=original_encoding).write(n(content))
 
 
 if __name__ == "__main__":

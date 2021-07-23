@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-import unicodedata
 import argparse
 from pathlib import Path
 import json
@@ -10,6 +9,7 @@ import re
 import pycldf
 
 
+from lexedata.edit.unicode_normalize import n
 from lexedata.util import excel as c
 from helper_functions import copy_metadata
 
@@ -18,7 +18,7 @@ from helper_functions import copy_metadata
 def no_dialect(request):
     # Copy the dataset metadata file to a temporary directory.
     target = copy_metadata(Path(__file__).parent / request.param)
-    with open(target, "r+", encoding="utf8") as file:
+    with open(target, "r", encoding="utf-8") as file:
         j = json.load(file)
         j["special:fromexcel"] = {}
         j["tables"][0] = {
@@ -132,11 +132,6 @@ def test_fields_of_formtable_no_transcription(no_dialect):
                 ("{", "}", "source", False),
             ],
         )
-
-
-# TODO: discuss with Gereon, these function might be deprecated
-def n(s: str):
-    return unicodedata.normalize("NFKC", s)
 
 
 @pytest.fixture
