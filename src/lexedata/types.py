@@ -87,11 +87,11 @@ class Judgement(RowObject):
         return "CognateTable"
 
 
-Language_ID = t.TypeVar("Language_ID", bound=t.Hashable)
-Form_ID = t.TypeVar("Form_ID", bound=t.Hashable)
-Parameter_ID = t.TypeVar("Parameter_ID", bound=t.Hashable)
-Cognate_ID = t.TypeVar("Cognate_ID", bound=t.Hashable)
-Cognateset_ID = t.TypeVar("Cognateset_ID", bound=t.Hashable)
+Language_ID = t.TypeVar("Language_ID", bound=t.Union[str, int])
+Form_ID = t.TypeVar("Form_ID", bound=t.Union[str, int])
+Parameter_ID = t.TypeVar("Parameter_ID", bound=t.Union[str, int])
+Cognate_ID = t.TypeVar("Cognate_ID", bound=t.Union[str, int])
+Cognateset_ID = t.TypeVar("Cognateset_ID", bound=t.Union[str, int])
 
 
 class Wordlist(

@@ -5,8 +5,8 @@ from csvw.metadata import URITemplate
 import pycldf
 import networkx
 
-from lexedata.util import load_clics
 from lexedata import cli
+from lexedata.util import load_clics
 from lexedata.edit.add_status_column import add_status_column_to_table
 
 FormID = str
@@ -241,12 +241,6 @@ if __name__ == "__main__":
         after you heavily edited the cognate sets afterwards."""
     )
     parser.add_argument(
-        "--add-column",
-        default=False,
-        action="store_true",
-        help="Add column 'Core_Concept_ID' as new #parameterReference to #CognatesetTable (default)",
-    )
-    parser.add_argument(
         "--overwrite",
         action="store_true",
         default=False,
@@ -266,7 +260,8 @@ if __name__ == "__main__":
         args.status_update = None
     add_central_concepts_to_cognateset_table(
         dataset,
-        add_column=args.add_column,
+        # TODO: Add column if it doesn't exist
+        add_column=True,
         overwrite_existing=args.overwrite,
         logger=logger,
         status_update=args.status_update,

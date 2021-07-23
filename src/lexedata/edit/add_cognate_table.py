@@ -5,6 +5,7 @@ If the dataset has no cognatesetReference column anywhere, add an empty CognateT
 If the dataset has a cognatesetReference in the FormTable, extract that to a separate cognateTable, also transferring alignments if they exist.
 If the dataset has a cognatesetReference anywhere else, admit you don't know what is going on and die.
 """
+import sys
 
 import pycldf
 
@@ -107,13 +108,24 @@ def add_cognate_table(
 if __name__ == "__main__":
     parser = cli.parser(__doc__)
     parser.add_argument(
-        "--split-cognatesets",
-        action="store_true",
+        "--unique-id",
+        choices=["dataset", "concept"],
         default=False,
-        help="Assume that cognatesets are only uniquie within concepts, and make them globally unique in the process.",
+        help="Are cognateset IDs unique over the whole *dataset* (including, but not limited to, cross-meaning cognatesets), or are they unique only *within a concept* (eg. cognateset 1 for concept ‘the hand’ has no relation cognateset 1 for concept ‘to eat’",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
+    split: bool
+    if args.unique_id == "dataset":
+        split = False
+    elif args.unique_id == "concept":
+        split = True
+    else:
+        logger.error(
+            "You must specify whether cognateset have dataset-wide unique ids or not (--unique-id)"
+        )
+        sys.exit(cli.Exit.CLI_ARGUMENT_ERROR)
+
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
-    add_cognate_table(dataset, split=args.split_cognatesets)
+    add_cognate_table(dataset, split=split)

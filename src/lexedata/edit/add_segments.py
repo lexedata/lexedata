@@ -249,7 +249,7 @@ def add_segments_to_dataset(
 if __name__ == "__main__":
     parser = cli.parser(description=__doc__)
     parser.add_argument(
-        "transcription",
+        "transcription-column",
         nargs="?",
         default=None,
         help="Column containing the IPA transcriptions. Default: The CLDF #form column",
@@ -272,11 +272,15 @@ if __name__ == "__main__":
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
-    if args.transcription is None:
-        args.transcription = dataset.column_names.forms.form
+    if args.transcription_column is None:
+        args.transcription_column = dataset.column_names.forms.form
     # add segments to FormTable
     report = add_segments_to_dataset(
-        dataset, args.transcription, args.overwrite, args.replace_form, logger=logger
+        dataset,
+        args.transcription_column,
+        args.overwrite,
+        args.replace_form,
+        logger=logger,
     )
     data = []
     for lan, segment_report in report.items():

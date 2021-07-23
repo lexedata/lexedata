@@ -120,7 +120,7 @@ def read_wordlist(
                 "code": dataset["FormTable", code_column].name,
             },
         )
-        target = col_map.forms.id
+        form_table_column = col_map.forms.id
     else:
         # We search for cognatesetReferences in the FormTable or a separate
         # CognateTable.
@@ -136,7 +136,7 @@ def read_wordlist(
             cognatesets = util.cache_table(
                 dataset, columns={"form": col_map.forms.id, "code": code_column}
             )
-            target = col_map.forms.id
+            form_table_column = col_map.forms.id
         else:
             # There was no cognatesetReference in the form table. If we
             # find them in CognateTable (I mean, they should be there!), we
@@ -153,7 +153,7 @@ def read_wordlist(
                     for key in dataset["CognateTable"].tableSchema.foreignKeys
                     if key.columnReference == [form_reference]
                 ]
-                (target,) = foreign_key.reference.columnReference
+                (form_table_column,) = foreign_key.reference.columnReference
                 cognatesets = util.cache_table(
                     dataset,
                     "CognateTable",
@@ -202,7 +202,7 @@ def read_wordlist(
     for row in dataset["FormTable"].iterdicts():
         language = row[col_map.forms.languageReference]
         for parameter in all_parameters(row[parameter_column]):
-            data[language][parameter] |= cognates_by_form[row[target]]
+            data[language][parameter] |= cognates_by_form[row[form_table_column]]
     return data
 
 
@@ -278,8 +278,8 @@ def root_meaning_code(
     blocks = {}
     sorted_roots: t.Dict[types.Parameter_ID, t.List[types.Cognateset_ID]] = {}
     c = len(ascertainment)
-    for concept in sorted(roots, key=hash):
-        possible_roots = sorted(roots[concept], key=hash)
+    for concept in sorted(roots):
+        possible_roots = sorted(roots[concept])
         sorted_roots[concept] = possible_roots
         blocks[concept] = {root: r for r, root in enumerate(possible_roots, c)}
         c += len(possible_roots)
@@ -299,8 +299,8 @@ def root_meaning_code(
 
 
 class AbsenceHeuristic(enum.Enum):
-    TrustCentralConcept = 0
-    TrustHalfPrimaryConcepts = 1
+    CentralConcept = 0
+    HalfPrimaryConcepts = 1
 
 
 # TODO: Maybe this would make sense tied closer to AbsenceHeuristic?
@@ -317,7 +317,7 @@ def apply_heuristics(
     These concepts will be considered when deciding whether a root is deemed
     absent in a language.
 
-    For the TrustCentralConcept heuristic, the relevant concepts are the
+    For the CentralConcept heuristic, the relevant concepts are the
     central concept of a cognateset, as given by the #parameterReference column
     of the CognatesetTable. A central concept not included in the
     primary_concepts is ignored with a warning.
@@ -330,9 +330,9 @@ def apply_heuristics(
     ...         propertyUrl="http://cldf.clld.org/v1.0/terms.rdf#parameterReference"))
     >>> ds.auto_constraints(cst)
     >>> ds.write(CognatesetTable=[
-    ...     {"ID": "cogset1", "Central_Concept": "concept1"}
+    ...     {"ID": "cognateset1", "Central_Concept": "concept1"}
     ... ])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustCentralConcept) == {'cogset1': {'concept1'}}
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CentralConcept) == {'cognateset1': {'concept1'}}
     True
 
     This extends to the case where a cognateset may have more than one central concept.
@@ -346,13 +346,13 @@ def apply_heuristics(
     ...         separator=","))
     >>> ds.auto_constraints(cst)
     >>> ds.write(CognatesetTable=[
-    ...     {"ID": "cogset1", "Central_Concepts": ["concept1", "concept2"]}
+    ...     {"ID": "cognateset1", "Central_Concepts": ["concept1", "concept2"]}
     ... ])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustCentralConcept) == {
-    ...     'cogset1': {'concept1', 'concept2'}}
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CentralConcept) == {
+    ...     'cognateset1': {'concept1', 'concept2'}}
     True
 
-    For the TrustHalfPrimaryConcepts heurisitc, the relevant concepts are all
+    For the HalfPrimaryConcepts heurisitc, the relevant concepts are all
     primary concepts connected to a cognateset.
 
     >>> ds = util.fs.new_wordlist(
@@ -362,7 +362,7 @@ def apply_heuristics(
     ...     CognateTable=[
     ...         {"ID": "1", "Form_ID": "f1", "Cognateset_ID": "s1"},
     ...         {"ID": "2", "Form_ID": "f2", "Cognateset_ID": "s1"}])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.TrustHalfPrimaryConcepts) == {
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.HalfPrimaryConcepts) == {
     ...     's1': {'c1', 'c2'}}
     True
 
@@ -375,9 +375,9 @@ def apply_heuristics(
         heuristic
         if heuristic is not None
         else (
-            AbsenceHeuristic.TrustCentralConcept
+            AbsenceHeuristic.CentralConcept
             if ("CognatesetTable", "parameterReference") in dataset
-            else AbsenceHeuristic.TrustHalfPrimaryConcepts
+            else AbsenceHeuristic.HalfPrimaryConcepts
         )
     )
 
@@ -385,7 +385,7 @@ def apply_heuristics(
         types.Cognateset_ID, t.Set[types.Parameter_ID]
     ] = t.DefaultDict(set)
 
-    if heuristic is AbsenceHeuristic.TrustHalfPrimaryConcepts:
+    if heuristic is AbsenceHeuristic.HalfPrimaryConcepts:
         c_f = dataset["CognateTable", "formReference"].name
         c_s = dataset["CognateTable", "cognatesetReference"].name
         concepts = util.cache_table(
@@ -398,11 +398,11 @@ def apply_heuristics(
             for concept in util.ensure_list(form["concepts"]):
                 relevant_concepts[j[c_s]].add(concept)
 
-    elif heuristic is AbsenceHeuristic.TrustCentralConcept:
-        c_cogset_concept = dataset["CognatesetTable", "parameterReference"].name
+    elif heuristic is AbsenceHeuristic.CentralConcept:
+        c_cognateset_concept = dataset["CognatesetTable", "parameterReference"].name
         c_id = dataset["CognatesetTable", "id"].name
         for c in dataset["CognatesetTable"]:
-            for concept in util.ensure_list(c[c_cogset_concept]):
+            for concept in util.ensure_list(c[c_cognateset_concept]):
                 if concept not in primary_concepts:
                     logger.warning(
                         f"The central concept {concept} of cognateset {c[c_id]} was not part of your list of primary concepts to be included in the coding."
@@ -486,7 +486,7 @@ def root_presence_code(
             for cognateset in cognatesets:
                 language_roots[language].add(cognateset)
 
-    all_roots_sorted: t.Sequence[types.Cognateset_ID] = sorted(all_roots, key=hash)
+    all_roots_sorted: t.Sequence[types.Cognateset_ID] = sorted(all_roots)
 
     alignment = {}
     roots = {}
@@ -551,8 +551,7 @@ def multistate_code(
         for concept, cognatesets in lexicon.items():
             roots[concept].update(cognatesets)
     sorted_roots: t.Mapping[types.Parameter_ID, t.Sequence[types.Cognateset_ID]] = {
-        concept: sorted(cognatesets, key=hash)
-        for concept, cognatesets in sorted(roots.items())
+        concept: sorted(cognatesets) for concept, cognatesets in sorted(roots.items())
     }
 
     states: t.List[int] = [len(roots) for _, roots in sorted_roots.items()]
@@ -722,7 +721,7 @@ def add_partitions(data_object: ET.Element, partitions):
     for name, indices in partitions.items():
         indices_set = compress_indices(set(indices))
         indices_string = ",".join(
-            "{:d}-{:d}".format(s.start, s.stop) for s in indices_set
+            "{:d}-{:d}".format(s.start + 1, s.stop) for s in indices_set
         )
         previous_alignment.addnext(
             data_object.makeelement(
@@ -730,7 +729,7 @@ def add_partitions(data_object: ET.Element, partitions):
                 {
                     "id": "concept:" + name,
                     "spec": "FilteredAlignment",
-                    "filter": "0," + indices_string,
+                    "filter": "1," + indices_string,
                     "data": "@" + data_object.attrib["id"],
                     "ascertained": "true",
                     "excludefrom": "0",
@@ -771,18 +770,21 @@ if __name__ == "__main__":
         "--language-list",
         default=None,
         type=Path,
+        metavar="LANGUAGE_FILE",
         help="File to load a list of languages from",
     )
     parser.add_argument(
         "--concept-list",
         default=None,
         type=Path,
+        metavar="CONCEPT_FILE",
         help="File to load a list of concepts from",
     )
     parser.add_argument(
-        "--cogset-list",
+        "--cognateset-list",
         default=None,
         type=Path,
+        metavar="COGNATESETFILE_FILE",
         help="File to load a list of cognate sets from",
     )
     parser.add_argument(
@@ -800,17 +802,17 @@ if __name__ == "__main__":
         a meaning.""",
     )
     parser.add_argument(
-        "--heuristic",
+        "--absence-heuristic",
         type=AbsenceHeuristic.__getitem__,
         default=None,
         choices=list(AbsenceHeuristic.__members__),
         help="""In case of --coding=rootpresence, which heuristic should be used for the
         coding of absences? The default depends on whether the dataset contains
         a #parameterReference column in its CognatesetTable: If there is one,
-        or for --heuristic=TrustCentralConcept, a root is considered absent
+        or for --heuristic=CentralConcept, a root is considered absent
         when that concept (or at least half of them, if it is multi-valued) are
         attested with other roots. In the other case, or for
-        --heuristic=TrustHalfPrimaryConcepts, a root is considered absent when
+        --heuristic=HalfPrimaryConcepts, a root is considered absent when
         at least half the the concepts it is connected to are attested with
         other roots in the language.""",
     )
@@ -838,14 +840,14 @@ if __name__ == "__main__":
     else:
         concepts = types.WorldSet()
 
-    cogsets: t.Set[str]
-    if args.cogset_list:
-        cogsets = {
+    cognatesets: t.Set[str]
+    if args.cognateset_list:
+        cognatesets = {
             c.strip()
-            for c in args.cogset_list.open(encoding="utf-8").read().split("\n")
+            for c in args.cognateset_list.open(encoding="utf-8").read().split("\n")
         }
     else:
-        cogsets = types.WorldSet()
+        cognatesets = types.WorldSet()
 
     # Step 1: Load the raw data.
     ds: t.Mapping[Language_ID, t.Mapping[Parameter_ID, t.Set[Cognateset_ID]]] = {
@@ -863,11 +865,13 @@ if __name__ == "__main__":
         relevant_concepts = apply_heuristics(
             dataset, args.heuristic, primary_concepts=concepts
         )
-        binal, cogset_indices = root_presence_code(
+        binal, cognateset_indices = root_presence_code(
             ds, relevant_concepts=relevant_concepts, logger=logger
         )
         exclude = {
-            index for cogset, index in cogset_indices.items() if cogset not in cogsets
+            index
+            for cognateset, index in cognateset_indices.items()
+            if cognateset not in cognatesets
         }
         n_characters = len(next(iter(binal.values())))
         alignment = {
@@ -876,13 +880,13 @@ if __name__ == "__main__":
         }
         sequences = raw_binary_alignment(alignment)
     elif args.coding == "rootmeaning":
-        binal, concept_cogset_indices = root_meaning_code(ds)
+        binal, concept_cognateset_indices = root_meaning_code(ds)
         n_characters = len(next(iter(binal.values())))
         exclude = {
             index
-            for concept, cogset_indices in concept_cogset_indices.items()
-            for cogset, index in cogset_indices.items()
-            if cogset not in cogsets
+            for concept, cognateset_indices in concept_cognateset_indices.items()
+            for cognateset, index in cognateset_indices.items()
+            if cognateset not in cognatesets
         }
         alignment = {
             key: "".join([v for i, v in enumerate(value) if i not in exclude])
@@ -890,8 +894,8 @@ if __name__ == "__main__":
         }
         sequences = raw_binary_alignment(alignment)
         partitions = {
-            concept: cogsets.values()
-            for concept, cogsets in concept_cogset_indices.items()
+            concept: cognatesets.values()
+            for concept, cognatesets in concept_cognateset_indices.items()
         }
     elif args.coding == "multistate":
         multial, concept_indices = multistate_code(ds)

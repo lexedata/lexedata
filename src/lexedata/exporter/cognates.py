@@ -25,28 +25,17 @@ CognatesetID = str
 class ExcelWriter:
     """Class logic for cognateset Excel export."""
 
-    header = [("ID", "CogSet")]  # Add columns here for other datasets.
+    header: t.List[t.Tuple[str, str]]
 
     def __init__(
         self,
         dataset: pycldf.Dataset,
         database_url: t.Optional[str] = None,
-        add_central_concepts: bool = False,
         singleton_cognate: bool = False,
     ):
         self.dataset = dataset
-        self.add_concept = add_central_concepts
         self.singleton = singleton_cognate
         self.set_header()
-        # set column for concept reference
-        if self.add_concept:
-            try:
-                c_cogset_concept = self.dataset[
-                    "CognatesetTable", "parameterReference"
-                ].name
-                self.header.insert(1, (c_cogset_concept, "Central_Concept"))
-            except KeyError:
-                self.header.insert(1, ("", "Central_Concept"))
         if database_url:
             self.URL_BASE = database_url
         else:
@@ -73,6 +62,7 @@ class ExcelWriter:
         size_sort: bool = False,
         language_order="name",
         status_update: t.Optional[str] = None,
+        logger: cli.logging.Logger = cli.logger,
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -98,9 +88,11 @@ class ExcelWriter:
         """
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
-        # if status update, add column to self.header
-        if status_update and self.singleton:
-            self.header.append(("", "Status_Column"))
+        if status_update is not None:
+            if ("Status_Column", "Status_Column") not in self.header:
+                logger.warning(
+                    f"You requested that I set the status of new singleton cognate sets to {status_update}, but your CognatesetTable has no Status_Column to write it to."
+                )
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
@@ -227,10 +219,6 @@ class ExcelWriter:
                     if db_name == c_cogset_id:
                         value = f"X{i+1}_{form[c_language]}"
                     elif db_name == c_cogset_name:
-                        value = concept_id_by_form_id[form_id]
-                    # or the header was set to Central_Concept by switch add_concepts
-                    # or cognateset dataset contains concept reference
-                    elif header == "Central_Concept":
                         value = concept_id_by_form_id[form_id]
                     elif db_name == c_cogset_concept:
                         value = concept_id_by_form_id[form_id]
@@ -386,7 +374,8 @@ if __name__ == "__main__":
         help="List the biggest cognatesets first",
     )
     parser.add_argument(
-        "--language-sort-column", help="A column name to sort languages by"
+        "--sort-languages-by",
+        help="The name of a column in the LanguageTable to sort languages by in the output",
     )
     parser.add_argument(
         "--url-template",
@@ -397,41 +386,36 @@ if __name__ == "__main__":
         " (default: https://example.org/lexicon/{:})",
     )
     parser.add_argument(
-        "--add-concepts",
-        action="store_true",
-        default=False,
-        help="Output the central concept associated with each cognateset",
+        "--add-singletons-with-status",
+        default=None,
+        metavar="MESSAGE",
+        help="Include in the output all forms that don't belong to a cognateset. For each form, a singleton cognateset is created, and its status column (if there is one) is set to MESSAGE.",
     )
     parser.add_argument(
         "--add-singletons",
-        action="store_true",
-        default=False,
-        help="Output all forms that don't belong to a cognateset. "
-        "For each form, a singleton cognateset is created.",
-    )
-    parser.add_argument(
-        "--status-update",
-        type=str,
-        default="automatic singleton",
-        help="Text written to Status_Column. Set to 'None' for no status update. "
-        "(default: automatic singleton)",
+        action="store_const",
+        const="automatic singleton",
+        help="Short for `--add-singletons-with-status='automatic singleton'`",
+        dest="add_singletons_with_status",
     )
     # TODO: Derive URL template from the "special:domain" property of the
     # wordlist, where it exists? So something like
     # 'https://{special:domain}/values/{{:}}'? It would work for Lexibank and
     # for LexiRumah, is it robust enough?
     args = parser.parse_args()
+    cli.setup_logging(args)
     if args.status_update == "None":
         args.status_update = None
     E = ExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
         database_url=args.url_template,
-        add_central_concepts=args.add_concepts,
-        singleton_cognate=args.add_singletons,
+        # TODO: maybe remove the add_central_concepts argument from this function?
+        add_central_concepts=False,
+        singleton_cognate=args.add_singletons_with_status is None,
     )
     E.create_excel(
         args.excel,
         size_sort=args.size_sort,
         language_order=args.language_sort_column,
-        status_update=args.status_update,
+        status_update=args.add_singletons_with_status,
     )

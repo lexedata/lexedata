@@ -9,7 +9,7 @@ import re
 import pycldf
 
 
-from lexedata.edit.unicode_normalize import n
+from lexedata.edit.normalize_unicode import n
 from lexedata.util import excel as c
 from helper_functions import copy_metadata
 
