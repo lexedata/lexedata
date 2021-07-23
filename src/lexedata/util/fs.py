@@ -1,4 +1,5 @@
 import csv
+import shutil
 import tempfile
 import typing as t
 from pathlib import Path
@@ -82,3 +83,29 @@ def get_dataset(fname: Path) -> pycldf.Dataset:
     if fname.suffix == ".json":
         return pycldf.dataset.Dataset.from_metadata(fname)
     return pycldf.dataset.Dataset.from_data(fname)
+
+
+def copy_dataset(original: Path, target: Path) -> pycldf.Dataset:
+    """Return a copy of the dataset at original.
+
+    Copy the dataset (metadata and relative table URLs) from `original` to
+    `target`, and return the new dataset at `target`.
+
+    """
+    dataset = pycldf.Dataset.from_metadata(original)
+    orig_bibpath = dataset.bibpath
+    shutil.copyfile(original, target)
+
+    dataset = pycldf.Dataset.from_metadata(target)
+    for table in dataset.tables:
+        link = Path(str(table.url))
+        olink = original.parent / link
+        tlink = target.parent / link
+        shutil.copyfile(olink, tlink)
+    link = dataset.bibpath.name
+    olink = original.parent / link
+    tlink = target.parent / link
+    shutil.copyfile(olink, tlink)
+    shutil.copyfile(orig_bibpath, dataset.bibpath)
+
+    return dataset

@@ -1,8 +1,8 @@
 import re
-import logging
-from pathlib import Path
-import tempfile
 import shutil
+import logging
+import tempfile
+from pathlib import Path
 
 import pytest
 import pycldf
