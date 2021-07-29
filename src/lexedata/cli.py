@@ -25,9 +25,9 @@ class Exit(IntEnum):
 
     def __call__(self, message: t.Optional[str] = None):
         if message is None:
-            logger.error(self.name)
+            logger.critical(self.name)
         else:
-            logger.error(message)
+            logger.critical(message)
         sys.exit(self)
 
 

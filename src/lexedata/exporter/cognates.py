@@ -422,8 +422,9 @@ if __name__ == "__main__":
     try:
         cogset_order = E.dataset["CognatesetTable", args.sort_cognatesets_by].name
     except KeyError:
-        logger.error("No column '{args.sort_cognatesets_by}' in your CognatesetTable.")
-        cli.Exit.INVALID_COLUMN_NAME()
+        cli.Exit.INVALID_COLUMN_NAME(
+            f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
+        )
 
     E.create_excel(
         args.excel,
