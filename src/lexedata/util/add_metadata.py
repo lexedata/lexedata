@@ -105,11 +105,11 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
     understood_colnames = {
         c.name for c in ds[ds.primary_table].tableSchema.columns if c.name in colnames
     }
-    more_columns = [
-        c
+    more_columns = {
+        c["propertyUrl"]: c
         for c in ds[ds.primary_table].tableSchema.columns
         if c.name not in understood_colnames
-    ]
+    }
     logger.info(
         f"CLDF freely understood the columns {understood_colnames} in your forms.csv."
     )
@@ -121,7 +121,6 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
         # Maybe they are known CLDF properties?
         if column_name in pycldf.terms.TERMS:
             column = pycldf.TERMS[column_name].to_column()
-            column.name = column_name
         # Maybe they are CLDF default column names?
         elif column_name in DEFAULT_NAME_COLUMNS:
             column = DEFAULT_NAME_COLUMNS[column_name]
@@ -131,7 +130,6 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
         # Maybe they are columns inherited from LingPy?
         elif column_name.upper() in LINGPY_COLUMNS:
             column = LINGPY_COLUMNS[column_name.upper()]
-            column.name = column_name
         # Maybe they are some name we have seen before?
         elif column_name in OTHER_KNOWN_COLUMNS:
             column = OTHER_KNOWN_COLUMNS[column_name]
@@ -145,12 +143,16 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
                 null=[""],
                 name=column_name,
             )
+        column.name = column_name
 
         ds[ds.primary_table].tableSchema.columns.append(column)
         summary = column.propertyUrl or column.datatype
         logger.info(f"Column {column_name} seems to be a {summary} column.")
+        to_be_replaced = more_columns.pop(column["propertyUrl"], default=None)
+        if to_be_replaced is not None:
+            ds[ds.primary_table].tableSchema.columns.remove(to_be_replaced)
 
-    for column in more_columns:
+    for column in more_columns.values():
         logger.info(f"Also added column {column.name}, as expected from a FormTable.")
 
     ds[ds.primary_table].tableSchema.columns.sort(
