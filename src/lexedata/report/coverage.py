@@ -50,7 +50,7 @@ if __name__ == "__main__":
     elif args.forms.name == "forms.csv":
         dataset = pycldf.Wordlist.from_data(args.metadata_or_forms)
     else:
-        cli.Exit.CLI_ARGUMENT_ERROR(
+        cli.Exit.INVALID_DATASET(
             "You must either specify the parth to a valid metadata-free form table (--forms path/to/forms.csv) or a valid metadata file (--metadata path/to/Filename-metadata.json)."
         )
 
