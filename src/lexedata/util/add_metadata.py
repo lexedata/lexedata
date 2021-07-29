@@ -106,7 +106,7 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
         c.name for c in ds[ds.primary_table].tableSchema.columns if c.name in colnames
     }
     more_columns = {
-        c["propertyUrl"]: c
+        c.propertyUrl.uri: c
         for c in ds[ds.primary_table].tableSchema.columns
         if c.name not in understood_colnames
     }
@@ -148,9 +148,10 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
         ds[ds.primary_table].tableSchema.columns.append(column)
         summary = column.propertyUrl or column.datatype
         logger.info(f"Column {column_name} seems to be a {summary} column.")
-        to_be_replaced = more_columns.pop(column["propertyUrl"], default=None)
-        if to_be_replaced is not None:
-            ds[ds.primary_table].tableSchema.columns.remove(to_be_replaced)
+        if column.propertyUrl:
+            to_be_replaced = more_columns.pop(column.propertyUrl.uri, default=None)
+            if to_be_replaced is not None:
+                ds[ds.primary_table].tableSchema.columns.remove(to_be_replaced)
 
     for column in more_columns.values():
         logger.info(f"Also added column {column.name}, as expected from a FormTable.")
