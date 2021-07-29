@@ -229,7 +229,11 @@ class NaiveCellParser:
         )
 
     def parse(
-        self, cell: op.cell.Cell, language_id: str, cell_identifier: str = ""
+        self,
+        cell: op.cell.Cell,
+        language_id: str,
+        cell_identifier: str = "",
+        logger: cli.logging.Logger = cli.logger,
     ) -> t.Iterable[Form]:
         """Return form properties for every form in the cell"""
         # cell_identifier format: sheet.cell_coordinate
@@ -593,8 +597,9 @@ def alignment_from_braces(text, start=0):
 
 
 class CellParserHyperlink(NaiveCellParser):
-    def __init__(self, dataset: pycldf.Dataset):
+    def __init__(self, dataset: pycldf.Dataset, extractor: re.Pattern):
         super().__init__(dataset=dataset)
+        self.extractor = extractor
         self.cc(short="c_id", long=("CognateTable", "formReference"), dataset=dataset)
         try:
             self.c["c_comment"] = dataset["CognateTable", "comment"].name
@@ -607,7 +612,11 @@ class CellParserHyperlink(NaiveCellParser):
             pass
 
     def parse(
-        self, cell: op.cell.Cell, language_id: str, cell_identifier: str = ""
+        self,
+        cell: op.cell.Cell,
+        language_id: str,
+        cell_identifier: str = "",
+        logger: cli.logging.Logger = cli.logger,
     ) -> t.Iterable[Judgement]:
         try:
             url = cell.hyperlink.target
@@ -617,10 +626,15 @@ class CellParserHyperlink(NaiveCellParser):
                 slice, alignment = alignment_from_braces("{" + text + "}")
             else:
                 slice, alignment = alignment_from_braces(text)
+            try:
+                form_id = self.extractor.search(url)["ID"]
+            except (TypeError, IndexError):
+                logger.error(
+                    f"Could not extract group ID from URL {url} using regular expression {self.extractor.pattern}"
+                )
+                cli.Exit.INVALID_ID()
             properties = {
-                self.c["c_id"]: url.split("/")[-1].strip(
-                    ")"
-                ),  # TODO: Only here to fix an error in the last Arawak export, which added erroneous brackets after form IDs. (But hopefully harmless if you still see it here now.)
+                self.c["c_id"]: form_id,
                 self.c.get("c_segments"): ["{:}:{:}".format(i, j) for i, j in slice],
                 self.c.get("c_alignment"): alignment,
                 self.c.get("c_comment"): comment,
