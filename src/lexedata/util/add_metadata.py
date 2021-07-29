@@ -45,7 +45,7 @@ LEXEDATA_COLUMNS = {
         aboutUrl="...",
     ),
     "Variants": Column(
-        datatype=Datatype(base="string", format=r"\s*(~|)\s*[[/(].*[]/)]\s*"),
+        datatype=Datatype(base="string", format=r"\s*(~|)\s*[[/(<].*[]/)>]\s*"),
         separator=",",
         default="",
         null=[""],
@@ -87,12 +87,13 @@ OTHER_KNOWN_COLUMNS = {
         null=["", "?"],
         name="Page",
     ),
+    "Concept_ID": pycldf.TERMS["parameterReference"].to_column(),
 }
 
 
 def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
     if fname.name != "forms.csv":
-        raise ValueError(
+        cli.Exit.CLI_ARGUMENT_ERROR(
             "A metadata-free Wordlist must be in a file called 'forms.csv'."
         )
     ds = pycldf.Wordlist.from_data(fname)
@@ -135,7 +136,7 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
         elif column_name in OTHER_KNOWN_COLUMNS:
             column = OTHER_KNOWN_COLUMNS[column_name]
         else:
-            # Maybe they look like they have a specific type?
+            # TODO: Maybe they look like they have a specific type?
             ...
             # Otherwise, they are probably just text to be kept.
             column = Column(
