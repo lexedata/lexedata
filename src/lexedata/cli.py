@@ -20,6 +20,7 @@ class Exit(IntEnum):
     NO_COGNATETABLE = 3
     NO_SEGMENTS = 4
     INVALID_ID = 5
+    INVALID_COLUMN_NAME = 6
 
     def __call__(self):
         logger.error(self.name)
