@@ -406,10 +406,6 @@ if __name__ == "__main__":
         help="Short for `--add-singletons-with-status='automatic singleton'`",
         dest="add_singletons_with_status",
     )
-    # TODO: Derive URL template from the "special:domain" property of the
-    # wordlist, where it exists? So something like
-    # 'https://{special:domain}/values/{{:}}'? It would work for Lexibank and
-    # for LexiRumah, is it robust enough?
     args = parser.parse_args()
     logger = cli.setup_logging(args)
     if args.status_update == "None":
