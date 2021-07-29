@@ -78,22 +78,21 @@ def header_from_cognate_excel(
         separators.append(dataset["CognatesetTable", column_name].separator)
         if column_name == dataset["CognatesetTable", "comment"].name:
             logger.warning(
-                "Your cognates table has a separate ‘{header.value}’ column for comments, but `lexedata.importer.cognates` expects to extract comments from the cell comments of the metadata columns, not from a separate column."
+                "Your cognates table has a separate ‘{header.value}’ column for comments, but `lexedata.importer.cognates` expects to extract comments from the cell comments of the cognateset metadata columns, not from a separate column."
             )
             # TODO: What behaviour will happen? Will comments be merged, or will one of cell comments and comment column be ignored in this case?
     return row_header, separators
 
 
 def import_cognates_from_excel(
-    excel: str,
+    ws: openpyxl.worksheet.worksheet.Worksheet,
     dataset: pycldf.Dataset,
     extractor: re.Pattern = re.compile("/(?P<ID>[^/]*)/?$"),
     logger: cli.logging.Logger = cli.logger,
 ) -> None:
     logger.info("Loading sheet…")
-    ws = openpyxl.load_workbook(excel).active
     logger.info(
-        f"Importing cognate sets from {excel}, sheet {ws.title}, into {dataset.tablegroup._fname}…"
+        f"Importing cognate sets from sheet {ws.title}, into {dataset.tablegroup._fname}…"
     )
 
     row_header, _ = header_from_cognate_excel(ws, dataset, logger=logger)
@@ -141,8 +140,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
+    ws = openpyxl.load_workbook(args.cogset).active
+
     import_cognates_from_excel(
-        args.cogsets,
+        ws,
         pycldf.Dataset.from_metadata(args.metadata),
         extractor=re.compile(args.formid_regex),
         logger=logger,
