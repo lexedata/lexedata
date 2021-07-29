@@ -1,4 +1,3 @@
-import sys
 import typing as t
 from pathlib import Path
 
@@ -51,12 +50,9 @@ if __name__ == "__main__":
     elif args.forms.name == "forms.csv":
         dataset = pycldf.Wordlist.from_data(args.metadata_or_forms)
     else:
-        logger.error(
-            "You must either specify the parth to a valid metadata-free form table (--forms "
-            "path/to/forms.csv) or a valid metadata file (--metadata "
-            "path/to/Filename-metadata.json)."
+        cli.Exit.CLI_ARGUMENT_ERROR(
+            "You must either specify the parth to a valid metadata-free form table (--forms path/to/forms.csv) or a valid metadata file (--metadata path/to/Filename-metadata.json)."
         )
-        cli.ExitCode.CLI_ARGUMENT_ERROR()
 
     languages = {}
     try:
