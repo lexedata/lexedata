@@ -22,8 +22,11 @@ class Exit(IntEnum):
     INVALID_ID = 5
     INVALID_COLUMN_NAME = 6
 
-    def __call__(self):
-        logger.error(self.name)
+    def __call__(self, message: t.Optional[str] = None):
+        if message is None:
+            logger.error(self.name)
+        else:
+            logger.error(message)
         sys.exit(self)
 
 
