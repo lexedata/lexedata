@@ -15,15 +15,26 @@ from pathlib import Path
 
 import openpyxl
 
-import lexedata.cli as cli
-import lexedata.util as util
+from lexedata import cli, util, types
 
 
 def import_interleaved(
     ws: openpyxl.worksheet.worksheet.Worksheet,
     logger: logging.Logger = cli.logger,
-    ids: t.Set[str] = set(),
-) -> list:
+    ids: t.Optional[t.Set[types.Cognateset_ID]] = None,
+) -> t.Iterable[
+    t.Tuple[
+        types.Form_ID,
+        types.Language_ID,
+        types.Parameter_ID,
+        str,
+        None,
+        types.Cognateset_ID,
+    ]
+]:
+    if ids is None:
+        ids = set()
+
     comma_or_semicolon = re.compile("[,;]\\W*")
 
     concepts = []
@@ -94,7 +105,7 @@ def import_interleaved(
                 while id in ids:
                     synonym += 1
                     id = f"{base_id}_s{synonym:d}"
-                yield [id, language_name, concepts[c], form, None, cogset]
+                yield (id, language_name, concepts[c], form, None, cogset)
                 ids.add(id)
 
 
