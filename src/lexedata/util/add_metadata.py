@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pycldf
 from csvw.dsv import iterrows
-from csvw.metadata import Column, Datatype
+from csvw.metadata import Column, Datatype, TableGroup
 
 from lexedata import cli
 
@@ -96,7 +96,12 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
         cli.Exit.CLI_ARGUMENT_ERROR(
             "A metadata-free Wordlist must be in a file called 'forms.csv'."
         )
-    ds = pycldf.Wordlist.from_data(fname)
+    default_wordlist = TableGroup.from_file(
+        pycldf.util.pkg_path("modules", "Wordlist-metadata.json")
+    )
+    default_wordlist._fname = fname.with_name("Wordlist-metadata.json")
+    ds = pycldf.Wordlist(default_wordlist)
+
     # `from_data` checks that the reqired columns of the FormTable are present,
     # but it does not consolidate the columns further.
 
@@ -149,7 +154,7 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
         summary = column.propertyUrl or column.datatype
         logger.info(f"Column {column_name} seems to be a {summary} column.")
         if column.propertyUrl:
-            to_be_replaced = more_columns.pop(column.propertyUrl.uri, default=None)
+            to_be_replaced = more_columns.pop(column.propertyUrl.uri, None)
             if to_be_replaced is not None:
                 ds[ds.primary_table].tableSchema.columns.remove(to_be_replaced)
 

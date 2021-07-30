@@ -35,14 +35,15 @@ def new_wordlist(path: t.Optional[Path] = None, **data):
     ...     CognateTable=[])
     >>> [table.url.string for table in ds.tables]
     ['forms.csv', 'languages.csv', 'parameters.csv', 'cognatesets.csv', 'cognates.csv']
-
+    >>> sorted(f.name for f in ds.directory.iterdir())
+    ['Wordlist-metadata.json', 'cognates.csv', 'cognatesets.csv', 'forms.csv', 'languages.csv', 'parameters.csv']
     """
     if path is None:
         path = Path(tempfile.mkdtemp())
 
     if data.get("FormTable"):
         forms = data["FormTable"]
-        keys = set().union(*forms)
+        keys: t.List[str] = list(set().union(*forms))
         with (path / "forms.csv").open("w", encoding="utf8") as form_table_file:
             writer = csv.DictWriter(form_table_file, fieldnames=keys)
             writer.writeheader()

@@ -126,7 +126,7 @@ if __name__ == "__main__":
     if not args.sheet:
         args.sheet = ws.get_sheet_names()
 
-    ids = set()
+    ids: t.Set[str] = set()
     for sheetname in args.sheet:
         sheet = ws[sheetname]
         for row in import_interleaved(sheet, logger=logger, ids=ids):
