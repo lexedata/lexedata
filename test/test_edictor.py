@@ -39,13 +39,18 @@ def test_write_edictor_empty_dataset():
     exporter.write_edictor_file(
         dataset, file, forms, judgements_about_form, cognateset_numbers
     )
-    assert (
-        file.getvalue()
-        .upper()
-        .startswith(
-            "ID\tCLDF_ID\tDOCULECT\tCONCEPT\tIPA\tTOKENS\tCOMMENT\tSOURCE\tCOGID\tALIGNMENT"
-        )
-    )
+    assert set(file.getvalue().split("\n")[0].strip().upper().split("\t")) == {
+        "ID",
+        "CLDF_ID",
+        "DOCULECT",
+        "CONCEPT",
+        "IPA",
+        "TOKENS",
+        "COMMENT",
+        "SOURCE",
+        "COGID",
+        "ALIGNMENT",
+    }
 
 
 def test_forms_to_csv():

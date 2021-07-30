@@ -1,4 +1,5 @@
 import pytest
+import logging
 import tempfile
 import itertools
 from pathlib import Path
@@ -121,7 +122,9 @@ def test_roundtrip(cldf_wordlist, working_and_nonworking_bibfile):
     dataset["CognateTable"].write([])
     dataset["CognatesetTable"].write([])
 
-    import_cognates_from_excel(out_filename, dataset)
+    ws = openpyxl.load_workbook(out_filename).active
+
+    import_cognates_from_excel(ws, dataset)
 
     new_judgements = {
         (row[c_formReference], row[c_cogsetReference])
@@ -154,7 +157,8 @@ def test_roundtrip_separator_column(cldf_wordlist, working_and_nonworking_bibfil
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
 
-    import_cognates_from_excel(out_filename, dataset)
+    ws = openpyxl.load_workbook(out_filename).active
+    import_cognates_from_excel(ws, dataset)
 
     reread_tags = [
         (c[c_id], c["CommaSeparatedTags"]) for c in dataset["CognatesetTable"]
@@ -168,9 +172,47 @@ def test_cell_comments():
     dataset, _ = copy_to_temp(
         Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     )
-    ws_test = Path(__file__).parent / "data/excel/judgement_cell_with_note.xlsx"
+    excel_filename = Path(__file__).parent / "data/excel/judgement_cell_with_note.xlsx"
 
-    import_cognates_from_excel(ws_test, dataset)
+    ws = openpyxl.load_workbook(excel_filename).active
+    import_cognates_from_excel(ws, dataset)
+    cognates = {
+        cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognateTable"]
+    }
+    assert cognates == {
+        "autaa_Woman-cogset": {
+            "Cognateset": "cogset",
+            "Comment": "Comment on judgement",
+            "Form_ID": "autaa_Woman",
+            "ID": "autaa_Woman-cogset",
+            "Segment_Slice": None,
+            "Alignment": None,
+        }
+    }
+    cognatesets = {
+        cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognatesetTable"]
+    }
+    assert cognatesets == {
+        "cogset": {"Name": "cogset", "Comment": "Cognateset-comment", "ID": "cogset"}
+    }
+
+
+def test_cell_comments_and_comment_column(caplog):
+    dataset, _ = copy_to_temp(
+        Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
+    )
+    excel_filename = Path(__file__).parent / "data/excel/judgement_cell_with_note.xlsx"
+
+    sheet = openpyxl.load_workbook(excel_filename).active
+    sheet.insert_cols(2)
+    sheet.cell(row=1, column=2, value="Comment")
+    sheet.cell(row=2, column=2, value="Comment")
+
+    with caplog.at_level(logging.INFO):
+        import_cognates_from_excel(sheet, dataset)
+
+    assert "from the cell comments" in caplog.text
+
     cognates = {
         cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognateTable"]
     }

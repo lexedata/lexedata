@@ -5,7 +5,6 @@ If the dataset has no cognatesetReference column anywhere, add an empty CognateT
 If the dataset has a cognatesetReference in the FormTable, extract that to a separate cognateTable, also transferring alignments if they exist.
 If the dataset has a cognatesetReference anywhere else, admit you don't know what is going on and die.
 """
-import sys
 
 import pycldf
 
@@ -14,7 +13,9 @@ from lexedata import cli
 from lexedata import util
 
 
-def add_explicit_cognateset_table(dataset: pycldf.Wordlist) -> None:
+def add_explicit_cognateset_table(
+    dataset: pycldf.Wordlist, logger: cli.logging.Logger = cli.logger
+) -> None:
     if "CognatesetTable" in dataset:
         return
     dataset.add_component("CognatesetTable")
@@ -22,7 +23,8 @@ def add_explicit_cognateset_table(dataset: pycldf.Wordlist) -> None:
     c_cognateset = dataset["CognateTable", "cognatesetReference"].name
 
     cognatesets = set()
-    for judgement in dataset["CognateTable"]:
+    logger.info("Aggregating cognate sets to write to separate table…")
+    for judgement in cli.tq(dataset["CognateTable"]):
         cognatesets.add(judgement[c_cognateset])
 
     dataset.write(CognatesetTable=[{"ID": id} for id in sorted(cognatesets)])
@@ -55,7 +57,8 @@ def add_cognate_table(
             pass
     cognate_judgements = []
     forms = cache_table(dataset, columns=columns)
-    for f, form in forms.items():
+    logger.info("Extracting cognate judgements from forms…")
+    for f, form in cli.tq(forms.items()):
         if form.get("cognatesetReference"):
             if split:
                 cogset = util.string_to_id(
@@ -102,8 +105,6 @@ def add_cognate_table(
 
     dataset.write(CognateTable=cognate_judgements)
 
-    add_explicit_cognateset_table(dataset)
-
 
 if __name__ == "__main__":
     parser = cli.parser(__doc__)
@@ -122,10 +123,10 @@ if __name__ == "__main__":
     elif args.unique_id == "concept":
         split = True
     else:
-        logger.error(
+        cli.Exit.CLI_ARGUMENT_ERROR(
             "You must specify whether cognateset have dataset-wide unique ids or not (--unique-id)"
         )
-        sys.exit(cli.Exit.CLI_ARGUMENT_ERROR)
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
     add_cognate_table(dataset, split=split)
+    add_explicit_cognateset_table(dataset, logger)

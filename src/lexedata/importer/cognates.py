@@ -1,3 +1,4 @@
+import re
 import typing as t
 
 import pycldf
@@ -53,7 +54,9 @@ class CognateEditParser(ExcelCognateParser):
 
 
 def header_from_cognate_excel(
-    ws: openpyxl.worksheet.worksheet.Worksheet, dataset: pycldf.Dataset
+    ws: openpyxl.worksheet.worksheet.Worksheet,
+    dataset: pycldf.Dataset,
+    logger: cli.logging.Logger = cli.logger,
 ):
     row_header = []
     separators = []
@@ -73,19 +76,26 @@ def header_from_cognate_excel(
             break
         row_header.append(column_name)
         separators.append(dataset["CognatesetTable", column_name].separator)
+        if column_name == dataset["CognatesetTable", "comment"].name:
+            logger.warning(
+                "Your cognates table has a separate ‘{header.value}’ column for comments, but `lexedata.importer.cognates` expects to extract comments from the cell comments of the cognateset metadata columns, not from a separate column."
+            )
+            # TODO: What behaviour will happen? Will comments be merged, or will one of cell comments and comment column be ignored in this case?
     return row_header, separators
 
 
 def import_cognates_from_excel(
-    excel: str, dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger
+    ws: openpyxl.worksheet.worksheet.Worksheet,
+    dataset: pycldf.Dataset,
+    extractor: re.Pattern = re.compile("/(?P<ID>[^/]*)/?$"),
+    logger: cli.logging.Logger = cli.logger,
 ) -> None:
     logger.info("Loading sheet…")
-    ws = openpyxl.load_workbook(excel).active
     logger.info(
-        f"Importing cognate sets from {excel}, sheet {ws.title}, into {dataset.tablegroup._fname}…"
+        f"Importing cognate sets from sheet {ws.title}, into {dataset.tablegroup._fname}…"
     )
 
-    row_header, _ = header_from_cognate_excel(ws, dataset)
+    row_header, _ = header_from_cognate_excel(ws, dataset, logger=logger)
     excel_parser_cognate = CognateEditParser(
         dataset,
         top=2,
@@ -94,7 +104,7 @@ def import_cognates_from_excel(
         # columns, so actually correct for the 1-based indices. When there is
         # no comment column, we need to compensate for the 1-based Excel
         # indices.
-        cellparser=cell_parsers.CellParserHyperlink(dataset),
+        cellparser=cell_parsers.CellParserHyperlink(dataset, extractor=extractor),
         row_header=row_header,
         check_for_language_match=[dataset["LanguageTable", "name"].name],
         check_for_match=[dataset["FormTable", "id"].name],
@@ -120,10 +130,21 @@ if __name__ == "__main__":
         default="cognates.xlsx",
         help="Path to an Excel file containing cogsets and cognatejudgements (default: cognates.xlsx). The data will be imported from the *active sheet* (probably the last one you had open in Excel) of that spreadsheet.",
     )
+    parser.add_argument(
+        "--formid-regex",
+        type=str,
+        default="/(?P<ID>[^/]*)/?$",
+        help="A regular expression whose ID group extracts the forms IDs from the links in the cells. For example, if your Form IDs are anchors in a page, you want '#(?P<ID>[^#]*)$', that is, the longest group of non-# characters at the end of the URL. (Default: '/(?P<ID>[^/]*)/?$', which gives the final component of a path, eg. for forms in Lexibank https://lexibank.clld.org/values/FORM_ID/ or using the exporter's default https://example.org/lexicon/FORM_ID)",
+    )
 
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
+    ws = openpyxl.load_workbook(args.cogset).active
+
     import_cognates_from_excel(
-        args.cogsets, pycldf.Dataset.from_metadata(args.metadata), logger
+        ws,
+        pycldf.Dataset.from_metadata(args.metadata),
+        extractor=re.compile(args.formid_regex),
+        logger=logger,
     )

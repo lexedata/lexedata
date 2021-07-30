@@ -60,6 +60,7 @@ class ExcelWriter:
         self,
         out: Path,
         size_sort: bool = False,
+        cogset_order: t.Optional[str] = None,
         language_order="name",
         status_update: t.Optional[str] = None,
         logger: cli.logging.Logger = cli.logger,
@@ -139,14 +140,17 @@ class ExcelWriter:
 
         # Again, row_index 2 is indeed row 2, row 1 is header
         row_index = 1 + 1
+        cogsets = list(self.dataset["CognatesetTable"])
+        # Sort first by size, then by the specified column, so that if both
+        # happen, the cognatesets are globally sorted by the specified column
+        # and within one group by size.
         if size_sort:
-            cogsets = sorted(
-                self.dataset["CognatesetTable"],
+            cogsets.sort(
                 key=lambda x: len(all_judgements[x[c_cogset_id]]),
                 reverse=True,
             )
-        else:
-            cogsets = self.dataset["CognatesetTable"]
+        if cogset_order is not None:
+            cogsets.sort(key=lambda c: c[cogset_order])
 
         # iterate over all cogsets
         for cogset in cogsets:
@@ -371,11 +375,15 @@ if __name__ == "__main__":
         "--size-sort",
         action="store_true",
         default=False,
-        help="List the biggest cognatesets first",
+        help="List the biggest cognatesets first (within a group, if another sort order is specified by --sort-cognatesets-by)",
     )
     parser.add_argument(
         "--sort-languages-by",
         help="The name of a column in the LanguageTable to sort languages by in the output",
+    )
+    parser.add_argument(
+        "--sort-cognatesets-by",
+        help="The name of a column in the CognatesetTable to sort cognates by in the output",
     )
     parser.add_argument(
         "--url-template",
@@ -398,24 +406,26 @@ if __name__ == "__main__":
         help="Short for `--add-singletons-with-status='automatic singleton'`",
         dest="add_singletons_with_status",
     )
-    # TODO: Derive URL template from the "special:domain" property of the
-    # wordlist, where it exists? So something like
-    # 'https://{special:domain}/values/{{:}}'? It would work for Lexibank and
-    # for LexiRumah, is it robust enough?
     args = parser.parse_args()
-    cli.setup_logging(args)
+    logger = cli.setup_logging(args)
     if args.status_update == "None":
         args.status_update = None
     E = ExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
         database_url=args.url_template,
-        # TODO: maybe remove the add_central_concepts argument from this function?
-        add_central_concepts=False,
         singleton_cognate=args.add_singletons_with_status is None,
     )
+    try:
+        cogset_order = E.dataset["CognatesetTable", args.sort_cognatesets_by].name
+    except KeyError:
+        cli.Exit.INVALID_COLUMN_NAME(
+            f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
+        )
+
     E.create_excel(
         args.excel,
         size_sort=args.size_sort,
+        cogset_order=cogset_order,
         language_order=args.language_sort_column,
         status_update=args.add_singletons_with_status,
     )
