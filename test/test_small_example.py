@@ -14,6 +14,7 @@ from pathlib import Path
 
 from lexedata import util
 from lexedata.importer import excel_interleaved
+from lexedata.edit import add_cognate_table
 from lexedata.util.add_metadata import add_metadata
 
 from mock_excel import MockSingleExcelSheet
@@ -35,8 +36,8 @@ def assert_datasets_are_equal(ds1, ds2):
         tabletype = ds1.get_tabletype(table)
         if tabletype is None:
             continue
-        rows1 = list(ds1[tabletype])
-        rows2 = list(ds2[tabletype])
+        rows1 = [dict(row) for row in ds1[tabletype]]
+        rows2 = [dict(row) for row in ds2[tabletype]]
         for row in rows1:
             assert (
                 row in rows2
@@ -537,7 +538,6 @@ def test_create_metadata_valid(interleaved_excel_example):
         writer.writerows(forms)
     ds = add_metadata(path / "forms.csv")
     ds.write_metadata(path / "Wordlist-metadata.json")
-    ds.write(FormTable=list(ds["FormTable"]))
 
     assert {f.name for f in path.iterdir()} == {"forms.csv", "Wordlist-metadata.json"}
     assert len(ds.tables) == 1, "Expected a single table"
@@ -584,40 +584,12 @@ def test_create_metadata_cerrect(interleaved_excel_example, formtable_only_examp
         writer.writerows(forms)
     ds = add_metadata(path / "forms.csv")
     ds.write_metadata(path / "Wordlist-metadata.json")
-    ds.write(FormTable=list(ds["FormTable"]))
 
+    # Normalize dataset
+    ds.write(FormTable=list(ds["FormTable"]))
     assert_datasets_are_equal(ds, formtable_only_example)
 
 
-def test_add_cog_tables(interleaved_excel_example):
-    ids = set()
-    forms = [
-        dict(
-            zip(
-                ["ID", "Language_ID", "Concept_ID", "Form", "Comment", "Cognateset_ID"],
-                row,
-            )
-        )
-        for row in excel_interleaved.import_interleaved(
-            interleaved_excel_example, logger=logging.Logger, ids=ids
-        )
-    ]
-
-    path = Path(tempfile.mkdtemp())
-    with (path / "forms.csv").open("w", encoding="utf-8") as form_table_file:
-        writer = csv.DictWriter(
-            form_table_file,
-            fieldnames=[
-                "ID",
-                "Language_ID",
-                "Concept_ID",
-                "Form",
-                "Comment",
-                "Cognateset_ID",
-            ],
-        )
-        writer.writeheader()
-        writer.writerows(forms)
-    ds = add_metadata(path / "forms.csv")
-    ds.write_metadata(path / "Wordlist-metadata.json")
-    ds.write(FormTable=list(ds["FormTable"]))
+def test_add_cog_tables(formtable_only_example):
+    ds = formtable_only_example
+    add_cognate_table.add_cognate_table(ds, True)
