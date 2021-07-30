@@ -590,6 +590,19 @@ def test_create_metadata_cerrect(interleaved_excel_example, formtable_only_examp
     assert_datasets_are_equal(ds, formtable_only_example)
 
 
-def test_add_cog_tables(formtable_only_example):
+def test_add_cog_tables_valid(formtable_only_example):
     ds = formtable_only_example
     add_cognate_table.add_cognate_table(ds, True)
+    # TODO: Check shape
+
+
+def test_add_cog_tables_correct(formtable_only_example):
+    ds = formtable_only_example
+    add_cognate_table.add_cognate_table(ds, True)
+    # TODO: Check whether the outcome is correct
+
+
+# TODO: Add segments, add alignments, add language table, add concept table,
+# add concepticon to concept table, find central concepts, phylogenetics
+# exporter. Check some reports: In particular coverage. At a later stage, add a
+# concept with homophones, and check they are found.
