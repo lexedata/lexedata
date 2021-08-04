@@ -34,6 +34,19 @@ class ExcelWriter:
         singleton_cognate: bool = False,
     ):
         self.dataset = dataset
+        # assert that all required tables are present in Dataset
+        try:
+            dataset["CognatesetTable"]
+        except KeyError:
+            cli.Exit.INVALID_DATASET(
+                "This script presupposes a separate CognatesetTable. Call lexedata.edit.add_cognate_table.py"
+            )
+        try:
+            dataset["CognateTable"]
+        except KeyError:
+            cli.Exit.NO_COGNATETABLE(
+                "This script presupposes a separate CognateTable. Call lexedata.edit.add_cognate_table.py"
+            )
         self.singleton = singleton_cognate
         self.set_header()
         if database_url:
@@ -397,6 +410,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sort-cognatesets-by",
         help="The name of a column in the CognatesetTable to sort cognates by in the output",
+        default="id"
     )
     parser.add_argument(
         "--url-template",
@@ -421,8 +435,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    if args.status_update == "None":
-        args.status_update = None
     E = ExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
         database_url=args.url_template,
@@ -439,6 +451,6 @@ if __name__ == "__main__":
         args.excel,
         size_sort=args.size_sort,
         cogset_order=cogset_order,
-        language_order=args.language_sort_column,
+        language_order=args.sort_languages_by,
         status_update=args.add_singletons_with_status,
     )
