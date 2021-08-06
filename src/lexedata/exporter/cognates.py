@@ -36,14 +36,16 @@ class ExcelWriter:
         self.dataset = dataset
         # assert that all required tables are present in Dataset
         try:
-            dataset["CognatesetTable"]
-        except KeyError:
+            for _ in dataset["CognatesetTable"]:
+                break
+        except (KeyError, FileNotFoundError):
             cli.Exit.INVALID_DATASET(
                 "This script presupposes a separate CognatesetTable. Call lexedata.edit.add_cognate_table.py"
             )
         try:
-            dataset["CognateTable"]
-        except KeyError:
+            for _ in dataset["CognateTable"]:
+                break
+        except (KeyError, FileNotFoundError):
             cli.Exit.NO_COGNATETABLE(
                 "This script presupposes a separate CognateTable. Call lexedata.edit.add_cognate_table.py"
             )
@@ -410,7 +412,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sort-cognatesets-by",
         help="The name of a column in the CognatesetTable to sort cognates by in the output",
-        default="id"
+        default="id",
     )
     parser.add_argument(
         "--url-template",
