@@ -40,14 +40,14 @@ class ExcelWriter:
                 break
         except (KeyError, FileNotFoundError):
             cli.Exit.INVALID_DATASET(
-                "This script presupposes a separate CognatesetTable. Call lexedata.edit.add_cognate_table.py"
+                "This script presupposes a separate CognatesetTable. Call lexedata.edit.add_cognate_table"
             )
         try:
             for _ in dataset["CognateTable"]:
                 break
         except (KeyError, FileNotFoundError):
             cli.Exit.NO_COGNATETABLE(
-                "This script presupposes a separate CognateTable. Call lexedata.edit.add_cognate_table.py"
+                "This script presupposes a separate CognateTable. Call lexedata.edit.add_cognate_table"
             )
         self.singleton = singleton_cognate
         self.set_header()

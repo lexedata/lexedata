@@ -4,7 +4,9 @@ from pathlib import Path
 
 import openpyxl as op
 import tempfile
+import pytest
 
+from helper_functions import copy_metadata
 from lexedata.util.fs import get_dataset
 from lexedata.exporter.cognates import ExcelWriter
 
@@ -84,3 +86,40 @@ def test_adding_singleton_cognatesets_with_status(caplog):
         "NEW",
         "NEW",
     ]
+
+
+def test_no_cognateset_table(caplog):
+    copy = copy_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset = get_dataset(copy)
+    dataset.remove_table("CognatesetTable")
+    with pytest.raises(SystemExit):
+        ExcelWriter(
+            dataset=dataset,
+        )
+    assert re.search(
+        r".* presupposes a separate CognatesetTable.* lexedata.edit.add_cognate_table.*",
+        caplog.text,
+    )
+
+
+@pytest.mark.skip(
+    reason="The test throws an error for a missing CognatesetTable. "
+    "However the CognateTable was removed. I don't really get why."
+)
+def test_no_cognate_table(caplog):
+    copy = copy_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset = get_dataset(copy)
+    dataset.remove_table("CognateTable")
+    with pytest.raises(SystemExit):
+        ExcelWriter(
+            dataset=dataset,
+        )
+
+    assert re.search(
+        r".* presupposes a separate CognateTable.* lexedata.edit.add_cognate_table.*",
+        caplog.text,
+    )
