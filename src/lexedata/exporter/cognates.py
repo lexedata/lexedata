@@ -314,7 +314,10 @@ class ExcelWriter:
         cell_value = self.form_to_cell_value(judgement[0], judgement[1])
         form_cell = ws.cell(row=row, column=column, value=cell_value)
         c_id = self.dataset["FormTable", "id"].name
-        c_comment = self.dataset["CognateTable", "comment"].name
+        try:
+            c_comment = self.dataset["CognateTable", "comment"].name
+        except KeyError:
+            c_comment = None
         comment = judgement[1].get(c_comment, None)
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
@@ -388,8 +391,11 @@ class ExcelWriter:
         return "{:} ‘{:}’{:}".format(transcription, ", ".join(translations), suffix)
 
     def get_segments(self, form):
-        c_segments = self.dataset["FormTable", "Segments"].name
-        return form[c_segments]
+        try:
+            c_segments = self.dataset["FormTable", "Segments"].name
+            return form[c_segments]
+        except KeyError:
+            return None
 
 
 if __name__ == "__main__":
