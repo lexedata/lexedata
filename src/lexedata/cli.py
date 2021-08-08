@@ -31,8 +31,9 @@ class Exit(IntEnum):
         sys.exit(self)
 
 
-def tq(iter, logger=logger, total: t.Optional[t.Union[int, float]] = None):
+def tq(iter, task, logger=logger, total: t.Optional[t.Union[int, float]] = None):
     if logger.getEffectiveLevel() >= logging.INFO:
+        print(task)
         return tqdm.tqdm(iter, total=total)
     else:
         return iter
