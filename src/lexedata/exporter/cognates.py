@@ -200,6 +200,9 @@ class ExcelWriter:
                             all_judgements[cogset[c_cogset_id]][0][c_cognate_form]
                         ]
                     else:
+                        # TODO: CHeck with Gereon and Natalia that this fixes issue 179
+                        if db_name == "":
+                            continue
                         column = self.dataset["CognatesetTable", db_name]
                         if column.separator is None:
                             value = cogset[db_name]
