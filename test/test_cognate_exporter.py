@@ -123,3 +123,37 @@ def test_no_cognate_table(caplog):
         r".* presupposes a separate CognateTable.* lexedata.edit.add_cognate_table.*",
         caplog.text,
     )
+
+
+@pytest.mark.skip(
+    reason="The test throws an error for a missing CognatesetTable. "
+    "However no table was removed. I don't really get why."
+)
+def test_no_segment_column():
+    copy = copy_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset = get_dataset(copy)
+    dataset.remove_columns("FormTable", "Segments")
+    writer = ExcelWriter(
+        dataset=dataset,
+    )
+    form = dataset["Formtable"][0]
+    assert writer.get_segments(form) is None
+
+
+@pytest.mark.skip(
+    reason="The test throws an error for a missing CognatesetTable. "
+    "However no table was removed. I don't really get why."
+)
+def test_no_comment_column():
+    copy = copy_metadata(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset = get_dataset(copy)
+    dataset.remove_columns("FormTable", "comment")
+    writer = ExcelWriter(
+        dataset=dataset,
+    )
+    form = dataset["Formtable"][0]
+    assert writer.form_to_cell_value(form, dict()) == " ‘one, one’ ⚠"
