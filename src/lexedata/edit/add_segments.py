@@ -218,7 +218,10 @@ def add_segments_to_dataset(
     c_f_form = dataset["FormTable", "form"].name
     # report = t.Dict[str, t.Dict[str, t.Dict[str, str]]] = {}
     report = {f[c_f_lan]: SegmentReport() for f in dataset["FormTable"]}
-    for r, row in enumerate(dataset["FormTable"], 1):
+    for r, row in cli.tq(
+            enumerate(dataset["FormTable"], 1),
+            task="Writing forms with segments to dataset",
+            total=dataset["FormTable"].common_props.get("dc:extent")):
         if row[c_f_segments] and not overwrite_existing:
             write_back.append(row)
             continue
