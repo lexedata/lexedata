@@ -269,7 +269,7 @@ def add_segments_to_dataset(
 if __name__ == "__main__":
     parser = cli.parser(description=__doc__)
     parser.add_argument(
-        "transcription-column",
+        "transcription_column",
         nargs="?",
         default=None,
         help="Column containing the IPA transcriptions. Default: The CLDF #form column",
