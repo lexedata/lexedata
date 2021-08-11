@@ -106,11 +106,11 @@ class ExcelWriter:
             )
         else:
             # sorted returns a list, so better return a list here as well
-            languages = self.dataset["LanguageTable"]
+            languages = list(self.dataset["LanguageTable"])
         for col, lan in cli.tq(
             enumerate(languages, len(excel_header) + 1),
             task="Writing languages to excel header",
-            total=languages.common_props.get("dc:extent"),
+            total=len(languages),
         ):
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
