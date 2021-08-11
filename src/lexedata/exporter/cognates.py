@@ -106,7 +106,11 @@ class ExcelWriter:
             )
         else:
             languages = self.dataset["LanguageTable"]
-        for col, lan in enumerate(languages, len(excel_header) + 1):
+        for col, lan in cli.tq(
+                enumerate(languages, len(excel_header) + 1),
+                task="Writing languages to excel header",
+                total=languages.common_props.get("dc:extent")
+        ):
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
         ws.append(excel_header)
@@ -153,7 +157,11 @@ class ExcelWriter:
             cogsets.sort(key=lambda c: c[cogset_order])
 
         # iterate over all cogsets
-        for cogset in cogsets:
+        for cogset in cli.tq(
+            cogsets,
+            task="Wirting cognates and cognatesets to excel",
+            total=len(cogsets)
+        ):
             # possibly a cogset can appear without any judgment, if so ignore it
             if cogset[c_cogset_id] not in all_judgements:
                 continue
@@ -197,7 +205,11 @@ class ExcelWriter:
         # write remaining forms to singleton congatesets if switch is activated
         if self.singleton:
             # remove all forms that appear in judgements
-            for k in all_judgements:
+            for k in cli.tq(
+                all_judgements,
+                task="Write singleton cognatesets to excel",
+                total=len(all_judgements)
+            ):
                 for judgement in all_judgements[k]:
                     form_id = judgement[c_cognate_form]
                     try:
