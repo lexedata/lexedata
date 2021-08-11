@@ -105,11 +105,12 @@ class ExcelWriter:
                 self.dataset["LanguageTable"], key=lambda x: x[c_sort], reverse=False
             )
         else:
+            # sorted returns a list, so better return a list here as well
             languages = self.dataset["LanguageTable"]
         for col, lan in cli.tq(
-                enumerate(languages, len(excel_header) + 1),
-                task="Writing languages to excel header",
-                total=languages.common_props.get("dc:extent")
+            enumerate(languages, len(excel_header) + 1),
+            task="Writing languages to excel header",
+            total=languages.common_props.get("dc:extent"),
         ):
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
@@ -160,7 +161,7 @@ class ExcelWriter:
         for cogset in cli.tq(
             cogsets,
             task="Wirting cognates and cognatesets to excel",
-            total=len(cogsets)
+            total=len(cogsets),
         ):
             # possibly a cogset can appear without any judgment, if so ignore it
             if cogset[c_cogset_id] not in all_judgements:
@@ -208,7 +209,7 @@ class ExcelWriter:
             for k in cli.tq(
                 all_judgements,
                 task="Write singleton cognatesets to excel",
-                total=len(all_judgements)
+                total=len(all_judgements),
             ):
                 for judgement in all_judgements[k]:
                     form_id = judgement[c_cognate_form]

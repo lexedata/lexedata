@@ -50,9 +50,9 @@ def aligne_cognate_table(
     cognatesets: t.Dict[str, t.List[t.Tuple[str, str, str, t.List[str]]]] = {}
     judgements: t.Dict[str, t.Dict[str, t.Any]] = {}
     for judgement in cli.tq(
-            dataset["CognateTable"],
-            task="Aligning the cognate segments",
-            total=dataset["CognateTable"].common_props.get("dc:extent")
+        dataset["CognateTable"],
+        task="Aligning the cognate segments",
+        total=dataset["CognateTable"].common_props.get("dc:extent"),
     ):
         judgements[judgement[c_id]] = judgement
         form = forms[judgement[c_form_id]]

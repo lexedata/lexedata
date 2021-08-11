@@ -33,7 +33,7 @@ class Exit(IntEnum):
 
 def tq(iter, task, logger=logger, total: t.Optional[t.Union[int, float]] = None):
     if logger.getEffectiveLevel() >= logging.INFO:
-        #print(task)
+        # print(task)
         logger.info(task)
         return tqdm.tqdm(iter, total=total)
     else:

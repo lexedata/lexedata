@@ -62,8 +62,12 @@ def update_integer_ids(
     c_id = table.get_column("http://cldf.clld.org/v1.0/terms.rdf#id")
     max_id = 0
     no_integer_rows: t.Set[str] = set()
-    #logger.info("Checking IDs that are already integers…")
-    for row in cli.tq(ds[table], task="Checking IDs that are already integers…", total=ds[table].common_props.get("dc:extent")):
+    # logger.info("Checking IDs that are already integers…")
+    for row in cli.tq(
+        ds[table],
+        task="Checking IDs that are already integers…",
+        total=ds[table].common_props.get("dc:extent"),
+    ):
         try:
             max_id = max(int(row[c_id.name]), max_id)
         except ValueError:
@@ -72,7 +76,11 @@ def update_integer_ids(
 
     mapping: t.Dict[str, int]
     rows: t.List[t.Dict[str, t.Any]] = []
-    for row in cli.tq(ds[table], task="Updating integer ids", total=ds[table].common_props.get("dc:extent")):
+    for row in cli.tq(
+        ds[table],
+        task="Updating integer ids",
+        total=ds[table].common_props.get("dc:extent"),
+    ):
         original = row[c_id.name]
         if row[c_id.name] in no_integer_rows:
             max_id += 1
@@ -98,10 +106,12 @@ def update_integer_ids(
     for other_table, columns in foreign_keys_to_here.items():
         if not columns:
             continue
-        #logger.info(f"Applying changed foreign key to {other_table}…")
+        # logger.info(f"Applying changed foreign key to {other_table}…")
         rows = []
         for row in cli.tq(
-            ds[other_table], task=f"Applying changed foreign key to {other_table}…", total=ds[other_table].common_props.get("dc:extent")
+            ds[other_table],
+            task=f"Applying changed foreign key to {other_table}…",
+            total=ds[other_table].common_props.get("dc:extent"),
         ):
             for column in columns:
                 row[column] = mapping[str(row[column])]
@@ -126,7 +136,11 @@ def update_ids(
     """Update all IDs of the table in the database, also in foreign keys."""
     c_id = table.get_column("http://cldf.clld.org/v1.0/terms.rdf#id")
     rows = []
-    for row in cli.tq(ds[table], task=f"Updating ids of {table}", total=ds[table].common_props.get("dc:extent")):
+    for row in cli.tq(
+        ds[table],
+        task=f"Updating ids of {table}",
+        total=ds[table].common_props.get("dc:extent"),
+    ):
         row[c_id.name] = mapping.get(row[c_id.name], row[c_id.name])
         rows.append(row)
     logger.info(f"Writing {table.url.string} back to file…")
