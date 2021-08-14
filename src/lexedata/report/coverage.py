@@ -20,10 +20,21 @@ def coverage_report(
     except KeyError:
         pass
 
+    # get the foreign keys pointing to the required tables
+    foreign_key_parameter = ""
+    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
+        if foreign_key.reference.resource == dataset["ParameterTable"].url:
+            foreign_key_parameter = foreign_key.columnReference[0]
+
+    foreign_key_language = ""
+    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
+        if foreign_key.reference.resource == dataset["LanguageTable"].url:
+            foreign_key_language = foreign_key.columnReference[0]
+
     concepts: t.DefaultDict[str, t.Counter[str]] = t.DefaultDict(t.Counter)
     multiple_concepts = bool(dataset["FormTable", "parameterReference"].separator)
-    c_concept = dataset["FormTable", "parameterReference"].name
-    c_language = dataset["FormTable", "languageReference"].name
+    c_concept = foreign_key_parameter
+    c_language = foreign_key_language
     c_form = dataset["FormTable", "form"].name
     for form in dataset["FormTable"]:
         languages.setdefault(form[c_language], {})
@@ -50,8 +61,8 @@ def coverage_report(
 
     total_number_concepts = len(list(dataset["ParameterTable"]))
 
-    header = ""
-    data = []
+    header_languages = ""
+    data_languages = []
     for language, metadata in languages.items():
 
         conceptlist = concepts[language]
@@ -75,7 +86,7 @@ def coverage_report(
                 primary_count += 1
         # if args.languages_only:
         #     print(language)
-        data.append(
+        data_languages.append(
             [
                 metadata[c_l_id],
                 metadata["Name"],
@@ -84,7 +95,64 @@ def coverage_report(
                 synonyms,
             ]
         )
-    return data, header
+    return data_languages, header_languages
+
+
+def coverage_report_concepts(
+    dataset: pycldf.Dataset,
+):
+    # load possible primary concepts
+    c_c_id = dataset["ParameterTable", "id"].name
+    try:
+        primary_concepts = [
+            c[c_c_id] for c in dataset["ParameterTable"] if c["Primary"]
+        ]
+    except KeyError:
+        logger.warning(
+            "ParamterTable doesn't contain a column 'Primary'. Primary concepts couldn't be loaded. "
+            "Loading all concepts."
+        )
+        primary_concepts = [c[c_c_id] for c in dataset["ParameterTable"]]
+    # get the foreign keys pointing to the required tables
+    foreign_key_parameter = ""
+    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
+        if foreign_key.reference.resource == dataset["ParameterTable"].url:
+            foreign_key_parameter = foreign_key.columnReference[0]
+
+    foreign_key_language = ""
+    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
+        if foreign_key.reference.resource == dataset["LanguageTable"].url:
+            foreign_key_language = foreign_key.columnReference[0]
+
+    multiple_concepts = bool(dataset["FormTable", "parameterReference"].separator)
+    c_concept = foreign_key_parameter
+    c_language = foreign_key_language
+    # for each concept count the languages
+    concepts_to_languages: t.DefaultDict[str, t.List[str]] = t.DefaultDict(list)
+    for form in dataset["FormTable"]:
+        if multiple_concepts:
+            language = form[c_language]
+            for concept in form[c_concept]:
+                if (
+                    language not in concepts_to_languages[concept]
+                    and concept in primary_concepts
+                ):
+                    concepts_to_languages[concept].append(language)
+        else:
+            concept = form[c_concept]
+            language = form[c_language]
+            if (
+                language not in concepts_to_languages[concept]
+                and concept in primary_concepts
+            ):
+                concepts_to_languages[concept].append(language)
+
+    data_concepts = []
+    for k, v in concepts_to_languages.items():
+        data_concepts.append([k, len(set(v))])
+    header_concepts = ""
+
+    return data_concepts, header_concepts
 
 
 if __name__ == "__main__":
@@ -120,6 +188,13 @@ if __name__ == "__main__":
         metavar="CONCEPT",
     )
     parser.add_argument(
+        "--concept-report",
+        "-r",
+        action="store_true",
+        default=False,
+        help="Output separate report with concepts and the number of languages that attest them",
+    )
+    parser.add_argument(
         "--missing",
         action="store_true",
         default=False,
@@ -139,6 +214,7 @@ if __name__ == "__main__":
     )
 
     # TODO: consider generic way of writing the header
+    print(data)
     print(
         tabulate(
             data,
@@ -152,3 +228,17 @@ if __name__ == "__main__":
             tablefmt="pretty",
         )
     )
+
+    if args.concept_report:
+        data, header = coverage_report_concepts(dataset=dataset)
+        print(data)
+        print(
+            tabulate(
+                data,
+                headers=[
+                    "Concept_ID",
+                    "Language_Count",
+                ],
+                tablefmt="pretty",
+            )
+        )
