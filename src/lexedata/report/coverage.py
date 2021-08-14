@@ -53,7 +53,7 @@ def coverage_report(
             c[c_c_id] for c in dataset["ParameterTable"] if c["Primary"]
         ]
     except KeyError:
-        logger.warning(
+        cli.logger.warning(
             "ParamterTable doesn't contain a column 'Primary'. Primary concepts couldn't be loaded. "
             "Loading all concepts."
         )
@@ -108,7 +108,7 @@ def coverage_report_concepts(
             c[c_c_id] for c in dataset["ParameterTable"] if c["Primary"]
         ]
     except KeyError:
-        logger.warning(
+        cli.logger.warning(
             "ParamterTable doesn't contain a column 'Primary'. Primary concepts couldn't be loaded. "
             "Loading all concepts."
         )
@@ -214,7 +214,6 @@ if __name__ == "__main__":
     )
 
     # TODO: consider generic way of writing the header
-    print(data)
     print(
         tabulate(
             data,
@@ -231,7 +230,6 @@ if __name__ == "__main__":
 
     if args.concept_report:
         data, header = coverage_report_concepts(dataset=dataset)
-        print(data)
         print(
             tabulate(
                 data,
