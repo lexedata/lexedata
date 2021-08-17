@@ -826,7 +826,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--cogsets",
         type=Path,
-        default="",
+        default=None,
         help="Path to an optional second Excel file containing cogsets and cognate judgements",
     )
     parser.add_argument(
