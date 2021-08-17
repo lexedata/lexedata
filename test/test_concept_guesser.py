@@ -14,7 +14,9 @@ from lexedata.edit.add_central_concepts import (
 from lexedata.edit.add_concepticon import (
     create_concepticon_for_concepts,
     add_concepticon_definitions,
+    add_concepticon_names,
 )
+from lexedata.util.fs import copy_dataset
 
 
 # TODO: Discuss this with Gereon. This fixture seems dangerous as we call a function that we test at another place
@@ -153,3 +155,16 @@ def test_concepticon_definitions(copy_wordlist_add_concepticons):
         "The natural number five (5).",
         "That part of the fore limb below the forearm or wrist in primates (including humans).",
     ]
+
+
+def test_add_concepticon_names_missing_column():
+    original = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    target = dirname / original.name
+    dataset = copy_dataset(original=original, target=target)
+    add_concepticon_names(dataset=dataset)
+    print(dataset["ParameterTable", "asdf"])
+    try:
+        assert dataset["ParameterTable", "Concepticon_Gloss"]
+    except KeyError:
+        pytest.fail("No column Concepticon_Gloss")
