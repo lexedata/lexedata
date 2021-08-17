@@ -163,7 +163,6 @@ def test_add_concepticon_names_missing_column():
     target = dirname / original.name
     dataset = copy_dataset(original=original, target=target)
     add_concepticon_names(dataset=dataset)
-    print(dataset["ParameterTable", "asdf"])
     try:
         assert dataset["ParameterTable", "Concepticon_Gloss"]
     except KeyError:
