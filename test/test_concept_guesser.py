@@ -14,7 +14,9 @@ from lexedata.edit.add_central_concepts import (
 from lexedata.edit.add_concepticon import (
     create_concepticon_for_concepts,
     add_concepticon_definitions,
+    add_concepticon_names
 )
+from helper_functions import copy_metadata
 
 
 # TODO: Discuss this with Gereon. This fixture seems dangerous as we call a function that we test at another place
@@ -153,3 +155,11 @@ def test_concepticon_definitions(copy_wordlist_add_concepticons):
         "The natural number five (5).",
         "That part of the fore limb below the forearm or wrist in primates (including humans).",
     ]
+
+
+def test_add_concepticon_names_add_column():
+    target = copy_metadata(Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json")
+    dataset = pycldf.Dataset.from_metadata(target)
+    add_concepticon_names(dataset=dataset)
+    print(dataset["ParamterTable", "Concepticon_Gloss"])
+    assert dataset["ParamterTable", "Concepticon_Gloss"]
