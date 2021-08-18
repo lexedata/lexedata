@@ -60,6 +60,9 @@ def import_interleaved(
                 elif bracket_level:
                     i += 1
                     continue
+                # TODO: this could be dangerous, we could replace an arbitrary ?
+                if f[i] == "?":
+                    f = f.replace("?", "")
                 elif match:
                     forms.append(f[:i].strip())
                     i += match.span()[1]
@@ -77,6 +80,8 @@ def import_interleaved(
                     cogset = str(cogset.value)
                 else:
                     cogset = cogset.value
+                    if cogset == "?":
+                        cogset = ""
                 cogsets = comma_or_semicolon.split(cogset.strip())
 
             if len(cogsets) == 1 or len(cogsets) == len(forms):
