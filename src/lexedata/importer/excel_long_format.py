@@ -211,6 +211,9 @@ def read_single_excel_sheet(
             continue
         # else, look for candidates, link to existing form or add new form
         for item, value in form.items():
+            # TODO: How to prevent matching of '' forms?
+            if value == "?":
+                value = ""
             try:
                 sep = db.dataset["FormTable", item].separator
             except KeyError:
