@@ -213,7 +213,8 @@ def read_single_excel_sheet(
         for item, value in form.items():
             # TODO: How to prevent matching of '' forms?
             if value == "?":
-                value = ""
+                form[item] = ""
+
             try:
                 sep = db.dataset["FormTable", item].separator
             except KeyError:
