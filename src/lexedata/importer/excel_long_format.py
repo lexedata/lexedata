@@ -314,7 +314,10 @@ def add_single_languages(
                 f"Importing all forms independent of concept"
             )
         concepts = KeyKeyDict()
-        concept_column = dataset["FormTable", "parameterReference"].name
+        if concept_name:
+            concept_column = concept_name
+        else:
+            concept_column = dataset["FormTable", "parameterReference"].name
     # add Status_Column if not existing and status_update given
     if status_update:
         add_status_column_to_table(dataset=dataset, table_name="FormTable")
