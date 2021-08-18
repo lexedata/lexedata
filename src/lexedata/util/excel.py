@@ -457,6 +457,7 @@ class CellParser(NaiveCellParser):
                 if element.startswith(start):
                     break
             else:
+                # TODO: here an other if catchin '-' might be necessary
                 # The only thing we expect outside delimiters is the variant
                 # separators, '~' and '%'.
                 if self.variant_separator and element in self.variant_separator:
