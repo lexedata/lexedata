@@ -163,6 +163,7 @@ def forms_to_tsv(
         c_segment_slice = dataset["CognateTable", "segmentSlice"].name
         c_alignment = dataset["CognateTable", "alignment"].name
     except KeyError:
+        # TODO: why not use directly: cli.EXIT.NO_COGNATETABLE(message) ?
         logger.critical(
             """Edictor export requires your dataset to have an explicit CognateTable containing the judgements,
             with all of IDs, forms, cognatesets, segment slices and alignments.
@@ -176,9 +177,10 @@ def forms_to_tsv(
     try:
         c_form_segments = dataset["FormTable", "segments"].name
     except KeyError:
+        # TODO: same: why not use cli:Exit....() directly?
         logger.critical(
             """Edictor export requires your dataset to have segments in the FormTable.
-        Run `lexedata.edit.segment_using_clts` to automatically add segments based on your forms."""
+        Run `lexedata.edit.add_segments` to automatically add segments based on your forms."""
         )
         # TODO: Exit.NO_SEGMENTS is not an `int`, so the exit code of the
         # python run is actually 1, not 4 as we wanted.
@@ -214,7 +216,7 @@ def forms_to_tsv(
                         form[c] = d.join(form[c])
                     except TypeError:
                         logger.warning(
-                            f"No segments found for form {form[c_form_id]}. You can generate segments using `lexedata.enrich.segment_using_clts`."
+                            f"No segments found for form {form[c_form_id]}. You can generate segments using `lexedata.edit.add_segments`."
                         )
                 # 2. No tabs, newlines in entries
                 for c, v in form.items():
