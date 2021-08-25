@@ -174,6 +174,7 @@ def forms_to_tsv(
     c_form_language = dataset["FormTable", "languageReference"].name
     c_form_concept = dataset["FormTable", "parameterReference"].name
     c_form_id = dataset["FormTable", "id"].name
+    c_form_form = dataset["FormTable", "form"].name
     try:
         c_form_segments = dataset["FormTable", "segments"].name
     except KeyError:
@@ -205,6 +206,8 @@ def forms_to_tsv(
     # select forms and cognates given restriction of languages and concepts, cognatesets respectively
     forms = {}
     for form in dataset["FormTable"]:
+        if form[c_form_form] is None or form[c_form_form] == "-":
+            continue
         if form[c_form_language] in languages:
             if concepts.intersection(ensure_list(form[c_form_concept])):
                 # Normalize the form:
@@ -223,7 +226,6 @@ def forms_to_tsv(
                     if type(v) == str:
                         form[c] = form[c].replace("\t", "!t").replace("\n", "!n")
                 forms[form[c_form_id]] = form
-
     cognateset_cache: t.Mapping[t.Optional[str], int]
     if "CognatesetTable" in dataset:
         cognateset_cache = {
