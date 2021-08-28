@@ -79,6 +79,8 @@ def import_data_from_sheet(
 
     for row in row_iter:
         data = Form({k: clean_cell_value(cell) for k, cell in zip(sheet_header, row)})
+        if "?" in data.values():
+            continue
         if "value" in implicit:
             data[implicit["value"]] = "\t".join(map(str, data.values()))
         concept_entry = data.pop(concept_column[1])
@@ -211,10 +213,6 @@ def read_single_excel_sheet(
             continue
         # else, look for candidates, link to existing form or add new form
         for item, value in form.items():
-            # TODO: How to prevent matching of '' forms?
-            if value == "?":
-                form[item] = ""
-
             try:
                 sep = db.dataset["FormTable", item].separator
             except KeyError:

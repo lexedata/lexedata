@@ -223,7 +223,7 @@ class NaiveCellParser:
         return Form(
             {
                 self.c["value"]: form_string,
-                self.c["form"]: form_string.strip() if form_string.strip() != "?" else "",
+                self.c["form"]: form_string.strip(),
                 self.c["lang"]: language_id,
             }
         )
@@ -491,8 +491,6 @@ class CellParser(NaiveCellParser):
                     logger.warning(
                         f"{cell_identifier}In form {form_string}: Element {element} was supposed to be a variant, but there is no earlier {field}"
                     )
-                if element == start + "?" + self.bracket_pairs[start]:
-                    element = start + "" + self.bracket_pairs[start]
                 properties[field] = element
 
             expect_variant = None

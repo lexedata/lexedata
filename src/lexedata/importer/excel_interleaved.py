@@ -60,9 +60,6 @@ def import_interleaved(
                 elif bracket_level:
                     i += 1
                     continue
-                # TODO: this could be dangerous, we could replace an arbitrary ?
-                if f[i] == "?":
-                    f = f.replace("?", "")
                 elif match:
                     forms.append(f[:i].strip())
                     i += match.span()[1]
@@ -80,8 +77,6 @@ def import_interleaved(
                     cogset = str(cogset.value)
                 else:
                     cogset = cogset.value
-                    if cogset == "?":
-                        cogset = ""
                 cogsets = comma_or_semicolon.split(cogset.strip())
 
             if len(cogsets) == 1 or len(cogsets) == len(forms):
@@ -93,6 +88,8 @@ def import_interleaved(
                     )
                 )
             for form, cogset in zip(forms, cogsets + [None]):
+                if form == "?" or cogset == "?":
+                    continue
                 base_id = util.string_to_id(f"{language_name}_{concepts[c]}")
                 id = base_id
                 synonym = 1
@@ -129,7 +126,7 @@ if __name__ == "__main__":
     )
 
     if not args.sheet:
-        args.sheet = ws.get_sheet_names()
+        args.sheet = [sheet for sheet in ws.sheetnames]
 
     ids: t.Set[str] = set()
     for sheetname in args.sheet:
