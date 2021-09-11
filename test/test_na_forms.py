@@ -6,10 +6,14 @@ import pytest
 import pycldf
 import openpyxl as op
 
-from lexedata.exporter.edictor import forms_to_tsv
 from lexedata.importer.excel_matrix import load_dataset
 from lexedata.importer.excel_interleaved import import_interleaved
 from lexedata.importer.excel_long_format import add_single_languages
+
+from lexedata.exporter.edictor import forms_to_tsv
+
+from lexedata.edit.add_segments import add_segments_to_dataset
+
 from lexedata.types import WorldSet
 from lexedata.util.fs import copy_dataset
 from helper_functions import copy_metadata
@@ -46,6 +50,7 @@ tested by this module. It affects multiple different components of Lexedata.
 
 """
 
+# Test the importers
 @pytest.mark.skip()
 def test_matrix_import_skips_question_marks():
     data = [  # noqa
@@ -114,6 +119,7 @@ def test_single_excel_import_skips_na():
         ["aa", "e.ta.'kɾã", "one"],
         ["bb", "mĩ.'ɾõ1", "two"],
         ["?", "?", "one"],
+        ["cc", "?", "three"],
     ]
     # create excel with data
     wb = op.Workbook()
@@ -124,7 +130,6 @@ def test_single_excel_import_skips_na():
     metadata = copy_metadata(
         Path(__file__).parent / "data\cldf\minimal\cldf-metadata.json"
     )
-    #metadata = metadata.
     _ = add_single_languages(
         metadata=metadata,
         sheets=sheets,
@@ -147,18 +152,71 @@ def test_single_excel_import_skips_na():
     ]
 
 
-
-def test_import_loads_dash():
-    data = [  # noqa
-        ["Concept", "L1", "L2"],
-        ["C1", "-", "Form1"],
-        ["C2", "Form2", "Form3"],
-    ]  # noqa
-    # TODO: Put data into an Excel sheet
-    # TODO: Run a matrix importer
-    # TODO: Check that the resulting dataset has an entry "-" for C1 in L1
+@pytest.mark.skip()
+def test_matrix_importer_dash():
+    pass
 
 
+def test_interleaved_import_dash():
+    data = [
+        ["", "Duala", "Ntomba"],
+        ["all", "ɓɛ́sɛ̃(nk)", "umá"],
+        ["", "1", "-"],
+        ["arm", "-", "lobɔ́kɔ"],
+        ["", "7", "1"]
+    ]
+
+    # create excel with data
+    wb = op.Workbook()
+    ws = wb.active
+    for row in data:
+        ws.append(row)
+    # import excel
+    forms = [r for r in import_interleaved(ws)]
+    assert forms == [
+        ['duala_all_s2', 'Duala', 'all', 'ɓɛ́sɛ̃(nk)', None, '1'],
+        ['duala_arm', 'Duala', 'arm', '-', None, '7'],
+        ['ntomba_all', 'Ntomba', 'all', 'umá', None, '-'],
+        ['ntomba_arm_s2', 'Ntomba', 'arm', 'lobɔ́kɔ', None, '1']
+    ]
+
+
+def test_single_excel_import_dash():
+    data = [ # noqa
+        ["phonetic", "Form", "English"],
+        ["aa", "e.ta.'kɾã", "one"],
+        ["bb", "-", "two"],
+    ]
+    # create excel with data
+    wb = op.Workbook()
+    ws = wb.active
+    for row in data:
+        ws.append(row)
+    sheets = [sheet for sheet in wb]
+    metadata = copy_metadata(
+        Path(__file__).parent / "data\cldf\minimal\cldf-metadata.json"
+    )
+    _ = add_single_languages(
+        metadata=metadata,
+        sheets=sheets,
+        match_form=[],
+        concept_name="English",
+        ignore_superfluous=True,
+        ignore_missing=True,
+        status_update=None,
+        logger=cli.logger
+    )
+    dataset = pycldf.Dataset.from_metadata(metadata)
+    forms = [f for f in dataset["FormTable"]]
+    assert forms == [
+        OrderedDict([('ID', 'sheet_one'), ('Language_ID', 'Sheet'), ('Concept_ID', 'one'), ('Form', "e.ta.'kɾã"),
+                     ('Segments', []), ('Value', "aa\te.ta.'kɾã\tone"), ('Comment', None), ('Source', [])]),
+        OrderedDict([('ID', 'sheet_two'), ('Language_ID', 'Sheet'), ('Concept_ID', 'two'), ('Form', '-'),
+                     ('Segments', []), ('Value', 'bb\t-\ttwo'), ('Comment', None), ('Source', [])])
+    ]
+
+
+# Test exporters
 def test_phylogenetics_exporter_dash_is_absence():
     forms = [  # noqa
         {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": "L1C1"},
@@ -230,10 +288,8 @@ def test_edictor_no_na_forms():
                              ('Source', '')])
     }
 
-    # TODO: Run the edictor exporter
-    # TODO: Check that the edictor export contains only L2C1 and L1C2
 
-
+# Test other scripts
 def test_detect_cognates_ignores_na_forms():
     forms = [  # noqa
         {"ID": "L1C1", "Language_ID": "L1", "Parameter_ID": "C1", "Form": ""},
@@ -250,14 +306,37 @@ def test_detect_cognates_ignores_na_forms():
 
 
 def test_add_segments_skips_na_forms():
-    forms = [  # noqa
-        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": ""},
-        {"ID": "L2C1", "Language_ID": "L2", "Concept_ID": "C1", "Form": "L2C1"},
-        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C2", "Form": "L1C2"},
-        {"ID": "L2C2", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-"},
+    dataset = pycldf.Dataset.from_metadata(
+        copy_metadata(
+            Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
+        )
+    )
+    # TODO: Ask Gereon: if the second form contains 'Value: ""', an error
+    # TODO: ValueError: C:\Users\WALTER~1.FUC\AppData\Local\Temp\lexedata-testtgo_g_z0\forms.csv:3:6 Value: required column value is missing is raised
+    dataset.write(FormTable=[
+        {"ID": "L2C2", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-", "Value": "-"},
+        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": "", "Value": "?"},
+        {"ID": "L2C1", "Language_ID": "L2", "Concept_ID": "C1", "Form": "L2C1", "Value": "L2C1"},
+        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C2", "Form": "L1C2", "Value": "L1C2"},
+
+    ])
+    _ = add_segments_to_dataset(
+        dataset=dataset,
+        transcription="Form",
+        overwrite_existing=False,
+        replace_form=False,
+    )
+    forms = [f for f in dataset["FormTable"]]
+    assert forms == [
+        OrderedDict([('ID', 'L2C2'), ('Language_ID', 'L2'), ('Concept_ID', 'C2'), ('Form', '-'), ('Segments', []),
+                     ('Value', '-'), ('Comment', None), ('Source', [])]),
+        OrderedDict([('ID', 'L1C1'), ('Language_ID', 'L1'), ('Concept_ID', 'C1'), ('Form', None), ('Segments', []),
+                     ('Value', '?'), ('Comment', None), ('Source', [])]),
+        OrderedDict([('ID', 'L2C1'), ('Language_ID', 'L2'), ('Concept_ID', 'C1'), ('Form', 'L2C1'),
+                     ('Segments', ['L', '²', 'C', '¹']), ('Value', 'L2C1'), ('Comment', None), ('Source', [])]),
+        OrderedDict([('ID', 'L1C2'), ('Language_ID', 'L1'), ('Concept_ID', 'C2'), ('Form', 'L1C2'),
+                     ('Segments', ['L', '¹', 'C', '²']), ('Value', 'L1C2'), ('Comment', None), ('Source', [])])
     ]
-    # TODO: run add_segments
-    # TODO: Check that the segments for L1C1 and L2C2 are empty
 
 
 def test_add_singlestons():
