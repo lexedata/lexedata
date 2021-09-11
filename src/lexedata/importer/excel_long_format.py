@@ -407,7 +407,7 @@ if __name__ == "__main__":
     if not args.sheet:
         sheets = [
             sheet
-            for sheet in args.excel.worksheets
+            for sheet in args.excel
             if sheet.title not in args.exclude_sheet
         ]
         logger.info("No sheets specified explicitly. Parsing sheets: %s", args.sheet)
