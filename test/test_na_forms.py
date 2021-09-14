@@ -1,6 +1,7 @@
 from pathlib import Path
 import tempfile
 from collections import OrderedDict
+import re
 
 import pytest
 import pycldf
@@ -13,6 +14,9 @@ from lexedata.importer.excel_long_format import add_single_languages
 from lexedata.exporter.edictor import forms_to_tsv
 
 from lexedata.edit.add_segments import add_segments_to_dataset
+from lexedata.edit.add_concepticon import create_concepticon_for_concepts
+
+from lexedata.report.homophones import list_homophones
 
 from lexedata.types import WorldSet
 from lexedata.util.fs import copy_dataset
@@ -276,7 +280,6 @@ def test_edictor_no_na_forms():
         concepts=WorldSet(),
         cognatesets=cognates
                  )
-    print(forms)
     assert forms == {
         'L2C1': OrderedDict([('ID', 'L2C1'), ('Language_ID', 'L2'), ('Parameter_ID', 'C;1'), ('Form', 'L2C1'),
                              ('orthographic', None), ('phonemic', None), ('phonetic', None), ('variants', ''),
@@ -306,6 +309,13 @@ def test_detect_cognates_ignores_na_forms():
 
 
 def test_add_segments_skips_na_forms():
+    forms = [
+        {"ID": "L2C2", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-", "Value": "-"},
+        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": "", "Value": "?"},
+        {"ID": "L2C1", "Language_ID": "L2", "Concept_ID": "C1", "Form": "L2C1", "Value": "L2C1"},
+        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C2", "Form": "L1C2", "Value": "L1C2"},
+
+    ]
     dataset = pycldf.Dataset.from_metadata(
         copy_metadata(
             Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
@@ -313,21 +323,15 @@ def test_add_segments_skips_na_forms():
     )
     # TODO: Ask Gereon: if the second form contains 'Value: ""', an error
     # TODO: ValueError: C:\Users\WALTER~1.FUC\AppData\Local\Temp\lexedata-testtgo_g_z0\forms.csv:3:6 Value: required column value is missing is raised
-    dataset.write(FormTable=[
-        {"ID": "L2C2", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-", "Value": "-"},
-        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": "", "Value": "?"},
-        {"ID": "L2C1", "Language_ID": "L2", "Concept_ID": "C1", "Form": "L2C1", "Value": "L2C1"},
-        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C2", "Form": "L1C2", "Value": "L1C2"},
-
-    ])
+    dataset.write(FormTable=forms)
     _ = add_segments_to_dataset(
         dataset=dataset,
         transcription="Form",
         overwrite_existing=False,
         replace_form=False,
     )
-    forms = [f for f in dataset["FormTable"]]
-    assert forms == [
+    segmented_forms = [f for f in dataset["FormTable"]]
+    assert segmented_forms == [
         OrderedDict([('ID', 'L2C2'), ('Language_ID', 'L2'), ('Concept_ID', 'C2'), ('Form', '-'), ('Segments', []),
                      ('Value', '-'), ('Comment', None), ('Source', [])]),
         OrderedDict([('ID', 'L1C1'), ('Language_ID', 'L1'), ('Concept_ID', 'C1'), ('Form', None), ('Segments', []),
@@ -351,17 +355,40 @@ def test_add_singlestons():
     # TODO: What should happen to the -?
 
 
-def test_homohpones_skips_na_forms():
+def test_homohpones_skips_na_forms(capsys):
     forms = [  # noqa
-        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C2", "Form": "form"},
-        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C1", "Form": ""},
-        {"ID": "L1C3", "Language_ID": "L1", "Concept_ID": "C2", "Form": "form"},
-        {"ID": "L1C4", "Language_ID": "L1", "Concept_ID": "C2", "Form": ""},
-        {"ID": "L1C5", "Language_ID": "L1", "Concept_ID": "C2", "Form": "-"},
-        {"ID": "L1C6", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-"},
+        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C2", "Form": "form", "Value": "-"},
+        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C1", "Form": "", "Value": "-"},
+        {"ID": "L1C3", "Language_ID": "L1", "Concept_ID": "C2", "Form": "form", "Value": "-"},
+        {"ID": "L1C4", "Language_ID": "L1", "Concept_ID": "C2", "Form": "", "Value": "-"},
+        {"ID": "L1C5", "Language_ID": "L1", "Concept_ID": "C2", "Form": "-", "Value": "-"},
+        {"ID": "L1C6", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-", "Value": "-"},
     ]
+    dataset = pycldf.Dataset.from_metadata(
+        copy_metadata(
+            Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
+        )
+    )
+    dataset.write(FormTable=forms, ParameterTable=[
+        {"ID": "C1", "Name": "one"},
+        {"ID": "C2", "Name": "two"}
+    ])
+    # add concepticon reference
+    create_concepticon_for_concepts(
+        dataset=dataset,
+        language=[],
+        concepticon_glosses=False,
+        concepticon_definition=False,
+        overwrite=False,
+        status_update=None,
+    )
+    list_homophones(dataset=dataset)
+    cap = capsys.readouterr()
+    match = r"OrderedDict\(.+\)\nOrderedDict\(.+\)\nUnknown: L1 form \{\('C2', 'L1C3'\), \('C2', 'L1C1'\)\}"
+    assert re.match(match, cap.out)
     # TODO: run report.homophones
-    # TODO: check that the reported homophones are only [{"L1C1", "L1C3"}], because the other entries don't count as forms.
+    # TODO: check that the reported homophones are only [{"L1C1", "L1C3"}], because the other entries don't
+    # count as forms.
 
 
 def test_extended_cldf_validate():

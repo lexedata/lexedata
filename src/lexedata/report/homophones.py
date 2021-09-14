@@ -24,7 +24,11 @@ def list_homophones(
         clics = nx.Graph()
 
     c_id = dataset["ParameterTable", "id"].name
-    c_concepticon = dataset["ParameterTable", "concepticonReference"].name
+    try:
+        c_concepticon = dataset["ParameterTable", "concepticonReference"].name
+    except KeyError:
+        cli.Exit.INVALID_DATASET("This script requires a column concepticonReference in ParamterTable. "
+                                 "Please run add_concepticon.py")
     concepticon = {}
     for concept in dataset["ParameterTable"]:
         concepticon[concept[c_id]] = concept[c_concepticon]
@@ -39,6 +43,8 @@ def list_homophones(
     ] = t.DefaultDict(lambda: t.DefaultDict(set))
 
     for form in dataset["FormTable"]:
+        if form[f_form] == "-" or form[f_form] is None:
+            continue
         homophones[form[f_lang]][form[f_form]].add((form[f_concept], form[f_id]))
 
     for lang, forms in homophones.items():
