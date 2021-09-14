@@ -223,7 +223,7 @@ def add_segments_to_dataset(
             write_back.append(row)
             continue
         else:
-            if row[transcription] == "" or row[transcription] == "-":
+            if row[transcription] is None or row[transcription] == "-":
                 row[dataset.column_names.forms.segments] = ""
             elif row[transcription]:
                 form = row[transcription].strip()
