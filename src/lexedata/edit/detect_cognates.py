@@ -66,7 +66,7 @@ def cognate_code_to_file(
     mode: str,
     output_file: Path,
 ) -> None:
-    dataset = pycldf.Wordlist.from_metadata(args.metadata)
+    dataset = pycldf.Wordlist.from_metadata(metadata)
     assert (
         dataset.column_names.forms.segments is not None
     ), "Dataset must have a CLDF #segments column."
