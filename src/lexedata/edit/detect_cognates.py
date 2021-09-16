@@ -176,7 +176,8 @@ def cognate_code_to_file(
         alignment = line["ALIGNMENT"].split(" + ")
         slice_start = 0
         for cs, alm in zip(partial, alignment):
-            cognatesets.setdefault(cs, {"ID": cs})
+            # TODO: @Gereon: is it alright to add the same content to Name and ID?
+            cognatesets.setdefault(cs, {"ID": cs, "Name": cs})
             length = len(alm.split())
             judgements.append(
                 {
