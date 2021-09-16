@@ -1,9 +1,7 @@
 from pathlib import Path
-import tempfile
 from collections import OrderedDict
 import re
 import tempfile
-import shutil
 
 import pytest
 import pycldf
@@ -74,7 +72,7 @@ def test_matrix_import_skips_question_marks():
     target = dirname / "test.xlsx"
     wb.save(target)
 
-    # TODo: struggeling to make a matrix importer run on such a simple structure in a way whitout too much coding ... this might even be a bad sign?
+    # TODO: struggeling to make a matrix importer run on such a simple structure in a way whitout too much coding ... this might even be a bad sign?
     # create simple metadata
     dataset = pycldf.Wordlist.in_dir(dirname)
     dataset.write(FormTable=[  # noqa
@@ -224,6 +222,7 @@ def test_single_excel_import_dash():
 
 
 # Test exporters
+# TODO: @Gereon Could you take care of the phylogenetics exporter?
 def test_phylogenetics_exporter_dash_is_absence():
     forms = [  # noqa
         {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": "L1C1"},
@@ -240,6 +239,7 @@ def test_phylogenetics_exporter_dash_is_absence():
     assert {"L1": "011", "L2": "010"}  # TODO == alignment
 
 
+# TODO: @Gereon Could you take care of the phylogenetics exporter?
 def test_phylogenetics_exporter_unknown():
     forms = [  # noqa
         {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": "L1C1"},
@@ -297,7 +297,8 @@ def test_edictor_exporter_no_na_forms():
 
 # Test other scripts
 # TODO: detect cognates creates a bunch of .tsv files. Is that supposed to be the case?
-@pytest.mark.skip(reason="The generated cognateset file does not comply with the metadata (column Name is missing)")
+# TODO: I'm unsure about the created cognatesets.csv. Could you, Gereon, check that it is alright? SO far no changes performed on detect_cognates to block na forms...
+@pytest.mark.skip()
 def test_detect_cognates_ignores_na_forms():
     forms = [  # noqa
         {"ID": "L2C1", "Language_ID": "L2", "Concept_ID": "C1", "Form": "L2C1", "Value": "L2C1"},
@@ -434,7 +435,7 @@ def test_extended_cldf_validate():
     # - A dataset where the segments is "" and the form is "-" should pass
     ...
 
-
+# TODO: so far coverage.py does not report forms at all, though we can skip "" and "-" forms
 def test_coverage_reports_na():
     # TODO: Check that the coverage report can treat "" forms like missing
     # rows, and that it can report "-" forms separately, and that it counts
