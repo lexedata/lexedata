@@ -12,6 +12,8 @@ import logging
 import tempfile
 from pathlib import Path
 
+import openpyxl
+
 from lexedata import util
 from lexedata.importer import excel_interleaved
 from lexedata.edit import add_cognate_table
@@ -71,7 +73,11 @@ def interleaved_excel_example():
         ["black", "wínda", "", "hínda; épííndu", "a-picy; ndwɛɛm"],
         ["", "21", "", "21, 21", "22, 23"],
     ]
-    return MockSingleExcelSheet(data)
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    for row in data:
+        ws.append(row)
+    return ws
 
 
 @pytest.fixture
