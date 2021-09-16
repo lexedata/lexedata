@@ -132,12 +132,12 @@ def cognate_code_to_file(
     # For some purposes it is useful to have monolithic cognate classes.
     lex.cluster(
         method="lexstat",
-        threshold=args.threshold,
+        threshold=threshold,
         ref="cogid",
         cluster_method=cluster_method,
         verbose=True,
         override=True,
-        gop=args.gop,
+        gop=gop,
         mode=mode,
     )
     # But actually, in most cases partial cognates are much more useful.
@@ -154,7 +154,7 @@ def cognate_code_to_file(
     lex.output("tsv", filename="auto-clusters")
     alm = lingpy.Alignments(lex, ref="partialcognateids", fuzzy=True)
     alm.align(method="progressive")
-    alm.output("tsv", filename=output_file, ignore="all", prettify=False)
+    alm.output("tsv", filename=str(output_file), ignore="all", prettify=False)
 
     try:
         dataset.add_component("CognateTable")
@@ -166,7 +166,7 @@ def cognate_code_to_file(
         ...
 
     read_back = csv.DictReader(
-        open(output_file + ".tsv", encoding="utf-8"), delimiter="\t"
+        open(str(output_file) + ".tsv", encoding="utf-8"), delimiter="\t"
     )
     cognatesets = {}
     judgements = []
