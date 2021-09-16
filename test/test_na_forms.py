@@ -2,6 +2,8 @@ from pathlib import Path
 import tempfile
 from collections import OrderedDict
 import re
+import tempfile
+import shutil
 
 import pytest
 import pycldf
@@ -15,6 +17,7 @@ from lexedata.exporter.edictor import forms_to_tsv
 
 from lexedata.edit.add_segments import add_segments_to_dataset
 from lexedata.edit.add_concepticon import create_concepticon_for_concepts
+from lexedata.edit.detect_cognates import cognate_code_to_file
 
 from lexedata.report.homophones import list_homophones
 
@@ -255,7 +258,7 @@ def test_phylogenetics_exporter_unknown():
     assert {"L1": "011?", "L2": "01?1"}  # TODO == alignment
 
 
-def test_edictor_no_na_forms():
+def test_edictor_exporter_no_na_forms():
     forms = [  # noqa
         {"ID": "L1C1", "Language_ID": "L1", "Parameter_ID": "C1", "Form": "", "Value": " "},
         {"ID": "L2C1", "Language_ID": "L2", "Parameter_ID": "C1", "Form": "L2C1", "Value": " "},
@@ -293,19 +296,55 @@ def test_edictor_no_na_forms():
 
 
 # Test other scripts
+# TODO: detect cognates creates a bunch of .tsv files. Is that supposed to be the case?
+@pytest.mark.skip(reason="The generated cognateset file does not comply with the metadata (column Name is missing)")
 def test_detect_cognates_ignores_na_forms():
     forms = [  # noqa
-        {"ID": "L1C1", "Language_ID": "L1", "Parameter_ID": "C1", "Form": ""},
-        {"ID": "L2C1", "Language_ID": "L2", "Parameter_ID": "C1", "Form": "L2C1"},
-        {"ID": "L1C2", "Language_ID": "L1", "Parameter_ID": "C2", "Form": "L1C2"},
-        {"ID": "L2C2", "Language_ID": "L2", "Parameter_ID": "C2", "Form": "-"},
+        {"ID": "L2C1", "Language_ID": "L2", "Concept_ID": "C1", "Form": "L2C1", "Value": "L2C1"},
+        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": "", "Value": "?"},
+        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C2", "Form": "L1C2", "Value": "L1C2"},
+        {"ID": "L2C2", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-", "Value": "-"},
     ]
+    cognates = [  # noqa
+        {"ID": "1", "Form_ID": "L2C1", "Cognateset": "1"},
+        {"ID": "2", "Form_ID": "L1C2", "Cognateset": "2"},
+    ]
+    languages = [
+        {"ID": "L1", "Name": "L1"},
+        {"ID": "L2", "Name": "L2"}
+    ]
+    concepts = [
+        {"ID": "C1", "Name": "C1"},
+        {"ID": "C2", "Name": "C2"}
+    ]
+    # load dataset and write content and segment
+    dataset = pycldf.Dataset.from_metadata(
+        copy_metadata(Path(__file__).parent / "data\cldf\minimal\cldf-metadata.json")
+    )
+    dataset.write(FormTable=forms, CognateTable=cognates, LanguageTable=languages, ParameterTable=concepts)
+    _ = add_segments_to_dataset(
+        dataset=dataset,
+        transcription="Form",
+        overwrite_existing=False,
+        replace_form=False,
+    )
+    # call detect cognates
+    cognate_code_to_file(
+        metadata=dataset.tablegroup._fname,
+        ratio=1.5,
+        soundclass="sca",
+        cluster_method="infomap",
+        gop=-2,
+        mode="overlap",
+        threshold=0.55,
+        initial_threshold=0.7,
+        output_file=dataset.tablegroup._fname.parent / "output",
+    )
     # TODO: run ACD
     # TODO: Check that the cognatesets contain only L2C1 and L1C2
-    cognates = [  # noqa
-        {"Form_ID": "L2C1", "Cognateset_ID": "1"},
-        {"Form_ID": "L1C2", "Cognateset_ID": "2"},
-    ]
+    cogsets = [c for c in dataset["CognatesetTable"]]
+    print(cogsets)
+    assert False
 
 
 def test_add_segments_skips_na_forms():
@@ -321,8 +360,6 @@ def test_add_segments_skips_na_forms():
             Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
         )
     )
-    # TODO: Ask Gereon: if the second form contains 'Value: ""', an error
-    # TODO: ValueError: C:\Users\WALTER~1.FUC\AppData\Local\Temp\lexedata-testtgo_g_z0\forms.csv:3:6 Value: required column value is missing is raised
     dataset.write(FormTable=forms)
     _ = add_segments_to_dataset(
         dataset=dataset,
@@ -384,7 +421,7 @@ def test_homohpones_skips_na_forms(capsys):
     )
     list_homophones(dataset=dataset)
     cap = capsys.readouterr()
-    match = r"OrderedDict\(.+\)\nOrderedDict\(.+\)\nUnknown: L1 form \{\('C2', 'L1C3'\), \('C2', 'L1C1'\)\}"
+    match = r"OrderedDict\(.+\)\nOrderedDict\(.+\)\nUnknown: L1 form \{\(('C2', 'L1C1'|'C2', 'L1C3')\), \(('C2', 'L1C1'|'C2', 'L1C3')\)\}\n"
     assert re.match(match, cap.out)
     # TODO: run report.homophones
     # TODO: check that the reported homophones are only [{"L1C1", "L1C3"}], because the other entries don't
