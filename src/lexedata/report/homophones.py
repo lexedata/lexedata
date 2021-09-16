@@ -27,8 +27,10 @@ def list_homophones(
     try:
         c_concepticon = dataset["ParameterTable", "concepticonReference"].name
     except KeyError:
-        cli.Exit.INVALID_DATASET("This script requires a column concepticonReference in ParamterTable. "
-                                 "Please run add_concepticon.py")
+        cli.Exit.INVALID_DATASET(
+            "This script requires a column concepticonReference in ParamterTable. "
+            "Please run add_concepticon.py"
+        )
     concepticon = {}
     for concept in dataset["ParameterTable"]:
         concepticon[concept[c_id]] = concept[c_concepticon]

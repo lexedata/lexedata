@@ -55,6 +55,7 @@ tested by this module. It affects multiple different components of Lexedata.
 
 """
 
+
 # Test the importers
 @pytest.mark.skip()
 def test_matrix_import_skips_question_marks():
@@ -75,12 +76,9 @@ def test_matrix_import_skips_question_marks():
     # TODO: struggeling to make a matrix importer run on such a simple structure in a way whitout too much coding ... this might even be a bad sign?
     # create simple metadata
     dataset = pycldf.Wordlist.in_dir(dirname)
-    dataset.write(FormTable=[  # noqa
-        {"Concept": "", "L1": "", "L2": "", "value": ""}
-         ]
-                  )
-    #metadata = dataset.tablegroup._fname
-    metadata = Path(__file__).parent / "data\cldf\minimal\cldf-metadata.json"
+    dataset.write(FormTable=[{"Concept": "", "L1": "", "L2": "", "value": ""}])  # noqa
+    # metadata = dataset.tablegroup._fname
+    metadata = Path(__file__).parent / r"data\cldf\minimal\cldf-metadata.json"
     # load the dataset
     load_dataset(
         metadata=metadata,
@@ -101,7 +99,7 @@ def test_interleaved_import_skips_na():
         ["all", "ɓɛ́sɛ̃(nk)", "umá"],
         ["", "1", "?"],
         ["arm", "?", "lobɔ́kɔ"],
-        ["", "7", "1"]
+        ["", "7", "1"],
     ]
 
     # create excel with data
@@ -113,13 +111,13 @@ def test_interleaved_import_skips_na():
     forms = [r for r in import_interleaved(ws)]
 
     assert forms == [
-        ['duala_all', 'Duala', 'all', 'ɓɛ́sɛ̃(nk)', None, '1'],
-        ['ntomba_arm', 'Ntomba', 'arm', 'lobɔ́kɔ', None, '1']
+        ["duala_all", "Duala", "all", "ɓɛ́sɛ̃(nk)", None, "1"],
+        ["ntomba_arm", "Ntomba", "arm", "lobɔ́kɔ", None, "1"],
     ]
 
 
 def test_single_excel_import_skips_na():
-    data = [ # noqa
+    data = [  # noqa
         ["phonetic", "Form", "English"],
         ["aa", "e.ta.'kɾã", "one"],
         ["bb", "mĩ.'ɾõ1", "two"],
@@ -133,7 +131,7 @@ def test_single_excel_import_skips_na():
         ws.append(row)
     sheets = [sheet for sheet in wb]
     metadata = copy_metadata(
-        Path(__file__).parent / "data\cldf\minimal\cldf-metadata.json"
+        Path(__file__).parent / r"data\cldf\minimal\cldf-metadata.json"
     )
     _ = add_single_languages(
         metadata=metadata,
@@ -143,17 +141,35 @@ def test_single_excel_import_skips_na():
         ignore_superfluous=True,
         ignore_missing=True,
         status_update=None,
-        logger=cli.logger
+        logger=cli.logger,
     )
     dataset = pycldf.Dataset.from_metadata(metadata)
     forms = [f for f in dataset["FormTable"]]
     assert forms == [
         OrderedDict(
-            [('ID', 'sheet_one'), ('Language_ID', 'Sheet'), ('Concept_ID', 'one'), ('Form', "e.ta.'kɾã"),
-             ('Segments', []), ('Value', "aa\te.ta.'kɾã\tone"), ('Comment', None), ('Source', [])]),
+            [
+                ("ID", "sheet_one"),
+                ("Language_ID", "Sheet"),
+                ("Concept_ID", "one"),
+                ("Form", "e.ta.'kɾã"),
+                ("Segments", []),
+                ("Value", "aa\te.ta.'kɾã\tone"),
+                ("Comment", None),
+                ("Source", []),
+            ]
+        ),
         OrderedDict(
-            [('ID', 'sheet_two'), ('Language_ID', 'Sheet'), ('Concept_ID', 'two'), ('Form', "mĩ.'ɾõ1"),
-             ('Segments', []), ('Value', "bb\tmĩ.'ɾõ1\ttwo"), ('Comment', None), ('Source', [])])
+            [
+                ("ID", "sheet_two"),
+                ("Language_ID", "Sheet"),
+                ("Concept_ID", "two"),
+                ("Form", "mĩ.'ɾõ1"),
+                ("Segments", []),
+                ("Value", "bb\tmĩ.'ɾõ1\ttwo"),
+                ("Comment", None),
+                ("Source", []),
+            ]
+        ),
     ]
 
 
@@ -168,7 +184,7 @@ def test_interleaved_import_dash():
         ["all", "ɓɛ́sɛ̃(nk)", "umá"],
         ["", "1", "-"],
         ["arm", "-", "lobɔ́kɔ"],
-        ["", "7", "1"]
+        ["", "7", "1"],
     ]
 
     # create excel with data
@@ -179,15 +195,15 @@ def test_interleaved_import_dash():
     # import excel
     forms = [r for r in import_interleaved(ws)]
     assert forms == [
-        ['duala_all_s2', 'Duala', 'all', 'ɓɛ́sɛ̃(nk)', None, '1'],
-        ['duala_arm', 'Duala', 'arm', '-', None, '7'],
-        ['ntomba_all', 'Ntomba', 'all', 'umá', None, '-'],
-        ['ntomba_arm_s2', 'Ntomba', 'arm', 'lobɔ́kɔ', None, '1']
+        ["duala_all_s2", "Duala", "all", "ɓɛ́sɛ̃(nk)", None, "1"],
+        ["duala_arm", "Duala", "arm", "-", None, "7"],
+        ["ntomba_all", "Ntomba", "all", "umá", None, "-"],
+        ["ntomba_arm_s2", "Ntomba", "arm", "lobɔ́kɔ", None, "1"],
     ]
 
 
 def test_single_excel_import_dash():
-    data = [ # noqa
+    data = [  # noqa
         ["phonetic", "Form", "English"],
         ["aa", "e.ta.'kɾã", "one"],
         ["bb", "-", "two"],
@@ -199,7 +215,7 @@ def test_single_excel_import_dash():
         ws.append(row)
     sheets = [sheet for sheet in wb]
     metadata = copy_metadata(
-        Path(__file__).parent / "data\cldf\minimal\cldf-metadata.json"
+        Path(__file__).parent / r"data\cldf\minimal\cldf-metadata.json"
     )
     _ = add_single_languages(
         metadata=metadata,
@@ -209,15 +225,35 @@ def test_single_excel_import_dash():
         ignore_superfluous=True,
         ignore_missing=True,
         status_update=None,
-        logger=cli.logger
+        logger=cli.logger,
     )
     dataset = pycldf.Dataset.from_metadata(metadata)
     forms = [f for f in dataset["FormTable"]]
     assert forms == [
-        OrderedDict([('ID', 'sheet_one'), ('Language_ID', 'Sheet'), ('Concept_ID', 'one'), ('Form', "e.ta.'kɾã"),
-                     ('Segments', []), ('Value', "aa\te.ta.'kɾã\tone"), ('Comment', None), ('Source', [])]),
-        OrderedDict([('ID', 'sheet_two'), ('Language_ID', 'Sheet'), ('Concept_ID', 'two'), ('Form', '-'),
-                     ('Segments', []), ('Value', 'bb\t-\ttwo'), ('Comment', None), ('Source', [])])
+        OrderedDict(
+            [
+                ("ID", "sheet_one"),
+                ("Language_ID", "Sheet"),
+                ("Concept_ID", "one"),
+                ("Form", "e.ta.'kɾã"),
+                ("Segments", []),
+                ("Value", "aa\te.ta.'kɾã\tone"),
+                ("Comment", None),
+                ("Source", []),
+            ]
+        ),
+        OrderedDict(
+            [
+                ("ID", "sheet_two"),
+                ("Language_ID", "Sheet"),
+                ("Concept_ID", "two"),
+                ("Form", "-"),
+                ("Segments", []),
+                ("Value", "bb\t-\ttwo"),
+                ("Comment", None),
+                ("Source", []),
+            ]
+        ),
     ]
 
 
@@ -260,10 +296,34 @@ def test_phylogenetics_exporter_unknown():
 
 def test_edictor_exporter_no_na_forms():
     forms = [  # noqa
-        {"ID": "L1C1", "Language_ID": "L1", "Parameter_ID": "C1", "Form": "", "Value": " "},
-        {"ID": "L2C1", "Language_ID": "L2", "Parameter_ID": "C1", "Form": "L2C1", "Value": " "},
-        {"ID": "L1C2", "Language_ID": "L1", "Parameter_ID": "C2", "Form": "L1C2", "Value": " "},
-        {"ID": "L2C2", "Language_ID": "L2", "Parameter_ID": "C2", "Form": "-", "Value": " "},
+        {
+            "ID": "L1C1",
+            "Language_ID": "L1",
+            "Parameter_ID": "C1",
+            "Form": "",
+            "Value": " ",
+        },
+        {
+            "ID": "L2C1",
+            "Language_ID": "L2",
+            "Parameter_ID": "C1",
+            "Form": "L2C1",
+            "Value": " ",
+        },
+        {
+            "ID": "L1C2",
+            "Language_ID": "L1",
+            "Parameter_ID": "C2",
+            "Form": "L1C2",
+            "Value": " ",
+        },
+        {
+            "ID": "L2C2",
+            "Language_ID": "L2",
+            "Parameter_ID": "C2",
+            "Form": "-",
+            "Value": " ",
+        },
     ]
     cognates = [  # noqa
         {"Form_ID": "L2C1", "Cognateset_ID": "1"},
@@ -272,26 +332,50 @@ def test_edictor_exporter_no_na_forms():
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     target = dirname / "cldf-metadata.json"
     dataset = copy_dataset(
-            original=Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json",
-            target=target
-        )
+        original=Path(__file__).parent
+        / r"data/cldf/smallmawetiguarani/cldf-metadata.json",
+        target=target,
+    )
 
     dataset.write(FormTable=forms)
     forms, judgements_about_form, cognateset_mapping = forms_to_tsv(
-        dataset=dataset,
-        languages=WorldSet(),
-        concepts=WorldSet(),
-        cognatesets=cognates
-                 )
+        dataset=dataset, languages=WorldSet(), concepts=WorldSet(), cognatesets=cognates
+    )
     assert forms == {
-        'L2C1': OrderedDict([('ID', 'L2C1'), ('Language_ID', 'L2'), ('Parameter_ID', 'C;1'), ('Form', 'L2C1'),
-                             ('orthographic', None), ('phonemic', None), ('phonetic', None), ('variants', ''),
-                             ('Segments', []), ('Comment', None), ('procedural_comment', None),
-                             ('Value', ' '), ('Source', '')]),
-        'L1C2': OrderedDict([('ID', 'L1C2'), ('Language_ID', 'L1'), ('Parameter_ID', 'C;2'), ('Form', 'L1C2'),
-                             ('orthographic', None), ('phonemic', None), ('phonetic', None), ('variants', ''),
-                             ('Segments', []), ('Comment', None), ('procedural_comment', None), ('Value', ' '),
-                             ('Source', '')])
+        "L2C1": OrderedDict(
+            [
+                ("ID", "L2C1"),
+                ("Language_ID", "L2"),
+                ("Parameter_ID", "C;1"),
+                ("Form", "L2C1"),
+                ("orthographic", None),
+                ("phonemic", None),
+                ("phonetic", None),
+                ("variants", ""),
+                ("Segments", []),
+                ("Comment", None),
+                ("procedural_comment", None),
+                ("Value", " "),
+                ("Source", ""),
+            ]
+        ),
+        "L1C2": OrderedDict(
+            [
+                ("ID", "L1C2"),
+                ("Language_ID", "L1"),
+                ("Parameter_ID", "C;2"),
+                ("Form", "L1C2"),
+                ("orthographic", None),
+                ("phonemic", None),
+                ("phonetic", None),
+                ("variants", ""),
+                ("Segments", []),
+                ("Comment", None),
+                ("procedural_comment", None),
+                ("Value", " "),
+                ("Source", ""),
+            ]
+        ),
     }
 
 
@@ -301,28 +385,51 @@ def test_edictor_exporter_no_na_forms():
 @pytest.mark.skip()
 def test_detect_cognates_ignores_na_forms():
     forms = [  # noqa
-        {"ID": "L2C1", "Language_ID": "L2", "Concept_ID": "C1", "Form": "L2C1", "Value": "L2C1"},
-        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": "", "Value": "?"},
-        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C2", "Form": "L1C2", "Value": "L1C2"},
-        {"ID": "L2C2", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-", "Value": "-"},
+        {
+            "ID": "L2C1",
+            "Language_ID": "L2",
+            "Concept_ID": "C1",
+            "Form": "L2C1",
+            "Value": "L2C1",
+        },
+        {
+            "ID": "L1C1",
+            "Language_ID": "L1",
+            "Concept_ID": "C1",
+            "Form": "",
+            "Value": "?",
+        },
+        {
+            "ID": "L1C2",
+            "Language_ID": "L1",
+            "Concept_ID": "C2",
+            "Form": "L1C2",
+            "Value": "L1C2",
+        },
+        {
+            "ID": "L2C2",
+            "Language_ID": "L2",
+            "Concept_ID": "C2",
+            "Form": "-",
+            "Value": "-",
+        },
     ]
     cognates = [  # noqa
         {"ID": "1", "Form_ID": "L2C1", "Cognateset": "1"},
         {"ID": "2", "Form_ID": "L1C2", "Cognateset": "2"},
     ]
-    languages = [
-        {"ID": "L1", "Name": "L1"},
-        {"ID": "L2", "Name": "L2"}
-    ]
-    concepts = [
-        {"ID": "C1", "Name": "C1"},
-        {"ID": "C2", "Name": "C2"}
-    ]
+    languages = [{"ID": "L1", "Name": "L1"}, {"ID": "L2", "Name": "L2"}]
+    concepts = [{"ID": "C1", "Name": "C1"}, {"ID": "C2", "Name": "C2"}]
     # load dataset and write content and segment
     dataset = pycldf.Dataset.from_metadata(
-        copy_metadata(Path(__file__).parent / "data\cldf\minimal\cldf-metadata.json")
+        copy_metadata(Path(__file__).parent / r"data\cldf\minimal\cldf-metadata.json")
     )
-    dataset.write(FormTable=forms, CognateTable=cognates, LanguageTable=languages, ParameterTable=concepts)
+    dataset.write(
+        FormTable=forms,
+        CognateTable=cognates,
+        LanguageTable=languages,
+        ParameterTable=concepts,
+    )
     _ = add_segments_to_dataset(
         dataset=dataset,
         transcription="Form",
@@ -350,16 +457,37 @@ def test_detect_cognates_ignores_na_forms():
 
 def test_add_segments_skips_na_forms():
     forms = [
-        {"ID": "L2C2", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-", "Value": "-"},
-        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": "", "Value": "?"},
-        {"ID": "L2C1", "Language_ID": "L2", "Concept_ID": "C1", "Form": "L2C1", "Value": "L2C1"},
-        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C2", "Form": "L1C2", "Value": "L1C2"},
-
+        {
+            "ID": "L2C2",
+            "Language_ID": "L2",
+            "Concept_ID": "C2",
+            "Form": "-",
+            "Value": "-",
+        },
+        {
+            "ID": "L1C1",
+            "Language_ID": "L1",
+            "Concept_ID": "C1",
+            "Form": "",
+            "Value": "?",
+        },
+        {
+            "ID": "L2C1",
+            "Language_ID": "L2",
+            "Concept_ID": "C1",
+            "Form": "L2C1",
+            "Value": "L2C1",
+        },
+        {
+            "ID": "L1C2",
+            "Language_ID": "L1",
+            "Concept_ID": "C2",
+            "Form": "L1C2",
+            "Value": "L1C2",
+        },
     ]
     dataset = pycldf.Dataset.from_metadata(
-        copy_metadata(
-            Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
-        )
+        copy_metadata(Path(__file__).parent / r"data/cldf/minimal/cldf-metadata.json")
     )
     dataset.write(FormTable=forms)
     _ = add_segments_to_dataset(
@@ -370,14 +498,54 @@ def test_add_segments_skips_na_forms():
     )
     segmented_forms = [f for f in dataset["FormTable"]]
     assert segmented_forms == [
-        OrderedDict([('ID', 'L2C2'), ('Language_ID', 'L2'), ('Concept_ID', 'C2'), ('Form', '-'), ('Segments', []),
-                     ('Value', '-'), ('Comment', None), ('Source', [])]),
-        OrderedDict([('ID', 'L1C1'), ('Language_ID', 'L1'), ('Concept_ID', 'C1'), ('Form', None), ('Segments', []),
-                     ('Value', '?'), ('Comment', None), ('Source', [])]),
-        OrderedDict([('ID', 'L2C1'), ('Language_ID', 'L2'), ('Concept_ID', 'C1'), ('Form', 'L2C1'),
-                     ('Segments', ['L', '²', 'C', '¹']), ('Value', 'L2C1'), ('Comment', None), ('Source', [])]),
-        OrderedDict([('ID', 'L1C2'), ('Language_ID', 'L1'), ('Concept_ID', 'C2'), ('Form', 'L1C2'),
-                     ('Segments', ['L', '¹', 'C', '²']), ('Value', 'L1C2'), ('Comment', None), ('Source', [])])
+        OrderedDict(
+            [
+                ("ID", "L2C2"),
+                ("Language_ID", "L2"),
+                ("Concept_ID", "C2"),
+                ("Form", "-"),
+                ("Segments", []),
+                ("Value", "-"),
+                ("Comment", None),
+                ("Source", []),
+            ]
+        ),
+        OrderedDict(
+            [
+                ("ID", "L1C1"),
+                ("Language_ID", "L1"),
+                ("Concept_ID", "C1"),
+                ("Form", None),
+                ("Segments", []),
+                ("Value", "?"),
+                ("Comment", None),
+                ("Source", []),
+            ]
+        ),
+        OrderedDict(
+            [
+                ("ID", "L2C1"),
+                ("Language_ID", "L2"),
+                ("Concept_ID", "C1"),
+                ("Form", "L2C1"),
+                ("Segments", ["L", "²", "C", "¹"]),
+                ("Value", "L2C1"),
+                ("Comment", None),
+                ("Source", []),
+            ]
+        ),
+        OrderedDict(
+            [
+                ("ID", "L1C2"),
+                ("Language_ID", "L1"),
+                ("Concept_ID", "C2"),
+                ("Form", "L1C2"),
+                ("Segments", ["L", "¹", "C", "²"]),
+                ("Value", "L1C2"),
+                ("Comment", None),
+                ("Source", []),
+            ]
+        ),
     ]
 
 
@@ -395,22 +563,56 @@ def test_add_singlestons():
 
 def test_homohpones_skips_na_forms(capsys):
     forms = [  # noqa
-        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C2", "Form": "form", "Value": "-"},
-        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C1", "Form": "", "Value": "-"},
-        {"ID": "L1C3", "Language_ID": "L1", "Concept_ID": "C2", "Form": "form", "Value": "-"},
-        {"ID": "L1C4", "Language_ID": "L1", "Concept_ID": "C2", "Form": "", "Value": "-"},
-        {"ID": "L1C5", "Language_ID": "L1", "Concept_ID": "C2", "Form": "-", "Value": "-"},
-        {"ID": "L1C6", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-", "Value": "-"},
+        {
+            "ID": "L1C1",
+            "Language_ID": "L1",
+            "Concept_ID": "C2",
+            "Form": "form",
+            "Value": "-",
+        },
+        {
+            "ID": "L1C2",
+            "Language_ID": "L1",
+            "Concept_ID": "C1",
+            "Form": "",
+            "Value": "-",
+        },
+        {
+            "ID": "L1C3",
+            "Language_ID": "L1",
+            "Concept_ID": "C2",
+            "Form": "form",
+            "Value": "-",
+        },
+        {
+            "ID": "L1C4",
+            "Language_ID": "L1",
+            "Concept_ID": "C2",
+            "Form": "",
+            "Value": "-",
+        },
+        {
+            "ID": "L1C5",
+            "Language_ID": "L1",
+            "Concept_ID": "C2",
+            "Form": "-",
+            "Value": "-",
+        },
+        {
+            "ID": "L1C6",
+            "Language_ID": "L2",
+            "Concept_ID": "C2",
+            "Form": "-",
+            "Value": "-",
+        },
     ]
     dataset = pycldf.Dataset.from_metadata(
-        copy_metadata(
-            Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
-        )
+        copy_metadata(Path(__file__).parent / r"data/cldf/minimal/cldf-metadata.json")
     )
-    dataset.write(FormTable=forms, ParameterTable=[
-        {"ID": "C1", "Name": "one"},
-        {"ID": "C2", "Name": "two"}
-    ])
+    dataset.write(
+        FormTable=forms,
+        ParameterTable=[{"ID": "C1", "Name": "one"}, {"ID": "C2", "Name": "two"}],
+    )
     # add concepticon reference
     create_concepticon_for_concepts(
         dataset=dataset,
@@ -434,6 +636,7 @@ def test_extended_cldf_validate():
     # - A dataset where an NA form is in cognatesets should fail
     # - A dataset where the segments is "" and the form is "-" should pass
     ...
+
 
 # TODO: so far coverage.py does not report forms at all, though we can skip "" and "-" forms
 def test_coverage_reports_na():

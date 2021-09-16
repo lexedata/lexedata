@@ -120,7 +120,9 @@ if __name__ == "__main__":
 
     ws = openpyxl.load_workbook(args.excel)
 
-    w = csv.writer(open(Path(args.directory) / "forms.csv", "w", newline="", encoding="utf-8"))
+    w = csv.writer(
+        open(Path(args.directory) / "forms.csv", "w", newline="", encoding="utf-8")
+    )
     w.writerow(
         ["ID", "Language_ID", "Parameter_ID", "Form", "Comment", "Cognateset_ID"]
     )
