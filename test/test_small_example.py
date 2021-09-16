@@ -19,8 +19,6 @@ from lexedata.importer import excel_interleaved
 from lexedata.edit import add_cognate_table
 from lexedata.util.add_metadata import add_metadata
 
-from mock_excel import MockSingleExcelSheet
-
 
 def assert_datasets_are_equal(ds1, ds2):
     """Check that two datasets are largely equal.
