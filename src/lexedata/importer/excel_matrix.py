@@ -376,14 +376,20 @@ class ExcelParser:
                     continue
 
                 # Parse the cell, which results (potentially) in multiple forms
-                c_f_form = self.db.dataset["FormTable", "form"].name
+                if properties.__table__ == "FormTable":
+                    c_f_form = self.db.dataset[properties.__table__, "form"].name
                 for params in self.cell_parser.parse(
                     cell_with_forms,
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
-                    if params[c_f_form] == "?":
-                        continue
+                    if properties.__table__ == "FormTable":
+                        if params[c_f_form] == "?":
+                            continue
+                        else:
+                            self.handle_form(
+                                params, row_object, cell_with_forms, this_lan, status_update
+                            )
                     else:
                         self.handle_form(
                             params, row_object, cell_with_forms, this_lan, status_update
