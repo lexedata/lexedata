@@ -388,7 +388,11 @@ class ExcelParser:
                             continue
                         else:
                             self.handle_form(
-                                params, row_object, cell_with_forms, this_lan, status_update
+                                params,
+                                row_object,
+                                cell_with_forms,
+                                this_lan,
+                                status_update,
                             )
                     else:
                         self.handle_form(
