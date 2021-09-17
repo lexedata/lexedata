@@ -78,7 +78,7 @@ def test_matrix_import_skips_question_marks():
     dataset = pycldf.Wordlist.in_dir(dirname)
     dataset.write(FormTable=[{"Concept": "", "L1": "", "L2": "", "value": ""}])  # noqa
     # metadata = dataset.tablegroup._fname
-    metadata = Path(__file__).parent / r"data\cldf\minimal\cldf-metadata.json"
+    metadata = Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     # load the dataset
     load_dataset(
         metadata=metadata,
@@ -131,7 +131,7 @@ def test_single_excel_import_skips_na():
         ws.append(row)
     sheets = [sheet for sheet in wb]
     metadata = copy_metadata(
-        Path(__file__).parent / r"data\cldf\minimal\cldf-metadata.json"
+        Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     )
     _ = add_single_languages(
         metadata=metadata,
@@ -215,7 +215,7 @@ def test_single_excel_import_dash():
         ws.append(row)
     sheets = [sheet for sheet in wb]
     metadata = copy_metadata(
-        Path(__file__).parent / r"data\cldf\minimal\cldf-metadata.json"
+        Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     )
     _ = add_single_languages(
         metadata=metadata,
@@ -333,7 +333,7 @@ def test_edictor_exporter_no_na_forms():
     target = dirname / "cldf-metadata.json"
     dataset = copy_dataset(
         original=Path(__file__).parent
-        / r"data/cldf/smallmawetiguarani/cldf-metadata.json",
+        / "data/cldf/smallmawetiguarani/cldf-metadata.json",
         target=target,
     )
 
@@ -422,7 +422,7 @@ def test_detect_cognates_ignores_na_forms():
     concepts = [{"ID": "C1", "Name": "C1"}, {"ID": "C2", "Name": "C2"}]
     # load dataset and write content and segment
     dataset = pycldf.Dataset.from_metadata(
-        copy_metadata(Path(__file__).parent / r"data\cldf\minimal\cldf-metadata.json")
+        copy_metadata(Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json")
     )
     dataset.write(
         FormTable=forms,
@@ -487,7 +487,7 @@ def test_add_segments_skips_na_forms():
         },
     ]
     dataset = pycldf.Dataset.from_metadata(
-        copy_metadata(Path(__file__).parent / r"data/cldf/minimal/cldf-metadata.json")
+        copy_metadata(Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json")
     )
     dataset.write(FormTable=forms)
     _ = add_segments_to_dataset(
