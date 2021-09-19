@@ -185,13 +185,13 @@ Your concepts.csv will now have two new columns: Concepticon ID and Concepticon 
 ```--overwrite``` to overwrite existing central concepts for all cognatesets.
 
 ### 4.4 Segment forms using CLTS
-In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms. Lexedata uses CLTS to segment the forms. To use this functionality type: ```python -m lexedata.enrich.segment_using_clts```. A column "Segments" will be filled in in your forms.csv. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review.
+In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms. Lexedata uses CLTS to segment the forms. To use this functionality type: ```python -m lexedata.edit.add_segments```. A column "Segments" will be filled in in your forms.csv. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review. You may choose to apply these corrections to the form column as well.
 
 Optional arguments:
 
 ```--metadata [METADATA]```: the metadata file of your dataset
 
-```--overwrite```: segment all forms rather than only segment unsegmented forms (default behavior)
+```--overwrite```: segment all forms rather than only unsegmented forms (default behavior)
 
 ```--replace-form```: with this option, any automatic corrections are applied not only on the Segments column, but also on the form itself in the #form column.
 
