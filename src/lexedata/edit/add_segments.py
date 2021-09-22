@@ -169,7 +169,11 @@ def segment_form(
             i -= 1
             continue
         if grapheme.endswith("ⁿ") or grapheme.endswith("ᵐ") or grapheme.endswith("ᵑ"):
-            if i + 1 > len(raw_tokens) - 1 or raw_tokens[i + 1].preceding is not None:
+            if (
+                i + 1 > len(raw_tokens) - 1
+                or not hasattr(raw_tokens[i + 1], "preceding")
+                or raw_tokens[i + 1].preceding is not None
+            ):
                 logger.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
@@ -181,7 +185,11 @@ def segment_form(
             raw_tokens[i] = bipa[grapheme[:-1]]
             continue
         if grapheme.endswith("ʰ"):
-            if i + 1 > len(raw_tokens) - 1 or raw_tokens[i + 1].preceding is not None:
+            if (
+                i + 1 > len(raw_tokens) - 1
+                or not hasattr(raw_tokens[i + 1], "preceding")
+                or raw_tokens[i + 1].preceding is not None
+            ):
                 logger.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
