@@ -23,6 +23,7 @@ def load_concepts_by_form(
     c_f_concept = dataset.column_names.forms.parameterReference
     for form in cli.tq(
         dataset["FormTable"],
+        task="Load concepts by form id",
         total=dataset["FormTable"].common_props.get("dc:extent"),
     ):
         concept = form.get(c_f_concept, [])
@@ -39,6 +40,7 @@ def concepts_to_concepticon(dataset: pycldf.Wordlist) -> t.Mapping[ConceptID, in
         )
         for row in cli.tq(
             dataset["ParameterTable"],
+            task="Load central concepts",
             total=dataset["ParameterTable"].common_props.get("dc:extent"),
         )
     }
@@ -162,6 +164,7 @@ def connected_concepts(
 
     for judgement in cli.tq(
         table,
+        task="Link cognatesets to concepts",
         total=table.common_props.get("dc:extent"),
     ):
         cognatesets_to_concepts[judgement[c_cognateset]].extend(
@@ -216,6 +219,7 @@ def add_central_concepts_to_cognateset_table(
     write_back = []
     for row in cli.tq(
         dataset["CognatesetTable"],
+        task="Write cognatesets with central concepts to dataset",
         total=dataset["CognatesetTable"].common_props.get("dc:extent"),
     ):
         if not overwrite_existing and row[c_core_concept]:

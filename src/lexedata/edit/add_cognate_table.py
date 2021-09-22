@@ -57,8 +57,9 @@ def add_cognate_table(
             pass
     cognate_judgements = []
     forms = cache_table(dataset, columns=columns)
-    logger.info("Extracting cognate judgements from forms…")
-    for f, form in cli.tq(forms.items()):
+    for f, form in cli.tq(
+        forms.items(), task="Extracting cognate judgements from forms…"
+    ):
         if form.get("cognatesetReference"):
             if split:
                 cogset = util.string_to_id(

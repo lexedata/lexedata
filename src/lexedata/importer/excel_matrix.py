@@ -4,7 +4,6 @@ import re
 import typing as t
 from pathlib import Path
 import logging
-from tqdm import tqdm
 import argparse
 
 import pycldf
@@ -81,7 +80,11 @@ class DB:
             try:
                 self.cache[table_type] = {
                     row[id]: row
-                    for row in cli.tq(table, total=table.common_props.get("dc:extent"))
+                    for row in cli.tq(
+                        table,
+                        task="Cache the dataset",
+                        total=table.common_props.get("dc:extent"),
+                    )
                 }
             except FileNotFoundError:
                 self.cache[table_type] = {}
@@ -298,6 +301,7 @@ class ExcelParser:
         # iterate over language columns
         for lan_col in cli.tq(
             sheet.iter_cols(min_row=1, max_row=self.top - 1, min_col=self.left),
+            task="Parse all languages",
             total=sheet.max_column - self.left,
         ):
             c_l_id = self.db.dataset["LanguageTable", "id"].name
@@ -328,8 +332,10 @@ class ExcelParser:
     ) -> None:
         languages = self.parse_all_languages(sheet)
         row_object = None
-        for row in tqdm(
-            sheet.iter_rows(min_row=self.top), total=sheet.max_row - self.top
+        for row in cli.tq(
+            sheet.iter_rows(min_row=self.top),
+            task="Parsing cells",
+            total=sheet.max_row - self.top,
         ):
             row_header, row_forms = row[: self.left - 1], row[self.left - 1 :]
             # Parse the row header, creating or retrieving the associated row

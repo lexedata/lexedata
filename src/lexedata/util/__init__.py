@@ -188,6 +188,8 @@ def cache_table(
     return {
         row[c_id]: {prop: row[name] for prop, name in columns.items()}
         for row in tq(
-            dataset[table], total=dataset[table].common_props.get("dc:extent")
+            dataset[table],
+            task=f"Caching table {table}",
+            total=dataset[table].common_props.get("dc:extent"),
         )
     }

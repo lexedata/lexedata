@@ -193,12 +193,16 @@ def read_single_excel_sheet(
         report[language_id].is_new_language = True
 
     # read new data from sheet
-    for form in import_data_from_sheet(
-        sheet,
-        sheet_header=sheet_header,
-        implicit=implicit,
-        language_id=language_id,
-        concept_column=concept_columns,
+    for form in cli.tq(
+        import_data_from_sheet(
+            sheet,
+            sheet_header=sheet_header,
+            implicit=implicit,
+            language_id=language_id,
+            concept_column=concept_columns,
+        ),
+        task=f"Parsing cells of sheet {sheet.title}",
+        total=sheet.max_row,
     ):
         # if concept not in dataset, don't add form
         try:
