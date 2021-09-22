@@ -15,27 +15,39 @@ from pathlib import Path
 
 import openpyxl
 
-import lexedata.cli as cli
-import lexedata.util as util
+from lexedata import cli, util, types
+from lexedata.util.excel import clean_cell_value
 
 
 def import_interleaved(
     ws: openpyxl.worksheet.worksheet.Worksheet,
     logger: logging.Logger = cli.logger,
-    ids: t.Set[str] = set(),
-) -> list:
+    ids: t.Optional[t.Set[types.Cognateset_ID]] = None,
+) -> t.Iterable[
+    t.Tuple[
+        types.Form_ID,
+        types.Language_ID,
+        types.Parameter_ID,
+        str,
+        None,
+        types.Cognateset_ID,
+    ]
+]:
+    if ids is None:
+        ids = set()
+
     comma_or_semicolon = re.compile("[,;]\\W*")
 
     concepts = []
     for concept_metadata in ws.iter_cols(min_col=1, max_col=1, min_row=2):
         for entry, cogset in zip(concept_metadata[::2], concept_metadata[1::2]):
             try:
-                concepts.append(entry.value.strip())
+                concepts.append(clean_cell_value(entry))
             except AttributeError:
                 break
 
     for language in ws.iter_cols(min_col=2):
-        language_name = language[0].value
+        language_name = clean_cell_value(language[0])
         for c, (entry, cogset) in enumerate(zip(language[1::2], language[2::2])):
             if not entry.value:
                 if cogset.value:
@@ -45,7 +57,7 @@ def import_interleaved(
                 continue
             bracket_level = 0
             i = 0
-            f = entry.value.strip()
+            f = clean_cell_value(entry)
             forms = []
             while i < len(f):
                 match = comma_or_semicolon.match(f[i:])
@@ -70,13 +82,10 @@ def import_interleaved(
 
             forms.append(f.strip())
 
-            if type(cogset.value) == float:
-                cogsets = [str(int(cogset.value))]
+            if isinstance(clean_cell_value(cogset), int):
+                cogsets = [str(clean_cell_value(cogset))]
             else:
-                if isinstance(cogset.value, int):
-                    cogset = str(cogset.value)
-                else:
-                    cogset = cogset.value
+                cogset = clean_cell_value(cogset)
                 cogsets = comma_or_semicolon.split(cogset.strip())
 
             if len(cogsets) == 1 or len(cogsets) == len(forms):
@@ -94,7 +103,7 @@ def import_interleaved(
                 while id in ids:
                     synonym += 1
                     id = f"{base_id}_s{synonym:d}"
-                yield [id, language_name, concepts[c], form, None, cogset]
+                yield (id, language_name, concepts[c], form, None, cogset)
                 ids.add(id)
 
 
