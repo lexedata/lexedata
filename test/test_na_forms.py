@@ -194,12 +194,13 @@ def test_interleaved_import_dash():
         ws.append(row)
     # import excel
     forms = [tuple(r) for r in import_interleaved(ws)]
-    assert forms == [
-        ("duala_all_s2", "Duala", "all", "ɓɛ́sɛ̃(nk)", None, "1"),
+    expected_forms = [
+        ("duala_all", "Duala", "all", "ɓɛ́sɛ̃(nk)", None, "1"),
         ("duala_arm", "Duala", "arm", "-", None, "7"),
-        ("ntomba_all", "Ntomba", "all", "umá", None, "-"),
-        ("ntomba_arm_s2", "Ntomba", "arm", "lobɔ́kɔ", None, "1"),
+        ("ntomba_all", "Ntomba", "all", "umá", None, "-"),
+        ("ntomba_arm", "Ntomba", "arm", "lobɔ́kɔ", None, "1"),
     ]
+    assert forms == expected_forms
 
 
 def test_single_excel_import_dash():
