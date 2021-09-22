@@ -108,11 +108,11 @@ def test_interleaved_import_skips_na():
     for row in data:
         ws.append(row)
     # import excel
-    forms = [r for r in import_interleaved(ws)]
+    forms = [tuple(r) for r in import_interleaved(ws)]
 
     assert forms == [
-        ["duala_all", "Duala", "all", "ɓɛ́sɛ̃(nk)", None, "1"],
-        ["ntomba_arm", "Ntomba", "arm", "lobɔ́kɔ", None, "1"],
+        ("duala_all", "Duala", "all", "ɓɛ́sɛ̃(nk)", None, "1"),
+        ("ntomba_arm", "Ntomba", "arm", "lobɔ́kɔ", None, "1"),
     ]
 
 
@@ -193,12 +193,12 @@ def test_interleaved_import_dash():
     for row in data:
         ws.append(row)
     # import excel
-    forms = [r for r in import_interleaved(ws)]
+    forms = [tuple(r) for r in import_interleaved(ws)]
     assert forms == [
-        ["duala_all_s2", "Duala", "all", "ɓɛ́sɛ̃(nk)", None, "1"],
-        ["duala_arm", "Duala", "arm", "-", None, "7"],
-        ["ntomba_all", "Ntomba", "all", "umá", None, "-"],
-        ["ntomba_arm_s2", "Ntomba", "arm", "lobɔ́kɔ", None, "1"],
+        ("duala_all_s2", "Duala", "all", "ɓɛ́sɛ̃(nk)", None, "1"),
+        ("duala_arm", "Duala", "arm", "-", None, "7"),
+        ("ntomba_all", "Ntomba", "all", "umá", None, "-"),
+        ("ntomba_arm_s2", "Ntomba", "arm", "lobɔ́kɔ", None, "1"),
     ]
 
 
