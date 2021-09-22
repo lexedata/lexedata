@@ -21,8 +21,8 @@ def test_unkown_aspiration(caplog):
 
 def test_segment_report():
     report1 = SegmentReport()
-    report1.sounds["aʰ"]["count"] = 1
-    report1.sounds["aʰ"]["comment"] = "comment"
+    report1.sounds["aʰ"].count = 1
+    report1.sounds["aʰ"].comment = "comment"
     report1 = report1("language")
     assert report1 == [("language", "aʰ", 1, "comment")]
 
