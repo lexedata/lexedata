@@ -19,10 +19,19 @@ def test_unkown_aspiration(caplog):
     ) and report("language") == [("language", "aʰ", 1, "unknown pre-aspiration")]
 
 
+def test_prenasal_before_vowel(caplog):
+    form = "-eᵐa"
+    report = SegmentReport()
+    segment_form(form, report)
+    assert re.search("Unknown sound .* encountered in -eᵐa", caplog.text)
+    expected_report = [("language", "eᵐ", 1, "unknown pre-nasalization")]
+    assert report("language") == expected_report
+
+
 def test_segment_report():
     report1 = SegmentReport()
-    report1.sounds["aʰ"]["count"] = 1
-    report1.sounds["aʰ"]["comment"] = "comment"
+    report1.sounds["aʰ"].count = 1
+    report1.sounds["aʰ"].comment = "comment"
     report1 = report1("language")
     assert report1 == [("language", "aʰ", 1, "comment")]
 

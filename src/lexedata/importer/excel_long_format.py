@@ -79,6 +79,8 @@ def import_data_from_sheet(
 
     for row in row_iter:
         data = Form({k: clean_cell_value(cell) for k, cell in zip(sheet_header, row)})
+        if "?" in data.values():
+            continue
         if "value" in implicit:
             data[implicit["value"]] = "\t".join(map(str, data.values()))
         concept_entry = data.pop(concept_column[1])
@@ -315,7 +317,10 @@ def add_single_languages(
                 f"Importing all forms independent of concept"
             )
         concepts = KeyKeyDict()
-        concept_column = dataset["FormTable", "parameterReference"].name
+        if concept_name:
+            concept_column = concept_name
+        else:
+            concept_column = dataset["FormTable", "parameterReference"].name
     # add Status_Column if not existing and status_update given
     if status_update:
         add_status_column_to_table(dataset=dataset, table_name="FormTable")
@@ -405,9 +410,7 @@ if __name__ == "__main__":
 
     if not args.sheet:
         sheets = [
-            sheet
-            for sheet in args.excel.worksheets
-            if sheet.title not in args.exclude_sheet
+            sheet for sheet in args.excel if sheet.title not in args.exclude_sheet
         ]
         logger.info("No sheets specified explicitly. Parsing sheets: %s", args.sheet)
     else:

@@ -99,6 +99,8 @@ def import_interleaved(
                     )
                 )
             for form, cogset in zip(forms, cogsets + [None]):
+                if form == "?" or cogset == "?":
+                    continue
                 base_id = util.string_to_id(f"{language_name}_{concepts[c]}")
                 id = base_id
                 synonym = 1
@@ -129,13 +131,15 @@ if __name__ == "__main__":
 
     ws = openpyxl.load_workbook(args.excel)
 
-    w = csv.writer(open(Path(args.directory) / "forms.csv", "w", encoding="utf-8"))
+    w = csv.writer(
+        open(Path(args.directory) / "forms.csv", "w", newline="", encoding="utf-8")
+    )
     w.writerow(
         ["ID", "Language_ID", "Parameter_ID", "Form", "Comment", "Cognateset_ID"]
     )
 
     if not args.sheet:
-        args.sheet = ws.get_sheet_names()
+        args.sheet = [sheet for sheet in ws.sheetnames]
 
     ids: t.Set[str] = set()
     for sheetname in args.sheet:

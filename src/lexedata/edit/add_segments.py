@@ -35,13 +35,21 @@ tokenizer = segments.Tokenizer()
 
 
 @attr.s(auto_attribs=True)
-class SegmentReport:
-    sounds: defaultdict = defaultdict(lambda: {"count": 0, "comment": ""})
+class ReportEntry:
+    count: int = 0
+    comment: str = ""
 
-    def __call__(self, name: str) -> t.Tuple[str, str, int, str]:
+
+@attr.s(auto_attribs=True)
+class SegmentReport:
+    sounds: t.MutableMapping[str, ReportEntry] = attr.ib(
+        factory=lambda: defaultdict(ReportEntry)
+    )
+
+    def __call__(self, name: str) -> t.List[t.Tuple[str, str, int, str]]:
         res = []
         for k, v in self.sounds.items():
-            res.append((name, k, v["count"], v["comment"]))
+            res.append((name, k, v.count, v.comment))
         return res
 
 
@@ -137,8 +145,8 @@ def segment_form(
             i -= 1
             continue
         if raw_tokens[i].source == "/":
-            report.sounds[str(raw_tokens[i])]["count"] += 1
-            report.sounds[str(raw_tokens[i])]["comment"] = "illegal symbol"
+            report.sounds[str(raw_tokens[i])].count += 1
+            report.sounds[str(raw_tokens[i])].comment = "illegal symbol"
             del raw_tokens[i]
             logger.warning(
                 f"{context_for_warnings}Impossible sound '/' encountered in {formstring} – "
@@ -161,26 +169,32 @@ def segment_form(
             i -= 1
             continue
         if grapheme.endswith("ⁿ") or grapheme.endswith("ᵐ") or grapheme.endswith("ᵑ"):
-            if i + 1 > len(raw_tokens) - 1 or raw_tokens[i + 1].preceding is not None:
+            if (
+                i + 1 > len(raw_tokens) - 1
+                or not hasattr(raw_tokens[i + 1], "preceding")
+                or raw_tokens[i + 1].preceding is not None
+            ):
                 logger.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
-                report.sounds[str(raw_tokens[i])]["count"] += 1
-                report.sounds[str(raw_tokens[i])][
-                    "comment"
-                ] = "unknown pre-nasalization"
+                report.sounds[str(raw_tokens[i])].count += 1
+                report.sounds[str(raw_tokens[i])].comment = "unknown pre-nasalization"
                 i -= 1
                 continue
             raw_tokens[i + 1] = bipa["pre-nasalized " + raw_tokens[i + 1].name]
             raw_tokens[i] = bipa[grapheme[:-1]]
             continue
         if grapheme.endswith("ʰ"):
-            if i + 1 > len(raw_tokens) - 1 or raw_tokens[i + 1].preceding is not None:
+            if (
+                i + 1 > len(raw_tokens) - 1
+                or not hasattr(raw_tokens[i + 1], "preceding")
+                or raw_tokens[i + 1].preceding is not None
+            ):
                 logger.warning(
                     f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
                 )
-                report.sounds[str(raw_tokens[i])]["count"] += 1
-                report.sounds[str(raw_tokens[i])]["comment"] = "unknown pre-aspiration"
+                report.sounds[str(raw_tokens[i])].count += 1
+                report.sounds[str(raw_tokens[i])].comment = "unknown pre-aspiration"
                 i -= 1
                 continue
             raw_tokens[i + 1] = bipa["pre-aspirated " + raw_tokens[i + 1].name]
@@ -189,8 +203,8 @@ def segment_form(
         logger.warning(
             f"{context_for_warnings}Unknown sound {raw_tokens[i]} encountered in {formstring}"
         )
-        report.sounds[str(raw_tokens[i])]["count"] += 1
-        report.sounds[str(raw_tokens[i])]["comment"] = "unknown sound"
+        report.sounds[str(raw_tokens[i])].count += 1
+        report.sounds[str(raw_tokens[i])].comment = "unknown sound"
         i -= 1
 
     return raw_tokens
@@ -227,7 +241,9 @@ def add_segments_to_dataset(
             write_back.append(row)
             continue
         else:
-            if row[transcription]:
+            if row[transcription] is None or row[transcription] == "-":
+                row[dataset.column_names.forms.segments] = ""
+            elif row[transcription]:
                 form = row[transcription].strip()
                 for wrong, right in pre_replace.items():
                     if wrong in form:

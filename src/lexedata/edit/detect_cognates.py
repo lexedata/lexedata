@@ -15,6 +15,8 @@ import lingpy
 import lingpy.compare.partial
 
 import lexedata.cli as cli
+import lexedata.types as types
+
 
 clts_path = cldfcatalog.Config.from_file().get_clone("clts")
 clts = cldfbench.catalogs.CLTS(clts_path)
@@ -55,22 +57,9 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
     return segments[1:-1]
 
 
-def cognate_code_to_file(
-    metadata: Path,
-    ratio: float,
-    soundclass: str,
-    cluster_method: str,
-    threshold: float,
-    initial_threshold: float,
-    gop: float,
-    mode: str,
-    output_file: Path,
-) -> None:
-    dataset = pycldf.Wordlist.from_metadata(args.metadata)
-    assert (
-        dataset.column_names.forms.segments is not None
-    ), "Dataset must have a CLDF #segments column."
-
+def filter_function_factory(
+    dataset: types.Wordlist,
+) -> t.Callable[[t.Dict[str, t.Any]], bool]:
     def filter(row: t.Dict[str, t.Any]) -> bool:
         row["tokens"] = [
             str(x)
@@ -85,9 +74,28 @@ def cognate_code_to_file(
         row["concept"] = row[dataset.column_names.forms.parameterReference.lower()]
         return row["segments"] and row["concept"]
 
+    return filter
+
+
+def cognate_code_to_file(
+    metadata: Path,
+    ratio: float,
+    soundclass: str,
+    cluster_method: str,
+    threshold: float,
+    initial_threshold: float,
+    gop: float,
+    mode: str,
+    output_file: Path,
+) -> None:
+    dataset = pycldf.Wordlist.from_metadata(metadata)
+    assert (
+        dataset.column_names.forms.segments is not None
+    ), "Dataset must have a CLDF #segments column."
+
     lex = lingpy.compare.partial.Partial.from_cldf(
         metadata,
-        filter=filter,
+        filter=filter_function_factory(dataset),
         columns=["doculect", "concept", "tokens"],
         model=lingpy.data.model.Model(soundclass),
         check=True,
@@ -132,12 +140,12 @@ def cognate_code_to_file(
     # For some purposes it is useful to have monolithic cognate classes.
     lex.cluster(
         method="lexstat",
-        threshold=args.threshold,
+        threshold=threshold,
         ref="cogid",
         cluster_method=cluster_method,
         verbose=True,
         override=True,
-        gop=args.gop,
+        gop=gop,
         mode=mode,
     )
     # But actually, in most cases partial cognates are much more useful.
@@ -154,7 +162,7 @@ def cognate_code_to_file(
     lex.output("tsv", filename="auto-clusters")
     alm = lingpy.Alignments(lex, ref="partialcognateids", fuzzy=True)
     alm.align(method="progressive")
-    alm.output("tsv", filename=output_file, ignore="all", prettify=False)
+    alm.output("tsv", filename=str(output_file), ignore="all", prettify=False)
 
     try:
         dataset.add_component("CognateTable")
@@ -166,7 +174,7 @@ def cognate_code_to_file(
         ...
 
     read_back = csv.DictReader(
-        open(output_file + ".tsv", encoding="utf-8"), delimiter="\t"
+        open(str(output_file) + ".tsv", encoding="utf-8"), delimiter="\t"
     )
     cognatesets = {}
     judgements = []
@@ -176,7 +184,8 @@ def cognate_code_to_file(
         alignment = line["ALIGNMENT"].split(" + ")
         slice_start = 0
         for cs, alm in zip(partial, alignment):
-            cognatesets.setdefault(cs, {"ID": cs})
+            # TODO: @Gereon: is it alright to add the same content to Name and ID?
+            cognatesets.setdefault(cs, {"ID": cs, "Name": cs})
             length = len(alm.split())
             judgements.append(
                 {

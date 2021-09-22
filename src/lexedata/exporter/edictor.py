@@ -163,6 +163,7 @@ def forms_to_tsv(
         c_segment_slice = dataset["CognateTable", "segmentSlice"].name
         c_alignment = dataset["CognateTable", "alignment"].name
     except KeyError:
+        # TODO: why not use directly: cli.EXIT.NO_COGNATETABLE(message) ?
         logger.critical(
             """Edictor export requires your dataset to have an explicit CognateTable containing the judgements,
             with all of IDs, forms, cognatesets, segment slices and alignments.
@@ -173,12 +174,14 @@ def forms_to_tsv(
     c_form_language = dataset["FormTable", "languageReference"].name
     c_form_concept = dataset["FormTable", "parameterReference"].name
     c_form_id = dataset["FormTable", "id"].name
+    c_form_form = dataset["FormTable", "form"].name
     try:
         c_form_segments = dataset["FormTable", "segments"].name
     except KeyError:
+        # TODO: same: why not use cli:Exit....() directly?
         logger.critical(
             """Edictor export requires your dataset to have segments in the FormTable.
-        Run `lexedata.edit.segment_using_clts` to automatically add segments based on your forms."""
+        Run `lexedata.edit.add_segments` to automatically add segments based on your forms."""
         )
         # TODO: Exit.NO_SEGMENTS is not an `int`, so the exit code of the
         # python run is actually 1, not 4 as we wanted.
@@ -203,6 +206,8 @@ def forms_to_tsv(
     # select forms and cognates given restriction of languages and concepts, cognatesets respectively
     forms = {}
     for form in dataset["FormTable"]:
+        if form[c_form_form] is None or form[c_form_form] == "-":
+            continue
         if form[c_form_language] in languages:
             if concepts.intersection(ensure_list(form[c_form_concept])):
                 # Normalize the form:
@@ -214,14 +219,13 @@ def forms_to_tsv(
                         form[c] = d.join(form[c])
                     except TypeError:
                         logger.warning(
-                            f"No segments found for form {form[c_form_id]}. You can generate segments using `lexedata.enrich.segment_using_clts`."
+                            f"No segments found for form {form[c_form_id]}. You can generate segments using `lexedata.edit.add_segments`."
                         )
                 # 2. No tabs, newlines in entries
                 for c, v in form.items():
                     if type(v) == str:
                         form[c] = form[c].replace("\t", "!t").replace("\n", "!n")
                 forms[form[c_form_id]] = form
-
     cognateset_cache: t.Mapping[t.Optional[str], int]
     if "CognatesetTable" in dataset:
         cognateset_cache = {
