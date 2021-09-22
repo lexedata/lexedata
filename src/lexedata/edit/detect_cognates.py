@@ -15,6 +15,8 @@ import lingpy
 import lingpy.compare.partial
 
 import lexedata.cli as cli
+import lexedata.types as types
+
 
 clts_path = cldfcatalog.Config.from_file().get_clone("clts")
 clts = cldfbench.catalogs.CLTS(clts_path)
@@ -55,6 +57,26 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
     return segments[1:-1]
 
 
+def filter_function_factory(
+    dataset: types.Wordlist,
+) -> t.Callable[[t.Dict[str, t.Any]], bool]:
+    def filter(row: t.Dict[str, t.Any]) -> bool:
+        row["tokens"] = [
+            str(x)
+            for x in clean_segments(row[dataset.column_names.forms.segments.lower()])
+        ]
+        row["tokens"] = ["+" if x == "_" else x for x in row["tokens"]]
+        # TODO: Find the official LingPy way to consider word boundaries to
+        # also be morpheme boundaries – just adding them in
+        # `partial_cluster(sep=...+'_')` did not work, and why isn't it the
+        # default anyway?
+        row["doculect"] = row[dataset.column_names.forms.languageReference.lower()]
+        row["concept"] = row[dataset.column_names.forms.parameterReference.lower()]
+        return row["segments"] and row["concept"]
+
+    return filter
+
+
 def cognate_code_to_file(
     metadata: Path,
     ratio: float,
@@ -71,23 +93,9 @@ def cognate_code_to_file(
         dataset.column_names.forms.segments is not None
     ), "Dataset must have a CLDF #segments column."
 
-    def filter(row: t.Dict[str, t.Any]) -> bool:
-        row["tokens"] = [
-            str(x)
-            for x in clean_segments(row[dataset.column_names.forms.segments.lower()])
-        ]
-        row["tokens"] = ["+" if x == "_" else x for x in row["tokens"]]
-        # TODO: Find the official LingPy way to consider word boundaries to
-        # also be morpheme boundaries – just adding them in
-        # `partial_cluster(sep=...+'_')` did not work, and why isn't it the
-        # default anyway?
-        row["doculect"] = row[dataset.column_names.forms.languageReference.lower()]
-        row["concept"] = row[dataset.column_names.forms.parameterReference.lower()]
-        return row["segments"] and row["concept"]
-
     lex = lingpy.compare.partial.Partial.from_cldf(
         metadata,
-        filter=filter,
+        filter=filter_function_factory(dataset),
         columns=["doculect", "concept", "tokens"],
         model=lingpy.data.model.Model(soundclass),
         check=True,
