@@ -32,7 +32,10 @@ def add_concepticon_names(
         pass
 
     write_back = []
-    for row in dataset["ParameterTable"]:
+    for row in cli.tq(
+        dataset["ParameterTable"],
+        task="Write concepts with concepticon names to dataset",
+    ):
         try:
             row[column_name] = concepticon.api.conceptsets[
                 row[dataset.column_names.parameters.concepticonReference]
@@ -99,7 +102,10 @@ def add_concepticon_references(
     ]
 
     write_back = []
-    for i, row in enumerate(dataset["ParameterTable"]):
+    for i, row in cli.tq(
+        enumerate(dataset["ParameterTable"]),
+        task="Write concepts with concepticon reference to dataset",
+    ):
         if overwrite or not row.get(
             dataset.column_names.parameters.concepticonReference
         ):
@@ -151,7 +157,10 @@ def add_concepticon_definitions(
 
     # write concepticon definitions
     write_back = []
-    for row in dataset["ParameterTable"]:
+    for row in cli.tq(
+        dataset["ParameterTable"],
+        task="Write concepts with concepticon definitions to dataset",
+    ):
         try:
             row[column_name] = concepticon.api.conceptsets[
                 row[concepticon_ids]

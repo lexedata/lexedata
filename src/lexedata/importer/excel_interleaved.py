@@ -46,7 +46,9 @@ def import_interleaved(
             except AttributeError:
                 break
 
-    for language in ws.iter_cols(min_col=2):
+    for language in cli.tq(
+        ws.iter_cols(min_col=2), task="Parsing cells", total=ws.max_column
+    ):
         language_name = clean_cell_value(language[0])
         for c, (entry, cogset) in enumerate(zip(language[1::2], language[2::2])):
             if not entry.value:
