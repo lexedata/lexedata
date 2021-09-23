@@ -89,9 +89,10 @@ def coverage_report(
     data_languages = []
     for language, metadata in languages.items():
         conceptlist = concepts[language]
-        if not conceptlist:
-            continue
-        synonyms = sum(conceptlist.values()) / len(conceptlist)
+        try:
+            synonyms = sum(conceptlist.values()) / len(conceptlist)
+        except ZeroDivisionError:
+            synonyms = float("nan")
         include = True
         # percentage of all concepts covered by this language
         conceptlist_percentage = len(conceptlist) / total_number_concepts

@@ -1,6 +1,7 @@
-from pathlib import Path
 import re
+import math
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -30,10 +31,12 @@ def test_coverage_report(cldf_wordlist):
     data, _ = coverage_report(
         dataset=dataset, min_percentage=0, with_concept=[], missing=False
     )
+    assert math.isnan(data[2][4])
+    data[2][4] = 0
     assert data == [
-        ["ache", "Aché", 6, 0.6, 1.5],
-        ["paraguayan_guarani", "Paraguayan Guaraní", 7, 0.7, 1.0],
-        ["old_paraguayan_guarani", "Old Paraguayan Guaraní", 1, 0.1, 1.0],
+        ["ache", "Aché", 5, 0.5, 1.6],
+        ["paraguayan_guarani", "Paraguayan Guaraní", 5, 0.5, 1.0],
+        ["old_paraguayan_guarani", "Old Paraguayan Guaraní", 0, 0.0, 0],
         ["kaiwa", "Kaiwá", 5, 0.5, 1.0],
     ]
 
