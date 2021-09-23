@@ -6,7 +6,7 @@ import openpyxl as op
 import tempfile
 import pytest
 
-from helper_functions import copy_metadata
+from helper_functions import empty_copy_of_cldf_wordlist, copy_to_temp
 from lexedata.util.fs import get_dataset
 from lexedata.exporter.cognates import ExcelWriter
 
@@ -89,59 +89,50 @@ def test_adding_singleton_cognatesets_with_status(caplog):
 
 
 def test_no_cognateset_table(caplog):
-    copy = copy_metadata(
+    dataset, _ = empty_copy_of_cldf_wordlist(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
-    dataset = get_dataset(copy)
     dataset.remove_table("CognatesetTable")
     with pytest.raises(SystemExit):
         ExcelWriter(
             dataset=dataset,
         )
-    assert re.search(
-        r".* presupposes a separate CognatesetTable.* lexedata.edit.add_cognate_table.*",
-        caplog.text,
-    )
+    assert "presupposes a separate CognatesetTable" in caplog.text
+    assert "lexedata.edit.add_table" in caplog.text
 
 
 def test_no_cognate_table(caplog):
-    copy = copy_metadata(
+    dataset, _ = empty_copy_of_cldf_wordlist(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
-    dataset = get_dataset(copy)
     dataset.remove_table("CognateTable")
     with pytest.raises(SystemExit):
         ExcelWriter(
             dataset=dataset,
         )
-
-    assert re.search(
-        r".* presupposes a separate CognateTable.* lexedata.edit.add_cognate_table.*",
-        caplog.text,
-    )
+    assert "presupposes a separate CognateTable" in caplog.text
+    assert "lexedata.edit.add_cognate_table" in caplog.text
 
 
 def test_no_segment_column():
-    copy = copy_metadata(
+    dataset, _ = copy_to_temp(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
-    dataset = get_dataset(copy)
     dataset.remove_columns("FormTable", "Segments")
     writer = ExcelWriter(
         dataset=dataset,
     )
-    form = dataset["Formtable"][0]
+    form = next(iter(dataset["FormTable"]))
     assert writer.get_segments(form) is None
 
 
 def test_no_comment_column():
-    copy = copy_metadata(
+    dataset, _ = copy_to_temp(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
-    dataset = get_dataset(copy)
     dataset.remove_columns("FormTable", "comment")
     writer = ExcelWriter(
         dataset=dataset,
     )
-    form = dataset["Formtable"][0]
-    assert writer.form_to_cell_value(form, dict()) == " ‘one, one’ ⚠"
+    form = next(iter(dataset["FormTable"]))
+    assert writer.form_to_cell_value(form, dict()).strip() == "‘one, one’"
