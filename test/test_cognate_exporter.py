@@ -104,10 +104,6 @@ def test_no_cognateset_table(caplog):
     )
 
 
-@pytest.mark.skip(
-    reason="The test throws an error for a missing CognatesetTable. "
-    "However the CognateTable was removed. I don't really get why."
-)
 def test_no_cognate_table(caplog):
     copy = copy_metadata(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
@@ -125,10 +121,6 @@ def test_no_cognate_table(caplog):
     )
 
 
-@pytest.mark.skip(
-    reason="The test throws an error for a missing CognatesetTable. "
-    "However no table was removed. I don't really get why."
-)
 def test_no_segment_column():
     copy = copy_metadata(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
@@ -142,10 +134,6 @@ def test_no_segment_column():
     assert writer.get_segments(form) is None
 
 
-@pytest.mark.skip(
-    reason="The test throws an error for a missing CognatesetTable. "
-    "However no table was removed. I don't really get why."
-)
 def test_no_comment_column():
     copy = copy_metadata(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"

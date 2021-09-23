@@ -40,14 +40,14 @@ class ExcelWriter:
                 break
         except (KeyError, FileNotFoundError):
             cli.Exit.INVALID_DATASET(
-                "This script presupposes a separate CognatesetTable. Call lexedata.edit.add_cognate_table"
+                "This script presupposes a separate CognatesetTable. Call `lexedata.edit.add_table CognatesetTable` to automatically add one."
             )
         try:
             for _ in dataset["CognateTable"]:
                 break
         except (KeyError, FileNotFoundError):
             cli.Exit.NO_COGNATETABLE(
-                "This script presupposes a separate CognateTable. Call lexedata.edit.add_cognate_table"
+                "This script presupposes a separate CognateTable. Call `lexedata.edit.add_cognate_table` to automatically add one."
             )
         self.singleton = singleton_cognate
         self.set_header()
@@ -200,7 +200,6 @@ class ExcelWriter:
                             all_judgements[cogset[c_cogset_id]][0][c_cognate_form]
                         ]
                     else:
-                        # TODO: CHeck with Gereon and Natalia that this fixes issue 179
                         if db_name == "":
                             continue
                         column = self.dataset["CognatesetTable", db_name]
