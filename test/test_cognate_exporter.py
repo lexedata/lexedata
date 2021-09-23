@@ -4,7 +4,9 @@ from pathlib import Path
 
 import openpyxl as op
 import tempfile
+import pytest
 
+from helper_functions import empty_copy_of_cldf_wordlist, copy_to_temp
 from lexedata.util.fs import get_dataset
 from lexedata.exporter.cognates import ExcelWriter
 
@@ -84,3 +86,53 @@ def test_adding_singleton_cognatesets_with_status(caplog):
         "NEW",
         "NEW",
     ]
+
+
+def test_no_cognateset_table(caplog):
+    dataset, _ = empty_copy_of_cldf_wordlist(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset.remove_table("CognatesetTable")
+    with pytest.raises(SystemExit):
+        ExcelWriter(
+            dataset=dataset,
+        )
+    assert "presupposes a separate CognatesetTable" in caplog.text
+    assert "lexedata.edit.add_table" in caplog.text
+
+
+def test_no_cognate_table(caplog):
+    dataset, _ = empty_copy_of_cldf_wordlist(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset.remove_table("CognateTable")
+    with pytest.raises(SystemExit):
+        ExcelWriter(
+            dataset=dataset,
+        )
+    assert "presupposes a separate CognateTable" in caplog.text
+    assert "lexedata.edit.add_cognate_table" in caplog.text
+
+
+def test_no_segment_column():
+    dataset, _ = copy_to_temp(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset.remove_columns("FormTable", "Segments")
+    writer = ExcelWriter(
+        dataset=dataset,
+    )
+    form = next(iter(dataset["FormTable"]))
+    assert writer.get_segments(form) is None
+
+
+def test_no_comment_column():
+    dataset, _ = copy_to_temp(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset.remove_columns("FormTable", "comment")
+    writer = ExcelWriter(
+        dataset=dataset,
+    )
+    form = next(iter(dataset["FormTable"]))
+    assert writer.form_to_cell_value(form, dict()).strip() == "‘one, one’"

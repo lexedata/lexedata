@@ -6,6 +6,7 @@ from pathlib import Path
 import pycldf
 
 from lexedata.util.fs import copy_dataset
+from lexedata.types import Wordlist
 
 
 def copy_metadata(original: Path) -> Path:
@@ -28,7 +29,7 @@ def empty_copy_of_cldf_wordlist(cldf_wordlist) -> t.Tuple[pycldf.Dataset, Path]:
     return dataset, original
 
 
-def copy_to_temp(cldf_wordlist: Path):
+def copy_to_temp(cldf_wordlist: Path) -> t.Tuple[Wordlist, Path]:
     """Copy the dataset to a different temporary location.
 
     Given a dataset, copy it to a temporary location and return the new dataset

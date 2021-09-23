@@ -34,6 +34,21 @@ class ExcelWriter:
         singleton_cognate: bool = False,
     ):
         self.dataset = dataset
+        # assert that all required tables are present in Dataset
+        try:
+            for _ in dataset["CognatesetTable"]:
+                break
+        except (KeyError, FileNotFoundError):
+            cli.Exit.INVALID_DATASET(
+                "This script presupposes a separate CognatesetTable. Call `lexedata.edit.add_table CognatesetTable` to automatically add one."
+            )
+        try:
+            for _ in dataset["CognateTable"]:
+                break
+        except (KeyError, FileNotFoundError):
+            cli.Exit.NO_COGNATETABLE(
+                "This script presupposes a separate CognateTable. Call `lexedata.edit.add_cognate_table` to automatically add one."
+            )
         self.singleton = singleton_cognate
         self.set_header()
         if database_url:
@@ -185,6 +200,8 @@ class ExcelWriter:
                             all_judgements[cogset[c_cogset_id]][0][c_cognate_form]
                         ]
                     else:
+                        if db_name == "":
+                            continue
                         column = self.dataset["CognatesetTable", db_name]
                         if column.separator is None:
                             value = cogset[db_name]
@@ -299,7 +316,10 @@ class ExcelWriter:
         cell_value = self.form_to_cell_value(judgement[0], judgement[1])
         form_cell = ws.cell(row=row, column=column, value=cell_value)
         c_id = self.dataset["FormTable", "id"].name
-        c_comment = self.dataset["CognateTable", "comment"].name
+        try:
+            c_comment = self.dataset["CognateTable", "comment"].name
+        except KeyError:
+            c_comment = None
         comment = judgement[1].get(c_comment, None)
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
@@ -373,8 +393,11 @@ class ExcelWriter:
         return "{:} ‘{:}’{:}".format(transcription, ", ".join(translations), suffix)
 
     def get_segments(self, form):
-        c_segments = self.dataset["FormTable", "Segments"].name
-        return form[c_segments]
+        try:
+            c_segments = self.dataset["FormTable", "Segments"].name
+            return form[c_segments]
+        except KeyError:
+            return None
 
 
 if __name__ == "__main__":
@@ -397,6 +420,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sort-cognatesets-by",
         help="The name of a column in the CognatesetTable to sort cognates by in the output",
+        default="id",
     )
     parser.add_argument(
         "--url-template",
@@ -421,8 +445,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    if args.status_update == "None":
-        args.status_update = None
     E = ExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
         database_url=args.url_template,
@@ -439,6 +461,6 @@ if __name__ == "__main__":
         args.excel,
         size_sort=args.size_sort,
         cogset_order=cogset_order,
-        language_order=args.language_sort_column,
+        language_order=args.sort_languages_by,
         status_update=args.add_singletons_with_status,
     )
