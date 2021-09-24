@@ -597,7 +597,7 @@ def test_create_metadata_cerrect(interleaved_excel_example, formtable_only_examp
 def test_add_cog_tables_valid(formtable_only_example):
     ds = formtable_only_example
     add_cognate_table.add_cognate_table(ds, True)
-    # TODO: Check shape
+    ds.validate()
 
 
 def test_add_cog_tables_correct(formtable_only_example):

@@ -200,6 +200,8 @@ def read_wordlist(
     else:
         data = t.DefaultDict(lambda: t.DefaultDict(set))
     for row in dataset["FormTable"].iterdicts():
+        if not cognates_by_form[row[form_table_column]]:
+            continue
         language = row[col_map.forms.languageReference]
         for parameter in all_parameters(row[parameter_column]):
             data[language][parameter] |= cognates_by_form[row[form_table_column]]
@@ -292,9 +294,10 @@ def root_meaning_code(
             if entries is None:
                 alignment[language].extend(["?" for _ in possible_roots])
             else:
-                alignment[language].extend(
-                    ["1" if k in entries else "0" for k in possible_roots]
-                )
+                concept_sequence: t.List[Literal["0", "1", "?"]] = [
+                    "1" if k in entries else "0" for k in possible_roots
+                ]
+                alignment[language].extend(concept_sequence)
     return alignment, blocks
 
 
@@ -856,6 +859,7 @@ if __name__ == "__main__":
         for language, sequence in read_cldf_dataset(dataset).items()
         if language in languages
     }
+
     logger.info(f"Imported languages {set(ds)}.")
 
     # Step 2: Code the data

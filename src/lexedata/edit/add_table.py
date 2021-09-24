@@ -1,7 +1,9 @@
 """
 Given a table name: Find all the references to that table and create an empty table of that type filled with all those.
 
-Should definitely work for:
+Should definitely work for: LanguageTable, CognatesetTable, and ParameterTable (i.e. the table with the concepts).
+Warn about `ConceptTable`, but proceed adding a ParameterTable.
+Suggest running `lexedata.edit.simplify_ids` if the references we resolve here are not properly ID-shaped.
 """
 
 from lexedata import cli
