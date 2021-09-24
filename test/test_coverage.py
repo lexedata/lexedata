@@ -26,6 +26,23 @@ def test_no_primary_concepts(caplog, cldf_wordlist):
     assert re.search(r".*doesn't contain a column 'Primary'.*", caplog.text)
 
 
+def test_uncoded_coverage_report(cldf_wordlist):
+    dataset = cldf_wordlist
+    data, _ = coverage_report(
+        dataset=dataset,
+        min_percentage=0,
+        with_concept=[],
+        missing=False,
+        only_coded=False,
+    )
+    assert data == [
+        ["ache", "Aché", 6, 0.6, 1.5],
+        ["paraguayan_guarani", "Paraguayan Guaraní", 7, 0.7, 1.0],
+        ["old_paraguayan_guarani", "Old Paraguayan Guaraní", 1, 0.1, 1.0],
+        ["kaiwa", "Kaiwá", 5, 0.5, 1.0],
+    ]
+
+
 def test_coverage_report(cldf_wordlist):
     dataset = cldf_wordlist
     data, _ = coverage_report(
