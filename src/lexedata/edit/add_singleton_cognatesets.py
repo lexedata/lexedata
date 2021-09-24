@@ -6,24 +6,35 @@ cognatesets for streaks of segments not in cognatesets.
 
 """
 import typing as t
-from collections import OrderedDict
 
 import pycldf
 
 from lexedata import types
 from lexedata import cli
+
 # Type aliases, for clarity
 CognatesetID = str
 FormID = str
 ConceptID = str
 
 
-def create_singeltons(dataset: pycldf.Dataset):
+def create_singeltons(dataset: pycldf.Dataset, logger: cli.logger = cli.logger):
     # cldf names and foreignkeys
     c_f_id = dataset["FormTable", "id"].name
     c_cs_id = dataset["CognatesetTable", "id"].name
     c_cs_name = dataset["CognatesetTable", "name"].name
     c_c_id = dataset["CognateTable", "id"].name
+
+    status_column = None
+    for column in dataset["CognateTable"].tableSchema.columns:
+        if column.name == "Status_Column":
+            status_column = column.name
+    if not status_column:
+        logger.warning(
+            "No Status Column. Proceeding without Status Column. "
+            "Run add_status_column.py in default mode or with table-names CognatesetTable to "
+            "add a Status Column."
+        )
 
     foreign_key_form_concept = ""
     for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
@@ -50,7 +61,7 @@ def create_singeltons(dataset: pycldf.Dataset):
             foreign_key_cognate_cogset = foreign_key.columnReference[0]
 
     # load data
-    singleton_forms: t.Dict[FormID, OrderedDict] = {}
+    singleton_forms: t.Dict[FormID, types.Form] = {}
     for f in dataset["FormTable"]:
         singleton_forms[f[c_f_id]] = f
 
@@ -86,14 +97,16 @@ def create_singeltons(dataset: pycldf.Dataset):
     for i, form_id in enumerate(singleton_forms):
         cogset = {
             c_cs_id: f"X{i + 1}_{singleton_forms[form_id][foreign_key_form_language]}",
-            c_cs_name: concept_id_by_form_id[form_id]
+            c_cs_name: concept_id_by_form_id[form_id],
         }
+        if status_column:
+            cogset[status_column] = "automatic singleton"
         all_cogsets.append(cogset)
 
         cognate = {
             c_c_id: f"{cogset[c_cs_id]}",
             foreign_key_cognate_form: form_id,
-            foreign_key_cognate_cogset: cogset[c_cs_id]
+            foreign_key_cognate_cogset: cogset[c_cs_id],
         }
         judgements.append(cognate)
         this_form = all_forms[f[c_f_id]]
@@ -105,14 +118,20 @@ def create_singeltons(dataset: pycldf.Dataset):
     return new_forms, all_cogsets, judgements
 
 
-def write_singletons_to_dataset(dataset: pycldf.Dataset):
-    all_forms, all_cogsets, judgements = create_singeltons(dataset=dataset)
-    dataset.write(FormTable=all_forms, CognatesetTable=all_cogsets, CognateTable=judgements)
+def write_singletons_to_dataset(dataset: pycldf.Dataset, logger: cli.logger):
+    logger.info("Creating Singleton Cognatesets.")
+    all_forms, all_cogsets, judgements = create_singeltons(
+        dataset=dataset, logger=logger
+    )
+    dataset.write(
+        FormTable=all_forms, CognatesetTable=all_cogsets, CognateTable=judgements
+    )
 
 
 if __name__ == "__main__":
     parser = cli.parser(description="Create an Excel cognate view from a CLDF dataset")
     args = parser.parse_args()
-    # logger = cli.setup_logging(args)
-    write_singletons_to_dataset(dataset=pycldf.Dataset.from_metadata(args.metadata))
-
+    logger = cli.setup_logging(args)
+    write_singletons_to_dataset(
+        dataset=pycldf.Dataset.from_metadata(args.metadata), logger=logger
+    )
