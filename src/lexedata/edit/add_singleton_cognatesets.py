@@ -21,6 +21,7 @@ ConceptID = str
 def create_singeltons(dataset: pycldf.Dataset, logger: cli.logger = cli.logger):
     # cldf names and foreignkeys
     c_f_id = dataset["FormTable", "id"].name
+    c_f_form = dataset["FormTable", "form"].name
     c_cs_id = dataset["CognatesetTable", "id"].name
     c_cs_name = dataset["CognatesetTable", "name"].name
     c_c_id = dataset["CognateTable", "id"].name
@@ -85,12 +86,11 @@ def create_singeltons(dataset: pycldf.Dataset, logger: cli.logger = cli.logger):
                 continue
     del all_judgements
     judgements = [c for c in dataset["CognateTable"]]
-    # create singletons for remaining forms and add singleton to cogsets and replace corresponding forms
-    all_forms: t.Dict[FormID, types.Form] = {}
-    for f in dataset["FormTable"]:
-        all_forms[f[c_f_id]] = f
 
+    # create singletons for remaining forms and add singleton to cogsets
     for i, form_id in enumerate(singleton_forms):
+        if singleton_forms[form_id][c_f_form] is None:
+            continue
         cogset = {
             c_cs_id: f"X{i + 1}_{singleton_forms[form_id][foreign_key_form_language]}",
             c_cs_name: concept_id_by_form_id[form_id],
