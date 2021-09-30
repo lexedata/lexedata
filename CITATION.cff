@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Kaiping"
+  given-names: "Gereon A."
+  orcid: "https://orcid.org/0000-0002-8155-9089"
+- family-names: "Steiger"
+  given-names: "Melvin S."
+- family-names: "Chousou-Polydouri"
+  given-names: "Natalia"
+  orcid: "https://orcid.org/0000-0002-5693-975X"
+title: "Lexedata"
+subtitle: "Lexical Data Editing tools"
+version: 1.0.0-beta3
+doi: 10.5281/zenodo.5541168
+date-released: 2021-09-30
+url: "https://github.com/Anaphory/lexedata"
