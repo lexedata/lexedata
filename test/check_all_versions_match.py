@@ -7,12 +7,13 @@ they don't all match.
 
 """
 
+import sys
 import json
 import configparser
 from pathlib import Path
 
 if __name__ == "__main__":
-    root = Path(__file__).absolute().parent
+    root = Path(__file__).absolute().parent.parent
 
     py = root / "setup.cfg"
     config = configparser.ConfigParser()
@@ -25,5 +26,13 @@ if __name__ == "__main__":
     print(zenodo, zenodo_version)
 
     cff = root / "CITATION.cff"
-    _, cff_version = [r for r in cff.open() if r.startswith()["version:"]][0].split(" ")
+    # Maybe use cffconvert to parse? Or at least YAML?
+    _, cff_version = [r for r in cff.open() if r.startswith("version:")][0].split(" ")
     print(cff, cff_version)
+
+    # There is also CodeMeta (https://codemeta.github.io/), which is the
+    # solution suggested by JOSS. https://elib.dlr.de/133084/1/1905.08674.pdf
+    # suggests converting CFF automatically to CodeMeta.
+
+    if not (py_version.strip() == zenodo_version.strip() == cff_version.strip()):
+        sys.exit(1)
