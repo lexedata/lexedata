@@ -53,18 +53,18 @@ def list_homophones(
         for form, meanings in forms.items():
             if len(meanings) == 1:
                 continue
-            clics_nodes = [concepticon.get(concept) for concept, form_id in meanings]
+            clics_nodes = {concepticon.get(concept) for concept, form_id in meanings}
             if None in clics_nodes:
-                clics_nodes = [c for c in clics_nodes if c]
-                x = "(but at least one concept not found)"
+                x = "(but at least one concept not found):"
             else:
-                x = ""
+                x = ":"
+            clics_nodes -= {None}
             if len(clics_nodes) <= 1:
                 print("Unknown:", lang, form, meanings)
             elif nx.is_connected(clics.subgraph(clics_nodes)):
-                print("Connected:", x, lang, form, meanings)
+                print("Connected", x, lang, form, meanings)
             else:
-                print("Unconnected:", x, lang, form, meanings)
+                print("Unconnected", x, lang, form, meanings)
 
 
 if __name__ == "__main__":
