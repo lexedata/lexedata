@@ -12,6 +12,7 @@ authors:
 title: "Lexedata"
 subtitle: "Lexical Data Editing tools"
 version: 1.0.0-beta3
-doi: 10.5281/zenodo.5541168
+license: GPL-3.0+
+doi: 10.5281/zenodo.5541167
 date-released: 2021-09-30
 url: "https://github.com/Anaphory/lexedata"
