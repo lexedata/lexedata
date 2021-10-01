@@ -47,13 +47,12 @@ def list_homophones(
     for form in dataset["FormTable"]:
         if form[f_form] == "-" or form[f_form] is None:
             continue
-        homophones[form[f_lang]][form[f_form]].add((form[f_concept], form[f_id]))
-
+        homophones[form[f_lang]][form[f_form]].add(tuple(form[f_concept]))
     for lang, forms in homophones.items():
         for form, meanings in forms.items():
             if len(meanings) == 1:
                 continue
-            clics_nodes = [concepticon.get(concept) for concept, form_id in meanings]
+            clics_nodes = [concepticon.get(concept) for concept in meanings]
             if None in clics_nodes:
                 clics_nodes = [c for c in clics_nodes if c]
                 x = "(but at least one concept not found)"
