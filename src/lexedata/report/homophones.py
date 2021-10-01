@@ -42,19 +42,22 @@ def list_homophones(
     f_concept = dataset["FormTable", "parameterReference"].name
     f_form = dataset["FormTable", "form"].name
 
-    homophones: t.DefaultDict[str, t.List] = t.DefaultDict(list)
+    homophones: t.DefaultDict[
+        str, t.DefaultDict[str, t.Set[t.Tuple[str, str]]]
+    ] = t.DefaultDict(lambda: t.DefaultDict(set))
 
     for form in dataset["FormTable"]:
         if form[f_form] == "-" or form[f_form] is None:
             continue
-        homophones[form[f_lang]].append(form)
+        if isinstance(form[f_concept], list):
+            homophones[form[f_lang]][form[f_form]].add(tuple(form[f_concept])+(form[f_id],))
+        else:
+            homophones[form[f_lang]][form[f_form]].add((form[f_concept], form[f_id]))
     output = output.open("w", encoding="utf8", newline="")
     output = writer(output, delimiter=",")
-    output.writerow(["Comment", "Concepticon Status", "Form_ID", "Form", "Concepts"])
+    output.writerow(["Comment", "Concepticon Status", "Form", "Concepts"])
     for lang, forms in homophones.items():
-        print(forms)
-        for form in forms:
-            meanings = tuple(form[f_concept])
+        for form, meanings in forms.items():
             if len(meanings) == 1:
                 continue
             clics_nodes = [concepticon.get(concept) for concept in meanings]
@@ -64,14 +67,14 @@ def list_homophones(
             else:
                 x = ""
             if len(clics_nodes) <= 1:
-                output.writerow(["Unknown", x, lang, form[f_id], form[f_form], meanings])
-                print("Unknown:", lang, form[f_id], form[f_form], meanings)
+                output.writerow(["Unknown", x, lang, form, meanings])
+                print("Unknown:", lang, form, meanings)
             elif nx.is_connected(clics.subgraph(clics_nodes)):
-                output.writerow(["Connected", x, lang, form[f_id], form[f_form], meanings])
-                print("Connected:", x, lang, form[f_id], form[f_form], meanings)
+                output.writerow(["Connected", x, lang, form, meanings])
+                print("Connected:", x, lang, form, meanings)
             else:
-                output.writerow(["Unconnected", x, lang, form[f_id], form[f_form], meanings])
-                print("Unconnected:", x, lang, form[f_id], form[f_form], meanings)
+                output.writerow(["Unconnected", x, lang, form, meanings])
+                print("Unconnected:", x, lang, form, meanings)
 
 
 if __name__ == "__main__":
