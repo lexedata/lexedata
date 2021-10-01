@@ -6,6 +6,8 @@ accidental homophones
 
 """
 import typing as t
+from pathlib import Path
+from csv import writer
 
 import networkx as nx
 import pycldf
@@ -15,7 +17,7 @@ from lexedata.util import load_clics
 
 
 def list_homophones(
-    dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger
+    dataset: pycldf.Dataset, output: Path, logger: cli.logging.Logger = cli.logger
 ) -> None:
     clics = load_clics()
     # warn if clics cannot be loaded
@@ -40,16 +42,19 @@ def list_homophones(
     f_concept = dataset["FormTable", "parameterReference"].name
     f_form = dataset["FormTable", "form"].name
 
-    homophones: t.DefaultDict[
-        str, t.DefaultDict[str, t.Set[t.Tuple[str, str]]]
-    ] = t.DefaultDict(lambda: t.DefaultDict(set))
+    homophones: t.DefaultDict[str, t.List] = t.DefaultDict(list)
 
     for form in dataset["FormTable"]:
         if form[f_form] == "-" or form[f_form] is None:
             continue
-        homophones[form[f_lang]][form].add(tuple(form[f_concept]))
+        homophones[form[f_lang]].append(form)
+    output = output.open("w", encoding="utf8", newline="")
+    output = writer(output, delimiter=",")
+    output.writerow(["Comment", "Concepticon Status", "Form_ID", "Form", "Concepts"])
     for lang, forms in homophones.items():
-        for form, meanings in forms.items():
+        print(forms)
+        for form in forms:
+            meanings = tuple(form[f_concept])
             if len(meanings) == 1:
                 continue
             clics_nodes = [concepticon.get(concept) for concept in meanings]
@@ -59,16 +64,25 @@ def list_homophones(
             else:
                 x = ""
             if len(clics_nodes) <= 1:
+                output.writerow(["Unknown", x, lang, form[f_id], form[f_form], meanings])
                 print("Unknown:", lang, form[f_id], form[f_form], meanings)
             elif nx.is_connected(clics.subgraph(clics_nodes)):
+                output.writerow(["Connected", x, lang, form[f_id], form[f_form], meanings])
                 print("Connected:", x, lang, form[f_id], form[f_form], meanings)
             else:
+                output.writerow(["Unconnected", x, lang, form[f_id], form[f_form], meanings])
                 print("Unconnected:", x, lang, form[f_id], form[f_form], meanings)
 
 
 if __name__ == "__main__":
 
     parser = cli.parser(description=__doc__)
+    parser.add_argument(
+        "--output-file",
+        help="Path to output file",
+        type=Path,
+        default="homophones.csv"
+    )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    list_homophones(dataset=pycldf.Dataset.from_metadata(args.metadata), logger=logger)
+    list_homophones(dataset=pycldf.Dataset.from_metadata(args.metadata), output=args.output_file, logger=logger)
