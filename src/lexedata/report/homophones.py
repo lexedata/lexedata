@@ -60,12 +60,15 @@ def list_homophones(
         for form, meanings in forms.items():
             if len(meanings) == 1:
                 continue
-            clics_nodes = [concepticon.get(concept) for concept in meanings]
+
+            meanings_list = list(meanings)
+            meanings_list.pop(-1)
+            clics_nodes = {concepticon.get(concept) for concept in meanings}
             if None in clics_nodes:
-                clics_nodes = [c for c in clics_nodes if c]
-                x = "(but at least one concept not found)"
+                x = "(but at least one concept not found):"
             else:
-                x = ""
+                x = ":"
+            clics_nodes -= {None}
             if len(clics_nodes) <= 1:
                 output.writerow(["Unknown", x, lang, form, meanings])
                 print("Unknown:", lang, form, meanings)
