@@ -47,7 +47,7 @@ def list_homophones(
     for form in dataset["FormTable"]:
         if form[f_form] == "-" or form[f_form] is None:
             continue
-        homophones[form[f_lang]][form[f_form]].add(tuple(form[f_concept]))
+        homophones[form[f_lang]][form].add(tuple(form[f_concept]))
     for lang, forms in homophones.items():
         for form, meanings in forms.items():
             if len(meanings) == 1:
@@ -59,11 +59,11 @@ def list_homophones(
             else:
                 x = ""
             if len(clics_nodes) <= 1:
-                print("Unknown:", lang, form, meanings)
+                print("Unknown:", lang, form[f_id], form[f_form], meanings)
             elif nx.is_connected(clics.subgraph(clics_nodes)):
-                print("Connected:", x, lang, form, meanings)
+                print("Connected:", x, lang, form[f_id], form[f_form], meanings)
             else:
-                print("Unconnected:", x, lang, form, meanings)
+                print("Unconnected:", x, lang, form[f_id], form[f_form], meanings)
 
 
 if __name__ == "__main__":
