@@ -71,13 +71,10 @@ def list_homophones(
             clics_nodes -= {None}
             if len(clics_nodes) <= 1:
                 output.writerow(["Unknown", x, lang, form, meanings])
-                print("Unknown:", lang, form, meanings)
             elif nx.is_connected(clics.subgraph(clics_nodes)):
                 output.writerow(["Connected", x, lang, form, meanings])
-                print("Connected:", x, lang, form, meanings)
             else:
                 output.writerow(["Unconnected", x, lang, form, meanings])
-                print("Unconnected:", x, lang, form, meanings)
 
 
 if __name__ == "__main__":
