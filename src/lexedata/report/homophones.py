@@ -55,7 +55,7 @@ def list_homophones(
             homophones[form[f_lang]][form[f_form]].add((form[f_concept], form[f_id]))
     output = output.open("w", encoding="utf8", newline="")
     output = writer(output, delimiter=",")
-    output.writerow(["Comment", "Concepticon Status", "Form", "Concepts"])
+    output.writerow(["Comment", "Concepticon Status", "Language", "Form", "Concepts"])
     for lang, forms in homophones.items():
         for form, meanings in forms.items():
             if len(meanings) == 1:
