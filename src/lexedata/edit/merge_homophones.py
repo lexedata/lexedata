@@ -39,10 +39,16 @@ class Skip(Exception):
     """Skip this merge, leave all forms as expected. This is not an Error!"""
 
 
+def skip(
+    sequence: t.Sequence[C], target: t.Optional[t.Dict[str, t.Any]] = None, separator: str = ";"
+) -> t.Optional[C]:
+    raise Skip
+    return target
+
 # TODO: Melvin does not understand this function. It s not comparing anything and just returns the first element of the sequence....
 # TODO: Melvin didn't get the intention behind the annotation target: t.Optional[t.Dict[str, t.Any]] = None, it would make more sense if the functions also take the dataset or some cldf terminology
 def assert_equal(
-    sequence: t.Sequence[C], target: t.Optional[t.Dict[str, t.Any]] = None
+    sequence: t.Sequence[C], target: t.Optional[t.Dict[str, t.Any]] = None, separator: str = ";"
 ) -> t.Optional[C]:
     forms = set(sequence)
     assert len(forms) <= 1
@@ -75,13 +81,15 @@ def concatenate(
     target: t.Optional[t.Dict[str, t.Any]] = None,
     separator: str = ";",
 ) -> t.Optional[C]:
+    if target is None:
+        target = ""
     assert isinstance(sequence, str) and isinstance(
         target, str
     ), "Concatenation is only valid for strings"
     if separator is not None:
         target += separator + sequence
     else:
-        target += separator
+        target += sequence
     return target
 
 
@@ -137,6 +145,7 @@ merging_functions: t.Dict[str, Merger] = {
     "error-not-null": assert_equal_ignoring_null,
     "concatenate": concatenate,
     "union": union,
+    "skip": skip,
 }
 
 
