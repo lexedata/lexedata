@@ -50,7 +50,9 @@ def list_homophones(
         if form[f_form] == "-" or form[f_form] is None:
             continue
         if isinstance(form[f_concept], list):
-            homophones[form[f_lang]][form[f_form]].add(tuple(form[f_concept])+(form[f_id],))
+            homophones[form[f_lang]][form[f_form]].add(
+                tuple(form[f_concept]) + (form[f_id],)
+            )
         else:
             homophones[form[f_lang]][form[f_form]].add((form[f_concept], form[f_id]))
     output = output.open("w", encoding="utf8", newline="")
@@ -81,11 +83,12 @@ if __name__ == "__main__":
 
     parser = cli.parser(description=__doc__)
     parser.add_argument(
-        "--output-file",
-        help="Path to output file",
-        type=Path,
-        default="homophones.csv"
+        "--output-file", help="Path to output file", type=Path, default="homophones.csv"
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    list_homophones(dataset=pycldf.Dataset.from_metadata(args.metadata), output=args.output_file, logger=logger)
+    list_homophones(
+        dataset=pycldf.Dataset.from_metadata(args.metadata),
+        output=args.output_file,
+        logger=logger,
+    )
