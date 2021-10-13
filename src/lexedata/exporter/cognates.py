@@ -3,6 +3,7 @@ import re
 import typing as t
 import urllib.parse
 from pathlib import Path
+import traceback
 
 import pycldf
 import openpyxl as op
@@ -102,18 +103,45 @@ class ExcelWriter:
         status_update: string, writen to status_column of singleton cognates.
 
         """
+        # cldf names
+        try:
+            c_name = self.dataset["LanguageTable", "name"].name
+            c_id = self.dataset["LanguageTable", "id"].name
+            c_form_id = self.dataset["FormTable", "id"].name
+            c_language = self.dataset["FormTable", "languageReference"].name
+            c_form_concept_reference = self.dataset[
+                "FormTable", "parameterReference"
+            ].name
+            c_cognate_cognateset = self.dataset[
+                "CognateTable", "cognatesetReference"
+            ].name
+            c_cognate_form = self.dataset["CognateTable", "formReference"].name
+            c_cogset_id = self.dataset["CognatesetTable", "id"].name
+            c_cogset_name = self.dataset["CognatesetTable", "name"].name
+        except KeyError:
+            formatted_lines = traceback.format_exc().splitlines()
+            match = re.match(r'.*"(.*?)", "(.*?)".*', formatted_lines[2])
+            cli.Exit.INVALID_COLUMN_NAME(
+                f"The {match.group(1)} is missing the column {match.group(2)} which is required by cldf."
+            )
+        try:
+            c_comment = self.dataset["CognatesetTable", "comment"].name
+        except KeyError:
+            c_comment = None
+
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
         if status_update is not None:
             if ("Status_Column", "Status_Column") not in self.header:
+                # TODO: This warning seems odd to me, the cognate exporter is not supposed to change the orignal dataset/tables
+                # TODO: As I, Melvin, recall it should just write the status_update to the outputted excel file.
+                # TODO: Personally, I would add the Status_Column to the header when the user requests it
                 logger.warning(
                     f"You requested that I set the status of new singleton cognate sets to {status_update}, but your CognatesetTable has no Status_Column to write it to."
                 )
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
-        c_name = self.dataset["LanguageTable", "name"].name
-        c_id = self.dataset["LanguageTable", "id"].name
         if language_order:
             c_sort = self.dataset["LanguageTable", f"{language_order}"].name
             languages = sorted(
@@ -132,12 +160,9 @@ class ExcelWriter:
         ws.append(excel_header)
 
         # load all forms
-        c_form_id = self.dataset["FormTable", "id"].name
-        c_language = self.dataset["FormTable", "languageReference"].name
         all_forms = {f[c_form_id]: f for f in self.dataset["FormTable"]}
 
         # map form_id to id of associated concept
-        c_form_concept_reference = self.dataset["FormTable", "parameterReference"].name
         concept_id_by_form_id = dict()
         for f in self.dataset["FormTable"]:
             concept = f[c_form_concept_reference]
@@ -148,15 +173,8 @@ class ExcelWriter:
 
         # load all cognates by cognateset id
         all_judgements: t.Dict[CognatesetID, t.List[types.CogSet]] = {}
-        c_cognate_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
-        c_cognate_form = self.dataset["CognateTable", "formReference"].name
         for j in self.dataset["CognateTable"]:
             all_judgements.setdefault(j[c_cognate_cognateset], []).append(j)
-        try:
-            c_comment = self.dataset["CognatesetTable", "comment"].name
-        except KeyError:
-            c_comment = None
-        c_cogset_id = self.dataset["CognatesetTable", "id"].name
 
         # Again, row_index 2 is indeed row 2, row 1 is header
         row_index = 1 + 1
@@ -235,7 +253,6 @@ class ExcelWriter:
                     except KeyError:
                         continue
             # create for remaining forms singleton cognatesets and write to file
-            c_cogset_name = self.dataset["CognatesetTable", "name"].name
             try:
                 c_cogset_concept = self.dataset[
                     "CognatesetTable", "parameterReference"
