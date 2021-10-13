@@ -40,15 +40,20 @@ class Skip(Exception):
 
 
 def skip(
-    sequence: t.Sequence[C], target: t.Optional[t.Dict[str, t.Any]] = None, separator: str = ";"
+    sequence: t.Sequence[C],
+    target: t.Optional[t.Dict[str, t.Any]] = None,
+    separator: str = ";",
 ) -> t.Optional[C]:
     raise Skip
     return target
 
+
 # TODO: Melvin does not understand this function. It s not comparing anything and just returns the first element of the sequence....
 # TODO: Melvin didn't get the intention behind the annotation target: t.Optional[t.Dict[str, t.Any]] = None, it would make more sense if the functions also take the dataset or some cldf terminology
 def assert_equal(
-    sequence: t.Sequence[C], target: t.Optional[t.Dict[str, t.Any]] = None, separator: str = ";"
+    sequence: t.Sequence[C],
+    target: t.Optional[t.Dict[str, t.Any]] = None,
+    separator: str = ";",
 ) -> t.Optional[C]:
     forms = set(sequence)
     assert len(forms) <= 1
@@ -81,8 +86,11 @@ def concatenate(
     target: t.Optional[t.Dict[str, t.Any]] = None,
     separator: str = ";",
 ) -> t.Optional[C]:
+    breakpoint()
     if target is None:
         target = ""
+    if sequence is None:
+        sequence = ""
     assert isinstance(sequence, str) and isinstance(
         target, str
     ), "Concatenation is only valid for strings"
@@ -199,7 +207,6 @@ def merge_forms(
                 transcriptions.remove("form")
             if "comment" in transcriptions:
                 transcriptions.remove("comment")
-            print(transcriptions)
     except KeyError:
         transcriptions = None
     all_forms: t.Dict[str, types.Form] = {}
@@ -304,7 +311,6 @@ def merge_forms(
                             to_add_to_transcription = merging_functions[merger[name]](
                                 sequence=form[name],
                                 target=first_form[name],
-                                separator=variant_separator,
                             )
                             # overwrite this transcription field of the first form
                             all_forms[first_id][name] = to_add_to_transcription
@@ -378,19 +384,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--orthographic",
         type=str,
-        help="Specify the way to merge concepts",
+        help="Specify the way to merge orthographic transcriptions",
         choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
     )
     parser.add_argument(
         "--phonemic",
         type=str,
-        help="Specify the way to merge concepts",
+        help="Specify the way to merge phonemic transcriptions",
         choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
     )
     parser.add_argument(
         "--phonetic",
         type=str,
-        help="Specify the way to merge concepts",
+        help="Specify the way to merge phonetic transcriptions",
         choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
     )
     parser.add_argument(
