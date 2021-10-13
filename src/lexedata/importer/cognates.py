@@ -140,7 +140,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
-    ws = openpyxl.load_workbook(args.cogset).active
+    ws = openpyxl.load_workbook(args.cogsets).active
 
     import_cognates_from_excel(
         ws,
