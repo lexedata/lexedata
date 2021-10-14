@@ -73,12 +73,16 @@ def assert_equal_ignoring_null(
 
 # TODO: For this function to fulfill its purpose we would need to pass it the dataset or the variants key,
 # I think it s better to set as a default
-def variants(
-    sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
-) -> t.Optional[C]:
-    raise NotImplementedError
+def variants_factory(formstring: str="{}"):
+    def variants(
+        sequence: t.Sequence[C],
+        target: t.Optional[t.Dict[str, t.Any]] = None,
+        separator: str = ";",
+    ) -> t.Optional[C]:
+        all_transcriptions = union(sequence=sequence)
+        target["variants"] += all_transcriptions[1:]
+        return all_transcriptions[0]
+    return variants
 
 
 def concatenate(
@@ -154,6 +158,8 @@ merging_functions: t.Dict[str, Merger] = {
     "concatenate": concatenate,
     "union": union,
     "skip": skip,
+    "status": constant_factory("Status_Update"),
+    "orthographic": variants_factory("<{}>")
 }
 
 
@@ -212,7 +218,10 @@ def merge_forms(
     all_forms: t.Dict[str, types.Form] = {}
     for f in dataset["FormTable"]:
         all_forms[f[c_f_id]] = f
-    forms_to_merge: t.DefaultDict[str, t.List] = defaultdict(list)
+    # TODO: write function that reads report and returns 'forms_to_merge'
+    # key is form id from report that appears first in the dataset
+    # Then iterate over all forms, if form id in forms_to_merge
+    forms_to_merge: t.Dict[FORMID, t.Set[FORMID]] = []
 
     # parse csv string back into python objects
     with report.open("r", encoding="utf8") as input:
