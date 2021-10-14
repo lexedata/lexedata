@@ -22,7 +22,8 @@ from lexedata.edit.add_status_column import add_status_column_to_table
 
 # TODO: Melvin does not understand this type annotation. Or better, why use it in such a way?
 C = t.TypeVar("C")
-Merger = t.Callable[[t.Sequence[C], t.Optional[t.Dict[str, t.Any]]], t.Optional[C]]
+MaybeRow = t.Optional[t.Dict[str, t.Any]]
+Merger = t.Callable[[t.Sequence[C], MaybeRow], t.Optional[C]]
 
 
 def isiterable(object):
@@ -41,19 +42,14 @@ class Skip(Exception):
 
 def skip(
     sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
+    target: MaybeRow = None,
 ) -> t.Optional[C]:
     raise Skip
-    return target
 
 
-# TODO: Melvin does not understand this function. It s not comparing anything and just returns the first element of the sequence....
-# TODO: Melvin didn't get the intention behind the annotation target: t.Optional[t.Dict[str, t.Any]] = None, it would make more sense if the functions also take the dataset or some cldf terminology
 def assert_equal(
     sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
+    target: MaybeRow = None,
 ) -> t.Optional[C]:
     forms = set(sequence)
     assert len(forms) <= 1
@@ -65,7 +61,7 @@ def assert_equal(
 
 def assert_equal_ignoring_null(
     sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
+    target: MaybeRow = None,
     separator: str = ";",
 ) -> t.Optional[C]:
     return assert_equal(list(filter(bool, sequence)))
@@ -73,46 +69,50 @@ def assert_equal_ignoring_null(
 
 # TODO: For this function to fulfill its purpose we would need to pass it the dataset or the variants key,
 # I think it s better to set as a default
-def variants(
-    sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
-) -> t.Optional[C]:
-    raise NotImplementedError
+def transcription(wrapper: str = "{}"):
+    def first_transcription_remainder_to_variants(
+        sequence: t.Sequence[C],
+        target: MaybeRow = None,
+    ) -> t.Optional[C]:
+        all_transcriptions = union([[s] for s in sequence])
+        target["variants"] = (target.get("variants") or []) + [
+            wrapper.format(s) for s, in all_transcriptions[1:]
+        ]
+        return all_transcriptions[0][0]
 
 
 def concatenate(
     sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
+    target: MaybeRow = None,
 ) -> t.Optional[C]:
-    breakpoint()
-    if target is None:
-        target = ""
-    if sequence is None:
-        sequence = ""
-    assert isinstance(sequence, str) and isinstance(
-        target, str
-    ), "Concatenation is only valid for strings"
-    if separator is not None:
-        target += separator + sequence
+    if type(sequence[0]) == str:
+        return "; ".join(sequence)
+    elif type(sequence[0]) == list:
+        return sum(sequence, start=[])
     else:
-        target += sequence
-    return target
+        raise NotImplementedError
 
 
 def union(
     sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
+    target: MaybeRow = None,
 ) -> t.Optional[C]:
-    if isiterable(sequence):
-        target.extend(sequence)
-        return target
+    if type(sequence[0]) == str:
+        unique = []
+        for x in sequence:
+            if x not in unique:
+                unique.append(x)
+        return "; ".join(unique)
+    elif type(sequence[0]) == list:
+        # Assume list values, and accept the type error if not
+        unique = []
+        for xs in sequence:
+            for x in xs:
+                if x not in unique:
+                    unique.append(x)
+        return unique
     else:
-        sequence = [sequence]
-        target.extend(sequence)
-        return target
+        raise NotImplementedError
 
 
 def warn(
@@ -138,8 +138,7 @@ def warn(
 def constant_factory(c: C) -> Merger[C]:
     def constant(
         sequence: t.Sequence[C],
-        target: t.Optional[t.Dict[str, t.Any]] = None,
-        separator: str = ";",
+        target: MaybeRow = None,
     ) -> t.Optional[C]:
         return c
 
@@ -339,7 +338,7 @@ def merge_forms(
                 continue
             else:
                 if c_f_variant is not None:
-                    variants.append(this_c_form)
+                    [].append(this_c_form)
 
         # write merged form
         all_forms[first_id][foreign_key_form_concept] = first_concept
