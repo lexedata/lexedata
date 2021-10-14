@@ -157,13 +157,13 @@ merging_functions: t.Dict[str, Merger] = {
 }
 
 
-# default_mergers = {
-#     "form": "error-not-null",
-#     "language": "error-not-null",
-#     "source": "union",
-#     "concept": "union",
-#     "variants": "union"
-# }
+default_mergers: t.Mapping[str, str] = {
+    "form": "error-not-null",
+    "language": "error-not-null",
+    "source": "union",
+    "concept": "union",
+    "variants": "union",
+}
 
 
 def merge_forms(
@@ -282,7 +282,7 @@ def merge_forms(
                 )
             # merge concepts
             concept = form[foreign_key_form_concept]
-            first_concept = merging_functions[merger["concept"]](
+            first_concept = merger["concept"](
                 sequence=concept, target=first_concept, separator=concept_separator
             )
             # merge sources
@@ -352,6 +352,19 @@ def merge_forms(
     dataset.write(FormTable=all_forms.values())
 
 
+def parse_merge_override(string: str) -> t.Tuple[str, Merger]:
+    column, merger_name = string.rsplit(-1, ":")
+    merger_name = merger_name.lower()
+    return (column, merging_functions[merger_name])
+
+
+def format_mergers(mergers: t.Dict[str, str]) -> str:
+    "\n".join(
+        "{col}:{name}".format(col=col, name=name.upper())
+        for col, name in mergers.items()
+    )
+
+
 if __name__ == "__main__":
 
     parser = cli.parser(description="Script for merging homophones.")
@@ -361,44 +374,57 @@ if __name__ == "__main__":
         type=Path,
     )
     parser.add_argument(
-        "--source",
-        type=str,
-        help="Specify the way to merge sources. (default union)",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-        default="union",
+        "--merge",
+        nargs="+",
+        default=[],
+        type=parse_merge_override,
+        help="""Override merge defaults using COLUMN_NAME:MERGER syntax, eg. --merge Source:SKIP orthographic:VARIANTS. The default merging functions are:
+
+        {:}
+
+        The available mergers are {:}""".format(
+            format_mergers(default_mergers), [key.upper() for key in merging_functions]
+        ),
     )
-    parser.add_argument(
-        "--variants",
-        type=str,
-        help="Specify the way to merge sources. (default union)",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-        default="union",
-    )
-    parser.add_argument(
-        "--concept",
-        type=str,
-        help="Specify the way to merge concepts. (default union)",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-        default="union",
-    )
-    parser.add_argument(
-        "--orthographic",
-        type=str,
-        help="Specify the way to merge orthographic transcriptions",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-    )
-    parser.add_argument(
-        "--phonemic",
-        type=str,
-        help="Specify the way to merge phonemic transcriptions",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-    )
-    parser.add_argument(
-        "--phonetic",
-        type=str,
-        help="Specify the way to merge phonetic transcriptions",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-    )
+    # parser.add_argument(
+    #     "--source",
+    #     type=str,
+    #     help="Specify the way to merge sources. (default union)",
+    #     choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
+    #     default="union",
+    # )
+    # parser.add_argument(
+    #     "--variants",
+    #     type=str,
+    #     help="Specify the way to merge sources. (default union)",
+    #     choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
+    #     default="union",
+    # )
+    # parser.add_argument(
+    #     "--concept",
+    #     type=str,
+    #     help="Specify the way to merge concepts. (default union)",
+    #     choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
+    #     default="union",
+    # )
+    # parser.add_argument(
+    #     "--orthographic",
+    #     type=str,
+    #     help="Specify the way to merge orthographic transcriptions",
+    #     choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
+    # )
+    # parser.add_argument(
+    #     "--phonemic",
+    #     type=str,
+    #     help="Specify the way to merge phonemic transcriptions",
+    #     choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
+    # )
+    # parser.add_argument(
+    #     "--phonetic",
+    #     type=str,
+    #     help="Specify the way to merge phonetic transcriptions",
+    #     choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
+    # )
     parser.add_argument(
         "--status-update",
         type=str,
@@ -408,22 +434,14 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    merger = {
-        "source": args.source,
-        "concept": args.concept,
-        "variants": args.variants,
-    }
-    if args.orthographic:
-        merger["orthographic"] = args.orthographic
-    if args.phonemic:
-        merger["phonemic"] = args.phonemic
-    if args.phonetic:
-        merger["phonetic"] = args.phonetic
+    mergers = default_mergers
+    for column, merger in args.merge:
+        mergers[column] = merger
     if args.status_update == "None":
         args.status_update = None
     merge_forms(
         dataset=pycldf.Dataset.from_metadata(args.metadata),
         report=args.merge_report,
-        merger=merger,
+        merger=mergers,
         status_update=args.status_update,
     )
