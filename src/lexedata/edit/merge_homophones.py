@@ -275,7 +275,6 @@ def format_mergers(mergers: t.Mapping[str, Merger]) -> str:
 
 
 if __name__ == "__main__":
-
     parser = cli.parser(
         description="Script for merging homophones.",
         epilog="""The default merging functions are:
