@@ -51,7 +51,7 @@ def list_homophones(
             continue
         if isinstance(form[f_concept], list):
             homophones[form[f_lang]][form[f_form]].add(
-                tuple(form[f_concept]) + tuple(form[f_id])
+                tuple(form[f_concept]) + (form[f_id],)
             )
         else:
             homophones[form[f_lang]][form[f_form]].add((form[f_concept], form[f_id]))
