@@ -51,39 +51,38 @@ def list_homophones(
             continue
         if isinstance(form[f_concept], list):
             homophones[form[f_lang]][form[f_form]].add(
-                tuple(form[f_concept]) + (form[f_id],)
+                tuple(form[f_concept]) + tuple(form[f_id])
             )
         else:
             homophones[form[f_lang]][form[f_form]].add((form[f_concept], form[f_id]))
-    output = output.open("w", encoding="utf8", newline="")
-    output = writer(output, delimiter=",")
-    output.writerow(["Comment", "Concepticon Status", "Language", "Form", "Concepts"])
-    for lang, forms in homophones.items():
-        for form, meanings in forms.items():
-            if len(meanings) == 1:
-                continue
+    with output.open("w", encoding="utf8", newline="") as out:
+        for lang, forms in homophones.items():
+            for form, meanings in forms.items():
+                if len(meanings) == 1:
+                    continue
+                clics_nodes = {concepticon.get(concept) for concept in meanings}
+                if None in clics_nodes:
+                    x = "(but at least one concept not found):"
+                else:
+                    x = ":"
+                clics_nodes -= {None}
+                if len(clics_nodes) <= 1:
+                    x = "Unknown " + x
+                elif nx.is_connected(clics.subgraph(clics_nodes)):
+                    x = "Connected " + x
+                else:
+                    x = "Unconnected " + x
+                line = f"{lang}, {form}: {x}\n"
+                for ele in meanings:
+                    line += f"\t {ele[-1]}, {ele[0:-1]}\n"
+                out.write(line)
 
-            meanings_list = list(meanings)
-            meanings_list.pop(-1)
-            clics_nodes = {concepticon.get(concept) for concept in meanings}
-            if None in clics_nodes:
-                x = "(but at least one concept not found):"
-            else:
-                x = ":"
-            clics_nodes -= {None}
-            if len(clics_nodes) <= 1:
-                output.writerow(["Unknown", x, lang, form, meanings])
-            elif nx.is_connected(clics.subgraph(clics_nodes)):
-                output.writerow(["Connected", x, lang, form, meanings])
-            else:
-                output.writerow(["Unconnected", x, lang, form, meanings])
 
 
 if __name__ == "__main__":
-
     parser = cli.parser(description=__doc__)
     parser.add_argument(
-        "--output-file", help="Path to output file", type=Path, default="homophones.csv"
+        "--output-file", help="Path to output file", type=Path, default="homophones.txt"
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
