@@ -406,12 +406,14 @@ class ExcelWriter:
             translations.append(form[c_concept])
         return "{:} ‘{:}’{:}".format(transcription, ", ".join(translations), suffix)
 
-    def get_segments(self, form):
+    def get_segments(self, form: types.Form, logger: cli.logger=cli.logger):
         try:
             c_segments = self.dataset["FormTable", "Segments"].name
             return form[c_segments]
         except KeyError:
-            return None
+            logger.warn("No segments column found. Falling back to cldf form.")
+            c_f_form = self.dataset["FormTable", "form"].name
+            return form[c_f_form]
 
 
 if __name__ == "__main__":
