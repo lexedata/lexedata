@@ -74,7 +74,7 @@ def list_homophones(
                     x = "Unconnected " + x
                 line = f"{lang}, {form}: {x}\n"
                 for ele in meanings:
-                    line += f"\t {ele[-1]}, {ele[0:-1]}\n"
+                    line += f"\t {ele[-1]}, ({', '.join(ele[0:-1])})\n"
                 out.write(line)
 
 
