@@ -114,7 +114,7 @@ def test_no_cognate_table(caplog):
     assert "lexedata.edit.add_cognate_table" in caplog.text
 
 
-def test_no_segment_column():
+def test_no_segment_column(caplog):
     dataset, _ = copy_to_temp(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
@@ -123,7 +123,8 @@ def test_no_segment_column():
         dataset=dataset,
     )
     form = next(iter(dataset["FormTable"]))
-    assert writer.get_segments(form) is None
+    assert writer.get_segments(form) is form[dataset["FormTable", "form"].name] and \
+           re.search(r".*No segments column found. Falling back to cldf form.*", caplog.text)
 
 
 def test_no_comment_column():
