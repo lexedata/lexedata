@@ -406,7 +406,7 @@ class ExcelWriter:
             translations.append(form[c_concept])
         return "{:} ‘{:}’{:}".format(transcription, ", ".join(translations), suffix)
 
-    def get_segments(self, form: types.Form, logger: cli.logger=cli.logger):
+    def get_segments(self, form: types.Form, logger: cli.logger = cli.logger):
         try:
             c_segments = self.dataset["FormTable", "Segments"].name
             return form[c_segments]

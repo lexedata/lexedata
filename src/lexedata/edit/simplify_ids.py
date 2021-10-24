@@ -167,7 +167,9 @@ def update_ids(
         )
         rows = []
         for row in cli.tq(
-            ds[other_table], total=ds[other_table].common_props.get("dc:extent"), task=""
+            ds[other_table],
+            total=ds[other_table].common_props.get("dc:extent"),
+            task="",
         ):
             for column in columns:
                 row[column] = mapping.get(row[column], row[column])

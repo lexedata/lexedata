@@ -123,8 +123,11 @@ def test_no_segment_column(caplog):
         dataset=dataset,
     )
     form = next(iter(dataset["FormTable"]))
-    assert writer.get_segments(form) is form[dataset["FormTable", "form"].name] and \
-           re.search(r".*No segments column found. Falling back to cldf form.*", caplog.text)
+    assert writer.get_segments(form) is form[
+        dataset["FormTable", "form"].name
+    ] and re.search(
+        r".*No segments column found. Falling back to cldf form.*", caplog.text
+    )
 
 
 def test_no_comment_column():
@@ -137,3 +140,14 @@ def test_no_comment_column():
     )
     form = next(iter(dataset["FormTable"]))
     assert writer.form_to_cell_value(form, dict()).strip() == "‘one, one’"
+
+
+def test_missing_required_column():
+    dataset, _ = copy_to_temp(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset.remove_columns("FormTable", "ID")
+    with pytest.raises(SystemExit, match=r".*Exit.INVALID_COLUMN_NAME"):
+        excel_writer = ExcelWriter(dataset=dataset, singleton_cognate=True)
+        output = dataset.tablegroup._fname.parent / "out.xlsx"
+        excel_writer.create_excel(out=output, status_update="NEW")

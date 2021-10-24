@@ -526,7 +526,9 @@ def test_create_metadata_valid(interleaved_excel_example):
     ]
 
     path = Path(tempfile.mkdtemp())
-    with (path / "forms.csv").open("w", encoding="utf-8", newline="") as form_table_file:
+    with (path / "forms.csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as form_table_file:
         writer = csv.DictWriter(
             form_table_file,
             fieldnames=[
@@ -572,7 +574,9 @@ def test_create_metadata_correct(interleaved_excel_example, formtable_only_examp
     ]
 
     path = Path(tempfile.mkdtemp())
-    with (path / "forms.csv").open("w", encoding="utf-8", newline="") as form_table_file:
+    with (path / "forms.csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as form_table_file:
         writer = csv.DictWriter(
             form_table_file,
             fieldnames=[
@@ -590,7 +594,6 @@ def test_create_metadata_correct(interleaved_excel_example, formtable_only_examp
     ds.write_metadata(path / "Wordlist-metadata.json")
 
     # Normalize dataset
-    forms_without_id = [f for f in ds["FormTable"] if f["ID"] is None]
     ds.write(FormTable=list(ds["FormTable"]))
     assert_datasets_are_equal(ds, formtable_only_example)
 
