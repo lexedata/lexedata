@@ -133,11 +133,8 @@ class ExcelWriter:
         ws: op.worksheet.worksheet.Worksheet = wb.active
         if status_update is not None:
             if ("Status_Column", "Status_Column") not in self.header:
-                # TODO: This warning seems odd to me, the cognate exporter is not supposed to change the orignal dataset/tables
-                # TODO: As I, Melvin, recall it should just write the status_update to the outputted excel file.
-                # TODO: Personally, I would add the Status_Column to the header when the user requests it
                 logger.warning(
-                    f"You requested that I set the status of new singleton cognate sets to {status_update}, but your CognatesetTable has no Status_Column to write it to."
+                    f"You requested that I set the status of new singleton cognate sets to {status_update}, but your CognatesetTable has no Status_Column to write it to. If you want a Status "
                 )
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
