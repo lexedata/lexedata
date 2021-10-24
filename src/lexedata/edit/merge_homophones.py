@@ -7,22 +7,26 @@ What other columns give warnings, what other columns give errors?
 
 *Optionally*, merge cognate sets that get merged by this procedure.
 """
-from pathlib import Path
-import typing as t
-from csv import DictReader
-from collections import defaultdict
-import re
 import argparse
+import typing as t
+from pathlib import Path
 
 import pycldf
 
 import lexedata.cli as cli
 from lexedata import types
-from lexedata.edit.add_status_column import add_status_column_to_table
 
-# TODO: Melvin does not understand this type annotation. Or better, why use it in such a way?
+# The cell value type, which tends to be string, lists of string, or int:
 C = t.TypeVar("C")
-Merger = t.Callable[[t.Sequence[C], t.Optional[t.Dict[str, t.Any]]], t.Optional[C]]
+# A CLDF row, mapping column names to cell values:
+MaybeRow = t.Optional[types.Form]
+# A function that matches a sequence of cell values to a ‘summary’ Cell value –
+# or None. It may modify the row in-place, if given a row:
+Merger = t.Callable[[t.Sequence[C], MaybeRow], t.Optional[C]]
+
+# For sequence operations, we treat strings as implicit sequences separated by
+# the separator.
+SEPARATOR = "; "
 
 
 def isiterable(object):
@@ -41,19 +45,14 @@ class Skip(Exception):
 
 def skip(
     sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
+    target: MaybeRow = None,
 ) -> t.Optional[C]:
     raise Skip
-    return target
 
 
-# TODO: Melvin does not understand this function. It s not comparing anything and just returns the first element of the sequence....
-# TODO: Melvin didn't get the intention behind the annotation target: t.Optional[t.Dict[str, t.Any]] = None, it would make more sense if the functions also take the dataset or some cldf terminology
 def assert_equal(
     sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
+    target: MaybeRow = None,
 ) -> t.Optional[C]:
     forms = set(sequence)
     assert len(forms) <= 1
@@ -65,8 +64,7 @@ def assert_equal(
 
 def assert_equal_ignoring_null(
     sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
+    target: MaybeRow = None,
 ) -> t.Optional[C]:
     return assert_equal(list(filter(bool, sequence)))
 
@@ -85,68 +83,97 @@ def variants_factory(formstring: str="{}"):
     return variants
 
 
+def warn(
+    sequence: t.Sequence[C],
+    target: MaybeRow = None,
+) -> t.Optional[C]:
+    forms = set(sequence)
+    if not len(forms) <= 1:
+        cli.logger.warning(
+            "The entries {:}, to be merged into {:}, were not identical.".format(
+                sequence, target and target.get("id")
+            )
+        )
+    try:
+        return forms.pop()
+    except KeyError:
+        return None
+
+
+def transcription(wrapper: str = "{}"):
+    """Make a closure that adds variants to a variants column
+
+    >>> row = {"variants": None}
+    >>> orthographic = transcription("<{}>")
+    >>> orthographic(["a", "a", "an"], row)
+    "a"
+    >>> row
+    {"variants": ["<an>"]}
+
+    """
+
+    def first_transcription_remainder_to_variants(
+        sequence: t.Sequence[C],
+        target: MaybeRow = None,
+    ) -> t.Optional[C]:
+        all_transcriptions: t.Optional[t.List[C]] = union([[s] for s in sequence])
+        if all_transcriptions is None:
+            return None
+        else:
+            if target is not None:
+                target["variants"] = (target.get("variants") or []) + [
+                    wrapper.format(s) for s, in all_transcriptions[1:]
+                ]
+            return all_transcriptions[0]
+
+    first_transcription_remainder_to_variants.__name__ = f"transcription({wrapper!r})"
+    return first_transcription_remainder_to_variants
+
+
 def concatenate(
     sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
+    target: MaybeRow = None,
 ) -> t.Optional[C]:
-    breakpoint()
-    if target is None:
-        target = ""
-    if sequence is None:
-        sequence = ""
-    assert isinstance(sequence, str) and isinstance(
-        target, str
-    ), "Concatenation is only valid for strings"
-    if separator is not None:
-        target += separator + sequence
+    if isinstance(sequence[0], str):
+        return SEPARATOR.join(sequence)
+    elif isiterable(sequence[0]):
+        # Assume list values, and accept the type error if not
+        return sum(sequence, start=[])
     else:
-        target += sequence
-    return target
+        raise NotImplementedError
 
 
 def union(
     sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
+    target: MaybeRow = None,
 ) -> t.Optional[C]:
-    if isiterable(sequence):
-        target.extend(sequence)
-        return target
+    if isinstance(sequence[0], str):
+        unique = []
+        for entry in sequence:
+            for component in entry.split(SEPARATOR):
+                if component not in unique:
+                    unique.append(component)
+        return SEPARATOR.join(unique)
+    elif isiterable(sequence[0]):
+        # Assume list values, and accept the type error if not
+        unique = []
+        for entry in sequence:
+            for component in entry:
+                if component not in unique:
+                    unique.append(component)
+        return unique
     else:
-        sequence = [sequence]
-        target.extend(sequence)
-        return target
-
-
-def warn(
-    sequence: t.Sequence[C],
-    target: t.Optional[t.Dict[str, t.Any]] = None,
-    separator: str = ";",
-) -> t.Optional[C]:
-    if isiterable(target):
-        target = target[0]
-    if isiterable(sequence):
-        sequence = sequence[0]
-    assert type(target) == type(sequence), (
-        f"Comparing instances of different types:"
-        f" {target} type:{type(target)} and {sequence} type: {type(sequence)}"
-    )
-    if target != sequence:
-        cli.logger.warning(
-            f"The instance {sequence} was not equal to the instance of the first form {target}. {sequence} was ignored."
-        )
-    return target
+        raise NotImplementedError
 
 
 def constant_factory(c: C) -> Merger[C]:
     def constant(
         sequence: t.Sequence[C],
-        target: t.Optional[t.Dict[str, t.Any]] = None,
-        separator: str = ";",
+        target: MaybeRow = None,
     ) -> t.Optional[C]:
         return c
 
+    constant.__name__ = f"constant({c!r})"
     return constant
 
 
@@ -361,78 +388,154 @@ def merge_forms(
     dataset.write(FormTable=all_forms.values())
 
 
-if __name__ == "__main__":
+def default(
+    sequence: t.Sequence[C],
+    target: MaybeRow = None,
+) -> t.Optional[C]:
+    if isiterable(sequence[0]):
+        return union(sequence, target)
+    else:
+        return assert_equal(sequence, target)
 
-    parser = cli.parser(description="Script for merging homophones.")
+
+default_mergers: t.Mapping[str, Merger] = t.DefaultDict(
+    lambda: default,
+    {
+        "form": assert_equal_ignoring_null,
+        "language": assert_equal_ignoring_null,
+        "source": union,
+        "concept": union,
+        "variants": union,
+        "source": union,
+        "status": constant_factory("MERGED: Review necessary"),
+        "orthographic": transcription("<{}>"),
+        "phonemic": transcription("/{}/"),
+        "phonetic": transcription("[{}]"),
+    },
+)
+
+
+def merge_group(
+    forms: t.Sequence[types.Form],
+    target: types.Form,
+    mergers: t.Mapping[str, Merger],
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+) -> types.Form:
+    for column in target:
+        _, reference_name = dataset["FormTable", column].propertyUrl.split("#")
+        merger = mergers.get(column, mergers.get(reference_name, assert_equal))
+        target[column] = merger([form[column] for form in forms], target)
+    return target
+
+
+def merge_forms(
+    data: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+    mergers: t.Mapping[str, Merger],
+    homophone_groups: t.Mapping[types.Form_ID, t.Set[types.Form_ID]],
+) -> t.Iterable[types.Form]:
+    merge_targets = {
+        variant: target
+        for target, variants in homophone_groups.items()
+        for variant in variants
+    }
+    c_f_id = data["FormTable", "id"].name
+
+    for form_id in homophone_groups:
+        assert merge_targets[form_id] == form_id
+
+    buffer: t.OrderedDict[types.Form_ID, types.Form] = t.OrderedDict()
+    unknown = set()
+    form: types.Form
+    for form in data["FormTable"]:
+        id: types.Form_ID = form[c_f_id]
+        buffer[id] = form
+        if form in merge_targets:
+            unknown.add(id)
+            target_id = merge_targets[id]
+            group = homophone_groups[target_id]
+            if all(i in buffer for i in group):
+                try:
+                    buffer[target_id] = merge_group(
+                        [buffer[i] for i in group],
+                        buffer[target_id].copy(),  # type: ignore
+                        mergers,
+                        data,
+                    )
+                    for i in group:
+                        if i != target_id:
+                            del buffer[i]
+                except Skip:
+                    pass
+                for i in group:
+                    unknown.remove(i)
+        for f in buffer:
+            if f in unknown:
+                break
+            yield buffer.pop(f)
+
+
+def parse_merge_override(string: str) -> t.Tuple[str, Merger]:
+    column, merger_name = string.rsplit(":", 1)
+    merger_name = merger_name.lower()
+    return (column, eval(merger_name.lower()))
+
+
+def format_mergers(mergers: t.Mapping[str, Merger]) -> str:
+    return "\n".join(
+        " {col}:{name}".format(col=col, name=function.__name__)
+        for col, function in mergers.items()
+    )
+
+
+if __name__ == "__main__":
+    parser = cli.parser(
+        description="Script for merging homophones.",
+        epilog="""The default merging functions are:
+{:}
+Every other column is merged with `union` if it has list or string values, and with `assert_equal` otherwise.""".format(
+            format_mergers(default_mergers)
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
         "merge_report",
         help="Path pointing to the file containing the merge report generated by report/homophones.py",
         type=Path,
     )
     parser.add_argument(
-        "--source",
-        type=str,
-        help="Specify the way to merge sources. (default union)",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-        default="union",
-    )
-    parser.add_argument(
-        "--variants",
-        type=str,
-        help="Specify the way to merge sources. (default union)",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-        default="union",
-    )
-    parser.add_argument(
-        "--concept",
-        type=str,
-        help="Specify the way to merge concepts. (default union)",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-        default="union",
-    )
-    parser.add_argument(
-        "--orthographic",
-        type=str,
-        help="Specify the way to merge orthographic transcriptions",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-    )
-    parser.add_argument(
-        "--phonemic",
-        type=str,
-        help="Specify the way to merge phonemic transcriptions",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-    )
-    parser.add_argument(
-        "--phonetic",
-        type=str,
-        help="Specify the way to merge phonetic transcriptions",
-        choices=["error-not-null", "error", "warn", "union", "concatenate", "skip"],
-    )
-    parser.add_argument(
-        "--status-update",
-        type=str,
-        default="MERGED: Review necessary",
-        help="Text written to Status_Column. Set to 'None' for no status update. "
-        "(default: MERGED: Review necessary)",
+        "--merge",
+        nargs="+",
+        default=[],
+        type=parse_merge_override,
+        help="""Override merge defaults using COLUMN_NAME:MERGER syntax, eg. --merge Source:skip orthographic:transcription("~<{{}}>").""",
     )
     args = parser.parse_args()
-    logger = cli.setup_logging(args)
-    merger = {
-        "source": args.source,
-        "concept": args.concept,
-        "variants": args.variants,
-    }
-    if args.orthographic:
-        merger["orthographic"] = args.orthographic
-    if args.phonemic:
-        merger["phonemic"] = args.phonemic
-    if args.phonetic:
-        merger["phonetic"] = args.phonetic
-    if args.status_update == "None":
-        args.status_update = None
-    merge_forms(
-        dataset=pycldf.Dataset.from_metadata(args.metadata),
-        report=args.merge_report,
-        merger=merger,
-        status_update=args.status_update,
+    dataset = pycldf.Wordlist.from_metadata(args.metadata)
+
+    cli.logger = cli.setup_logging(args)
+    mergers = dict(default_mergers)
+    for column, merger in args.merge:
+        mergers[column] = merger
+
+    # Parse the homophones instructions!
+    homophone_groups = ...
+
+    dataset.write(
+        FormTable=merge_forms(
+            data=pycldf.Dataset.from_metadata(args.metadata),
+            mergers=mergers,
+            homophone_groups=homophone_groups,
+        )
     )

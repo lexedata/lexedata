@@ -56,8 +56,8 @@ def setup_logging(args: argparse.Namespace):
     return logger
 
 
-def parser(description: str) -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=description)
+def parser(description: str, **kwargs) -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=description, **kwargs)
     parser.add_argument(
         "--metadata",
         type=Path,
