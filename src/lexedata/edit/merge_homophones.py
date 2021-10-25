@@ -51,13 +51,15 @@ def cancel_and_skip(
 ) -> t.Optional[C]:
     """If entries differ, do not merge this set of forms
 
-    >>> skip([])
-    None
+    >>> cancel_and_skip([])
 
-    >>> skip([1, 2])
-    Skip
+    >>> cancel_and_skip([1, 2])
+    Traceback (most recent call last):
+    ...
+        raise Skip
+    lexedata.edit.merge_homophones.Skip
 
-    >>> skip([1, 1])
+    >>> cancel_and_skip([1, 1])
     1
 
     """
@@ -97,10 +99,10 @@ def warn(
 ) -> t.Optional[C]:
     """Print a warning if entries are not equal, but proceed taking the first one
 
-    >>> skip([1, 2])
+    >>> warn([1, 2])
     1
 
-    >>> skip([1, 1])
+    >>> warn([1, 1])
     1
     """
     forms = set(sequence)
@@ -195,11 +197,11 @@ def union(
     """Concatenate all entries, without duplicates
 
     Strings are concatenated using '; ' as a separator. FOr iterables
-    >>> concatenate([[1, 2], [2, 4]])
+    >>> union([[1, 2], [2, 4]])
     [1, 2, 4]
-    >>> concatenate([["a", "b"], ["c", "a"]])
+    >>> union([["a", "b"], ["c", "a"]])
     ['a', 'b', 'c']
-    >>> concatenate(["a", "b", "a"])
+    >>> union(["a", "b", "a"])
     'a; b'
 
     """
@@ -349,9 +351,11 @@ def format_mergers(mergers: t.Mapping[str, Merger]) -> str:
 def parse_homophones_report(
     report: Path,
 ) -> t.Mapping[types.Form_ID, t.Set[types.Form_ID]]:
-    """
-    :param report:
-    :return:
+    """Parse legacy homophones merge instructions
+
+    The format of the input file is the same as the output of the homophones report
+
+    >>> import tempfile
     >>> dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     >>> file = dirname / "temp_file.txt"
     >>> open_file = file.open("w", encoding="utf8")
@@ -383,9 +387,9 @@ def parse_homophones_report(
 def parse_homophones_old_format(
     report: Path,
 ) -> t.Mapping[types.Form_ID, t.Set[types.Form_ID]]:
-    """
-    :param report:
-    :return:
+    """Parse legacy homophones merge instructions
+
+    >>> import tempfile
     >>> dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     >>> file = dirname / "temp_file1.txt"
     >>> open_file = file.open("w", encoding="utf8")
