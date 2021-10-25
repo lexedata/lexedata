@@ -7,12 +7,11 @@ What other columns give warnings, what other columns give errors?
 
 *Optionally*, merge cognate sets that get merged by this procedure.
 """
+import re
 import argparse
 import typing as t
 from pathlib import Path
-import re
 from collections import defaultdict
-import tempfile
 
 import pycldf
 
@@ -46,21 +45,36 @@ class Skip(Exception):
     """Skip this merge, leave all forms as expected. This is not an Error!"""
 
 
-def skip(
+def cancel_and_skip(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """
-    Raise a Skip error
+    """If entries differ, do not merge this set of forms
+
     >>> skip([])
+    None
+
+    >>> skip([1, 2])
+    Skip
+
+    >>> skip([1, 1])
+    1
+
     """
-    raise Skip
+    forms = set(sequence)
+    if not len(forms) <= 1:
+        raise Skip
+    try:
+        return forms.pop()
+    except KeyError:
+        return None
 
 
-def assert_equal(
+def must_be_equal(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
+    """End with an error if entries are not equal"""
     forms = set(sequence)
     assert len(forms) <= 1
     try:
@@ -69,36 +83,25 @@ def assert_equal(
         return None
 
 
-def assert_equal_ignoring_null(
+def must_be_equal_or_null(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    return assert_equal(list(filter(bool, sequence)))
-
-
-def variants_factory(formstring: str="{}"):
-    """
-
-    """
-    def variants(
-        sequence: t.Sequence[C],
-        target: t.Optional[t.Dict[str, t.Any]] = None,
-        separator: str = ";",
-    ) -> t.Optional[C]:
-        all_transcriptions = union(sequence=sequence)
-        target["variants"] += all_transcriptions[1:]
-        return all_transcriptions[0]
-    return variants
+    """End with an error if those entries which are present are not equal"""
+    return must_be_equal(list(filter(bool, sequence)))
 
 
 def warn(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """
-    Warn if merging not identical objects
-    >>> warn(["a", "b"])
-    'a'
+    """Print a warning if entries are not equal, but proceed taking the first one
+
+    >>> skip([1, 2])
+    1
+
+    >>> skip([1, 1])
+    1
     """
     forms = set(sequence)
     if not len(forms) <= 1:
@@ -108,8 +111,19 @@ def warn(
             )
         )
     try:
-        return forms.pop()
-    except KeyError:
+        return sequence[0]
+    except IndexError:
+        return None
+
+
+def first(
+    sequence: t.Sequence[C],
+    target: MaybeRow = None,
+) -> t.Optional[C]:
+    """Take the first entry, no matter whether the others match or not"""
+    try:
+        return sequence[0]
+    except IndexError:
         return None
 
 
@@ -143,6 +157,9 @@ def transcription(wrapper: str = "{}"):
             return all_transcriptions[0]
 
     first_transcription_remainder_to_variants.__name__ = f"transcription({wrapper!r})"
+    first_transcription_remainder_to_variants.__doc__ = f"Keep one transcription in this column, add others as {wrapper} to variants".format(
+        "form"
+    )
     return first_transcription_remainder_to_variants
 
 
@@ -150,14 +167,16 @@ def concatenate(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """
-    Concatenates two objects. Strings are concatenated using '; ' as a separator. FOr iterables
-    >>> concatenate([[1, 2], [3, 4]])
-    [1, 2, 3, 4]
-    >>> concatenate([["a", "b"], ["c", "d"]])
-    ['a', 'b', 'c', 'd']
+    """Concatenate all entries, even if they are identical, in the given order
+
+    Strings are concatenated using '; ' as a separator. FOr iterables
+    >>> concatenate([[1, 2], [2, 4]])
+    [1, 2, 2, 4]
+    >>> concatenate([["a", "b"], ["c", "a"]])
+    ['a', 'b', 'c', 'a']
     >>> concatenate(["a", "b"])
     'a; b'
+
     """
     if isinstance(sequence[0], str):
         return SEPARATOR.join(sequence)
@@ -173,6 +192,17 @@ def union(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
+    """Concatenate all entries, without duplicates
+
+    Strings are concatenated using '; ' as a separator. FOr iterables
+    >>> concatenate([[1, 2], [2, 4]])
+    [1, 2, 4]
+    >>> concatenate([["a", "b"], ["c", "a"]])
+    ['a', 'b', 'c']
+    >>> concatenate(["a", "b", "a"])
+    'a; b'
+
+    """
     if isinstance(sequence[0], str):
         unique = []
         for entry in sequence:
@@ -200,44 +230,26 @@ def constant_factory(c: C) -> Merger[C]:
         return c
 
     constant.__name__ = f"constant({c!r})"
+    constant.__doc__ = f"Set the column to {c!r} for the merged form"
     return constant
-
-
-merging_functions: t.Dict[str, Merger] = {
-    "error": assert_equal,
-    "error-not-null": assert_equal_ignoring_null,
-    "concatenate": concatenate,
-    "union": union,
-    "skip": skip,
-    "status": constant_factory("Status_Update"),
-    "orthographic": variants_factory("<{}>")
-}
-
-
-# default_mergers = {
-#     "form": "error-not-null",
-#     "language": "error-not-null",
-#     "source": "union",
-#     "concept": "union",
-#     "variants": "union"
-# }
 
 
 def default(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
+    """Union for sequence-shaped entries (strings, and lists with a separator in the metadata), must_be_equal otherwise"""
     if isiterable(sequence[0]):
         return union(sequence, target)
     else:
-        return assert_equal(sequence, target)
+        return must_be_equal(sequence, target)
 
 
 default_mergers: t.Mapping[str, Merger] = t.DefaultDict(
     lambda: default,
     {
-        "form": assert_equal_ignoring_null,
-        "language": assert_equal_ignoring_null,
+        "form": must_be_equal,
+        "language": must_be_equal,
         "source": union,
         "concept": union,
         "variants": union,
@@ -264,7 +276,7 @@ def merge_group(
 ) -> types.Form:
     for column in target:
         _, reference_name = dataset["FormTable", column].propertyUrl.split("#")
-        merger = mergers.get(column, mergers.get(reference_name, assert_equal))
+        merger = mergers.get(column, mergers.get(reference_name, must_be_equal))
         target[column] = merger([form[column] for form in forms], target)
     return target
 
@@ -334,7 +346,9 @@ def format_mergers(mergers: t.Mapping[str, Merger]) -> str:
     )
 
 
-def parse_homophones_report(report: Path)->t.Mapping[types.Form_ID, t.Set[types.Form_ID]]:
+def parse_homophones_report(
+    report: Path,
+) -> t.Mapping[types.Form_ID, t.Set[types.Form_ID]]:
     """
     :param report:
     :return:
@@ -366,7 +380,9 @@ def parse_homophones_report(report: Path)->t.Mapping[types.Form_ID, t.Set[types.
     return homophone_groups
 
 
-def parse_homophones_old_format(report: Path)->t.Mapping[types.Form_ID, t.Set[types.Form_ID]]:
+def parse_homophones_old_format(
+    report: Path,
+) -> t.Mapping[types.Form_ID, t.Set[types.Form_ID]]:
     """
     :param report:
     :return:
@@ -397,13 +413,31 @@ def parse_homophones_old_format(report: Path)->t.Mapping[types.Form_ID, t.Set[ty
     return homophone_groups
 
 
+all_mergers: t.Set[Merger] = {default}
+all_mergers.update(default_mergers.values())
+for name, item in list(vars().items()):
+    if callable(item) and hasattr(item, "__annotations__"):
+        if set(item.__annotations__) == {"sequence", "target", "return"}:
+            all_mergers.add(item)
+
 if __name__ == "__main__":
     parser = cli.parser(
         description="Script for merging homophones.",
-        epilog="""The default merging functions are: {:} 
-        Every other column is merged with `union` if it has list or string values, and with `assert_equal` 
-        otherwise.""".format(
-            format_mergers(default_mergers)
+        epilog="""The default merging functions are:
+{:}
+
+Every other column is merged with `default`.
+
+The following merge functions are predefined, each takes the given entries for one column of the forms to be merged and aggregates them into a single new entry for the merged result form.
+{:}
+        """.format(
+            format_mergers(default_mergers),
+            "\n".join(
+                sorted(
+                    "{}: {}".format(m.__name__, m.__doc__.split("\n")[0])
+                    for m in all_mergers
+                )
+            ),
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -417,8 +451,8 @@ if __name__ == "__main__":
         nargs="+",
         default=[],
         type=parse_merge_override,
-        help="""Override merge defaults using COLUMN_NAME:MERGER syntax, 
-        eg. --merge Source:skip orthographic:transcription("~<{{}}>").""",
+        metavar="COLUMN:MERGER",
+        help="""Override merge defaults using COLUMN:MERGER syntax, eg. --merge Source:cancel_and_skip orthographic:transcription('~<{}>').""",
     )
     args = parser.parse_args()
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
