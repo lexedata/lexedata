@@ -422,6 +422,9 @@ all_mergers.update(default_mergers.values())
 for name, item in list(vars().items()):
     if callable(item) and hasattr(item, "__annotations__"):
         if set(item.__annotations__) == {"sequence", "target", "return"}:
+            # It would be better to check the actual types, instead of the
+            # parameter names, but that would need a deeper delve into the
+            # typing system.
             all_mergers.add(item)
 
 if __name__ == "__main__":
