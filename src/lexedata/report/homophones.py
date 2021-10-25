@@ -7,7 +7,6 @@ accidental homophones
 """
 import typing as t
 from pathlib import Path
-from csv import writer
 
 import networkx as nx
 import pycldf
@@ -76,7 +75,6 @@ def list_homophones(
                 for ele in meanings:
                     line += f"\t {ele[-1]}, ({', '.join(ele[0:-1])})\n"
                 out.write(line)
-
 
 
 if __name__ == "__main__":
