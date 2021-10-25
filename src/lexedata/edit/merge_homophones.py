@@ -50,6 +50,10 @@ def skip(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
+    """
+    Raise a Skip error
+    >>> skip([])
+    """
     raise Skip
 
 
@@ -73,6 +77,9 @@ def assert_equal_ignoring_null(
 
 
 def variants_factory(formstring: str="{}"):
+    """
+
+    """
     def variants(
         sequence: t.Sequence[C],
         target: t.Optional[t.Dict[str, t.Any]] = None,
@@ -88,6 +95,11 @@ def warn(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
+    """
+    Warn if merging not identical objects
+    >>> warn(["a", "b"])
+    'a'
+    """
     forms = set(sequence)
     if not len(forms) <= 1:
         cli.logger.warning(
@@ -107,9 +119,9 @@ def transcription(wrapper: str = "{}"):
     >>> row = {"variants": None}
     >>> orthographic = transcription("<{}>")
     >>> orthographic(["a", "a", "an"], row)
-    "a"
+    'a'
     >>> row
-    {"variants": ["<an>"]}
+    {'variants': ['<an>']}
 
     """
 
@@ -124,7 +136,7 @@ def transcription(wrapper: str = "{}"):
             if target is not None:
                 try:
                     target["variants"] = (target.get("variants") or []) + [
-                        wrapper.format(s) for s, in all_transcriptions[1:]
+                        wrapper.format(s) for s in all_transcriptions[1:]
                     ]
                 except KeyError:
                     pass
@@ -138,12 +150,21 @@ def concatenate(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
+    """
+    Concatenates two objects. Strings are concatenated using '; ' as a separator. FOr iterables
+    >>> concatenate([[1, 2], [3, 4]])
+    [1, 2, 3, 4]
+    >>> concatenate([["a", "b"], ["c", "d"]])
+    ['a', 'b', 'c', 'd']
+    >>> concatenate(["a", "b"])
+    'a; b'
+    """
     if isinstance(sequence[0], str):
         return SEPARATOR.join(sequence)
     elif isiterable(sequence[0]):
         # TODO: I expect this to throw a TypeError
         # Assume list values, and accept the type error if not
-        return sum(sequence, start=[])
+        return sum(sequence, [])
     else:
         raise NotImplementedError
 
@@ -182,8 +203,6 @@ def constant_factory(c: C) -> Merger[C]:
     return constant
 
 
-# TODO: Melvin has trouble understanding the terminology here. Why error - > assert_equal?
-# TODO: as i understand the meeting agenda, error should throw errors?
 merging_functions: t.Dict[str, Merger] = {
     "error": assert_equal,
     "error-not-null": assert_equal_ignoring_null,
