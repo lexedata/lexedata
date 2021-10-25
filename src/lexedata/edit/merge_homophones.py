@@ -10,6 +10,9 @@ What other columns give warnings, what other columns give errors?
 import argparse
 import typing as t
 from pathlib import Path
+import re
+from collections import defaultdict
+import tempfile
 
 import pycldf
 
@@ -69,8 +72,6 @@ def assert_equal_ignoring_null(
     return assert_equal(list(filter(bool, sequence)))
 
 
-# TODO: For this function to fulfill its purpose we would need to pass it the dataset or the variants key,
-# I think it s better to set as a default
 def variants_factory(formstring: str="{}"):
     def variants(
         sequence: t.Sequence[C],
@@ -121,9 +122,12 @@ def transcription(wrapper: str = "{}"):
             return None
         else:
             if target is not None:
-                target["variants"] = (target.get("variants") or []) + [
-                    wrapper.format(s) for s, in all_transcriptions[1:]
-                ]
+                try:
+                    target["variants"] = (target.get("variants") or []) + [
+                        wrapper.format(s) for s, in all_transcriptions[1:]
+                    ]
+                except KeyError:
+                    pass
             return all_transcriptions[0]
 
     first_transcription_remainder_to_variants.__name__ = f"transcription({wrapper!r})"
@@ -137,6 +141,7 @@ def concatenate(
     if isinstance(sequence[0], str):
         return SEPARATOR.join(sequence)
     elif isiterable(sequence[0]):
+        # TODO: I expect this to throw a TypeError
         # Assume list values, and accept the type error if not
         return sum(sequence, start=[])
     else:
@@ -197,195 +202,6 @@ merging_functions: t.Dict[str, Merger] = {
 #     "concept": "union",
 #     "variants": "union"
 # }
-
-
-def merge_forms(
-    dataset: pycldf.Dataset,
-    report: Path,
-    merger: Merger,
-    status_update: str = "MERGED: Review necessary",
-) -> None:
-    c_f_id = dataset["FormTable", "id"].name
-    c_f_form = dataset["FormTable", "form"].name
-    c_f_source = dataset["FormTable", "source"].name
-    source_separator = dataset["FormTable", "source"].separator
-    foreign_key_form_concept = ""
-    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
-        if foreign_key.reference.resource == dataset["ParameterTable"].url:
-            foreign_key_form_concept = foreign_key.columnReference[0]
-    concept_separator = dataset["FormTable", "parameterReference"].separator
-    add_status_column_to_table(dataset=dataset, table_name="FormTable")
-    c_f_status = dataset["FormTable", "Status_Column"].name
-    try:
-        c_f_variant = dataset["FormTable", "variants"].name
-    except KeyError:
-        c_f_variant = None
-    if c_f_variant:
-        variant_separator = dataset["FormTable", "variants"].separator
-    # check if there are transcription columns
-    try:
-        dialect = argparse.Namespace(
-            **dataset.tablegroup.common_props["special:fromexcel"]
-        )
-        # TODO: this might be risky, as we have to extract the names of the transcription columns from the dialect. And this involes hard coding some stuff
-        transcriptions = []
-        for ele in dialect.cell_parser["cell_parser_semantics"]:
-            transcriptions.append(ele[2])
-        if transcriptions:
-            if "source" in transcriptions:
-                transcriptions.remove("source")
-            if "variants" in transcriptions:
-                transcriptions.remove("variants")
-            if "form" in transcriptions:
-                transcriptions.remove("form")
-            if "comment" in transcriptions:
-                transcriptions.remove("comment")
-    except KeyError:
-        transcriptions = None
-    all_forms: t.Dict[str, types.Form] = {}
-    for f in dataset["FormTable"]:
-        all_forms[f[c_f_id]] = f
-    # TODO: write function that reads report and returns 'forms_to_merge'
-    # key is form id from report that appears first in the dataset
-    # Then iterate over all forms, if form id in forms_to_merge
-    forms_to_merge: t.Dict[FORMID, t.Set[FORMID]] = []
-
-    # parse csv string back into python objects
-    with report.open("r", encoding="utf8") as input:
-        reader = DictReader(input)
-        for row in reader:
-            concept_list = []
-            dummy_concept_list = row["Concepts"]
-            dummy_concept_list = dummy_concept_list.lstrip("{")
-            dummy_concept_list = dummy_concept_list.rstrip("}")
-            dummy_concept_list = re.split(r"\),", dummy_concept_list)
-            for i in range(len(dummy_concept_list)):
-                dummy_concept_list[i] = dummy_concept_list[i].replace("(", "")
-                dummy_concept_list[i] = dummy_concept_list[i].replace(")", "")
-                if dummy_concept_list[i].startswith(" "):
-                    dummy_concept_list[i] = dummy_concept_list[i].lstrip(" ")
-            for element in dummy_concept_list:
-                elements = element.split(",")
-                dummy_elements = []
-                for e in elements:
-                    if e.startswith(" "):
-                        e = e.lstrip(" ")
-                    e = e.replace("'", "")
-                    dummy_elements.append(e)
-                concept_list.append(tuple(dummy_elements))
-
-            for element in concept_list:
-                element = list(element)
-                form_id = element.pop(-1)
-                forms_to_merge[row["Form"]].append(form_id)
-
-    for k, values in forms_to_merge.items():
-        first_id = values.pop(0)
-        try:
-            first_form = all_forms[first_id]
-            first_c_form = all_forms[first_id][c_f_form]
-        except KeyError:
-            cli.Exit.INVALID_ID(
-                f"The form id {first_id} from the merge report could not be found in the dataset."
-            )
-        if c_f_variant:
-            first_variants = all_forms[first_id][c_f_variant]
-        else:
-            first_variants = None
-        if isinstance(first_variants, list):
-            pass
-        else:
-            first_variants = [first_variants]
-
-        first_concept = all_forms[first_id][foreign_key_form_concept]
-        if isinstance(first_concept, list):
-            pass
-        else:
-            first_concept = [first_concept]
-
-        first_source = all_forms[first_id][c_f_source]
-        if isinstance(first_source, list):
-            pass
-        else:
-            first_source = [first_source]
-
-        for id in values:
-            try:
-                form = all_forms[id]
-            except KeyError:
-                cli.Exit.INVALID_ID(
-                    f"The form id {first_id} from the merge report could not be found in the dataset."
-                )
-            # merge concepts
-            concept = form[foreign_key_form_concept]
-            first_concept = merging_functions[merger["concept"]](
-                sequence=concept, target=first_concept, separator=concept_separator
-            )
-            # merge sources
-            source = form[c_f_source]
-            first_source = merging_functions[merger["source"]](
-                sequence=source, target=first_source, separator=source_separator
-            )
-
-            # add existing variants to variants
-            if c_f_variant:
-                first_variants = merging_functions[merger[c_f_variant]](
-                    sequence=form[c_f_variant],
-                    target=first_variants,
-                    separator=variant_separator,
-                )
-
-            # add mismatching transcriptions to variants, if transcriptions exists.
-            # Default behaviour, add them to variants
-            to_add_to_variants = []
-            if transcriptions is not None:
-                for name in transcriptions:
-                    if first_form[name] == form[name]:
-                        continue
-                    try:
-                        if merging_functions[merger[name]].__name__ != "variants":
-                            to_add_to_transcription = merging_functions[merger[name]](
-                                sequence=form[name],
-                                target=first_form[name],
-                            )
-                            # overwrite this transcription field of the first form
-                            all_forms[first_id][name] = to_add_to_transcription
-                        else:
-                            to_add_to_variants = merging_functions[merger[name]](
-                                sequence=form[name],
-                                target=to_add_to_variants,
-                                separator=variant_separator,
-                            )
-                    except KeyError:
-                        cli.Exit.CLI_ARGUMENT_ERROR(
-                            f"No merging function was specified for the transcription {name}. "
-                            f"Please choose one using the argument --{name}."
-                        )
-
-            if to_add_to_variants:
-                first_variants.extend(to_add_to_variants)
-            this_c_form = form[c_f_form]
-            # delete current form
-            del all_forms[id]
-            # add mismatching forms to variants
-            # TODO: unsure here if I should concatenate different forms or add them to variants
-            # TODO: anyhow, this step needs to be performed as a last step because of the continue
-            # TODO: besides, the report already assures that the forms are identical...
-            if first_c_form == this_c_form:
-                continue
-            else:
-                if c_f_variant is not None:
-                    variants.append(this_c_form)
-
-        # write merged form
-        all_forms[first_id][foreign_key_form_concept] = first_concept
-        all_forms[first_id][c_f_source] = first_source
-        if c_f_variant is not None:
-            all_forms[first_id][c_f_variant] = first_variants
-        if status_update is not None:
-            all_forms[first_id][c_f_status] = status_update
-
-    dataset.write(FormTable=all_forms.values())
 
 
 def default(
@@ -499,12 +315,75 @@ def format_mergers(mergers: t.Mapping[str, Merger]) -> str:
     )
 
 
+def parse_homophones_report(report: Path)->t.Mapping[types.Form_ID, t.Set[types.Form_ID]]:
+    """
+    :param report:
+    :return:
+    >>> dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    >>> file = dirname / "temp_file.txt"
+    >>> open_file = file.open("w", encoding="utf8")
+    >>> _ = open_file.write("ache, e.ta.'kɾã: Unknown (but at least one concept not found):")
+    >>> _ = open_file.write("   ache_two_3, (two, two)")
+    >>> _ = open_file.write("   ache_one, (one, one)")
+    >>> open_file.close()
+    >>> parse_homophones_report(file)
+    defaultdict(<class 'set'>, {'19148': {'19819', '19499'}})
+    """
+    homophone_groups: t.Mapping[types.Form_ID, t.Set[types.Form_ID]] = defaultdict(set)
+    with report.open("r", encoding="utf8") as inn:
+        first_id = True
+        target_id = ""
+        for line in inn:
+            match = re.match(r"\s+?(\w+?) .*", line)
+            if match:
+                id = match.group(1)
+                if first_id:
+                    target_id = id
+                    first_id = False
+                else:
+                    homophone_groups[target_id].add(id)
+            else:
+                first_id = True
+    return homophone_groups
+
+
+def parse_homophones_old_format(report: Path)->t.Mapping[types.Form_ID, t.Set[types.Form_ID]]:
+    """
+    :param report:
+    :return:
+    >>> dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
+    >>> file = dirname / "temp_file1.txt"
+    >>> open_file = file.open("w", encoding="utf8")
+    >>> _ = open_file.write("Unconnected: Matsigenka kis {('ANGRY', '19148'), ('FIGHT (v. Or n.)', '19499'), ('CRITICIZE, SCOLD', '19819')}")
+    >>> open_file.close()
+    >>> parse_homophones_old_format(file)
+    defaultdict(<class 'set'>, {'19148': {'19819', '19499'}})
+    """
+    homophone_groups: t.Mapping[types.Form_ID, t.Set[types.Form_ID]] = defaultdict(set)
+    with report.open("r", encoding="utf8") as inn:
+        first_id = True
+        target_id = ""
+        for line in inn:
+            match = re.findall(r"\('.+?', '(\w+?)'\),? ?", line)
+            if match:
+                for id in match:
+                    if first_id:
+                        target_id = id
+                        first_id = False
+                    else:
+                        homophone_groups[target_id].add(id)
+                first_id = True
+            else:
+                first_id = True
+    return homophone_groups
+
+
 if __name__ == "__main__":
     parser = cli.parser(
         description="Script for merging homophones.",
-        epilog="""The default merging functions are:
-{:}
-Every other column is merged with `union` if it has list or string values, and with `assert_equal` otherwise.""".format(
+        epilog="""The default merging functions are: {:} 
+        Every other column is merged with `union` if it has list or string values, and with `assert_equal` 
+        otherwise.""".format(
             format_mergers(default_mergers)
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -519,7 +398,8 @@ Every other column is merged with `union` if it has list or string values, and w
         nargs="+",
         default=[],
         type=parse_merge_override,
-        help="""Override merge defaults using COLUMN_NAME:MERGER syntax, eg. --merge Source:skip orthographic:transcription("~<{{}}>").""",
+        help="""Override merge defaults using COLUMN_NAME:MERGER syntax, 
+        eg. --merge Source:skip orthographic:transcription("~<{{}}>").""",
     )
     args = parser.parse_args()
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
@@ -530,7 +410,7 @@ Every other column is merged with `union` if it has list or string values, and w
         mergers[column] = merger
 
     # Parse the homophones instructions!
-    homophone_groups = ...
+    homophone_groups = parse_homophones_report(args.merge_report)
 
     dataset.write(
         FormTable=merge_forms(
