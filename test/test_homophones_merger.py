@@ -149,3 +149,10 @@ def test_merge_3():
     # got merged as expected. Can also check different more mergable forms here
     # to increase coverage
     ...
+
+
+def test_order_merge():
+    """Say, the dataset has forms 1, 2, 3 in that order.
+    Someone wrote in their homophones to be merged that 3, 2, 1 shoud be merged.
+    Presumably, that means the values in form 3 have precedence, and for concatenate, they should appear in order 3,2,1.
+    """
