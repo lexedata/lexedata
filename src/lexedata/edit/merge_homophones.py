@@ -12,6 +12,7 @@ import argparse
 import typing as t
 from pathlib import Path
 from collections import defaultdict
+from io import StringIO
 
 import pycldf
 
@@ -183,7 +184,6 @@ def concatenate(
     if isinstance(sequence[0], str):
         return SEPARATOR.join(sequence)
     elif isiterable(sequence[0]):
-        # TODO: I expect this to throw a TypeError
         # Assume list values, and accept the type error if not
         return sum(sequence, [])
     else:
@@ -240,7 +240,10 @@ def default(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """Union for sequence-shaped entries (strings, and lists with a separator in the metadata), must_be_equal otherwise"""
+    """
+    Union for sequence-shaped entries (strings, and lists with a separator in the metadata),
+    must_be_equal otherwise
+    """
     if isiterable(sequence[0]):
         return union(sequence, target)
     else:
@@ -292,7 +295,7 @@ def merge_forms(
         types.Cognateset_ID,
     ],
     mergers: t.Mapping[str, Merger],
-    homophone_groups: t.Mapping[types.Form_ID, t.Set[types.Form_ID]],
+    homophone_groups: t.Mapping[types.Form_ID, t.Sequence[types.Form_ID]],
 ) -> t.Iterable[types.Form]:
     merge_targets = {
         variant: target
@@ -349,71 +352,59 @@ def format_mergers(mergers: t.Mapping[str, Merger]) -> str:
 
 
 def parse_homophones_report(
-    report: Path,
-) -> t.Mapping[types.Form_ID, t.Set[types.Form_ID]]:
-    """Parse legacy homophones merge instructions
+        report: t.TextIO,
+) -> t.Mapping[types.Form_ID, t.Sequence[types.Form_ID]]:
+    r"""Parse legacy homophones merge instructions
 
     The format of the input file is the same as the output of the homophones report
 
-    >>> import tempfile
-    >>> dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
-    >>> file = dirname / "temp_file.txt"
-    >>> open_file = file.open("w", encoding="utf8")
-    >>> _ = open_file.write("ache, e.ta.'kɾã: Unknown (but at least one concept not found):")
-    >>> _ = open_file.write("   ache_two_3, (two, two)")
-    >>> _ = open_file.write("   ache_one, (one, one)")
-    >>> open_file.close()
+    >>> file = StringIO("ache, e.ta.'kɾã: Unknown (but at least one concept not found)\n"
+    ... "    ache_one (one, one)\n"
+    ... "    ache_two_3 (two, two)\n")
     >>> parse_homophones_report(file)
-    defaultdict(<class 'set'>, {'19148': {'19819', '19499'}})
+    defaultdict(<class 'list'>, {'ache_one': ['ache_two_3']})
     """
-    homophone_groups: t.Mapping[types.Form_ID, t.Set[types.Form_ID]] = defaultdict(set)
-    with report.open("r", encoding="utf8") as inn:
-        first_id = True
-        target_id = ""
-        for line in inn:
-            match = re.match(r"\s+?(\w+?) .*", line)
-            if match:
-                id = match.group(1)
-                if first_id:
-                    target_id = id
-                    first_id = False
-                else:
-                    homophone_groups[target_id].add(id)
+    homophone_groups: t.Mapping[types.Form_ID, t.List[types.Form_ID]] = defaultdict(list)
+    first_id = True
+    target_id = ""
+    for line in report:
+        match = re.match(r"\s+?(\w+?) .*", line)
+        if match:
+            id = match.group(1)
+            if first_id:
+                target_id = id
+                first_id = False
             else:
-                first_id = True
+                homophone_groups[target_id].append(id)
+        else:
+            first_id = True
     return homophone_groups
 
 
 def parse_homophones_old_format(
-    report: Path,
-) -> t.Mapping[types.Form_ID, t.Set[types.Form_ID]]:
+    report: t.TextIO,
+) -> t.Mapping[types.Form_ID, t.Sequence[types.Form_ID]]:
     """Parse legacy homophones merge instructions
 
-    >>> import tempfile
-    >>> dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
-    >>> file = dirname / "temp_file1.txt"
-    >>> open_file = file.open("w", encoding="utf8")
-    >>> _ = open_file.write("Unconnected: Matsigenka kis {('ANGRY', '19148'), ('FIGHT (v. Or n.)', '19499'), ('CRITICIZE, SCOLD', '19819')}")
-    >>> open_file.close()
+    >>> file = StringIO("Unconnected: Matsigenka kis {('ANGRY', '19148'), ('FIGHT (v. Or n.)', '19499'), ('CRITICIZE, SCOLD', '19819')}")
     >>> parse_homophones_old_format(file)
-    defaultdict(<class 'set'>, {'19148': {'19819', '19499'}})
+    defaultdict(<class 'list'>, {'19148': ['19499', '19819']})
     """
-    homophone_groups: t.Mapping[types.Form_ID, t.Set[types.Form_ID]] = defaultdict(set)
-    with report.open("r", encoding="utf8") as inn:
-        first_id = True
-        target_id = ""
-        for line in inn:
-            match = re.findall(r"\('.+?', '(\w+?)'\),? ?", line)
-            if match:
-                for id in match:
-                    if first_id:
-                        target_id = id
-                        first_id = False
-                    else:
-                        homophone_groups[target_id].add(id)
-                first_id = True
-            else:
-                first_id = True
+    homophone_groups: t.Mapping[types.Form_ID, t.List[types.Form_ID]] = defaultdict(list)
+    first_id = True
+    target_id = ""
+    for line in report:
+        match = re.findall(r"\('.+?', '(\w+?)'\),? ?", line)
+        if match:
+            for id in match:
+                if first_id:
+                    target_id = id
+                    first_id = False
+                else:
+                    homophone_groups[target_id].append(id)
+            first_id = True
+        else:
+            first_id = True
     return homophone_groups
 
 
@@ -470,7 +461,7 @@ The following merge functions are predefined, each takes the given entries for o
         mergers[column] = merger
 
     # Parse the homophones instructions!
-    homophone_groups = parse_homophones_report(args.merge_report)
+    homophone_groups = parse_homophones_report(args.merge_report.open("r", encoding="utf8"))
 
     dataset.write(
         FormTable=merge_forms(
