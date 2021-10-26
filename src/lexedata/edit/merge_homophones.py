@@ -77,7 +77,18 @@ def must_be_equal(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """End with an error if entries are not equal"""
+    """
+    End with an error if entries are not equal
+    >>> must_be_equal([1, 2])
+    Traceback (most recent call last):
+    ...
+    AssertionError: assert 2 <= 1
+    ...
+    >>> must_be_equal([1, 1])
+    1
+    >>> must_be_equal([])
+
+    """
     forms = set(sequence)
     assert len(forms) <= 1
     try:
@@ -90,7 +101,19 @@ def must_be_equal_or_null(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """End with an error if those entries which are present are not equal"""
+    """
+    End with an error if those entries which are present are not equal
+    >>> must_be_equal_or_null([1, 2])
+    Traceback (most recent call last):
+    ...
+    AssertionError: assert 2 <= 1
+    ...
+
+    >>> must_be_equal_or_null([1, 1])
+    1
+    >>> must_be_equal_or_null([1, 1, None])
+    1
+    """
     return must_be_equal(list(filter(bool, sequence)))
 
 
@@ -102,7 +125,6 @@ def warn(
 
     >>> warn([1, 2])
     1
-
     >>> warn([1, 1])
     1
     """
@@ -123,7 +145,13 @@ def first(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """Take the first entry, no matter whether the others match or not"""
+    """
+    Take the first entry, no matter whether the others match or not
+    >>> first([1, 2])
+    1
+    >>> first([])
+
+    """
     try:
         return sequence[0]
     except IndexError:
@@ -225,6 +253,13 @@ def union(
 
 
 def constant_factory(c: C) -> Merger[C]:
+    """
+    >>> constant = constant_factory("a")
+    >>> constant()
+    'a'
+
+    """
+
     def constant(
         sequence: t.Sequence[C],
         target: MaybeRow = None,
@@ -243,6 +278,10 @@ def default(
     """
     Union for sequence-shaped entries (strings, and lists with a separator in the metadata),
     must_be_equal otherwise
+    >>> default([1, 2])
+    '1'
+    >>> default([1, 2], [3, 4]])
+    [1, 2, 3, 4]
     """
     if isiterable(sequence[0]):
         return union(sequence, target)
