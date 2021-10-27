@@ -86,7 +86,7 @@ The Wordlist-metadata.json file contains a detailed description of all the .csv 
 <!-- TO DO: add a reference to sample files and sample datasets --> 
 Below you can see a typical description of a .csv file in the .json file.
 
-![](https://github.com/Anaphory/lexedata/blob/nataliacp-patch-1/Manual/figures/json.png)
+![](figures/json.png)
 
 ### 1.2 Navigation using the command line
 On a MacOS computer you can navigate to a specific folder using the command line on your terminal as follows: 
