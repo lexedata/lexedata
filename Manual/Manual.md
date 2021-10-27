@@ -43,6 +43,8 @@
 ## 1. Introduction
 Lexedata is a set of tools for managing, editing, and annotating large lexical datasets in CLDF. In order to use lexedata you need to be somewhat familiar with the command line and git. Below we give the basics you need to get started, as well as some useful links for more information.
 
+TODO: add stuff here about lexedata architecture and organization
+
 ### 1.1 The CLDF format
 The CLDF format is designed for sharing and reusing comparative linguistic data. A CLDF lexical dataset consists of a series of .csv files, a .json file describing the structure of each .csv file and their inter-relationships, and a .bib file containing the relevant sources. A typical CLDF lexical dataset consists of the following .csv files: languages.csv, concepts.csv, forms.csv, cognatesets.csv, and cognates.csv. However, not all files are necessary: the bare minimum is forms.csv.
 <!--- NCP: What is the bare minimum for lexedata? this needs updating --->
@@ -123,7 +125,11 @@ To ensure dataset integrity, we recommend running `cldf validate Wordlist-metada
 <!--TODO: how do you set up git for the command line in the first place??? Natalia doesn't remember. -->
 
 ### 1.4 Some terminology
-Lexedata is CLDF-centric, so ‘Export’ is always ‘away from CLDF’ and ‘import’ is always ‘towards CLDF’.
+Lexedata is CLDF-centric, so ‘export’ is always ‘away from CLDF’ and ‘import’ is always ‘towards CLDF’.
+
+### 1.5 Lexedata commands
+TODO: add general description of a lexedata command and its logic. How to get help, how to read help, how to report issues
+
 
 ## 2. Lexedata installation instructions
 
@@ -147,22 +153,23 @@ If you are ever stuck with the python prompt, which starts with `>>>`, in
 order to exit Python type `quit()`.
 
 3. Install the lexedata package.
-In your terminal window type `pip lexedata`. This will
-install lexedata and all its dependencies on your computer and make it
+In your terminal window type `pip lexedata`. 
+<!---NCP: is this still the case for the new releases? --->
+This will install lexedata and all its dependencies on your computer and make it
 automatically updatable every time you pull a new version of the Lexedata
 repository from GitHub. Now you should be ready to use lexedata!
 
 ## 3. Importing data (lexedata.importer)
 
 ### 3.1 Importing a lexical dataset to CLDF from excel
-Lexedata has different ways of creating a lexical dataset from raw data depending on the format the raw data are in ("long format", "matrix", "interleaved"). 
+Lexedata has different ways of creating a lexical dataset from raw data depending on the format the raw data are in. Currently, three different dataset formats are supported: "long format", "matrix", and "interleaved". The file format in all cases is assumed to be .xlsx. 
 The "long format" assumes that every field in CLDF is a different column in your spreadsheet, and that each sheet of your spreadsheet is a different language. In other words, it assumes that you have a wordlist per language. The "matrix" format assumes that your spreadsheet is a comparative wordlist with different languages as different columns. You may have different kinds of information in each cell (e.g. forms and translations), as long as they are machine readable. The "interleaved" format assumes that you have alternating rows of data and cognate coding. It is similar to the "matrix" format, with the addition that under every row there is an extra row with numerical codes representing cognate classes.
 
 #### 3.1.1 Importing a lexical dataset using the "long" format
 In order to import a lexical dataset in a "long" excel format you use the following command.
 
 ```
-python -m lexedata.importer.excelsinglewordlist --add-running-id <filename.xlsx>  <concept column name>  forms.csv
+python -m lexedata.importer.excel_long_format
 ```
 You can exclude individual sheets from being imported by using the option `--exclude-sheet <sheet name>`. @Gereon I am not sure I understand the rest of the command. I think that --concept-property TUS is so that this column is added to the concept table, instead of being treated as another language. 
 
