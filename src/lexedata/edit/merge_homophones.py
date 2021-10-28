@@ -293,9 +293,9 @@ default_mergers: t.Mapping[str, Merger] = t.DefaultDict(
     lambda: default,
     {
         "form": must_be_equal,
-        "language": must_be_equal,
+        "languageReference": must_be_equal,
         "source": union,
-        "concept": union,
+        "parameterReference": union,
         "variants": union,
         "source": union,
         "status": constant_factory("MERGED: Review necessary"),
@@ -317,11 +317,18 @@ def merge_group(
         types.Cognate_ID,
         types.Cognateset_ID,
     ],
+    logger: cli.logger
 ) -> types.Form:
     for column in target:
-        _, reference_name = dataset["FormTable", column].propertyUrl.split("#")
-        merger = mergers.get(column, mergers.get(reference_name, must_be_equal))
-        target[column] = merger([form[column] for form in forms], target)
+        try:
+            try:
+                _, reference_name = dataset["FormTable", column].propertyUrl.uri.split("#")
+            except AttributeError:
+                reference_name = column
+            merger = mergers.get(column, mergers.get(reference_name, must_be_equal))
+            target[column] = merger([form[column] for form in forms], target)
+        except KeyError:
+            cli.Exit.INVALID_COLUMN_NAME(f"Column {cloumn} is not in FormTable.")
     return target
 
 
@@ -335,6 +342,7 @@ def merge_forms(
     ],
     mergers: t.Mapping[str, Merger],
     homophone_groups: t.Mapping[types.Form_ID, t.Sequence[types.Form_ID]],
+    logger: cli.logger = cli.logger
 ) -> t.Iterable[types.Form]:
     merge_targets = {
         variant: target
@@ -343,16 +351,20 @@ def merge_forms(
     }
     c_f_id = data["FormTable", "id"].name
 
-    for form_id in homophone_groups:
-        assert merge_targets[form_id] == form_id
+    for ids_to_merge in homophone_groups.values():
+        for form_id in ids_to_merge:
+            assert merge_targets[form_id] in homophone_groups
 
-    buffer: t.OrderedDict[types.Form_ID, types.Form] = t.OrderedDict()
+    buffer: t.Dict[types.Form_ID, types.Form] = {}
+    for f in dataset["FormTable"]:
+        buffer[f[c_f_id]] = f
+
     unknown = set()
     form: types.Form
+    print(len(buffer))
     for form in data["FormTable"]:
         id: types.Form_ID = form[c_f_id]
-        buffer[id] = form
-        if form in merge_targets:
+        if form[c_f_id] in merge_targets:
             unknown.add(id)
             target_id = merge_targets[id]
             group = homophone_groups[target_id]
@@ -363,6 +375,7 @@ def merge_forms(
                         buffer[target_id].copy(),  # type: ignore
                         mergers,
                         data,
+                        logger
                     )
                     for i in group:
                         if i != target_id:
@@ -371,10 +384,13 @@ def merge_forms(
                     pass
                 for i in group:
                     unknown.remove(i)
-        for f in buffer:
-            if f in unknown:
-                break
-            yield buffer.pop(f)
+        # TODO: Unsure why, but if we use the yield statement a lot of forms get duplicated
+        # with an example dataset of 20 forms, correctly two forms would disappear after the merge, but with yield we end up with over 300 forms
+        # for f in buffer:
+        #     if f in unknown:
+        #         break
+        #     yield buffer[f]
+    return buffer.values()
 
 
 def parse_merge_override(string: str) -> t.Tuple[str, Merger]:
@@ -501,11 +517,14 @@ The following merge functions are predefined, each takes the given entries for o
 
     # Parse the homophones instructions!
     homophone_groups = parse_homophones_report(args.merge_report.open("r", encoding="utf8"))
-
-    dataset.write(
-        FormTable=merge_forms(
+    merged_forms = [e for e in merge_forms(
             data=pycldf.Dataset.from_metadata(args.metadata),
             mergers=mergers,
             homophone_groups=homophone_groups,
-        )
+            logger=cli.logger
+    )]
+    print(len(merged_forms))
+    print(len(list(f for f in dataset["FormTable"])))
+    dataset.write(
+        FormTable=merged_forms
     )
