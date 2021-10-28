@@ -13,7 +13,8 @@
     + [1.3 Working with git](#13-working-with-git)
       - [1.3.1 How to set up git on your computer](#131-how-to-set-up-git-on-your-computer)
       - [1.3.2 Basic git commands](#132-basic-git-commands)
-    + [1.4 Some terminology](#14-some-terminology)
+    + [1.4 Lexedata commands](#14-lexedata-commands)
+    + [1.5 Some terminology](#15-some-terminology)
   * [2. Lexedata installation instructions](#2-lexedata-installation-instructions)
   * [3. Importing data (lexedata.importer)](#3-importing-data-lexedataimporter)
     + [3.1 Importing a lexical dataset to CLDF from excel](#31-importing-a-lexical-dataset-to-cldf-from-excel)
@@ -41,9 +42,9 @@
     + [7.1 Editing raw data through GitHub](#71-editing-raw-data-through-github)
 
 ## 1. Introduction
-Lexedata is a set of tools for managing, editing, and annotating large lexical datasets in CLDF. In order to use lexedata you need to be somewhat familiar with the command line and git. Below we give the basics you need to get started, as well as some useful links for more information.
+Lexedata is a set of tools for managing, editing, and annotating large lexical datasets in CLDF. In order to use lexedata you need to be somewhat familiar with the command line and git. Below we give the basics on the CLDF data format, command line navigation and git that you need to get started, as well as some useful links for more information. Finally we describe how commands are organized in lexedata, and we introduce some terminology we will be using in the manual.
 
-TODO: add stuff here about lexedata architecture and organization
+Lexedata is open access software in development. Please report any problems and suggest any improvements you would like to see by [opening an issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue#creating-an-issue-from-a-repository) on the [Lexedata GitHub repository](https://github.com/Anaphory/lexedata/tree/master).
 
 ### 1.1 The CLDF format
 The CLDF format is designed for sharing and reusing comparative linguistic data. A CLDF lexical dataset consists of a series of .csv files, a .json file describing the structure of each .csv file and their inter-relationships, and a .bib file containing the relevant sources. A typical CLDF lexical dataset consists of the following .csv files: languages.csv, concepts.csv, forms.csv, cognatesets.csv, and cognates.csv. However, not all files are necessary: the bare minimum is forms.csv.
@@ -124,12 +125,17 @@ To ensure dataset integrity, we recommend running `cldf validate Wordlist-metada
 
 <!--TODO: how do you set up git for the command line in the first place??? Natalia doesn't remember. -->
 
-### 1.4 Some terminology
+### 1.4 Lexedata commands
+
+You can access the Lexedata tools through commands in your terminal. Every command has the following general form:
+`python -m lexedata.[package_name].[command_name] --[optional argument] [positional argument]`
+Elements in brackets above need to be replaced depending on the exact operation you want to perform on your dataset. Also, there could be multiple positional arguments and optional arguments (with only a space as a separator), as well as commands that take only positional or only optional arguments. Positional arguments are not preceded by a hyphen and need to occur in strict order (if there are more than two of them). Optional arguments are always preceded by two hyphens and they can occur in any order after the command. Some optional arguments have a short name of one letter in addition to their regular name and in this case they are preceded by one hyphen (e.g. to access the help of any command you can use the optional argument `--help` or `-h`). Many positional arguments and most optional arguments have default settings. Commands in Lexedata are organized in four packages: lexedata.importer, lexedata.edit, lexedata.report, and lexedata.exporter. (In case you are wondering why they are not called "import" and "export", these words have special status in Python, so they were not available!). If a command name consists of more than one word, the words are separated with an underscore. Optional arguments consisting of more than one word also include underscores.
+
+Probably the most important thing to know before you get started with Lexedata is how to get help. You can access the help of every command by typing `python -m lexedata.[package_name].[command_name] --help`. The help explains how the command is used, what it does and lists all the positional and optional arguments, along with their default values if any.
+
+### 1.5 Some Terminology
+
 Lexedata is CLDF-centric, so ‘export’ is always ‘away from CLDF’ and ‘import’ is always ‘towards CLDF’.
-
-### 1.5 Lexedata commands
-TODO: add general description of a lexedata command and its logic. How to get help, how to read help, how to report issues
-
 
 ## 2. Lexedata installation instructions
 
