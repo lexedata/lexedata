@@ -78,10 +78,11 @@ def edit_distance(text1: str, text2: str) -> float:
 
 def load_clics():
     gml_file = (
-        # TODO: This is within the lexedata source tree. Try to find a better location.
+        # TODO: use pkg_resources.resource_stream, and assume we ship it properly with lexedata.
         Path(__file__).parent.parent
         / "data/clics-clics3-97832b5/clics3-network.gml.zip"
     )
+    # TODO: we might not have internet connection and file write permissions, don't use this fallback unconditionally.
     if not gml_file.exists():
         import urllib.request
 
