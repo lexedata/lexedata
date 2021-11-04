@@ -12,7 +12,6 @@ import argparse
 import typing as t
 from pathlib import Path
 from collections import defaultdict
-from io import StringIO
 
 import pycldf
 
@@ -235,6 +234,7 @@ def union(
     """
     if isinstance(sequence[0], str):
         unique = []
+
         for entry in sequence:
             for component in entry.split(SEPARATOR):
                 if component not in unique:
@@ -289,19 +289,25 @@ def default(
         return must_be_equal(sequence, target)
 
 
+# TODO: It doesn't make sense to merge the forms as they are identical.
+# Also, the columns form and id are skipped when merging
 default_mergers: t.Mapping[str, Merger] = t.DefaultDict(
     lambda: default,
     {
-        "form": must_be_equal,
+        # "Form": must_be_equal,
         "languageReference": must_be_equal,
-        "source": union,
+        "Language_ID": must_be_equal,
+        "Source": union,
         "parameterReference": union,
+        "Parameter_ID": union,
         "variants": union,
-        "source": union,
+        "Comment": concatenate,
+        "Value": concatenate,
         "status": constant_factory("MERGED: Review necessary"),
         "orthographic": transcription("<{}>"),
         "phonemic": transcription("/{}/"),
         "phonetic": transcription("[{}]"),
+        "Segments": union,
     },
 )
 
@@ -317,18 +323,39 @@ def merge_group(
         types.Cognate_ID,
         types.Cognateset_ID,
     ],
-    logger: cli.logger
+    logger: cli.logger,
 ) -> types.Form:
+    c_f_id = dataset["FormTable", "id"].name
+    c_f_form = dataset["FormTable", "form"].name
     for column in target:
+        # continue if column is id or form, otherwise ids or forms are merged with must be equal
+        if column == c_f_id or column == c_f_form:
+            continue
         try:
             try:
-                _, reference_name = dataset["FormTable", column].propertyUrl.uri.split("#")
+                _, reference_name = dataset["FormTable", column].propertyUrl.uri.split(
+                    "#"
+                )
             except AttributeError:
                 reference_name = column
             merger = mergers.get(column, mergers.get(reference_name, must_be_equal))
-            target[column] = merger([form[column] for form in forms], target)
+            merge_result = merger([form[column] for form in forms], target)
+            # make sure nothing in the target is overwritten with None or empty string
+            if (merge_result is None or merge_result == "") and (
+                target[column] is not None or target[column] != ""
+            ):
+                continue
+            # don't overwrite target value, but add return value from merging function
+            merge_result = merger([form[column] for form in forms], target)
+            if target[column] is None:
+                target[column] = merge_result
+            else:
+                if isinstance(target[column], str) and isinstance(merge_result, str):
+                    target[column] += SEPARATOR + merge_result
+                else:
+                    target[column] += merge_result
         except KeyError:
-            cli.Exit.INVALID_COLUMN_NAME(f"Column {cloumn} is not in FormTable.")
+            cli.Exit.INVALID_COLUMN_NAME(f"Column {column} is not in FormTable.")
     return target
 
 
@@ -342,7 +369,7 @@ def merge_forms(
     ],
     mergers: t.Mapping[str, Merger],
     homophone_groups: t.Mapping[types.Form_ID, t.Sequence[types.Form_ID]],
-    logger: cli.logger = cli.logger
+    logger: cli.logger = cli.logger,
 ) -> t.Iterable[types.Form]:
     merge_targets = {
         variant: target
@@ -356,12 +383,11 @@ def merge_forms(
             assert merge_targets[form_id] in homophone_groups
 
     buffer: t.Dict[types.Form_ID, types.Form] = {}
-    for f in dataset["FormTable"]:
+    for f in data["FormTable"]:
         buffer[f[c_f_id]] = f
 
     unknown = set()
     form: types.Form
-    print(len(buffer))
     for form in data["FormTable"]:
         id: types.Form_ID = form[c_f_id]
         if form[c_f_id] in merge_targets:
@@ -375,7 +401,7 @@ def merge_forms(
                         buffer[target_id].copy(),  # type: ignore
                         mergers,
                         data,
-                        logger
+                        logger,
                     )
                     for i in group:
                         if i != target_id:
@@ -390,7 +416,7 @@ def merge_forms(
         #     if f in unknown:
         #         break
         #     yield buffer[f]
-    return buffer.values()
+    return [ele for ele in buffer.values()]
 
 
 def parse_merge_override(string: str) -> t.Tuple[str, Merger]:
@@ -407,19 +433,21 @@ def format_mergers(mergers: t.Mapping[str, Merger]) -> str:
 
 
 def parse_homophones_report(
-        report: t.TextIO,
+    report: t.TextIO,
 ) -> t.Mapping[types.Form_ID, t.Sequence[types.Form_ID]]:
     r"""Parse legacy homophones merge instructions
 
     The format of the input file is the same as the output of the homophones report
-
+    >>> from io import StringIO
     >>> file = StringIO("ache, e.ta.'kɾã: Unknown (but at least one concept not found)\n"
     ... "    ache_one (one, one)\n"
     ... "    ache_two_3 (two, two)\n")
     >>> parse_homophones_report(file)
     defaultdict(<class 'list'>, {'ache_one': ['ache_two_3']})
     """
-    homophone_groups: t.Mapping[types.Form_ID, t.List[types.Form_ID]] = defaultdict(list)
+    homophone_groups: t.Mapping[types.Form_ID, t.List[types.Form_ID]] = defaultdict(
+        list
+    )
     first_id = True
     target_id = ""
     for line in report:
@@ -445,7 +473,9 @@ def parse_homophones_old_format(
     >>> parse_homophones_old_format(file)
     defaultdict(<class 'list'>, {'19148': ['19499', '19819']})
     """
-    homophone_groups: t.Mapping[types.Form_ID, t.List[types.Form_ID]] = defaultdict(list)
+    homophone_groups: t.Mapping[types.Form_ID, t.List[types.Form_ID]] = defaultdict(
+        list
+    )
     first_id = True
     target_id = ""
     for line in report:
@@ -516,15 +546,16 @@ The following merge functions are predefined, each takes the given entries for o
         mergers[column] = merger
 
     # Parse the homophones instructions!
-    homophone_groups = parse_homophones_report(args.merge_report.open("r", encoding="utf8"))
-    merged_forms = [e for e in merge_forms(
+    homophone_groups = parse_homophones_report(
+        args.merge_report.open("r", encoding="utf8")
+    )
+    merged_forms = [
+        e
+        for e in merge_forms(
             data=pycldf.Dataset.from_metadata(args.metadata),
             mergers=mergers,
             homophone_groups=homophone_groups,
-            logger=cli.logger
-    )]
-    print(len(merged_forms))
-    print(len(list(f for f in dataset["FormTable"])))
-    dataset.write(
-        FormTable=merged_forms
-    )
+            logger=cli.logger,
+        )
+    ]
+    dataset.write(FormTable=merged_forms)
