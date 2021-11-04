@@ -139,6 +139,9 @@ class ExcelWriter:
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
+        # TODO: wrap the following two blocks into a
+        # get_sorted_languages() -> t.OrderedDict[languageReference, Column Header/Titel/Name]
+        # function
         if language_order:
             c_sort = self.dataset["LanguageTable", f"{language_order}"].name
             languages = sorted(
@@ -152,6 +155,7 @@ class ExcelWriter:
             task="Writing languages to excel header",
             total=len(languages),
         ):
+            # TODO: This should be based on the foreign key relation
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
         ws.append(excel_header)
