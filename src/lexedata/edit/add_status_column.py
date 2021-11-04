@@ -20,17 +20,25 @@ def status_column_to_table_list(
     return dataset
 
 
+def normalize_table_name(name, dataset, logger=cli.logger):
+    try:
+        return str(dataset[name].url)
+    except KeyError:
+        logger.warning("Could not find table {}".format(name))
+        return None
+
+
 if __name__ == "__main__":
 
     parser = cli.parser(
         description="Add Status_Column to specified tables of the dataset"
     )
     parser.add_argument(
-        "table-names",
+        "tables",
         type=str,
         nargs="*",
         default=[],
-        help="Table names where to add Status_Column "
+        help="Table names and files to which to add Status_Column "
         "(default: FormTable, CognatesetTable, CognateTable, ParameterTable)",
     )
     parser.add_argument(
@@ -42,19 +50,29 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
+
+    dataset = pycldf.Dataset.from_metadata(args.metadata)
+
     # TODO: This should be made to work also for URLs, not just for names. Then
     # someone can have their custom tables, and run 'add_status_column *.csv
     # --exclude FormTable'
-    if args.table_names:
-        table_names = args.table_names
+    if args.tables:
+        table_names = [normalize_table_name(t, dataset, logger) for t in args.tables]
     else:
         table_names = [
-            "FormTable",
-            "CognatesetTable",
-            "CognateTable",
-            "ParameterTable",
+            normalize_table_name(t, dataset, logger)
+            for t in [
+                "FormTable",
+                "CognatesetTable",
+                "CognateTable",
+                "ParameterTable",
+            ]
         ]
-    table_names = [name for name in table_names if name not in args.exclude_tables]
-    logger.info("Tables to have a status column: {tables}".format(tables=table_names))
-    dataset = pycldf.Dataset.from_metadata(args.metadata)
-    status_column_to_table_list(dataset=dataset, tables=table_names)
+    tables = [
+        name
+        for name in table_names
+        if name not in [normalize_table_name(t, dataset, logger) for t in args.exclude]
+        if name
+    ]
+    logger.info("Tables to have a status column: {tables}".format(tables=tables))
+    status_column_to_table_list(dataset=dataset, tables=tables)
