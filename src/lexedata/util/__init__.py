@@ -10,7 +10,7 @@ import networkx
 from lingpy.compare.strings import ldn_swap
 
 import csvw
-from lexedata.cli import tq
+from lexedata.cli import tq, logger
 
 from ..types import KeyKeyDict
 from . import fs
@@ -194,3 +194,11 @@ def cache_table(
             total=dataset[table].common_props.get("dc:extent"),
         )
     }
+
+
+def normalize_table_name(name, dataset, logger=logger):
+    try:
+        return str(dataset[name].url)
+    except KeyError:
+        logger.warning("Could not find table {}".format(name))
+        return None

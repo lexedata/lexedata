@@ -3,6 +3,7 @@ import typing as t
 import pycldf
 
 import lexedata.cli as cli
+from lexedata.util import normalize_table_name
 
 
 def add_status_column_to_table(dataset: pycldf.Dataset, table_name: str) -> None:
@@ -18,14 +19,6 @@ def status_column_to_table_list(
     for table in tables:
         add_status_column_to_table(dataset, table)
     return dataset
-
-
-def normalize_table_name(name, dataset, logger=cli.logger):
-    try:
-        return str(dataset[name].url)
-    except KeyError:
-        logger.warning("Could not find table {}".format(name))
-        return None
 
 
 if __name__ == "__main__":
