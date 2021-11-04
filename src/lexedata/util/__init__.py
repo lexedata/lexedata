@@ -78,6 +78,7 @@ def edit_distance(text1: str, text2: str) -> float:
 
 def load_clics():
     gml_file = (
+        # TODO: This is within the lexedata source tree. Try to find a better location.
         Path(__file__).parent.parent
         / "data/clics-clics3-97832b5/clics3-network.gml.zip"
     )
