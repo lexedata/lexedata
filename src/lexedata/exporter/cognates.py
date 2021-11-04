@@ -415,7 +415,7 @@ class ExcelWriter:
             c_segments = self.dataset["FormTable", "Segments"].name
             return form[c_segments]
         except KeyError:
-            logger.warn("No segments column found. Falling back to cldf form.")
+            logger.warning("No segments column found. Falling back to cldf form.")
             c_f_form = self.dataset["FormTable", "form"].name
             return form[c_f_form]
 
