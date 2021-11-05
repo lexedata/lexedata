@@ -2,7 +2,6 @@
 import re
 import zipfile
 import typing as t
-from pathlib import Path
 
 import unicodedata
 import unidecode as uni
@@ -10,6 +9,7 @@ import networkx
 from lingpy.compare.strings import ldn_swap
 
 import csvw
+import pkg_resources
 from lexedata.cli import tq, logger
 
 from ..types import KeyKeyDict
@@ -98,9 +98,9 @@ def load_clics():
     doctest.
 
     """
-    # TODO: use pkg_resources.resource_stream, and assume we ship it properly with lexedata.
-    gml_file = Path(__file__).parent.parent / "data/clics3-network.gml.zip"
-    gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "r")
+    gml = zipfile.ZipFile(
+        pkg_resources.resource_stream("lexedata", "data/clics3-network.gml.zip")
+    ).open("graphs/network-3-families.gml", "r")
     return networkx.parse_gml(line.decode("utf-8") for line in gml)
 
 
