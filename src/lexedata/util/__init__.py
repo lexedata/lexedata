@@ -77,23 +77,29 @@ def edit_distance(text1: str, text2: str) -> float:
 
 
 def load_clics():
-    gml_file = (
-        # TODO: use pkg_resources.resource_stream, and assume we ship it properly with lexedata.
-        Path(__file__).parent.parent
-        / "data/clics-clics3-97832b5/clics3-network.gml.zip"
-    )
-    # TODO: we might not have internet connection and file write permissions, don't use this fallback unconditionally.
-    if not gml_file.exists():
+    """Load CLICS as networkx Graph.
+
+    Lexedata packages the CLICS colexification graph in GML format from
+    https://zenodo.org/record/3687530/files/clics/clics3-v1.1.zip?download=1
+
+    If you are missing a copy, get it using
+
         import urllib.request
 
         file_name, headers = urllib.request.urlretrieve(
-            "https://zenodo.org/record/3687530/files/clics/clics3-v1.1.zip?download=1"
         )
         zfobj = zipfile.ZipFile(file_name)
         zfobj.extract(
             "clics-clics3-97832b5/clics3-network.gml.zip",
             Path(__file__).parent.parent / "data/",
         )
+
+    TODO: this code puts it in the wrong place. It could be turned into a
+    doctest.
+
+    """
+    # TODO: use pkg_resources.resource_stream, and assume we ship it properly with lexedata.
+    gml_file = Path(__file__).parent.parent / "data/clics3-network.gml.zip"
     gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "r")
     return networkx.parse_gml(line.decode("utf-8") for line in gml)
 
