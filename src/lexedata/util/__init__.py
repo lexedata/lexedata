@@ -82,21 +82,6 @@ def load_clics():
     Lexedata packages the CLICS colexification graph in GML format from
     https://zenodo.org/record/3687530/files/clics/clics3-v1.1.zip?download=1
 
-    If you are missing a copy, get it using
-
-        import urllib.request
-
-        file_name, headers = urllib.request.urlretrieve(
-        )
-        zfobj = zipfile.ZipFile(file_name)
-        zfobj.extract(
-            "clics-clics3-97832b5/clics3-network.gml.zip",
-            Path(__file__).parent.parent / "data/",
-        )
-
-    TODO: this code puts it in the wrong place. It could be turned into a
-    doctest.
-
     """
     gml = zipfile.ZipFile(
         pkg_resources.resource_stream("lexedata", "data/clics3-network.gml.zip")
