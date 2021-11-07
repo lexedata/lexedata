@@ -69,7 +69,7 @@ def test_skip(caplog):
 
     # Something like:
     target_form = {"id": 2}
-    target["id"] = merge_homophones.cancel_and_skip([1, 1], target_form)
+    target_form["id"] = merge_homophones.cancel_and_skip([1, 1], target_form)
     assert target_form == {"id": 1}
     # Of course, this needs another function of merge_homophones around it, but
     # I don't know the call signature of that, and this test is definitely
