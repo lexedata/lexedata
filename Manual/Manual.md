@@ -182,6 +182,8 @@ You can exclude individual sheets from being imported by using the option `--exc
 #### 3.1.2 Importing a lexical dataset using the "matrix" format
 
 #### 3.1.3 Importing a lexical dataset using the "interleaved" format
+In order to import a dataset of the "interleaved" format you should use the command
+```python -m lexedata.importer.excel_interleaved ``` followed by the name of the excel file containing the dataset. A forms.csv file will be created. 
 
 ### 3.2 Adding a new language/new data to an existing lexical dataset
 
@@ -278,7 +280,7 @@ editing of cognate steps, start again at step 1.
 
 
 ### 6.4 Exporting coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)
-
+Lexedata is a powerful tool to prepare linguistic data for phylogenetic analyses. It can be used to export a cldf dataset containing cognate judgements as a coded matrix for phylogenetic analyses to be used by standard phylogenetic software (such as BEAST, MrBayes or revBayes). Different formats are supported, such as nexus, csv, a beast-friendly xml format, as well as a raw alignment format (similar to FASTA format used in bioinformatics). Lexedata also supports different coding methods for phylogenetic analyses: root-meaning sets, cross-meaning cognate sets, and multistate coding. Finally, you can use Lexedata to filter and export a portion of your dataset for phylogenetic analyses, e.g. if some languages or concepts are not fully coded yet, or if you want to exclude specific cognate sets that are not reviewed yet.
 
 ## 7. How to edit data
 There are two ways to edit data: through the web interface (under
