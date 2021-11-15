@@ -175,7 +175,7 @@ class ExcelWriter:
         # iterate over all cogsets
         for cogset in cli.tq(
             cogsets,
-            task="Wirting cognates and cognatesets to excel",
+            task="Writing cognates and cognatesets to excel",
             total=len(cogsets),
         ):
             # possibly a cogset can appear without any judgment, if so ignore it
@@ -225,7 +225,7 @@ class ExcelWriter:
             # remove all forms that appear in judgements
             for k in cli.tq(
                 all_judgements,
-                task="Write singleton cognatesets to excel",
+                task="Writing singleton cognatesets to excel",
                 total=len(all_judgements),
             ):
                 for judgement in all_judgements[k]:
