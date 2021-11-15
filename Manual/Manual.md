@@ -11,8 +11,7 @@
       - [1.1.7 Wordlist-metadata.json](#117-wordlist-metadatajson)
     + [1.2 Navigation using the command line](#12-navigation-using-the-command-line)
     + [1.3 Working with git](#13-working-with-git)
-      - [1.3.1 How to set up git on your computer](#131-how-to-set-up-git-on-your-computer)
-      - [1.3.2 Basic git commands](#132-basic-git-commands)
+      - [1.3.1 Basic git commands](#131-basic-git-commands)
     + [1.4 Lexedata commands](#14-lexedata-commands)
     + [1.5 Some terminology](#15-some-terminology)
   * [2. Lexedata installation instructions](#2-lexedata-installation-instructions)
@@ -47,8 +46,8 @@ Lexedata is a set of tools for managing, editing, and annotating large lexical d
 Lexedata is open access software in development. Please report any problems and suggest any improvements you would like to see by [opening an issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue#creating-an-issue-from-a-repository) on the [Lexedata GitHub repository](https://github.com/Anaphory/lexedata/tree/master).
 
 ### 1.1 The CLDF format
-The CLDF format is designed for sharing and reusing comparative linguistic data. A CLDF lexical dataset consists of a series of .csv files, a .json file describing the structure of each .csv file and their inter-relationships, and a .bib file containing the relevant sources. A typical CLDF lexical dataset consists of the following .csv files: languages.csv, concepts.csv, forms.csv, cognatesets.csv, and cognates.csv. However, not all files are necessary: the bare minimum is forms.csv.
-<!--- NCP: What is the bare minimum for lexedata? this needs updating --->
+The CLDF format is designed for sharing and reusing comparative linguistic data. A CLDF lexical dataset consists of a series of .csv files, a metadata .json file describing the structure of each .csv file and their inter-relationships, and a .bib file containing the relevant sources. A typical CLDF lexical dataset consists of the following .csv files: languages.csv, concepts.csv, forms.csv, cognatesets.csv, and cognates.csv. Not all files are necessary: the bare minimum for a valid CLDF dataset is forms.csv. However, lexedata requires a metadata json file for almost every operation.
+
 Each .csv file has to have an ID column. Below, we briefly describe the typical files of a lexical CLDF dataset and how they interact with Lexedata when necessary. For each file, you can find below the necessary columns and typical columns. You can always add any custom columns as needed for your dataset. There is also the possibility to add further .csv files depending on your needs. For more information on the CLDF format, you can refer to https://cldf.clld.org/.
 
 We recommend that you keep all these files in one folder which is versioned with git. You can use Github or Gitlab for this purpose, see section 1.3 below.
@@ -85,7 +84,10 @@ Typical columns: Comment
 This is a typical .bib file containing references to all sources used in the dataset. The handle (unique code) of each reference should be identical to the entry in the Source column of the forms.csv.
 
 #### 1.1.7 Wordlist-metadata.json
-The Wordlist-metadata.json file contains a detailed description of all the .csv files, their columns and their interrelationships. For an example of a simple .json file, see XXX. Every change to the structure of the dataset (e.g. insertion or deletion of a column in any file) needs to be reflected in the .json file for the dataset to be a valid cldf dataset.
+The Wordlist-metadata.json file contains a detailed description of all the .csv files, their columns and their interrelationships. It is not required file for a CLDF dataset, but it is necessary for the vast majority of operations using lexedata. For simple datasets, lexedata can create automatically a json file (see section XXX). However, for more complex datasets, you would need to provide one yourself.
+<!--- TODO: add some support for making a json file--->
+
+For an example of a simple .json file, see XXX. Every change to the structure of the dataset (e.g. insertion or deletion of a column in any file) needs to be reflected in the .json file for the dataset to be a valid cldf dataset.
 <!-- TO DO: add a reference to sample files and sample datasets --> 
 Below you can see a typical description of a .csv file in the .json file.
 
@@ -95,18 +97,13 @@ Below you can see a typical description of a .csv file in the .json file.
 On a MacOS computer you can navigate to a specific folder using the command line on your terminal as follows: 
 You can see the directory (folder) you are in at the moment (current directory) within the prompt. In order to go to a directory below (contained in the current directory), type `cd [relative directory path]`, e.g. `cd Documents/arawak/data`. `cd` stands for change directory. Note that directory names are case sensitive and that they can be automatically filled in (if they are unique) by pressing the tab key. 
 In order to go to a directory above (the directory containing the current directory), type `cd ..`. Note that you can type any path combining up and down steps. So, if I am in the data directory given as an example above, in order to go to the directory maweti-guarani which is within Documents, I can type `cd ../../maweti-guarani`.
-At any point you can see the contents of your current directory by typing `ls`. 
-
-<!-- Is navigation any different in different operating systems??? -->
+At any point you can see the contents of your current directory by typing `ls`.
 
 ### 1.3 Working with git
 Git is a version control system. It keeps track of changes so you can easily revert to an earlier version or store a snapshot of your project (e.g. the state of the dataset for a particular article you published). While you could use Lexedata without git, we highly recommend storing your data in a repository (folder) versioned with git.
-In this manual we are going to cover some basic commands to get you started. You can find more detailed instructions and more information on how to begin with git [here](https://product.hubspot.com/blog/git-and-github-tutorial-for-beginners) and also in the [tutorials](https://guides.github.com/) by Github. You can also download and use the GitHub Desktop application if you prefer to not use the command line to interact with GitHub. However, you do need to use the command line with Lexedata.
+In this manual we are going to cover some basic commands to get you started. You can find more detailed instructions and more information on how to begin with git [here](https://product.hubspot.com/blog/git-and-github-tutorial-for-beginners) and also in the [tutorials](https://guides.github.com/) by Github. You can also download and use the GitHub Desktop application if you prefer to not use the command line to interact with GitHub. However, you do need to use the command line to interact with Lexedata.
 
-#### 1.3.1 How to set up git on your computer
-<!--- Natalia: if somebody follows the tutorials say on github, like this one https://guides.github.com/introduction/git-handbook/, do they need to do something special to get git running on their computer? -->
-
-#### 1.3.2 Basic git commands
+#### 1.3.1 Basic git commands
 Below we are going to describe the use of the most basic git commands. We assume a setup with a local git repository (on your computer) and a remote repository (e.g. on GitHub).
 
 `git fetch`: This command "informs" the git on your computer about the status of the remote repository. It does *not* update or change any files in your local repository.
@@ -169,21 +166,33 @@ repository from GitHub. Now you should be ready to use lexedata!
 
 ### 3.1 Importing a lexical dataset to CLDF from excel
 Lexedata has different ways of creating a lexical dataset from raw data depending on the format the raw data are in. Currently, three different dataset formats are supported: "long format", "matrix", and "interleaved". The file format in all cases is assumed to be .xlsx. 
-The "long format" assumes that every field in CLDF is a different column in your spreadsheet, and that each sheet of your spreadsheet is a different language. In other words, it assumes that you have a wordlist per language. The "matrix" format assumes that your spreadsheet is a comparative wordlist with different languages as different columns. You may have different kinds of information in each cell (e.g. forms and translations), as long as they are machine readable. The "interleaved" format assumes that you have alternating rows of data and cognate coding. It is similar to the "matrix" format, with the addition that under every row there is an extra row with numerical codes representing cognate classes.
+The "long format" assumes that every field in CLDF is a different column in your spreadsheet, and that each sheet of your spreadsheet is a different language. In other words, it assumes that you have a wordlist per language. The "matrix" format assumes that your spreadsheet is a comparative wordlist with different languages as different columns. You may have different kinds of information in each cell (e.g. forms and translations), as long as they are machine readable. The matrix importer can also import a separate xls spreadsheet with cognate sets *at the same time* that the forms are imported to a CLDF dataset. The "interleaved" format assumes that you have alternating rows of data and cognate coding. It is similar to the "matrix" format, with the addition that under every row there is an extra row with numerical codes representing cognate classes.
+
+There are multiple types of information that lexedata can extract from excel files. A first distinction is between the content of the cells and the contents of a comment or note associated with the cell. Lexedata reads excel comments and stores them in a dedicated comment field when importing from a matrix and an interleaved format. However, it does not import comments from a long_format dataset (the assumption being that due to the long format, a dedicated column for columns would already exist if desired). Within the cell contents, there could be different types of information as well: e.g. more precise translations, sources, variant forms etc. Automatic separation of these different types of information depends on them being machine readable, i.e. they should be able to be automatically detected, because they are enclosed in different kinds of brackets. The "matrix" format importer script is the most sophisticated and customizable in terms of automatic separation of cell contents.
 
 #### 3.1.1 Importing a lexical dataset using the "long" format
-In order to import a lexical dataset in a "long" excel format you use the following command.
+In order to import a lexical dataset in a "long" excel format you need to provide lexedata with a json file describing the CLDF dataset you want to build. 
+<!--- TODO: add some chapter of json building--->
+The relevant command is:
 
 ```
-python -m lexedata.importer.excel_long_format
+python -m lexedata.importer.excel_long_format [path to excel file] --metadata [path to json file]
 ```
-You can exclude individual sheets from being imported by using the option `--exclude-sheet <sheet name>`. @Gereon I am not sure I understand the rest of the command. I think that --concept-property TUS is so that this column is added to the concept table, instead of being treated as another language. 
+You can exclude individual sheets from being imported by using the option `--exclude-sheet [sheet name]`.
+
+The long format assumes that each type of information is in a separate column and the content of a cell cannot be separated further. Excel comments (or notes) are not supported with this importer script.
 
 #### 3.1.2 Importing a lexical dataset using the "matrix" format
 
+The matrix format importer is highly customizable, since many different types of information can be included in each cell, apart from the form itself. As long as the cells are machine readable, lexedata can extract most of the information and correctly assign it in different fields of a CLDF dataset. The matrix importer is customized through a special key in the metadata json file. 
+<!---TODO: more info is needed about how to set this up---> 
+
+At the same time as the importation of forms, cognate information can be imported to the CLDF dataset from a separate spreadsheet, where every row is a cognate set. The contents of the cells of this second cognatesets spreadsheet are assumed to be easily relatable to the forms (e.g. matching the forms and source). 
+
 #### 3.1.3 Importing a lexical dataset using the "interleaved" format
+In the interleaved format, even rows contain forms, while odd rows contain the associated cognate codes. The cognate codes are assumed to be in the same order as the forms and a cognate code is expected for every form (even if this results in a cognate code being present in a cell multiple times). The interleaved importer is the only importing script in lexedata that does not require a json file. However, it also cannot perform any automatic treatment of information within the cells, apart from separation using a customizable separator. For example, if forms in the xlsx file are separated by ; and then some of the forms are followed by parentheses containing translations, each cell is going to be parsed according to the ; and everything in between will be parsed as the form (including the parentheses). You can edit further this dataset to separate the additional kinds of information by editing the forms.csv file that will be created. (see section XXX). 
 In order to import a dataset of the "interleaved" format you should use the command
-```python -m lexedata.importer.excel_interleaved ``` followed by the name of the excel file containing the dataset. A forms.csv file will be created. 
+```python -m lexedata.importer.excel_interleaved ``` followed by the name of the excel file containing the dataset. Only a forms.csv file will be created, which contains a Cognateset_ID column with cognate codes. This format is similar to the LingPy format. Note that for any further use of this CLDF dataset with lexedata, you need to create a json file (see sections XXX to create your own json file by hand or automatically respectively).
 
 ### 3.2 Adding a new language/new data to an existing lexical dataset
 
