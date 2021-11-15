@@ -1,7 +1,6 @@
 from pathlib import Path
-from collections import OrderedDict
-import re
 import tempfile
+from collections import OrderedDict
 
 import pytest
 import pycldf
@@ -21,7 +20,7 @@ from lexedata.report.homophones import list_homophones
 
 from lexedata.types import WorldSet
 from lexedata.util.fs import copy_dataset
-from helper_functions import copy_metadata
+from helper_functions import copy_metadata, copy_to_temp
 import lexedata.cli as cli
 
 """Test Lexedata handling of NA values
@@ -607,9 +606,11 @@ def test_homohpones_skips_na_forms(capsys):
             "Value": "-",
         },
     ]
-    dataset = pycldf.Dataset.from_metadata(
-        copy_metadata(Path(__file__).parent / r"data/cldf/minimal/cldf-metadata.json")
+    dataset, target = copy_to_temp(
+        Path(__file__).parent / r"data/cldf/minimal/cldf-metadata.json"
     )
+    target = target.parent
+    output = target / "out.txt"
     dataset.write(
         FormTable=forms,
         ParameterTable=[{"ID": "C1", "Name": "one"}, {"ID": "C2", "Name": "two"}],
@@ -623,13 +624,15 @@ def test_homohpones_skips_na_forms(capsys):
         overwrite=False,
         status_update=None,
     )
-    list_homophones(dataset=dataset)
-    cap = capsys.readouterr()
-    match = r"OrderedDict\(.+\)\nOrderedDict\(.+\)\nUnknown: L1 form \{\(('C2', 'L1C1'|'C2', 'L1C3')\), \(('C2', 'L1C1'|'C2', 'L1C3')\)\}\n"
-    assert re.match(match, cap.out)
-    # TODO: run report.homophones
-    # TODO: check that the reported homophones are only [{"L1C1", "L1C3"}], because the other entries don't
-    # count as forms.
+    list_homophones(dataset=dataset, output=output)
+    out = output.open("r", encoding="utf8")
+    assert set(out.readlines()) == set(
+        [
+            "L1, form: Unknown (but at least one concept not found):\n",
+            "\t L1C1, (C2)\n",
+            "\t L1C3, (C2)\n",
+        ]
+    )
 
 
 def test_extended_cldf_validate():

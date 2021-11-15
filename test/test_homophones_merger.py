@@ -137,7 +137,7 @@ def test_constants():
     )
 
 
-@pytest.skip("No function for parsing merge string.")
+@pytest.mark.skip("No function for parsing merge string.")
 def test_parse_merge_string():
     assert merge_homophones.parse_merge_command("Source:SKIP") == {
         "Source": merge_homophones.cancel_and_skip

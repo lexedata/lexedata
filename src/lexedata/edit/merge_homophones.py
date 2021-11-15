@@ -53,7 +53,7 @@ def cancel_and_skip(
 
     >>> cancel_and_skip([])
 
-    >>> cancel_and_skip([1, 2])
+    >>> cancel_and_skip([1, 2]) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
         raise Skip
@@ -78,11 +78,9 @@ def must_be_equal(
 ) -> t.Optional[C]:
     """
     End with an error if entries are not equal
-    >>> must_be_equal([1, 2])
+    >>> must_be_equal([1, 2]) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ...
     AssertionError: assert 2 <= 1
-    ...
     >>> must_be_equal([1, 1])
     1
     >>> must_be_equal([])
@@ -102,9 +100,8 @@ def must_be_equal_or_null(
 ) -> t.Optional[C]:
     """
     End with an error if those entries which are present are not equal
-    >>> must_be_equal_or_null([1, 2])
+    >>> must_be_equal_or_null([1, 2]) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ...
     AssertionError: assert 2 <= 1
     ...
 
@@ -255,7 +252,7 @@ def union(
 def constant_factory(c: C) -> Merger[C]:
     """
     >>> constant = constant_factory("a")
-    >>> constant()
+    >>> constant([])
     'a'
 
     """
@@ -278,9 +275,10 @@ def default(
     """
     Union for sequence-shaped entries (strings, and lists with a separator in the metadata),
     must_be_equal otherwise
-    >>> default([1, 2])
-    '1'
-    >>> default([1, 2], [3, 4]])
+    >>> default([1, 2]) # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    AssertionError: assert 2 <= 1
+    >>> default([[1, 2], [3, 4]])
     [1, 2, 3, 4]
     """
     if isiterable(sequence[0]):
@@ -468,7 +466,7 @@ def parse_homophones_old_format(
     report: t.TextIO,
 ) -> t.Mapping[types.Form_ID, t.Sequence[types.Form_ID]]:
     """Parse legacy homophones merge instructions
-
+    >>> from io import StringIO
     >>> file = StringIO("Unconnected: Matsigenka kis {('ANGRY', '19148'), ('FIGHT (v. Or n.)', '19499'), ('CRITICIZE, SCOLD', '19819')}")
     >>> parse_homophones_old_format(file)
     defaultdict(<class 'list'>, {'19148': ['19499', '19819']})

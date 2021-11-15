@@ -558,7 +558,7 @@ def test_create_metadata_valid(interleaved_excel_example):
     assert ds.validate()
 
 
-def test_create_metadata_cerrect(interleaved_excel_example, formtable_only_example):
+def test_create_metadata_correct(interleaved_excel_example, formtable_only_example):
     forms = [
         dict(
             zip(
