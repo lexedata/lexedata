@@ -1,9 +1,7 @@
-"""Import some Bantu data
+"""Import data in the "interleaved" format from an xls spreadsheet
 
-This script is a very rough sketch for importing yet another shape of data.
-Here, every even column contains cells with forms (some cells containing
-multiple forms), while the odd columns contain the associated cognate codes
-(generally in the same order).
+Here, every even row contains cells with forms (cells may contain
+multiple forms), while the odd rows contain the associated cognate codes (a one-to-one relationship between forms and codes is expected).
 
 """
 import re
