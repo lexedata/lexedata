@@ -15,6 +15,7 @@ from lexedata.exporter.edictor import forms_to_tsv
 from lexedata.edit.add_segments import add_segments_to_dataset
 from lexedata.edit.add_concepticon import create_concepticon_for_concepts
 from lexedata.edit.detect_cognates import cognate_code_to_file
+from lexedata.edit.add_singleton_cognatesets import create_singeltons
 
 from lexedata.report.homophones import list_homophones
 
@@ -551,14 +552,66 @@ def test_add_segments_skips_na_forms():
 
 def test_add_singlestons():
     forms = [  # noqa
-        {"ID": "L1C1", "Language_ID": "L1", "Concept_ID": "C1", "Form": ""},
-        {"ID": "L2C1", "Language_ID": "L2", "Concept_ID": "C1", "Form": "L2C1"},
-        {"ID": "L1C2", "Language_ID": "L1", "Concept_ID": "C2", "Form": "L1C2"},
-        {"ID": "L2C2", "Language_ID": "L2", "Concept_ID": "C2", "Form": "-"},
+        {
+            "ID": "L2C1",
+            "Language_ID": "L2",
+            "Concept_ID": "C1",
+            "Form": "L2C1",
+            "Value": "L2C1",
+        },
+        {
+            "ID": "L1C1",
+            "Language_ID": "L1",
+            "Concept_ID": "C1",
+            "Form": "",
+            "Value": "?",
+        },
+        {
+            "ID": "L1C2",
+            "Language_ID": "L1",
+            "Concept_ID": "C2",
+            "Form": "L1C2",
+            "Value": "L1C2",
+        },
+        {
+            "ID": "L2C2",
+            "Language_ID": "L2",
+            "Concept_ID": "C2",
+            "Form": "-",
+            "Value": "-",
+        },
     ]
-    # TODO: run add_singleton_cognatesets
-    # TODO: Check that there is no cognate set for L1C1
-    # TODO: What should happen to the -?
+    cognates = [{"ID": "1", "Form_ID": "L2C1", "Cognateset": "1"}]
+    concepts = [{"ID": "C1", "Name": "C1"}, {"ID": "C2", "Name": "C1"}]
+    cogsets = [{"ID": "1", "Name": "1"}]
+    dataset = pycldf.Dataset.from_metadata(
+        copy_metadata(Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json")
+    )
+    dataset.write(
+        FormTable=forms,
+        ParameterTable=concepts,
+        CognateTable=cognates,
+        CognatesetTable=cogsets,
+    )
+    all_cogsets, judgements = create_singeltons(dataset=dataset)
+    assert all_cogsets == [
+        OrderedDict([("ID", "1"), ("Name", "1"), ("Comment", None)]),
+        {"ID": "X2_L1", "Name": "C2"},
+        {"ID": "X3_L2", "Name": "C2"},
+    ] and judgements == [
+        OrderedDict(
+            [
+                ("ID", "1"),
+                ("Form_ID", "L2C1"),
+                ("Cognateset", "1"),
+                ("Segment_Slice", None),
+                ("Alignment", None),
+                ("Comment", None),
+            ]
+        ),
+        {"ID": "X2_L1", "Form_ID": "L1C2", "Cognateset": "X2_L1"},
+        {"ID": "X3_L2", "Form_ID": "L2C2", "Cognateset": "X3_L2"},
+    ]
 
 
 def test_homohpones_skips_na_forms(capsys):

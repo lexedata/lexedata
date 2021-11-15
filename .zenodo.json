@@ -1,0 +1,42 @@
+{
+    "description": "Tools to edit lexical data in CLDF, and transform it to and from other well-known formats.", 
+    "license": "GPL-3.0+", 
+    "title": "Lexedata: Lexical Data Editing tools", 
+    "grants": [
+        {
+            "id": "10.13039/501100001711::CRSII5_183578"
+        }
+    ], 
+    "upload_type": "software", 
+    "version": "1.0.0-beta3", 
+    "publication_date": "2021-09-30", 
+    "creators": [
+        {
+            "orcid": "0000-0002-8155-9089", 
+            "affiliation": "Univeristy of Zurich", 
+            "name": "Gereon A. Kaiping"
+        }, 
+        {
+            "affiliation": "Univeristy of Zurich", 
+            "name": "Melvin S. Steiger"
+        }, 
+        {
+            "orcid": "0000-0002-5693-975X", 
+            "affiliation": "Univeristy of Zurich", 
+            "name": "Natalia Chousou-Polydouri"
+        }
+    ], 
+    "access_right": "open", 
+    "related_identifiers": [
+        {
+            "scheme": "url", 
+            "identifier": "https://github.com/Anaphory/lexedata/tree/v1.0.0-beta3", 
+            "relation": "isSupplementTo"
+        }, 
+        {
+            "scheme": "doi", 
+            "identifier": "10.5281/zenodo.5541167", 
+            "relation": "isVersionOf"
+        }
+    ]
+}

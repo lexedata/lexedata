@@ -4,6 +4,7 @@ from tabulate import tabulate
 import pycldf
 
 import lexedata.cli as cli
+import lexedata.types as types
 
 
 def coverage_report(
@@ -11,10 +12,31 @@ def coverage_report(
     min_percentage: float,
     with_concept: t.Iterable,
     missing: bool,
+    only_coded: bool = True,
 ) -> t.Tuple[t.List[str], t.List[str]]:
+    if only_coded:
+        try:
+            c_j_form = dataset["CognateTable", "formReference"].name
+            coded = set()
+            form_column_referred_to_by_judgements = ""
+            for foreign_key in dataset["CognateTable"].tableSchema.foreignKeys:
+                if foreign_key.columnReference == [c_j_form]:
+                    (
+                        form_column_referred_to_by_judgements,
+                    ) = foreign_key.reference.columnReference
+            for judgement in dataset["CognateTable"]:
+                coded.add(judgement[c_j_form])
+        except KeyError:
+            form_column_referred_to_by_judgements = dataset["FormTable", "id"].name
+            coded = {}
+    else:
+        form_column_referred_to_by_judgements = dataset["FormTable", "id"].name
+        coded = types.WorldSet()
+
     languages = {}
     try:
         c_l_id = dataset["LanguageTable", "id"].name
+        c_l_name = dataset["LanguageTable", "name"].name
         for language in dataset["LanguageTable"]:
             languages[language[c_l_id]] = language
     except KeyError:
@@ -38,6 +60,8 @@ def coverage_report(
     c_form = dataset["FormTable", "form"].name
     for form in dataset["FormTable"]:
         languages.setdefault(form[c_language], {})
+        if form[form_column_referred_to_by_judgements] not in coded:
+            continue
         if form[c_form] == "?" and missing:
             continue
         if multiple_concepts:
@@ -54,7 +78,7 @@ def coverage_report(
         ]
     except KeyError:
         cli.logger.warning(
-            "ParamterTable doesn't contain a column 'Primary'. Primary concepts couldn't be loaded. "
+            "ParameterTable doesn't contain a column 'Primary'. Primary concepts couldn't be loaded. "
             "Loading all concepts."
         )
         primary_concepts = [c[c_c_id] for c in dataset["ParameterTable"]]
@@ -64,13 +88,15 @@ def coverage_report(
     header_languages = ""
     data_languages = []
     for language, metadata in languages.items():
-
         conceptlist = concepts[language]
-        synonyms = sum(conceptlist.values()) / len(conceptlist)
+        try:
+            synonyms = sum(conceptlist.values()) / len(conceptlist)
+        except ZeroDivisionError:
+            synonyms = float("nan")
         include = True
         # percentage of all concepts covered by this language
         conceptlist_percentage = len(conceptlist) / total_number_concepts
-        if conceptlist_percentage < min_percentage:
+        if conceptlist_percentage * 100 < min_percentage:
             include = False
 
         for c in with_concept:
@@ -89,7 +115,7 @@ def coverage_report(
         data_languages.append(
             [
                 metadata[c_l_id],
-                metadata["Name"],
+                metadata[c_l_name],
                 primary_count,
                 conceptlist_percentage,
                 synonyms,
@@ -167,17 +193,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "--min-percentage",
         default=0,
-        type=int,
+        type=float,
         help="Only include languages with at least M% concepts",
         metavar="M",
     )
-    # parser.add_argument(
-    #     "--languages-only",
-    #     "-l",
-    #     action="store_true",
-    #     default=False,
-    #     help="Only list matching languages, don't report statistics",
-    # )
+    parser.add_argument(
+        "--languages-only",
+        "-l",
+        action="store_true",
+        default=False,
+        help="Only list matching languages, don't report statistics",
+    )
     parser.add_argument(
         "--with-concept",
         "-c",
@@ -193,6 +219,13 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="Output separate report with concepts and the number of languages that attest them",
+    )
+
+    parser.add_argument(
+        "--coded",
+        action="store_true",
+        default=False,
+        help="Include only forms that are assigned to at least one cognate class",
     )
     parser.add_argument(
         "--missing",
@@ -210,33 +243,42 @@ if __name__ == "__main__":
             "You must specify the path to a valid metadata file (--metadata path/to/Filename-metadata.json)."
         )
     data, header = coverage_report(
-        dataset, args.min_percentage, args.with_concept, args.missing
+        dataset,
+        args.min_percentage,
+        args.with_concept,
+        missing=args.missing,
+        only_coded=args.coded,
     )
 
     # TODO: consider generic way of writing the header
-    print(
-        tabulate(
-            data,
-            headers=[
-                "Language_ID",
-                "Language_Name",
-                "Number of primary concepts",
-                "Percentage of total concepts",
-                "Synonyms",
-            ],
-            tablefmt="pretty",
-        )
-    )
-
-    if args.concept_report:
-        data, header = coverage_report_concepts(dataset=dataset)
+    if args.languages_only:
+        print(*[language[0] for language in data], sep="\n")
+    else:
         print(
             tabulate(
                 data,
                 headers=[
-                    "Concept_ID",
-                    "Language_Count",
+                    "Language_ID",
+                    "Language_Name",
+                    "Number of primary concepts",
+                    "Percentage of total concepts",
+                    "Synonyms",
                 ],
-                tablefmt="pretty",
+                stralign="left",
+                numalign="right",
             )
         )
+
+        if args.concept_report:
+            data, header = coverage_report_concepts(dataset=dataset)
+            print(
+                tabulate(
+                    data,
+                    headers=[
+                        "Concept_ID",
+                        "Language_Count",
+                    ],
+                    stralign="left",
+                    numalign="right",
+                )
+            )

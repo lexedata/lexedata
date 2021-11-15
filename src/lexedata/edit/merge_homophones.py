@@ -7,6 +7,7 @@ What other columns give warnings, what other columns give errors?
 
 *Optionally*, merge cognate sets that get merged by this procedure.
 """
+
 import re
 import argparse
 import typing as t
@@ -557,3 +558,4 @@ The following merge functions are predefined, each takes the given entries for o
         )
     ]
     dataset.write(FormTable=merged_forms)
+
