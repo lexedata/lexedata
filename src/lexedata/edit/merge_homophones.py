@@ -544,7 +544,7 @@ The following merge functions are predefined, each takes the given entries for o
         mergers[column] = merger
 
     # Parse the homophones instructions!
-    homophone_groups = parse_homophones_report(
+    homophone_groups = parse_homophones_old_format(
         args.merge_report.open("r", encoding="utf8")
     )
     merged_forms = [
