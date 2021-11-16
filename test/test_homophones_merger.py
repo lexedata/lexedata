@@ -255,9 +255,12 @@ def test_merge_2():
     merger = merge_homophones.default_mergers
     merger["phonemic"] = merge_homophones.first
     merger["orthographic"] = merge_homophones.first
-    buffer = merge_homophones.merge_forms(
-        data=dataset, mergers=merger, homophone_groups={"ache_one": ["ache_one1"]}
-    )
+    buffer = [
+        e
+        for e in merge_homophones.merge_forms(
+            data=dataset, mergers=merger, homophone_groups={"ache_one": ["ache_one1"]}
+        )
+    ]
     assert (
         len(buffer) == 3
         and buffer[0][c_f_id] == first_id
@@ -308,6 +311,21 @@ def test_merge_3():
             "Source": ["ache_s5"],
         },
         {
+            "ID": "ache_one1.2",
+            "Language_ID": "ache",
+            "Parameter_ID": ["one", "one"],
+            "Form": "e.ta.'kɾã",
+            "orthographic": "etakɾã",
+            "phonemic": "",
+            "phonetic": "e.ta.'kɾã",
+            "variants": ["~3"],
+            "Segments": ["b"],
+            "Comment": "dos",
+            "procedural_comment": "",
+            "Value": "value2",
+            "Source": ["ache_s6"],
+        },
+        {
             "ID": "ache_one2",
             "Language_ID": "ache",
             "Parameter_ID": ["one"],
@@ -343,17 +361,20 @@ def test_merge_3():
     merger = merge_homophones.default_mergers
     merger["phonemic"] = merge_homophones.first
     merger["orthographic"] = merge_homophones.first
-    buffer = merge_homophones.merge_forms(
-        data=dataset, mergers=merger, homophone_groups={"ache_one": ["ache_one1"]}
-    )
+    buffer = [
+        e
+        for e in merge_homophones.merge_forms(
+            data=dataset, mergers=merger, homophone_groups={"ache_one": ["ache_one1"]}
+        )
+    ]
     first_form = buffer[0]
     assert (
         len(buffer) == 3
         and first_form[c_f_id] == first_id
         and first_form["orthographic"] == "etakɾã"
         and first_form["phonemic"] == "etakɾã"
-        and first_form["variants"] == ["~1", "~2"]
-        and first_form["Source"] == ["ache_s4", "ache_s5"]
+        and first_form["variants"] == ["~1", "~2", "~3"]
+        and first_form["Source"] == ["ache_s4", "ache_s5", "ache_s5"]
         and first_form["Value"] == "value1; value2"
         and first_form["Comment"] == "uno; dos"
         and first_form["Segments"] == ["a", "b"]
