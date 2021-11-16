@@ -206,8 +206,9 @@ def concatenate(
     'a; b'
 
     """
-    if isinstance(sequence[0], str):
-        return SEPARATOR.join(sequence)
+    if isinstance(sequence[0], str) or sequence[0] is None:
+        unique = [s if s is not None else "" for s in sequence]
+        return SEPARATOR.join(unique)
     elif isiterable(sequence[0]):
         # Assume list values, and accept the type error if not
         return sum(sequence, [])
@@ -221,13 +222,13 @@ def union(
 ) -> t.Optional[C]:
     """Concatenate all entries, without duplicates
 
-    Strings are concatenated using '; ' as a separator. FOr iterables
+    Strings are concatenated using '; ' as a separator. For iterables
     >>> union([[1, 2], [2, 4]])
     [1, 2, 4]
     >>> union([["a", "b"], ["c", "a"]])
     ['a', 'b', 'c']
-    >>> union(["a", "b", "a"])
-    'a; b'
+    >>> union(["a", "b", "a", None])
+    'a; b; '
 
     """
     if isinstance(sequence[0], str) or sequence[0] is None:
@@ -235,7 +236,7 @@ def union(
 
         for entry in sequence:
             if entry is None:
-                continue
+                entry = ""
             for component in entry.split(SEPARATOR):
                 if component not in unique:
                     unique.append(component)
@@ -245,6 +246,8 @@ def union(
         unique = []
         for entry in sequence:
             for component in entry:
+                if component is None:
+                    component = ""
                 if component not in unique:
                     unique.append(component)
         return unique
@@ -351,7 +354,6 @@ def merge_group(
             ):
                 continue
             # don't overwrite target value, but add return value from merging function
-            merge_result = merger([form[column] for form in forms], target)
             if target[column] is None:
                 target[column] = merge_result
             else:
@@ -409,6 +411,7 @@ def merge_forms(
                         data,
                         logger,
                     )
+
                     for i in group:
                         if i != target_id:
                             del buffer[i]

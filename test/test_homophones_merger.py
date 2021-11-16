@@ -83,11 +83,11 @@ def test_concatenations():
         "text",
         "text",
     ]
+    assert merge_homophones.concatenate([None, "this", "text"]) == "; this; text"
     assert merge_homophones.concatenate(["this", "text"]) == "this; text"
     assert merge_homophones.concatenate(["this", "", "text"]) == "this; ; text"
-    # TODO: Discuss with Gereon: we use join, so None in the list throws an TypError
-    # assert merge_homophones.concatenate(["this", None, "text"]) == "this; ; text"
-    # assert merge_homophones.concatenate([None, "this", "text"]) == ";this;text"
+    assert merge_homophones.concatenate(["this", None, "text"]) == "this; ; text"
+    assert merge_homophones.concatenate([None, "this", "text"]) == "; this; text"
     assert merge_homophones.concatenate([["this"], [], ["text"]]) == ["this", "text"]
     assert merge_homophones.concatenate([["this", "text"], [], ["text"]]) == [
         "this",
@@ -97,14 +97,14 @@ def test_concatenations():
     with pytest.raises(NotImplementedError):
         assert merge_homophones.concatenate([1, 3])
 
+
+def test_union():
     assert merge_homophones.union([["this"], ["text"]]) == ["this", "text"]
     assert merge_homophones.union([["this"], ["text"], ["text"]]) == ["this", "text"]
     assert merge_homophones.union([["text"], ["this"], ["text"]]) == ["text", "this"]
     assert merge_homophones.union(["this", "text"]) == "this; text"
     assert merge_homophones.union(["this", "", "text"]) == "this; ; text"
-    # TODO: Throws AttributeError because of None.split(SEPERATOR)
-    # assert merge_homophones.union(["this", None, "text"]) == "this; ; text"
-    # assert merge_homophones.concatenate([None, "this", "text"]) == "this; text"
+    assert merge_homophones.union(["this", None, "text"]) == "this; ; text"
     assert merge_homophones.union([["this"], [], ["text"]]) == ["this", "text"]
     assert merge_homophones.union([["this", "text"], [], ["text"]]) == ["this", "text"]
     with pytest.raises(NotImplementedError):
@@ -298,7 +298,7 @@ def test_merge_3():
         {
             "ID": "ache_one1",
             "Language_ID": "ache",
-            "Parameter_ID": ["one", "one"],
+            "Parameter_ID": ["one1", "one1"],
             "Form": "e.ta.'kɾã",
             "orthographic": "etakɾã",
             "phonemic": "",
@@ -311,22 +311,22 @@ def test_merge_3():
             "Source": ["ache_s5"],
         },
         {
-            "ID": "ache_one1.2",
+            "ID": "ache_one2",
             "Language_ID": "ache",
-            "Parameter_ID": ["one", "one"],
+            "Parameter_ID": ["two1", None],
             "Form": "e.ta.'kɾã",
             "orthographic": "etakɾã",
             "phonemic": "",
             "phonetic": "e.ta.'kɾã",
             "variants": ["~3"],
-            "Segments": ["b"],
-            "Comment": "dos",
+            "Segments": [None],
+            "Comment": "tres",
             "procedural_comment": "",
-            "Value": "value2",
+            "Value": "value3",
             "Source": ["ache_s6"],
         },
         {
-            "ID": "ache_one2",
+            "ID": "ache_one3",
             "Language_ID": "ache",
             "Parameter_ID": ["one"],
             "Form": "form1",
@@ -341,7 +341,7 @@ def test_merge_3():
             "Source": [""],
         },
         {
-            "ID": "ache_one3",
+            "ID": "ache_one4",
             "Language_ID": "ache",
             "Parameter_ID": ["one"],
             "Form": "form2",
@@ -364,19 +364,23 @@ def test_merge_3():
     buffer = [
         e
         for e in merge_homophones.merge_forms(
-            data=dataset, mergers=merger, homophone_groups={"ache_one": ["ache_one1"]}
+            data=dataset,
+            mergers=merger,
+            homophone_groups={"ache_one": ["ache_one1", "ache_one2"]},
         )
     ]
     first_form = buffer[0]
     assert (
         len(buffer) == 3
         and first_form[c_f_id] == first_id
+        and first_form["Language_ID"] == "ache"
+        and first_form["Parameter_ID"] == ["one", "one", "one1", "two1", ""]
         and first_form["orthographic"] == "etakɾã"
         and first_form["phonemic"] == "etakɾã"
         and first_form["variants"] == ["~1", "~2", "~3"]
-        and first_form["Source"] == ["ache_s4", "ache_s5", "ache_s5"]
-        and first_form["Value"] == "value1; value2"
-        and first_form["Comment"] == "uno; dos"
+        and first_form["Source"] == ["ache_s4", "ache_s5", "ache_s6"]
+        and first_form["Value"] == "value1; value2; value3"
+        and first_form["Comment"] == "uno; dos; tres"
         and first_form["Segments"] == ["a", "b"]
     )
     # Create tmp dataset with four form, two of which have identical #forms,
