@@ -328,9 +328,13 @@ def merge_group(
 ) -> types.Form:
     c_f_id = dataset["FormTable", "id"].name
     c_f_form = dataset["FormTable", "form"].name
+    c_f_language = ""
+    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
+        if foreign_key.reference.resource == dataset["LanguageTable"].url:
+            c_f_language = foreign_key.columnReference[0]
     for column in target:
         # continue if column is id or form, otherwise ids or forms are merged with must be equal
-        if column == c_f_id or column == c_f_form:
+        if column == c_f_id or column == c_f_form or column == c_f_language:
             continue
         try:
             try:
