@@ -558,4 +558,3 @@ The following merge functions are predefined, each takes the given entries for o
         )
     ]
     dataset.write(FormTable=merged_forms)
-
