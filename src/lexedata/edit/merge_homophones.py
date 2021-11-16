@@ -389,12 +389,13 @@ def merge_forms(
     form: types.Form
     for form in data["FormTable"]:
         id: types.Form_ID = form[c_f_id]
-        if form[c_f_id] in merge_targets:
+        if id in merge_targets:
             unknown.add(id)
             target_id = merge_targets[id]
             group = homophone_groups[target_id]
             if all(i in buffer for i in group):
                 try:
+                    # TODO: if group contains several ids to be merged, but one in the middle raises Skip, the rest does not get merged
                     buffer[target_id] = merge_group(
                         [buffer[i] for i in group],
                         buffer[target_id].copy(),  # type: ignore
@@ -406,16 +407,14 @@ def merge_forms(
                         if i != target_id:
                             del buffer[i]
                 except Skip:
+                    logger.info(f"Merging form {id} with forms {group} was skipped.")
                     pass
-                for i in group:
-                    unknown.remove(i)
-        # TODO: Unsure why, but if we use the yield statement a lot of forms get duplicated
-        # with an example dataset of 20 forms, correctly two forms would disappear after the merge, but with yield we end up with over 300 forms
-        # for f in buffer:
-        #     if f in unknown:
-        #         break
-        #     yield buffer[f]
-    return [ele for ele in buffer.values()]
+                unknown.remove(id)
+
+    for f in buffer:
+        if f in unknown:
+            break
+        yield buffer[f]
 
 
 def parse_merge_override(string: str) -> t.Tuple[str, Merger]:
@@ -545,7 +544,7 @@ The following merge functions are predefined, each takes the given entries for o
         mergers[column] = merger
 
     # Parse the homophones instructions!
-    homophone_groups = parse_homophones_old_format(
+    homophone_groups = parse_homophones_report(
         args.merge_report.open("r", encoding="utf8")
     )
     merged_forms = [
