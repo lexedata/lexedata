@@ -230,7 +230,7 @@ def union(
     'a; b'
 
     """
-    if isinstance(sequence[0], str) or sequence is None:
+    if isinstance(sequence[0], str) or sequence[0] is None:
         unique = []
 
         for entry in sequence:
