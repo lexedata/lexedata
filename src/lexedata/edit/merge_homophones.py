@@ -230,10 +230,12 @@ def union(
     'a; b'
 
     """
-    if isinstance(sequence[0], str):
+    if isinstance(sequence[0], str) or sequence is None:
         unique = []
 
         for entry in sequence:
+            if entry is None:
+                continue
             for component in entry.split(SEPARATOR):
                 if component not in unique:
                     unique.append(component)
