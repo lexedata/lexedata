@@ -206,8 +206,9 @@ def concatenate(
     'a; b'
 
     """
-    if isinstance(sequence[0], str):
-        return SEPARATOR.join(sequence)
+    if isinstance(sequence[0], str) or sequence[0] is None:
+        unique = [s if s is not None else "" for s in sequence]
+        return SEPARATOR.join(unique)
     elif isiterable(sequence[0]):
         # Assume list values, and accept the type error if not
         return sum(sequence, [])
@@ -221,19 +222,21 @@ def union(
 ) -> t.Optional[C]:
     """Concatenate all entries, without duplicates
 
-    Strings are concatenated using '; ' as a separator. FOr iterables
+    Strings are concatenated using '; ' as a separator. For iterables
     >>> union([[1, 2], [2, 4]])
     [1, 2, 4]
     >>> union([["a", "b"], ["c", "a"]])
     ['a', 'b', 'c']
-    >>> union(["a", "b", "a"])
-    'a; b'
+    >>> union(["a", "b", "a", None])
+    'a; b; '
 
     """
-    if isinstance(sequence[0], str):
+    if isinstance(sequence[0], str) or sequence[0] is None:
         unique = []
 
         for entry in sequence:
+            if entry is None:
+                entry = ""
             for component in entry.split(SEPARATOR):
                 if component not in unique:
                     unique.append(component)
@@ -243,6 +246,8 @@ def union(
         unique = []
         for entry in sequence:
             for component in entry:
+                if component is None:
+                    component = ""
                 if component not in unique:
                     unique.append(component)
         return unique
@@ -326,9 +331,13 @@ def merge_group(
 ) -> types.Form:
     c_f_id = dataset["FormTable", "id"].name
     c_f_form = dataset["FormTable", "form"].name
+    c_f_language = ""
+    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
+        if foreign_key.reference.resource == dataset["LanguageTable"].url:
+            c_f_language = foreign_key.columnReference[0]
     for column in target:
         # continue if column is id or form, otherwise ids or forms are merged with must be equal
-        if column == c_f_id or column == c_f_form:
+        if column == c_f_id or column == c_f_form or column == c_f_language:
             continue
         try:
             try:
@@ -345,7 +354,6 @@ def merge_group(
             ):
                 continue
             # don't overwrite target value, but add return value from merging function
-            merge_result = merger([form[column] for form in forms], target)
             if target[column] is None:
                 target[column] = merge_result
             else:
@@ -389,12 +397,13 @@ def merge_forms(
     form: types.Form
     for form in data["FormTable"]:
         id: types.Form_ID = form[c_f_id]
-        if form[c_f_id] in merge_targets:
+        if id in merge_targets:
             unknown.add(id)
             target_id = merge_targets[id]
             group = homophone_groups[target_id]
             if all(i in buffer for i in group):
                 try:
+                    # TODO: if group contains several ids to be merged, but one in the middle raises Skip, the rest does not get merged
                     buffer[target_id] = merge_group(
                         [buffer[i] for i in group],
                         buffer[target_id].copy(),  # type: ignore
@@ -402,20 +411,19 @@ def merge_forms(
                         data,
                         logger,
                     )
+
                     for i in group:
                         if i != target_id:
                             del buffer[i]
                 except Skip:
+                    logger.info(f"Merging form {id} with forms {group} was skipped.")
                     pass
-                for i in group:
-                    unknown.remove(i)
-        # TODO: Unsure why, but if we use the yield statement a lot of forms get duplicated
-        # with an example dataset of 20 forms, correctly two forms would disappear after the merge, but with yield we end up with over 300 forms
-        # for f in buffer:
-        #     if f in unknown:
-        #         break
-        #     yield buffer[f]
-    return [ele for ele in buffer.values()]
+                unknown.remove(id)
+
+    for f in buffer:
+        if f in unknown:
+            break
+        yield buffer[f]
 
 
 def parse_merge_override(string: str) -> t.Tuple[str, Merger]:
