@@ -252,9 +252,9 @@ if __name__ == "__main__":
 
     create_concepticon_for_concepts(
         dataset=pycldf.Wordlist.from_metadata(args.metadata),
-        language=args.language,
-        concepticon_glosses=args.concepticon_glosses,
-        concepticon_definition=args.concepticon_definition,
+        language=args.gloss_language,
+        concepticon_glosses=args.add_concept_set_names,
+        concepticon_definition=args.add_definitions,
         overwrite=args.overwrite,
         status_update=args.status_update,
     )
