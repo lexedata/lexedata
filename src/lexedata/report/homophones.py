@@ -6,6 +6,7 @@ accidental homophones
 
 """
 import typing as t
+from pathlib import Path
 
 import networkx as nx
 import pycldf
@@ -15,7 +16,7 @@ from lexedata.util import load_clics
 
 
 def list_homophones(
-    dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger
+    dataset: pycldf.Dataset, output: Path, logger: cli.logging.Logger = cli.logger
 ) -> None:
     clics = load_clics()
     # warn if clics cannot be loaded
@@ -47,29 +48,44 @@ def list_homophones(
     for form in dataset["FormTable"]:
         if form[f_form] == "-" or form[f_form] is None:
             continue
-        homophones[form[f_lang]][form[f_form]].add((form[f_concept], form[f_id]))
-
-    for lang, forms in homophones.items():
-        for form, meanings in forms.items():
-            if len(meanings) == 1:
-                continue
-            clics_nodes = [concepticon.get(concept) for concept, form_id in meanings]
-            if None in clics_nodes:
-                clics_nodes = [c for c in clics_nodes if c]
-                x = "(but at least one concept not found)"
-            else:
-                x = ""
-            if len(clics_nodes) <= 1:
-                print("Unknown:", lang, form, meanings)
-            elif nx.is_connected(clics.subgraph(clics_nodes)):
-                print("Connected:", x, lang, form, meanings)
-            else:
-                print("Unconnected:", x, lang, form, meanings)
+        if isinstance(form[f_concept], list):
+            homophones[form[f_lang]][form[f_form]].add(
+                tuple(form[f_concept]) + (form[f_id],)
+            )
+        else:
+            homophones[form[f_lang]][form[f_form]].add((form[f_concept], form[f_id]))
+    with output.open("w", encoding="utf8", newline="") as out:
+        for lang, forms in homophones.items():
+            for form, meanings in forms.items():
+                if len(meanings) == 1:
+                    continue
+                clics_nodes = {concepticon.get(concept) for concept in meanings}
+                if None in clics_nodes:
+                    x = "(but at least one concept not found):"
+                else:
+                    x = ":"
+                clics_nodes -= {None}
+                if len(clics_nodes) <= 1:
+                    x = "Unknown " + x
+                elif nx.is_connected(clics.subgraph(clics_nodes)):
+                    x = "Connected " + x
+                else:
+                    x = "Unconnected " + x
+                line = f"{lang}, {form}: {x}\n"
+                for ele in meanings:
+                    line += f"\t {ele[-1]}, ({', '.join(ele[0:-1])})\n"
+                out.write(line)
 
 
 if __name__ == "__main__":
-
     parser = cli.parser(description=__doc__)
+    parser.add_argument(
+        "--output-file", help="Path to output file", type=Path, default="homophones.txt"
+    )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    list_homophones(dataset=pycldf.Dataset.from_metadata(args.metadata), logger=logger)
+    list_homophones(
+        dataset=pycldf.Dataset.from_metadata(args.metadata),
+        output=args.output_file,
+        logger=logger,
+    )
