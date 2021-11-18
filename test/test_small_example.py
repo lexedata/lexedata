@@ -526,7 +526,7 @@ def test_create_metadata_valid(interleaved_excel_example):
     ]
 
     path = Path(tempfile.mkdtemp())
-    with (path / "forms.csv").open("w", encoding="utf-8") as form_table_file:
+    with (path / "forms.csv").open("w", encoding="utf-8", newline="") as form_table_file:
         writer = csv.DictWriter(
             form_table_file,
             fieldnames=[
@@ -572,7 +572,7 @@ def test_create_metadata_correct(interleaved_excel_example, formtable_only_examp
     ]
 
     path = Path(tempfile.mkdtemp())
-    with (path / "forms.csv").open("w", encoding="utf-8") as form_table_file:
+    with (path / "forms.csv").open("w", encoding="utf-8", newline="") as form_table_file:
         writer = csv.DictWriter(
             form_table_file,
             fieldnames=[
