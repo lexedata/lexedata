@@ -347,7 +347,22 @@ def merge_group(
             except AttributeError:
                 reference_name = column
             merger = mergers.get(column, mergers.get(reference_name, must_be_equal))
-            merge_result = merger([form[column] for form in forms], target)
+            try:
+                merge_result = merger([form[column] for form in forms], target)
+            except AssertionError:
+                merger_name = merger.__doc__.split("\n")[0]
+                cli.Exit.INVALID_INPUT(
+                    f'Merging forms: {[f[c_f_id] for f in forms]} with target: {target[c_f_id]} \n'
+                    f'The merge function {merger_name} requires the input data to be equal. \n'
+                    f'Given input: {[form[column] for form in forms]}'
+                )
+            except NotImplementedError:
+                merger_name = merger.__doc__.split("\n")[0]
+                cli.Exit.INVALID_INPUT(
+                    f'Merging forms: {[f[c_f_id] for f in forms]} with target: {target[c_f_id]} \n'
+                    f'The merge function {merger_name} is not implemented for type {type(forms[0])}. \n'
+                    f'Given input: {[form[column] for form in forms]}'
+                )
             # make sure nothing in the target is overwritten with None or empty string
             if (merge_result is None or merge_result == "") and (
                 target[column] is not None or target[column] != ""
@@ -384,6 +399,7 @@ def merge_forms(
         for variant in variants
     }
     c_f_id = data["FormTable", "id"].name
+    c_f_form = data["FormTable", "form"].name
 
     for ids_to_merge in homophone_groups.values():
         for form_id in ids_to_merge:
@@ -403,7 +419,8 @@ def merge_forms(
             group = homophone_groups[target_id]
             if all(i in buffer for i in group):
                 try:
-                    # TODO: if group contains several ids to be merged, but one in the middle raises Skip, the rest does not get merged
+                    # check that #forms are all equal
+                    cancel_and_skip([f[c_f_form] for f in group] + [form[c_f_form]])
                     buffer[target_id] = merge_group(
                         [buffer[i] for i in group],
                         buffer[target_id].copy(),  # type: ignore
@@ -416,7 +433,7 @@ def merge_forms(
                         if i != target_id:
                             del buffer[i]
                 except Skip:
-                    logger.info(f"Merging form {id} with forms {group} was skipped.")
+                    logger.info(f"Merging form {id} with forms {[f[c_f_id] for f in group]} was skipped.")
                     pass
                 unknown.remove(id)
 
@@ -547,22 +564,30 @@ The following merge functions are predefined, each takes the given entries for o
     args = parser.parse_args()
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
-    cli.logger = cli.setup_logging(args)
+    logger = cli.setup_logging(args)
     mergers = dict(default_mergers)
     for column, merger in args.merge:
         mergers[column] = merger
-
+    logger.info(
+        "The homophones merger was initialized as follows\n Column : merger function\n" +
+        "\n".join(
+                "{}: {}".format(k, m.__doc__.split("\n")[0])
+                for k, m in mergers
+        )
+    )
     # Parse the homophones instructions!
     homophone_groups = parse_homophones_old_format(
-        args.merge_report.open("r", encoding="utf8")
+        args.merge_report.open("r", encoding="utf8"),
     )
+    if homophone_groups == defaultdict(list):
+        cli.Exit.INVALID_INPUT(f"The provided report {args.report} is empty or does not have the correct format.")
     merged_forms = [
         e
         for e in merge_forms(
             data=pycldf.Dataset.from_metadata(args.metadata),
             mergers=mergers,
             homophone_groups=homophone_groups,
-            logger=cli.logger,
+            logger=logger,
         )
     ]
     dataset.write(FormTable=merged_forms)

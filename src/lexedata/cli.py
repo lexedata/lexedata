@@ -22,6 +22,7 @@ class Exit(IntEnum):
     INVALID_ID = 5
     INVALID_COLUMN_NAME = 6
     INVALID_DATASET = 7
+    INVALID_INPUT = 8
 
     def __call__(self, message: t.Optional[str] = None):
         if message is None:
