@@ -579,11 +579,15 @@ The following merge functions are predefined, each takes the given entries for o
         )
     merged_forms = [
         e
-        for e in merge_forms(
-            data=pycldf.Dataset.from_metadata(args.metadata),
-            mergers=mergers,
-            homophone_groups=homophone_groups,
+        for e in cli.tq(
+            merge_forms(
+                data=pycldf.Dataset.from_metadata(args.metadata),
+                mergers=mergers,
+                homophone_groups=homophone_groups,
+                logger=logger,
+            ),
             logger=logger,
+            task=f"Merging {sum([len(v) for v in homophone_groups.values()])}",
         )
     ]
     dataset.write(FormTable=merged_forms)
