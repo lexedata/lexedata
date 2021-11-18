@@ -1,18 +1,15 @@
 import re
 from pathlib import Path
 from copy import deepcopy
+import logging
 
 import pytest
 
 from lexedata.edit import merge_homophones
 from helper_functions import copy_to_temp
 
-M = merge_homophones.all_mergers
-
 
 # Test the merging functions
-
-
 def test_errors(caplog):
     assert merge_homophones.must_be_equal([1, 1]) == 1
     assert merge_homophones.must_be_equal([]) is None
@@ -137,21 +134,6 @@ def test_constants():
     )
 
 
-@pytest.mark.skip("No function for parsing merge string.")
-def test_parse_merge_string():
-    assert merge_homophones.parse_merge_command("Source:SKIP") == {
-        "Source": merge_homophones.cancel_and_skip
-    }
-    already_parsed = {"Source": merge_homophones.cancel_and_skip}
-    merge_homophones.parse_merge_command("orthographic:VARIANTS", already_parsed)
-    assert already_parsed == {
-        "Source": merge_homophones.cancel_and_skip,
-        "orthographic": merge_homophones.cancel_and_skip,
-    }
-    with pytest.raises(ValueError):
-        merge_homophones.parse_merge_command("orthographic:VARIANTS", already_parsed)
-
-
 def test_preprocessing():
     # Create tmp dataset with #parameterReference without separator
     # Run preprocessing function
@@ -161,10 +143,142 @@ def test_preprocessing():
     ...
 
 
-def test_merge_1():
-    dataset, _ = copy_to_temp(
+@pytest.fixture()
+def copy_dataset():
+    return copy_to_temp(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
+
+
+def test_merge_group_not_implemented(copy_dataset, caplog):
+    dataset, _ = copy_dataset
+    forms = [
+        {
+            "ID": "ache_one",
+            "Language_ID": "ache",
+            "Parameter_ID": 1,
+            "Form": "e.ta.'kɾã",
+            "orthographic": "",
+            "phonemic": "",
+            "phonetic": "",
+            "variants": [],
+            "Segments": [],
+            "Comment": "uno",
+            "procedural_comment": "",
+            "Value": "value1",
+            "Source": ["ache_s4"],
+        },
+        {
+            "ID": "ache_one1",
+            "Language_ID": "ache",
+            "Parameter_ID": 1,
+            "Form": "e.ta.'kɾã",
+            "orthographic": "",
+            "phonemic": "",
+            "phonetic": "",
+            "variants": [],
+            "Segments": [],
+            "Comment": "dos",
+            "procedural_comment": "",
+            "Value": "value1",
+            "Source": ["ache_s4"],
+        },
+    ]
+    target = {
+        "ID": "ache_one",
+        "Language_ID": "ache",
+        "Parameter_ID": 1,
+        "Form": "e.ta.'kɾã",
+        "orthographic": "",
+        "phonemic": "",
+        "phonetic": "",
+        "variants": [],
+        "Segments": [],
+        "Comment": "uno",
+        "procedural_comment": "",
+        "Value": "value1",
+        "Source": ["ache_s4"],
+    }
+    mergers = merge_homophones.default_mergers
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(SystemExit):
+            merge_homophones.merge_group(
+                forms=forms, target=target, mergers=mergers, dataset=dataset
+            )
+            print(target)
+        assert re.search(
+            r".+\nThe merge function union is not implemented for type.+\n.+",
+            caplog.text,
+        )
+
+
+def test_merge_group_assertion_error(copy_dataset, caplog):
+
+    dataset, _ = copy_dataset
+    forms = [
+        {
+            "ID": "ache_one",
+            "Language_ID": "ache",
+            "Parameter_ID": [1],
+            "Form": "e.ta.'kɾã",
+            "orthographic": "",
+            "phonemic": "",
+            "phonetic": "",
+            "variants": [],
+            "Segments": [],
+            "Comment": "uno",
+            "procedural_comment": "",
+            "Value": "value1",
+            "Source": ["ache_s4"],
+        },
+        {
+            "ID": "ache_one1",
+            "Language_ID": "ache",
+            "Parameter_ID": [1],
+            "Form": "e.ta.'kɾã",
+            "orthographic": "",
+            "phonemic": "",
+            "phonetic": "",
+            "variants": [],
+            "Segments": [],
+            "Comment": "dos",
+            "procedural_comment": "uno",
+            "Value": "value1",
+            "Source": ["ache_s4"],
+        },
+    ]
+    target = {
+        "ID": "ache_one",
+        "Language_ID": "ache",
+        "Parameter_ID": [1],
+        "Form": "e.ta.'kɾã",
+        "orthographic": "",
+        "phonemic": "",
+        "phonetic": "",
+        "variants": [],
+        "Segments": [],
+        "Comment": "uno",
+        "procedural_comment": "",
+        "Value": "value1",
+        "Source": ["ache_s4"],
+    }
+    mergers = merge_homophones.default_mergers
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(
+            SystemExit,
+        ) as exit:
+            merge_homophones.merge_group(
+                forms=forms, target=target, mergers=mergers, dataset=dataset
+            )
+            print(exit.value)
+        assert re.search(
+            r".+\nThe merge function must_be_equal requires the input data to be equal.+\n.+",
+            caplog.text,
+        )
+
+
+def test_merge_1(copy_dataset):
+    dataset, _ = copy_dataset
     c_f_id = dataset["FormTable", "id"].name
     first_form = next(dataset["FormTable"].iterdicts())
     first_id = first_form[c_f_id]
@@ -392,7 +506,9 @@ def test_merge_3():
 
 
 def test_parse_merge_override():
-    assert ("Source", merge_homophones.union) == merge_homophones.parse_merge_override("Source:union")
+    assert ("Source", merge_homophones.union) == merge_homophones.parse_merge_override(
+        "Source:union"
+    )
 
 
 def test_order_merge():
@@ -400,4 +516,3 @@ def test_order_merge():
     Someone wrote in their homophones to be merged that 3, 2, 1 shoud be merged.
     Presumably, that means the values in form 3 have precedence, and for concatenate, they should appear in order 3,2,1.
     """
-
