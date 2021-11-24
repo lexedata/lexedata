@@ -293,12 +293,11 @@ def default(
         return must_be_equal(sequence, target)
 
 
-# TODO: It doesn't make sense to merge the forms as they are identical.
-# Also, the columns form and id are skipped when merging
 default_mergers: t.Mapping[str, Merger] = t.DefaultDict(
     lambda: default,
     {
-        # "Form": must_be_equal,
+        "Form": must_be_equal,
+        "form": must_be_equal,
         "languageReference": must_be_equal,
         "Language_ID": must_be_equal,
         "Source": union,
@@ -327,17 +326,11 @@ def merge_group(
         types.Cognate_ID,
         types.Cognateset_ID,
     ],
-    logger: cli.logger,
+    logger: cli.logger = cli.logger,
 ) -> types.Form:
     c_f_id = dataset["FormTable", "id"].name
-    c_f_form = dataset["FormTable", "form"].name
-    c_f_language = ""
-    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
-        if foreign_key.reference.resource == dataset["LanguageTable"].url:
-            c_f_language = foreign_key.columnReference[0]
     for column in target:
-        # continue if column is id or form, otherwise ids or forms are merged with must be equal
-        if column == c_f_id or column == c_f_form or column == c_f_language:
+        if column == c_f_id:
             continue
         try:
             try:
@@ -347,7 +340,22 @@ def merge_group(
             except AttributeError:
                 reference_name = column
             merger = mergers.get(column, mergers.get(reference_name, must_be_equal))
-            merge_result = merger([form[column] for form in forms], target)
+            try:
+                merge_result = merger([form[column] for form in forms], target)
+            except AssertionError:
+                merger_name = merger.__name__
+                cli.Exit.INVALID_INPUT(
+                    f"Merging forms: {[f[c_f_id] for f in forms]} with target: {target[c_f_id]} on column: {column}\n"
+                    f"The merge function {merger_name} requires the input data to be equal. \n"
+                    f"Given input: {[form[column] for form in forms]}"
+                )
+            except NotImplementedError:
+                merger_name = merger.__name__
+                cli.Exit.INVALID_INPUT(
+                    f"Merging forms: {[f[c_f_id] for f in forms]} with target: {target[c_f_id]} \n"
+                    f"The merge function {merger_name} is not implemented for type {type(forms[0])}. \n"
+                    f"Given input: {[form[column] for form in forms]}"
+                )
             # make sure nothing in the target is overwritten with None or empty string
             if (merge_result is None or merge_result == "") and (
                 target[column] is not None or target[column] != ""
@@ -357,9 +365,13 @@ def merge_group(
             if target[column] is None:
                 target[column] = merge_result
             else:
-                if isinstance(target[column], str) and isinstance(merge_result, str):
+                if (
+                    isinstance(target[column], str)
+                    and isinstance(merge_result, str)
+                    and merge_result != target[column]
+                ):
                     target[column] += SEPARATOR + merge_result
-                else:
+                elif target[column] != merge_result:
                     target[column] += merge_result
         except KeyError:
             cli.Exit.INVALID_COLUMN_NAME(f"Column {column} is not in FormTable.")
@@ -403,7 +415,6 @@ def merge_forms(
             group = homophone_groups[target_id]
             if all(i in buffer for i in group):
                 try:
-                    # TODO: if group contains several ids to be merged, but one in the middle raises Skip, the rest does not get merged
                     buffer[target_id] = merge_group(
                         [buffer[i] for i in group],
                         buffer[target_id].copy(),  # type: ignore
@@ -416,7 +427,9 @@ def merge_forms(
                         if i != target_id:
                             del buffer[i]
                 except Skip:
-                    logger.info(f"Merging form {id} with forms {group} was skipped.")
+                    logger.info(
+                        f"Merging form {id} with forms {[f[c_f_id] for f in group]} was skipped."
+                    )
                     pass
                 unknown.remove(id)
 
@@ -547,22 +560,34 @@ The following merge functions are predefined, each takes the given entries for o
     args = parser.parse_args()
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
-    cli.logger = cli.setup_logging(args)
+    logger = cli.setup_logging(args)
+    # TODO: catch error of unkown merger
     mergers = dict(default_mergers)
     for column, merger in args.merge:
         mergers[column] = merger
-
+    logger.info(
+        "The homophones merger was initialized as follows\n Column : merger function\n"
+        + "\n".join("{}: {}".format(k, m.__name__) for k, m in mergers)
+    )
     # Parse the homophones instructions!
     homophone_groups = parse_homophones_old_format(
-        args.merge_report.open("r", encoding="utf8")
+        args.merge_report.open("r", encoding="utf8"),
     )
+    if homophone_groups == defaultdict(list):
+        cli.Exit.INVALID_INPUT(
+            f"The provided report {args.report} is empty or does not have the correct format."
+        )
     merged_forms = [
         e
-        for e in merge_forms(
-            data=pycldf.Dataset.from_metadata(args.metadata),
-            mergers=mergers,
-            homophone_groups=homophone_groups,
-            logger=cli.logger,
+        for e in cli.tq(
+            merge_forms(
+                data=pycldf.Dataset.from_metadata(args.metadata),
+                mergers=mergers,
+                homophone_groups=homophone_groups,
+                logger=logger,
+            ),
+            logger=logger,
+            task=f"Merging {sum([len(v) for v in homophone_groups.values()])}",
         )
     ]
     dataset.write(FormTable=merged_forms)
