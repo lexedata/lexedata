@@ -577,14 +577,24 @@ def alignment_from_braces(text, start=0):
     The "-" character is used as the alignment gap character, so it does not
     count towards the segment slices.
 
-    >>> alignment_from_braces("t{e x}t")
-    ([(2, 3)], ['e', 'x'])
-    >>> alignment_from_braces("{ t - e } x { t }")
-    ([(1, 2), (4, 4)], ['t', '-', 'e', 't'])
+    If opening or closing brackets are missing, the slice goes until the end of the form.
 
+    >>> alignment_from_braces("t{e x t")
+    ([(2, 4)], ['e', 'x', 't'])
+    >>> alignment_from_braces("t e x}t")
+    ([(1, 3)], ['t', 'e', 'x'])
+    >>> alignment_from_braces("t e x t")
+    ([(1, 4)], ['t', 'e', 'x', 't'])
     """
-    before, remainder = text.split("{", 1)
-    content, remainder = remainder.split("}", 1)
+    # TODO: Should we warn/error instead?
+    try:
+        before, remainder = text.split("{", 1)
+    except ValueError:
+        before, remainder = "", text
+    try:
+        content, remainder = remainder.split("}", 1)
+    except ValueError:
+        content, remainder = remainder, ""
     content = content.strip()
     i = len(before.strip())
     j = len([s for s in content.split() if s != "-"])

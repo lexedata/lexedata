@@ -2,7 +2,6 @@
 import re
 import zipfile
 import typing as t
-from pathlib import Path
 
 import unicodedata
 import unidecode as uni
@@ -10,7 +9,8 @@ import networkx
 from lingpy.compare.strings import ldn_swap
 
 import csvw
-from lexedata.cli import tq
+import pkg_resources
+from lexedata.cli import tq, logger
 
 from ..types import KeyKeyDict
 from . import fs
@@ -77,22 +77,15 @@ def edit_distance(text1: str, text2: str) -> float:
 
 
 def load_clics():
-    gml_file = (
-        Path(__file__).parent.parent
-        / "data/clics-clics3-97832b5/clics3-network.gml.zip"
-    )
-    if not gml_file.exists():
-        import urllib.request
+    """Load CLICS as networkx Graph.
 
-        file_name, headers = urllib.request.urlretrieve(
-            "https://zenodo.org/record/3687530/files/clics/clics3-v1.1.zip?download=1"
-        )
-        zfobj = zipfile.ZipFile(file_name)
-        zfobj.extract(
-            "clics-clics3-97832b5/clics3-network.gml.zip",
-            Path(__file__).parent.parent / "data/",
-        )
-    gml = zipfile.ZipFile(gml_file).open("graphs/network-3-families.gml", "r")
+    Lexedata packages the CLICS colexification graph in GML format from
+    https://zenodo.org/record/3687530/files/clics/clics3-v1.1.zip?download=1
+
+    """
+    gml = zipfile.ZipFile(
+        pkg_resources.resource_stream("lexedata", "data/clics3-network.gml.zip")
+    ).open("graphs/network-3-families.gml", "r")
     return networkx.parse_gml(line.decode("utf-8") for line in gml)
 
 
@@ -193,3 +186,11 @@ def cache_table(
             total=dataset[table].common_props.get("dc:extent"),
         )
     }
+
+
+def normalize_table_name(name, dataset, logger=logger):
+    try:
+        return str(dataset[name].url)
+    except KeyError:
+        logger.warning("Could not find table {}".format(name))
+        return None
