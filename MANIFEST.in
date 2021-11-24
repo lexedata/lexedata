@@ -1,1 +1,1 @@
-recursive-include lexedata/* clics3-network.gml.zip
+include src/lexedata/data/clics3-network.gml.zip
