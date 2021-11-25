@@ -46,34 +46,38 @@ Lexedata is a set of tools for managing, editing, and annotating large lexical d
 Lexedata is open access software in development. Please report any problems and suggest any improvements you would like to see by [opening an issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue#creating-an-issue-from-a-repository) on the [Lexedata GitHub repository](https://github.com/Anaphory/lexedata/tree/master).
 
 ### 1.1 The CLDF format
-The CLDF format is designed for sharing and reusing comparative linguistic data. A CLDF lexical dataset consists of a series of .csv files, a metadata .json file describing the structure of each .csv file and their inter-relationships, and a .bib file containing the relevant sources. A typical CLDF lexical dataset consists of the following .csv files: languages.csv, concepts.csv, forms.csv, cognatesets.csv, and cognates.csv. Not all files are necessary: the bare minimum for a valid CLDF dataset is forms.csv. However, lexedata requires a metadata json file for almost every operation.
+The CLDF format is designed for sharing and reusing comparative linguistic data. A CLDF lexical dataset consists of a series of .csv files, a metadata .json file describing the structure of each .csv file and their inter-relationships, and a .bib file containing the relevant sources. A typical CLDF lexical dataset consists of the following .csv files: languages.csv, parameters.csv (listing concepts), forms.csv, cognatesets.csv, and cognates.csv. Not all files are necessary: the bare minimum for a valid CLDF dataset is forms.csv. However, lexedata requires a metadata json file for almost every operation.
 
 Each .csv file has to have an ID column. Below, we briefly describe the typical files of a lexical CLDF dataset and how they interact with Lexedata when necessary. For each file, you can find below the necessary columns and typical columns. You can always add any custom columns as needed for your dataset. There is also the possibility to add further .csv files depending on your needs. For more information on the CLDF format, you can refer to https://cldf.clld.org/.
 
 We recommend that you keep all these files in one folder which is versioned with git. You can use Github or Gitlab for this purpose, see section 1.3 below.
 
-#### 1.1.1 Languages.csv
-Languages.csv contains the different varieties included in your lexical dataset and their metadata. Every row is a variety.
+#### 1.1.1 languages.csv
+The file `languages.csv` contains the different varieties included in your lexical dataset and their metadata. Every row is a variety.
 Necessary columns: Language_ID
 Typical columns: Language_name
 
 
-#### 1.1.2 Concepts.csv
-Concepts.csv contains the different concepts (meanings) included in your lexical dataset. Every row is a concept.
-Necessary columns: Concept_ID
-Typical columns: Concept_name, Definition, Concepticon_ID
+#### 1.1.2 parameters.csv
+The `parameters.csv` (sometimes also named `concepts.csv` in datasets with manually created metadata) contains the different concepts (meanings) included in your lexical dataset. Every row is a concept.
 
-#### 1.1.3 Forms.csv
-Forms.csv contains all the different forms included in your dataset. Every row is a form. To add page numbers for the sources in the cldf format, you should use the format source[page]. You can have different page numbers and page ranges within the square brackets (e.g. smith2003[45, 48, 52-56]).
-Necessary columns: Form_ID, Form, Concept_ID, Language_ID, Source
-Typical columns: Comment, Segments
+ - Necessary columns: Concept_ID
+ - Typical columns: Concept_name, Definition, Concepticon_ID
 
-#### 1.1.4 Cognatesets.csv
+#### 1.1.3 forms.csv
+The FormTable, contained in a file usually named `forms.csv`, is the core of a lexical dataset.
+A well-structured `forms.csv` on its own, even without accompanying metadata, can already be understood as a lexical dataset by many CLDF-aware applications.
+The table contains all the different forms included in your dataset. Every row is a form. To add page numbers for the sources in the cldf format, you should use the format source[page]. You can have different page numbers and page ranges within the square brackets (e.g. `smith2003[45, 48, 52-56]`).
+
+ - Necessary columns: Form_ID, Form, Concept_ID, Language_ID
+ - Typical columns: Comment, Segments, Source
+
+#### 1.1.4 cognatesets.csv
 Cognatesets.csv contains the cognate sets included in your dataset and their metadata. Every row is a cognate set. Note that, depending on the dataset, cognate set here can either mean cross-concept cognate set (all forms descending from the same protoform), or root-meaning set (all forms descending from the same protoform that have the same meaning). Lexedata is capable of automatically deriving root-meaning sets from cross-concept cognate sets, but the reverse is of course not possible.
 Necessary columns: Cognateset_ID
 Typical columns: Comment, Source
 
-#### 1.1.5 Cognates.csv
+#### 1.1.5 cognates.csv
 Cognates.csv contains all the individual cognate judgements included in the dataset, i.e. it links every form to the cognateset it belongs to. Note that it is possible to have forms belonging to multiple cognate sets (e.g. to account for partial cognacy). 
 <!--TO DO: add reference to somewhere, where more complex datasets are explained. 
  NCP: what was the intent of this comment? Should we have a section on partial cognacy?-->
@@ -81,10 +85,10 @@ Necessary columns: Cognate_ID, Form_ID, Cognateset_ID
 Typical columns: Comment
 
 #### 1.1.6 sources.bib
-This is a typical .bib file containing references to all sources used in the dataset. The handle (unique code) of each reference should be identical to the entry in the Source column of the forms.csv.
+This is a BibTeX file containing references to all sources used in the dataset. The entries in the Source column of the forms.csv (or any other table) must be identical to a handle (unique code) of a reference in the `sources.bib`.
 
 #### 1.1.7 Wordlist-metadata.json
-The Wordlist-metadata.json file contains a detailed description of all the .csv files, their columns and their interrelationships. It is not required file for a CLDF dataset, but it is necessary for the vast majority of operations using lexedata. For simple datasets, lexedata can create automatically a json file (see section XXX). However, for more complex datasets, you would need to provide one yourself.
+The Wordlist-metadata.json file contains a detailed description of all the CSV files, their columns and their interrelationships. It is not required file for a CLDF dataset, but it is necessary for the vast majority of operations using lexedata. For simple datasets, lexedata can create automatically a json file (see section XXX). However, for more complex datasets, you would need to provide one yourself.
 <!--- TODO: add some support for making a json file--->
 
 For an example of a simple .json file, see XXX. Every change to the structure of the dataset (e.g. insertion or deletion of a column in any file) needs to be reflected in the .json file for the dataset to be a valid cldf dataset.
@@ -156,7 +160,7 @@ If you are ever stuck with the python prompt, which starts with `>>>`, in
 order to exit Python type `quit()`.
 
 3. Install the lexedata package.
-In your terminal window type `pip lexedata`. 
+In your terminal window type `pip install lexedata`. 
 <!---NCP: is this still the case for the new releases? --->
 This will install lexedata and all its dependencies on your computer and make it
 automatically updatable every time you pull a new version of the Lexedata
@@ -201,7 +205,7 @@ In order to import a dataset of the "interleaved" format you should use the comm
 
 ### 4.1 Linking concepts to concepticon
 Lexedata can automatically link the concepts of a dataset with concept sets in the Concepticon (https://concepticon.clld.org/). In order to use this functionality, navigate to your depository and type ```python -m lexedata.enrich.guess_concepticon Wordlist-metadata.json```.
-Your concepts.csv will now have two new columns: Concepticon ID and Concepticon Name. We recommend that you manually inspect these links for errors. 
+Your ParameterTable will now have two new columns: Concepticon ID and Concepticon Name. We recommend that you manually inspect these links for errors. 
 
 
 ### 4.2 Automatic cognate detection
@@ -298,7 +302,7 @@ repository.
 
 ### 7.1 Editing raw data through GitHub
 This section describes how to edit raw data through GitHub. By raw data we mean any part of the data that are not cognate set judgements, alignments and related annotations. While it is possible to edit cognate set assignments and annotations this way as well, we recommend that you use the cognate table for this purpose (see section XXX). 
-Raw data are contained in three .csv files in the cldf format: concepts.csv, forms.csv, and languages.csv. Note that for small .csv files, instead of following the steps below, you can edit them directly through GitHub's web interface. 
+Raw data are contained in three .csv files in the cldf format: `parameters.csv`, `forms.csv`, and `languages.csv`. Note that for small .csv files, instead of following the steps below, you can edit them directly through GitHub's web interface. 
 
 1. pull the dataset repository from GitHub
 While in the dataset repository, type `git pull`. 

@@ -1,3 +1,4 @@
+"""Load #cognate and #cognatesets from excel file into CLDF"""
 import re
 import typing as t
 
@@ -121,9 +122,7 @@ def import_cognates_from_excel(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(
-        description="Load #cognate and #cognatesets from excel file into CLDF"
-    )
+    parser = cli.parser(description=__doc__)
     parser.add_argument(
         "cogsets",
         nargs="?",

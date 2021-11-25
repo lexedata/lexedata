@@ -8,4 +8,7 @@ venv
 .tox
 .idea*
 
+# Sphinx generated files
+docs/build-docs/
+
 src/lexedata/data/clics-clics3-97832b5/clics3-network.gml.zip
