@@ -156,7 +156,7 @@ If you are ever stuck with the python prompt, which starts with `>>>`, in
 order to exit Python type `quit()`.
 
 3. Install the lexedata package.
-In your terminal window type `pip lexedata`. 
+In your terminal window type `pip install lexedata`. 
 <!---NCP: is this still the case for the new releases? --->
 This will install lexedata and all its dependencies on your computer and make it
 automatically updatable every time you pull a new version of the Lexedata
