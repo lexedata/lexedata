@@ -3,7 +3,7 @@
   * [1. Introduction](#1-introduction)
     + [1.1 The CLDF format](#11-the-cldf-format)
       - [1.1.1 Languages.csv](#111-languagescsv)
-      - [1.1.2 Concepts.csv](#112-conceptscsv)
+      - [1.1.2 Parameters.csv](#112-parameterscsv)
       - [1.1.3 Forms.csv](#113-formscsv)
       - [1.1.4 Cognatesets.csv](#114-cognatesetscsv)
       - [1.1.5 Cognates.csv](#115-cognatescsv)
