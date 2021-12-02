@@ -25,6 +25,10 @@ if __name__ == "__main__":
     dataset = pycldf.Dataset.from_metadata(args.metadata)
     id_column = dataset[args.table, "id"].name
     ids = {row[id_column] for row in dataset[args.table]}
+    if args.original not in ids:
+        logger.error("The original ID {args.original} is not an ID in {args.table}.")
+        cli.Exit.INVALID_ID()
+
     if args.replacement in ids and not args.merge:
         logger.error(
             "The replacement ID {args.replacement} is already an ID in {args.table}. If you want to force conflation of the two rows in tables that reference this one, use --merge."
