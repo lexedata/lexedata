@@ -138,7 +138,7 @@ def update_ids(
     rows = []
     for row in cli.tq(
         ds[table],
-        task=f"Updating ids of {table}",
+        task=f"Updating ids of {table.url.string}",
         total=ds[table].common_props.get("dc:extent"),
     ):
         row[c_id.name] = mapping.get(row[c_id.name], row[c_id.name])
