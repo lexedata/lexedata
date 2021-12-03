@@ -8,11 +8,15 @@ if __name__ == "__main__":
     parser = cli.parser(
         description="Replace the ID of an object (eg. a language ID) in the wordlist"
     )
-    parser.add_argument("table", type=str, help="The table to apply the replacement to")
     parser.add_argument(
-        "original", type=str, help="Name of the original column to be replaced"
+        "table", type=str, help="The table to apply the replacement to", metavar="TABLE"
     )
-    parser.add_argument("replacement", type=str, help="Name of the replacement column")
+    parser.add_argument(
+        "original", type=str, help="Original ID to be replaced", metavar="ORIGINAL"
+    )
+    parser.add_argument(
+        "replacement", type=str, help="New ID of ORIGINAL", metavar="REPLACEMENT"
+    )
     parser.add_argument(
         "--merge",
         action="store_true",
