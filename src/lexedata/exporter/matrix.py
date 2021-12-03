@@ -24,6 +24,11 @@ if __name__ == "__main__":
         help="File path for the generated cognate excel file.",
     )
     parser.add_argument(
+        "--all-concepts",
+        action="store_true",
+        help="Export all concepts (default: export only core concepts)",
+    )
+    parser.add_argument(
         "--sort-languages-by",
         help="The name of a column in the LanguageTable to sort languages by in the output",
     )
@@ -37,6 +42,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     cli.setup_logging(args)
+
+    if not args.all_concepts:
+        raise NotImplementedError
 
     E = ExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
