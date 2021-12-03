@@ -24,9 +24,9 @@ if __name__ == "__main__":
         help="File path for the generated cognate excel file.",
     )
     parser.add_argument(
-        "--all-concepts",
-        action="store_true",
-        help="Export all concepts (default: export only core concepts)",
+        "--concept-list",
+        type=Path,
+        help="Output only the concepts listed in this file",
     )
     parser.add_argument(
         "--sort-languages-by",
@@ -41,9 +41,12 @@ if __name__ == "__main__":
         " (default: https://example.org/lexicon/{:})",
     )
     args = parser.parse_args()
-    cli.setup_logging(args)
+    logger = cli.setup_logging(args)
 
-    if not args.all_concepts:
+    if args.concept_list:
+        if not args.concept_list.exists():
+            logger.critical("Concept list file %s not found.", args.concept_list)
+            cli.Exit.FILE_NOT_FOUND()
         raise NotImplementedError
 
     E = ExcelWriter(
