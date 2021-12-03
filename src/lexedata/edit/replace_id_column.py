@@ -9,8 +9,15 @@ if __name__ == "__main__":
     parser = cli.parser(
         description="Replace the ID column of a table by some other column"
     )
-    parser.add_argument("table", type=str, help="The table to apply the replacement to")
-    parser.add_argument("replacement", type=str, help="Name of the replacement column")
+    parser.add_argument(
+        "table", type=str, help="The table to apply the replacement to", metavar="TABLE"
+    )
+    parser.add_argument(
+        "replacement",
+        type=str,
+        help="Name of the replacement column",
+        metavar="REPLACEMENT",
+    )
     parser.add_argument(
         "--merge",
         action="store_true",
