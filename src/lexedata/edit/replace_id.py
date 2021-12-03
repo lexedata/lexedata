@@ -6,13 +6,13 @@ from lexedata.edit.simplify_ids import update_ids
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Replace the ID of an object (eg. a language ID) in the wordlist"
+        description="Replace the ID of an object (e.g. a language ID) in the wordlist"
     )
     parser.add_argument("table", type=str, help="The table to apply the replacement to")
     parser.add_argument(
-        "original", type=str, help="Name of the original column to be replaced"
+        "original", type=str, help="the original id"
     )
-    parser.add_argument("replacement", type=str, help="Name of the replacement column")
+    parser.add_argument("replacement", type=str, help="the replacement id")
     parser.add_argument(
         "--merge",
         action="store_true",
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     ids = {row[id_column] for row in dataset[args.table]}
     if args.replacement in ids and not args.merge:
         logger.error(
-            "The replacement ID {args.replacement} is already an ID in {args.table}. If you want to force conflation of the two rows in tables that reference this one, use --merge."
+            "The replacement ID {args.replacement} is already an ID in {args.table}. If you want to force conflation of the two IDs, use --merge."
         )
         cli.Exit.INVALID_ID()
 
