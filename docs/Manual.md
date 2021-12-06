@@ -26,7 +26,7 @@
     + [4.2 Automatic cognate detection](#42-automatic-cognate-detection)
     + [4.3 Adding central concepts to cognate sets](#43-adding-central-concepts-to-cognate-sets)
     + [4.4 Segment forms using CLTS](#44-segment-forms-using-clts)
-    + [4.5 How to merge concepts](#45-how-to-merge-concepts)
+    + [4.5 How to replace IDs](#45-how-to-replace-ids)
   * [5. Reporting and checking data integrity (lexedata.report)](#5-reporting-and-checking-data-integrity-lexedatareport)
     + [5.1 CLDF format validation](#51-cldf-format-validation)
     + [5.2 non-concatenative morphology](#52-non-concatenative-morphology)
@@ -37,8 +37,7 @@
     + [6.2 Edictor export-import loop](#62-edictor-export-import-loop)
     + [6.3 Comparative Wordlist export](#63-comparative-wordlist-export)
     + [6.4 Exporting coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)](#64-exporting-coded-data-for-phylogenetic-analyses-lexedataexporterphylogenetics)
-  * [7. How to edit data](#7-how-to-edit-data)
-    + [7.1 Editing raw data through GitHub](#71-editing-raw-data-through-github)
+  * [7. How to edit raw data](#7-how-to-edit-raw-data)
 
 ## 1. Introduction
 Lexedata is a set of tools for managing, editing, and annotating large lexical datasets in CLDF. In order to use lexedata you need to be somewhat familiar with the command line and git. Below we give the basics on the CLDF data format, command line navigation and git that you need to get started, as well as some useful links for more information. Finally we describe how commands are organized in lexedata, and we introduce some terminology we will be using in the manual.
@@ -129,10 +128,10 @@ To ensure dataset integrity, we recommend running `cldf validate Wordlist-metada
 ### 1.4 Lexedata commands
 
 You can access the Lexedata tools through commands in your terminal. Every command has the following general form:
-`python -m lexedata.[package_name].[command_name] --[optional argument] [positional argument]`
-Elements in brackets above need to be replaced depending on the exact operation you want to perform on your dataset (without brackets). Also, there could be multiple positional arguments and optional arguments (with only a space as a separator), as well as commands that take only positional or only optional arguments.  Positional arguments are not preceded by a hyphen and need to occur in strict order (if there are more than two of them). Optional arguments are always preceded by two hyphens and they can occur in any order after the command. Some optional arguments have a short name of one letter in addition to their regular name and in this case they are preceded by one hyphen (e.g. to access the help of any command you can use the optional argument `--help` or `-h`). Many positional arguments and most optional arguments have default settings. Commands in Lexedata are organized in four packages: lexedata.importer, lexedata.edit, lexedata.report, and lexedata.exporter. (In case you are wondering why they are not called "import" and "export", these words have special status in Python, so they were not available!). If a command name consists of more than one word, the words are separated with an underscore. Optional arguments consisting of more than one word also include underscores. If you need to replace a bracket with something including a space, enclose it in quotes (""). 
+`python -m lexedata.<i>package.command<i> [--*optional_argument* VALUE] [--*switch*] POSITIONAL ARGUMENTS`
+Elements in italics above need to be replaced depending on the exact command you are using. Elements in capital letters need to be replaced depending on the exact operation you want to perform on your dataset. Optional elements are enclosed in brackets. There could be multiple positional arguments and optional arguments (with only a space as a separator), as well as commands that take only positional or only optional arguments.  Positional arguments are not preceded by a hyphen and need to occur in strict order (if there are more than two of them). Optional arguments and switches are always preceded by two hyphens and they can occur in any order after the command. Optional arguments require a value (often there is a default value), while switches do not. Some optional arguments or switches have a short name of one letter in addition to their regular name and in this case they are preceded by one hyphen (e.g. to access the help of any command you can use the switch `--help` or `-h`). Many positional arguments and most optional arguments have default settings. Commands in Lexedata are organized in four packages: lexedata.importer, lexedata.edit, lexedata.report, and lexedata.exporter. (In case you are wondering why they are not called "import" and "export", these words have special status in Python, so they were not available!). If a command name consists of more than one word, the words are separated with an underscore. Optional arguments and switches consisting of more than one word also include underscores. If you need to replace an element in capital letters with something including a space, enclose it in quotes (""). 
 
-Probably the most important thing to know before you get started with Lexedata is how to get help. You can access the help of every command by typing `python -m lexedata.[package_name].[command_name] --help`. The help explains how the command is used, what it does and lists all the positional and optional arguments, along with their default values if any.
+Probably the most important thing to know before you get started with Lexedata is how to get help. You can access the help of every command by typing `python -m lexedata.*package.command* --help`. The help explains how the command is used, what it does and lists all the positional and optional arguments, along with their default values if any.
 
 ### 1.5 Some Terminology
 
@@ -228,7 +227,9 @@ Optional arguments:
 <!-- Should this section be before the automatic cognate detection? Or when the automatic cognate detection is done it automatically segments as well? Finally, should we add more info about CLTS? Do you like this way of listing stuff? should I do it everywhere?-->
 
 ### 4.5 How to replace IDs
-Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, etc), such as if you decide to conflate two concepts because they are not distinct in the languages under study, or two doculects that you want to consider as one. Lexedata can replace the id of an object and propagate this change in all tables where it is used as a foreign key (i.e. to link back to that object). The relevant command is ```python -m lexedata.edit.replace_id [table] [original id] [replacement_id]```. If you intend to merge two IDs, you need to use the optional argument ```--merge```.
+Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, etc), e.g. if accidentally you have used the same ID twice. Lexedata can replace the id of an object and propagate this change in all tables where it is used as a foreign key (i.e. to link back to that object). The relevant command is ```python -m lexedata.edit.replace_id TABLE ORIGINAL_ID REPLACEMENT_ID```. If you intend to merge two IDs, e.g. if you decide to conflate two concepts because they are not distinct in the languages under study, or two doculects that you want to consider as one. you need to use the optional argument ```--merge```. Keep in mind that lexedata cannot automatically merge two or more rows in the table in question, so if for example you merged two Language IDs, then you will have two rows in languages.csv with identical IDs. This will cause a warning if you try to validate your dataset (see section [5.1] (#51-cldf-format-validation). If you want to completely merge the rows, you need to do this by opening the corresponding csv in a spreadsheet or text editor (see section [7] (#7-how-to-edit-raw-data). 
+
+In case you want to replace an entire ID column of a table, then you need to add the new intended ID column to the table and use the command ```python -m lexedata.edit.replace_id_column TABLE NEW_ID_COLUMN```. 
 
 ## 5. Reporting and checking data integrity (lexedata.report)
 ### 5.1 CLDF format validation
@@ -296,12 +297,7 @@ editing of cognate steps, start again at step 1.
 ### 6.4 Exporting coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)
 Lexedata is a powerful tool to prepare linguistic data for phylogenetic analyses. It can be used to export a cldf dataset containing cognate judgements as a coded matrix for phylogenetic analyses to be used by standard phylogenetic software (such as BEAST, MrBayes or revBayes). Different formats are supported, such as nexus, csv, a beast-friendly xml format, as well as a raw alignment format (similar to FASTA format used in bioinformatics). Lexedata also supports different coding methods for phylogenetic analyses: root-meaning sets, cross-meaning cognate sets, and multistate coding. Finally, you can use Lexedata to filter and export a portion of your dataset for phylogenetic analyses, e.g. if some languages or concepts are not fully coded yet, or if you want to exclude specific cognate sets that are not reviewed yet.
 
-## 7. How to edit data
-There are two ways to edit data: through the web interface (under
-construction) and through editing the .csv files in your corresponding GitHub
-repository.
-
-### 7.1 Editing raw data through GitHub
+## 7. How to edit raw data
 This section describes how to edit raw data through GitHub. By raw data we mean any part of the data that are not cognate set judgements, alignments and related annotations. While it is possible to edit cognate set assignments and annotations this way as well, we recommend that you use the cognate table for this purpose (see section XXX). 
 Raw data are contained in three .csv files in the cldf format: `parameters.csv`, `forms.csv`, and `languages.csv`. Note that for small .csv files, instead of following the steps below, you can edit them directly through GitHub's web interface. 
 
