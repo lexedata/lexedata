@@ -229,7 +229,7 @@ Optional arguments:
 ### 4.5 How to replace IDs
 Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, etc), e.g. if accidentally you have used the same ID twice. Lexedata can replace the id of an object and propagate this change in all tables where it is used as a foreign key (i.e. to link back to that object). The relevant command is ```python -m lexedata.edit.replace_id TABLE ORIGINAL_ID REPLACEMENT_ID```. If you intend to merge two IDs, e.g. if you decide to conflate two concepts because they are not distinct in the languages under study, or two doculects that you want to consider as one. you need to use the optional argument ```--merge```. Keep in mind that lexedata cannot automatically merge two or more rows in the table in question, so if for example you merged two Language IDs, then you will have two rows in languages.csv with identical IDs. This will cause a warning if you try to validate your dataset (see section [5.1] (#51-cldf-format-validation). If you want to completely merge the rows, you need to do this by opening the corresponding csv in a spreadsheet or text editor (see section [7] (#7-how-to-edit-raw-data). 
 
-In case you want to replace an entire ID column of a table, then you need to add the new intended ID column to the table and use the command ```python -m lexedata.edit.replace_id_column TABLE NEW_ID_COLUMN```. 
+In case you want to replace an entire ID column of a table, then you need to add the new intended ID column to the table and use the command ```python -m lexedata.edit.replace_id_column TABLE REPLACEMENT```.
 
 ## 5. Reporting and checking data integrity (lexedata.report)
 ### 5.1 CLDF format validation
