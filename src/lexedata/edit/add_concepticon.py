@@ -1,3 +1,10 @@
+"""Guess which Concepticon concepts the entries in the ParameterTable refer to.
+
+Fill the Concepticon_ID (or generally, #concepticonReference) column of the
+dateset's ParameterTable with best guesses for Concepticon IDs, based on gloss
+columns in potentially different languages.
+
+"""
 import collections
 import typing as t
 
@@ -211,7 +218,9 @@ def create_concepticon_for_concepts(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description="Adds Concepticon reference to #parameterTable")
+    parser = cli.parser(
+        description=__doc__.split("\n\n")[0], epilog=__doc__.split("\n\n", 1)[1]
+    )
     parser.add_argument(
         "--overwrite",
         action="store_true",
