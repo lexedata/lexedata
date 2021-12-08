@@ -4,12 +4,19 @@ import typing as t
 import pycldf
 
 import lexedata.cli as cli
-from lexedata.util import parse_segment_slices
+from lexedata.util import parse_segment_slices, indices_to_segment_slice
+from lexedata import types
 
 
 def segment_to_cognateset(
-    dataset: pycldf.Dataset,
-    cognatesets: t.Optional[t.Iterable],
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+    cognatesets: t.Optional[t.Iterable[types.Cognateset_ID]],
     logger: cli.logging.Logger = cli.logger,
 ):
     # required fields
@@ -21,7 +28,7 @@ def segment_to_cognateset(
     c_cognate_slice = dataset.column_names.cognates.segmentSlice
 
     forms = {f[c_form_id]: f for f in dataset["FormTable"]}
-    cognateset_cache: t.Mapping[t.Optional[str], int]
+    cognateset_cache: t.Mapping[t.Optional[types.Cognateset_ID], int]
     if "CognatesetTable" in dataset:
         cognateset_cache = {
             cognateset["ID"]: c
@@ -36,7 +43,9 @@ def segment_to_cognateset(
 
     cognateset_cache[None] = 0
 
-    which_segment_belongs_to_which_cognateset: t.Dict[str, t.List[t.Set[str]]] = {}
+    which_segment_belongs_to_which_cognateset: t.Dict[
+        str, t.List[t.Set[types.Cognateset_ID]]
+    ] = {}
     for j in dataset["CognateTable"]:
         if j[c_cognate_form] in forms and cognateset_cache.get(j[c_cognate_cognateset]):
             form = forms[j[c_cognate_form]]
@@ -52,6 +61,9 @@ def segment_to_cognateset(
                 )
                 continue
             old_s = None
+            already: t.MutableMapping[types.Cognateset_ID, t.List[int]] = t.DefaultDict(
+                list
+            )
             for s in segments_judged:
                 if old_s is not None and old_s + 1 != s:
                     logger.warning(
@@ -66,11 +78,14 @@ def segment_to_cognateset(
                         f"In judgement {j[c_cognate_id]}, segment slice {j[c_cognate_slice]} points outside valid range 1:{len(form[c_form_segments])}."
                     )
                     continue
-                if cognatesets:
-                    logger.warning(
-                        f"In judgement {j[c_cognate_id]}, segment {s+1} is associated with cognate set {j[c_cognate_cognateset]}, but was already in {cognatesets}."
-                    )
+                for cs in cognatesets:
+                    already[cs].append(s)
                 cognatesets.add(j[c_cognate_cognateset])
+            for cs, segments in already.items():
+                segments_string = ",".join(indices_to_segment_slice(segments))
+                logger.warning(
+                    f"In judgement {j[c_cognate_id]}, segments {segments_string} are associated with cognate set {j[c_cognate_cognateset]}, but was already in {cognatesets}."
+                )
 
     return which_segment_belongs_to_which_cognateset
 

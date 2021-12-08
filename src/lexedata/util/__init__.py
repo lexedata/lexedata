@@ -100,6 +100,9 @@ def parse_segment_slices(
     >>> list(parse_segment_slices(["1:3"]))
     [0, 1, 2]
 
+    >>> list(parse_segment_slices(["1", "2:4"]))
+    [0, 1, 2, 3]
+
     >>> list(parse_segment_slices(["1:3", "2:4"]))
     [0, 1, 2, 1, 2, 3]
 
@@ -111,7 +114,10 @@ def parse_segment_slices(
     """
     i = -1  # Set it to the value before the first possible segment slice start
     for startend in segment_slices:
-        start_str, end_str = startend.split(":")
+        try:
+            start_str, end_str = startend.split(":")
+        except ValueError:
+            start_str, end_str = startend, startend
         start = int(start_str)
         end = int(end_str)
         if end < start:
@@ -120,6 +126,41 @@ def parse_segment_slices(
             raise ValueError("Segment slices are not ordered as required.")
         for i in range(start - 1, end):
             yield i
+
+
+def indices_to_segment_slice(
+    indices: t.Iterable[int], enforce_ordered=False
+) -> t.Sequence[str]:
+    """Turn component indices into a segment slice representation
+
+    This is the inverse of parse_segment_slices.
+
+    NOTE: Segment slices are 1-based, inclusive; Python indices are 0-based
+    (and if given as ranges, they are also exclusive).
+
+    >>> indices_to_segment_slice(parse_segment_slices(["1:3"]))
+    ["1:3"]
+    >>> indices_to_segment_slice([0, 1, 2])
+    ["1:3"]
+    >>> indices_to_segment_slice([0, 1, 3])
+    ["1:2", "4:4"]
+    """
+    slices = []
+    start_range = 0
+    prev = -1
+    for i in indices:
+        if prev + 1 == i:
+            prev = i
+            continue
+        if i <= prev:
+            if enforce_ordered:
+                raise ValueError("Indices are not ordered as required.")
+        if prev != -1:
+            slices.append("{:d}:{:d}".format(start_range + 1, prev + 1))
+        start_range = i
+        prev = i
+    slices.append("{:d}:{:d}".format(start_range + 1, prev + 1))
+    return slices
 
 
 def cache_table(
