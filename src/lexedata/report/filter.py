@@ -44,12 +44,12 @@ def filter(
 ) -> t.Iterator[R]:
     """Return all rows matching a filter
 
-    >>> filter([
+    >>> list(filter([
     ...   {"C": "A"},
     ...   {"C": "An"},
     ...   {"C": "T"},
     ...   {"C": "E"},
-    ... ], "C", re.compile("A"), True)
+    ... ], "C", re.compile("A"), True))
     [{'C': 'A'}, {'C': 'An'}]
     """
     n_row = 0
