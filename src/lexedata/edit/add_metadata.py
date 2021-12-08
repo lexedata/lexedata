@@ -15,6 +15,10 @@ if __name__ == "__main__":
 
     ds = add_metadata(fname)
 
+    if args.metadata.exists():
+        logger.critical("Metadata file %s already exists!", args.metadata)
+        cli.Exit.CLI_ARGUMENT_ERROR()
+
     ds.write_metadata(args.metadata)
 
     ds.validate(log=logger)
