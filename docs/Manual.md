@@ -183,7 +183,7 @@ python -m lexedata.importer.excel_long_format [path to excel file] --metadata [p
 ```
 You can exclude individual sheets from being imported by using the option `--exclude-sheet [sheet name]`.
 
-The long format assumes that each type of information is in a separate column and the content of a cell cannot be separated further. Excel comments (or notes) are not supported with this importer script.
+The long format assumes that each type of information is in a separate column and the content of a cell cannot be separated further in different cells (however, fields including separators are properly recognized provided that you have described them in the json file). Excel comments (or notes) are not supported with this importer script.
 
 #### 3.1.2 Importing a lexical dataset using the "matrix" format
 
@@ -198,38 +198,54 @@ In order to import a dataset of the "interleaved" format you should use the comm
 ```python -m lexedata.importer.excel_interleaved ``` followed by the name of the excel file containing the dataset. Only a forms.csv file will be created, which contains a Cognateset_ID column with cognate codes. This format is similar to the LingPy format. Note that for any further use of this CLDF dataset with lexedata, you need to create a json file (see sections XXX to create your own json file by hand or automatically respectively).
 
 ### 3.2 Adding a new language/new data to an existing lexical dataset
+The importation script using the long format can be used to add new data to an existing dataset, as in the case of adding an new variety or further lexical items for an existing variety (see section [3.1.1] (311-importing-a-lexical-dataset-using-the-long-format)). 
 
+## 4. Editing a CLDF dataset (lexedata.edit)
+The "edit" package includes a series of scripts to automate common targeted or batch edits in a lexical dataset. It also included scripts that create links to Concepticon (TODO: add link) and integrate with LingPy (TODO: add link).
 
-## 4. Editing data (lexedata.edit)
+### 4.1 CLDF structure
+src/lexedata//edit/simplify_ids.py
 
-### 4.1 Linking concepts to concepticon
-Lexedata can automatically link the concepts of a dataset with concept sets in the Concepticon (https://concepticon.clld.org/). In order to use this functionality, navigate to your depository and type ```python -m lexedata.enrich.guess_concepticon Wordlist-metadata.json```.
-Your ParameterTable will now have two new columns: Concepticon ID and Concepticon Name. We recommend that you manually inspect these links for errors. 
-
-
-### 4.2 Automatic cognate detection
-
-### 4.3 Adding central concepts to cognate sets
-```python -m lexedata.enrich.guess_concept_for_cognateset```
-```--overwrite``` to overwrite existing central concepts for all cognatesets.
-
-### 4.4 Segment forms using CLTS
-In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms. Lexedata uses CLTS to segment the forms. To use this functionality type: ```python -m lexedata.edit.add_segments```. A column "Segments" will be filled in in your forms.csv. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review. You may choose to apply these corrections to the form column as well.
-
-Optional arguments:
-
-```--metadata [METADATA]```: the metadata file of your dataset
-
-```--overwrite```: segment all forms rather than only unsegmented forms (default behavior)
-
-```--replace-form```: with this option, any automatic corrections are applied not only on the Segments column, but also on the form itself in the #form column.
-
-<!-- Should this section be before the automatic cognate detection? Or when the automatic cognate detection is done it automatically segments as well? Finally, should we add more info about CLTS? Do you like this way of listing stuff? should I do it everywhere?-->
-
-### 4.5 How to replace IDs
+### 4.1.2 How to replace or merge IDs (replace_id and replace_id_column)
 Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, etc), e.g. if accidentally you have used the same ID twice. Lexedata can replace the id of an object and propagate this change in all tables where it is used as a foreign key (i.e. to link back to that object). The relevant command is ```python -m lexedata.edit.replace_id TABLE ORIGINAL_ID REPLACEMENT_ID```. If you intend to merge two IDs, e.g. if you decide to conflate two concepts because they are not distinct in the languages under study, or two doculects that you want to consider as one. you need to use the optional argument ```--merge```. Keep in mind that lexedata cannot automatically merge two or more rows in the table in question, so if for example you merged two Language IDs, then you will have two rows in languages.csv with identical IDs. This will cause a warning if you try to validate your dataset (see section [5.1] (#51-cldf-format-validation). If you want to completely merge the rows, you need to do this by opening the corresponding csv in a spreadsheet or text editor (see section [7] (#7-how-to-edit-raw-data). 
 
 In case you want to replace an entire ID column of a table, then you need to add the new intended ID column to the table and use the command ```python -m lexedata.edit.replace_id_column TABLE REPLACEMENT```.
+
+src/lexedata//edit/replace_id.py
+src/lexedata//edit/replace_id_column.py
+src/lexedata//edit/change_id_column.py
+
+src/lexedata//edit/add_metadata.py
+src/lexedata//edit/add_table.py
+
+### 4.2 Data curation
+src/lexedata//edit/normalize_unicode.py
+
+#### 4.2.2 Segment forms (add_segments)
+In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms included in your dataset. Lexedata can do this automatically using CLTS (TODO: add link). To use this functionality type: ```python -m lexedata.edit.add_segments TRANCRIPTION_COLUMN```, where transcription column refers to the column that contains the forms to be segmented (the #form column by default). A column "Segments" will be added to your FormTable. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review. You may choose to apply these corrections to the form column as well, using the switch `--replace_form`.
+
+
+src/lexedata//edit/add_singleton_cognatesets.py
+src/lexedata//edit/merge_homophones.py
+src/lexedata//edit/add_status_column.py
+
+### 4.3 LingPy integration
+### 4.3.1 Automatic cognate detection (detect_cognates)
+src/lexedata//edit/align.py
+src/lexedata//edit/add_cognate_table.py
+This takes LingPy smooshed form and cognate table as an input and makes a separate cognate table. The interleaved script makes a metadata free forms.csv like this. 
+
+### 4.4 Concepticon integration
+
+#### 4.4.1 Linking concepts to Concepticon (add_concepticon)
+Lexedata can automatically link the concepts present in a dataset with concept sets in the Concepticon (https://concepticon.clld.org/). The relevant command is ```python -m lexedata.edit.add_concepticon```.
+Your ParameterTable will now have a new columns: Concepticon ID, with the corresponding ID of a concept set in Concepticon. We recommend that you manually inspect these links for errors. In order to facilitate this task, you can also add columns for the concept set name (`--add_concept_set_name`) and the concepticon definition (`--add_definitions`). Finally, if your ParameterTable contains a Status Column (see section [4.2.5]), any links to the Concepticon will be tagged as automatic, or you can define a custom message using `--status_update "STATUS UPDATE"`. 
+
+### 4.4.2 Adding central concepts to cognate sets (add_central_concepts)
+```python -m lexedata.enrich.guess_concept_for_cognateset```
+```--overwrite``` to overwrite existing central concepts for all cognatesets.
+
+
 
 ## 5. Reporting and checking data integrity (lexedata.report)
 ### 5.1 CLDF format validation
