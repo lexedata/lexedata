@@ -35,13 +35,20 @@ if __name__ == "__main__":
         )
         cli.Exit.INVALID_ID()
 
-    if args.replacement in ids and not args.merge:
-        logger.error(
-            "The replacement ID %s is already an ID in %s. If you want to force conflation of the two rows in tables that reference this one, use --merge.",
-            args.replacement,
-            args.table,
-        )
-        cli.Exit.INVALID_ID()
+    if args.replacement in ids:
+        if args.merge:
+            logger.info(
+                "The replacement ID %s is already an ID in %s. I have been told to merge them.",
+                args.replacement,
+                args.table,
+            )
+        else:
+            logger.error(
+                "The replacement ID %s is already an ID in %s. If you want to force conflation of the two rows in tables that reference this one, use --merge.",
+                args.replacement,
+                args.table,
+            )
+            cli.Exit.INVALID_ID()
 
     ids = dataset
 
