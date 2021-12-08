@@ -181,7 +181,7 @@ def add_concepticon_definitions(
 
 def create_concepticon_for_concepts(
     dataset: pycldf.Dataset,
-    language: t.Iterable,
+    language: t.Sequence[t.Tuple[str, str]],
     concepticon_glosses: bool,
     concepticon_definition: bool,
     overwrite: bool,
@@ -245,15 +245,13 @@ if __name__ == "__main__":
         action="append",
         default=[],
         type=equal_separated,
-        help="Maps from column names to language codes, eg. '-l GLOSS=en -l PORTUGUESE=pt'. "
-        "If no language mappings are given, try to understand the #id column in English.",
+        help="Maps from column names to 2-letter language codes. For example, if your ParameterTable has a column 'GLOSS', which contains English glosses, and a colum 'PORTUGUESE' with Portuguese translations, run this script with the arguments `-l GLOSS=en -l PORTUGUESE=pt`. If no language mappings are given, the assumption is that the #id column contains English glosses.",
     )
     parser.add_argument(
         "--status-update",
         type=str,
         default="automatic Concepticon link",
-        help="Text written to Status_Column. Set to 'None' for no status update. "
-        "(default: automatic Concepticon link)",
+        help="Text written to Status_Column. Set to 'None' for no status update. (default: automatic Concepticon link)",
     )
     args = parser.parse_args()
     if args.status_update == "None":
