@@ -49,8 +49,8 @@ def filter(
     ...   {"C": "An"},
     ...   {"C": "T"},
     ...   {"C": "E"},
-    ... ], "C", re.compile("A"), True))
-    [{'C': 'A'}, {'C': 'An'}]
+    ... ], "C", re.compile("A"), invert=True))
+    [{'C': 'T'}, {'C': 'E'}]
     """
     n_row = 0
     n_included = 0
