@@ -32,14 +32,26 @@ import pycldf
 
 import lexedata.cli as cli
 
+R = t.TypeVar("R", bound=t.Dict[str, t.Any])
+
 
 def filter(
-    table: t.Iterable[t.Dict[str, t.Any]],
+    table: t.Iterable[R],
     column: str,
     filter: re.Pattern,
     invert: bool = False,
     logger: cli.logging.Logger = cli.logger,
-):
+) -> t.Iterator[R]:
+    """Return all rows matching a filter
+
+    >>> filter([
+    ...   {"C": "A"},
+    ...   {"C": "An"},
+    ...   {"C": "T"},
+    ...   {"C": "E"},
+    ... ], "C", re.compile("A"), True)
+    [{'C': 'A'}, {'C': 'An'}]
+    """
     n_row = 0
     n_included = 0
     for row in table:
