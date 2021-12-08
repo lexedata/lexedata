@@ -131,11 +131,15 @@ You can access the Lexedata tools through commands in your terminal. Every comma
 `python -m lexedata.<i>package.command<i> [--*optional_argument* VALUE] [--*switch*] POSITIONAL ARGUMENTS`
 Elements in italics above need to be replaced depending on the exact command you are using. Elements in capital letters need to be replaced depending on the exact operation you want to perform on your dataset. Optional elements are enclosed in brackets. There could be multiple positional arguments and optional arguments (with only a space as a separator), as well as commands that take only positional or only optional arguments.  Positional arguments are not preceded by a hyphen and need to occur in strict order (if there are more than two of them). Optional arguments and switches are always preceded by two hyphens and they can occur in any order after the command. Optional arguments require a value (often there is a default value), while switches do not. Some optional arguments or switches have a short name of one letter in addition to their regular name and in this case they are preceded by one hyphen (e.g. to access the help of any command you can use the switch `--help` or `-h`). Many positional arguments and most optional arguments have default settings. Commands in Lexedata are organized in four packages: lexedata.importer, lexedata.edit, lexedata.report, and lexedata.exporter. (In case you are wondering why they are not called "import" and "export", these words have special status in Python, so they were not available!). If a command name consists of more than one word, the words are separated with an underscore. Optional arguments and switches consisting of more than one word also include underscores. If you need to replace an element in capital letters with something including a space, enclose it in quotes (""). 
 
-Probably the most important thing to know before you get started with Lexedata is how to get help. You can access the help of every command by typing `python -m lexedata.*package.command* --help`. The help explains how the command is used, what it does and lists all the positional and optional arguments, along with their default values if any.
+Probably the most important thing to know before you get started with Lexedata is how to get help. This manual contains all available commands and describes their most common uses but it is not exhaustive as far as optional arguments and switches are concerned. It is highly recommended to first read the help of any new command you are thinking of using. You can access the help of any command by typing `python -m lexedata.*package.command* --help`. The help explains how the command is used, what it does and lists all the positional and optional arguments, along with their default values, if any. If you find the help confusing, or something is missing, do not hesitate to let us know by opening an issue on GitHub.
 
 ### 1.5 Some Terminology
 
+In this section we explain briefly some terminology that is used in this manual and in the help of Lexedata commands.
+
 Lexedata is CLDF-centric, so ‘export’ is always ‘away from CLDF’ and ‘import’ is always ‘towards CLDF’.
+
+TODO: add stuff here about different cross-concept or within-concept cognate sets and how this affects things, especially coding. Also add stuff about central concept, coding methods, status column.
 
 ## 2. Lexedata installation instructions
 
@@ -206,16 +210,14 @@ The "edit" package includes a series of scripts to automate common targeted or b
 ### 4.1 CLDF structure
 src/lexedata//edit/simplify_ids.py
 
-### 4.1.2 How to replace or merge IDs (replace_id and replace_id_column)
+#### 4.1.2 How to replace or merge IDs (replace_id and replace_id_column)
 Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, etc), e.g. if accidentally you have used the same ID twice. Lexedata can replace the id of an object and propagate this change in all tables where it is used as a foreign key (i.e. to link back to that object). The relevant command is ```python -m lexedata.edit.replace_id TABLE ORIGINAL_ID REPLACEMENT_ID```. If you intend to merge two IDs, e.g. if you decide to conflate two concepts because they are not distinct in the languages under study, or two doculects that you want to consider as one. you need to use the optional argument ```--merge```. Keep in mind that lexedata cannot automatically merge two or more rows in the table in question, so if for example you merged two Language IDs, then you will have two rows in languages.csv with identical IDs. This will cause a warning if you try to validate your dataset (see section [5.1] (#51-cldf-format-validation). If you want to completely merge the rows, you need to do this by opening the corresponding csv in a spreadsheet or text editor (see section [7] (#7-how-to-edit-raw-data). 
 
 In case you want to replace an entire ID column of a table, then you need to add the new intended ID column to the table and use the command ```python -m lexedata.edit.replace_id_column TABLE REPLACEMENT```.
 
-src/lexedata//edit/replace_id.py
-src/lexedata//edit/replace_id_column.py
-src/lexedata//edit/change_id_column.py
+#### 4.1.3 How to add a metadata file (add_metadata)
+If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see section XXX how to read a json file). The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
 
-src/lexedata//edit/add_metadata.py
 src/lexedata//edit/add_table.py
 
 ### 4.2 Data curation
