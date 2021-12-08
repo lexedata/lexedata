@@ -44,6 +44,9 @@ def filter(
 ) -> t.Iterator[R]:
     """Return all rows matching a filter
 
+    Match the filter regular expression and return all rows in the table where
+    the filter matches the column. (Or all where it does not, if invert==True.)
+
     >>> list(filter([
     ...   {"C": "A"},
     ...   {"C": "An"},
@@ -51,6 +54,7 @@ def filter(
     ...   {"C": "E"},
     ... ], "C", re.compile("A"), invert=True))
     [{'C': 'T'}, {'C': 'E'}]
+
     """
     n_row = 0
     n_included = 0
