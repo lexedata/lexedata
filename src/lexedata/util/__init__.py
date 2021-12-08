@@ -144,6 +144,12 @@ def indices_to_segment_slice(
     ['1:3']
     >>> indices_to_segment_slice([0, 1, 3])
     ['1:2', '4:4']
+    >>> indices_to_segment_slice([0, 1, 2, 0])
+    ['1:3', '1:1']
+    >>> indices_to_segment_slice([0, 1, 2, 0], enforce_ordered=True)
+    Traceback (most recent call last):
+    ...
+    ValueError: Indices are not ordered as required.
     """
     slices = []
     start_range = 0
