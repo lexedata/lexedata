@@ -1,16 +1,26 @@
 """Segment the form.
 
-    First, apply some pre-processing replacements. Forms supplied contain all
-    sorts of noise and lookalike symbols. This function comes with reasonable
-    defaults, but if you encounter other problems, or you actually want to be
-    strict about IPA transcriptions, pass a dictionary of your choice as
-    `pre_replace`.
+Take a form, in a phonemic transcription compatible with IPA, and split it into
+phonemic segments, which are written back to the Segments column of the
+FormTable. Segmentation essentially uses
+[CLTS](https://clts.clld.org/parameters), including diphthongs and affricates.
 
-    Then, naïvely segment the form using the IPA tokenizer from the `segments`
-    package. Check each returned segment to see whether it is valid according
-    to CLTS's BIPA, and if not, try to fix some issues (in particular
-    pre-aspirated or pre-nasalized consonants showing up as post-aspirated
-    resp. post-nasalized vowels, which BIPA does not accept).)"""
+
+Details on the segmentation procedure:
+
+First, apply some pre-processing replacements. Forms supplied contain all
+sorts of noise and lookalike symbols. This function comes with reasonable
+defaults, but if you encounter other problems, or you actually want to be
+strict about IPA transcriptions, pass a dictionary of your choice as
+`pre_replace`.
+
+Then, naïvely segment the form using the IPA tokenizer from the `segments`
+package. Check each returned segment to see whether it is valid according to
+CLTS's BIPA, and if not, try to fix some issues (in particular pre-aspirated
+or pre-nasalized consonants showing up as post-aspirated resp. post-nasalized
+vowels, which BIPA does not accept).)
+
+"""
 
 import typing as t
 from collections import defaultdict
@@ -267,7 +277,9 @@ def add_segments_to_dataset(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description=__doc__)
+    parser = cli.parser(
+        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
+    )
     parser.add_argument(
         "transcription_column",
         nargs="?",
