@@ -139,11 +139,11 @@ def indices_to_segment_slice(
     (and if given as ranges, they are also exclusive).
 
     >>> indices_to_segment_slice(parse_segment_slices(["1:3"]))
-    ["1:3"]
+    ['1:3']
     >>> indices_to_segment_slice([0, 1, 2])
-    ["1:3"]
+    ['1:3']
     >>> indices_to_segment_slice([0, 1, 3])
-    ["1:2", "4:4"]
+    ['1:2', '4:4']
     """
     slices = []
     start_range = 0
