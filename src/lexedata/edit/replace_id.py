@@ -6,7 +6,7 @@ from lexedata.edit.simplify_ids import update_ids
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Replace the ID of an object (eg. a language ID) in the wordlist"
+        description="Replace the ID of an object (e.g. a language ID) in the wordlist"
     )
     parser.add_argument(
         "table", type=str, help="The table to apply the replacement to", metavar="TABLE"

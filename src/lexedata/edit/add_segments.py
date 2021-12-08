@@ -151,7 +151,7 @@ def segment_form(
             logger.warning(
                 f"{context_for_warnings}Impossible sound '/' encountered in {formstring} – "
                 f"You cannot use CLTS extended normalization "
-                f"with this script. The slash was not taken over into the segments."
+                f"with this script. The slash was skipped and not included in the segments."
             )
             i -= 1
             continue
@@ -250,7 +250,7 @@ def add_segments_to_dataset(
                         report[row[c_f_lan]].sounds[wrong]["count"] += form.count(wrong)
                         report[row[c_f_lan]].sounds[wrong][
                             "comment"
-                        ] = f"'{wrong}' replaced by '{right}' – run with `--replace-form` to apply this also to the forms."
+                        ] = f"'{wrong}' replaced by '{right}' in segments – run with `--replace-form` to apply this also to the forms."
                         form = form.replace(wrong, right)
                         # also replace symbol in #FormTable *form
                         if replace_form:
@@ -282,7 +282,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--replace-form",
+        "--replace_form",
         action="store_true",
         default=False,
         help="Apply the replacements performed on segments also to #form column of #FormTable",

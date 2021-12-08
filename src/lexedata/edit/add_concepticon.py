@@ -140,7 +140,7 @@ def add_concepticon_definitions(
     concepticon_ids = dataset.column_names.parameters.concepticonReference
     if concepticon_ids is None:
         logger.error(
-            "Your concepts table has no #concepticonReference column, so I cannot add any definitions from Concepticon to it. Try running lexedata.edit.add_conception to have me guess those references."
+            "Your concepts table has no #concepticonReference column, so I cannot add any definitions from Concepticon to it. Try running lexedata.edit.add_concepticon to have me guess those references."
         )
         return
 
@@ -216,22 +216,22 @@ if __name__ == "__main__":
         "--overwrite",
         action="store_true",
         default=False,
-        help="Set concepticon reference even if one exists already",
+        help="Set Concepticon reference even if one exists already",
     )
     parser.add_argument(
-        "--add-concept-set-names",
+        "--add_concept_set_names",
         action="store_true",
         default=False,
         help="Add/update a column containing Concepticon's concept set names (glosses)",
     )
     parser.add_argument(
-        "--add-definitions",
+        "--add_definitions",
         action="store_true",
         default=False,
         help="Add/update a column containing Concepticon's concept set definitions, for quick disambiguation",
     )
     parser.add_argument(
-        "--gloss-language",
+        "--gloss_language",
         "-l",
         action="append",
         default=[],
@@ -240,11 +240,11 @@ if __name__ == "__main__":
         "If no language mappings are given, try to understand the #id column in English.",
     )
     parser.add_argument(
-        "--status-update",
+        "--status_update",
         type=str,
-        default="automatic Concepticon link",
+        default="automatic Concepticon reference",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-        "(default: automatic Concepticon link)",
+        "(default: automatic Concepticon reference)",
     )
     args = parser.parse_args()
     if args.status_update == "None":
