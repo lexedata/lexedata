@@ -94,7 +94,8 @@ class BaseExcelWriter:
             task="Writing languages to excel header",
             total=len(languages),
         ):
-            # TODO: This should be based on the foreign key relation of languageReference
+            # TODO: This should be based on the foreign key relation of
+            # languageReference
             self.lan_dict[lan["id"]] = col
             excel_header.append(lan.get("name", lan["id"]))
         self.ws.append(excel_header)
@@ -105,31 +106,34 @@ class BaseExcelWriter:
         if rows is None:
             rows = self.collect_rows()
 
-        all_judgements = self.collect_forms_by_row()
+        forms_by_row = self.collect_forms_by_row()
 
         # iterate over all rows
-        for cogset in cli.tq(
+        for row in cli.tq(
             rows,
             task="Writing rows to Excel",
             total=len(rows),
+            logger=self.logger,
         ):
-            # possibly a cogset can appear without any judgment, if so ignore it
-            if cogset["id"] not in all_judgements:
+            # possibly a row can appear without any forms. Unlikely, but just
+            # ignore those.
+            if row["id"] not in forms_by_row:
                 continue
             # write all forms of this cognateset to excel
             new_row_index = self.create_formcells(
-                cogset,
-                all_judgements[cogset["id"]],
+                row,
+                forms_by_row[row["id"]],
                 row_index,
             )
-            # write rows for cognatesets
-            for row in range(row_index, new_row_index):
-                self.write_row_header(cogset, row)
+            # write rows for cognatesets, now that we know how many rows there
+            # are. (TODO: Maybe we could format all but the first row a lot
+            # weaker, so the groups stand out better?)
+            for r in range(row_index, new_row_index):
+                self.write_row_header(row, r)
 
             row_index = new_row_index
 
         self.after_filling(row_index)
-        self.wb.save(filename=out)
 
     def create_formcells(
         self,
@@ -528,8 +532,10 @@ if __name__ == "__main__":
     cogsets.sort(key=lambda c: c[cogset_order])
 
     E.create_excel(
-        args.excel,
         size_sort=args.size_sort,
         rows=cogsets,
         language_order=args.sort_languages_by,
+    )
+    E.wb.save(
+        filename=args.excel,
     )

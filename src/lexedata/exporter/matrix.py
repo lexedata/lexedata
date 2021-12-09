@@ -125,3 +125,6 @@ if __name__ == "__main__":
         language_order=args.sort_languages_by,
         rows=concept_list,
     )
+    E.wb.save(
+        filename=args.excel,
+    )
