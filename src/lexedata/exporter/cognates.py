@@ -167,7 +167,7 @@ class BaseExcelWriter:
 
         return row_index
 
-    def create_formcell(self, judgement, column: int, row: int) -> None:
+    def create_formcell(self, form: types.Form, column: int, row: int) -> None:
         """Fill the given cell with the form's data.
 
         In the cell described by ws, column, row, dump the data for the form:
@@ -175,17 +175,21 @@ class BaseExcelWriter:
         if there is one.
 
         """
-        cell_value = self.form_to_cell_value(judgement)
+        cell_value = self.form_to_cell_value(form)
         form_cell = self.ws.cell(row=row, column=column, value=cell_value)
-        comment = judgement.get("comment")
+        comment = form.get("comment")
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
         if self.URL_BASE:
-            link = self.URL_BASE.format(urllib.parse.quote(judgement["id"]))
+            link = self.URL_BASE.format(urllib.parse.quote(form["id"]))
             form_cell.hyperlink = link
 
     def collect_rows(self):
         return util.cache_table(self.dataset, self.row_table).values()
+
+    @abc.abstractmethod
+    def form_to_cell_value(self, form: types.Form):
+        "Format a form into text for an excel cell"
 
     @abc.abstractmethod
     def collect_forms_by_row(self):
