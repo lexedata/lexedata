@@ -160,5 +160,4 @@ def test_missing_required_column():
         excel_writer = ExcelWriter(
             dataset=dataset, singleton_cognate=True, singleton_status="NEW"
         )
-        output = dataset.tablegroup._fname.parent / "out.xlsx"
-        excel_writer.create_excel(out=output)
+        excel_writer.create_excel()
