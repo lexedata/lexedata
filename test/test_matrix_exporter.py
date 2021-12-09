@@ -80,6 +80,6 @@ def test_toexcel_filtered(cldf_wordlist, working_and_nonworking_bibfile, caplog)
     )
     with caplog.at_level(logging.WARNING):
         writer.create_excel(rows=["Woman"])
-    assert (len(list(writer.ws.iterrows())) == 2) or (
+    assert (len(list(writer.ws.iter_rows())) == 2) or (
         re.search("entries {'Woman'}", caplog.text)
     )

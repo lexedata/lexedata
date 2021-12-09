@@ -348,6 +348,9 @@ class ExcelWriter(BaseExcelWriter):
         Provide the best transcription and all translations of the form strung
         together.
 
+        >>> ds = util.fs.new_wordlist(FormTable=[])
+        >>> E = ExcelWriter(dataset=ds)
+        >>> E.form_to_cell_value({"form": "a"})
         k a w e n a t j a k a
         d i +dúpe
         +iíté+ k h ú
