@@ -121,7 +121,6 @@ class BaseExcelWriter:
                 continue
             # write all forms of this cognateset to excel
             new_row_index = self.create_formcells(
-                row,
                 forms_by_row[row["id"]],
                 row_index,
             )
@@ -137,8 +136,7 @@ class BaseExcelWriter:
 
     def create_formcells(
         self,
-        cogset: types.CogSet,
-        all_forms: t.Dict[str, types.Form],
+        row_forms: t.Iterable[types.Form],
         row_index: int,
     ) -> int:
         """Writes all forms for given cognate set to Excel.
@@ -153,19 +151,19 @@ class BaseExcelWriter:
         """
         # Read the forms from the database and group them by language
         forms = t.DefaultDict[int, t.List[types.Form]](list)
-        for form in all_forms:
+        for form in row_forms:
             forms[self.lan_dict[form["languageReference"]]].append(form)
 
         if not forms:
             return row_index + 1
 
         # maximum of rows to be added
-        maximum_cogset = max([len(c) for c in forms.values()])
+        maximum_size = max([len(c) for c in forms.values()])
         for column, cells in forms.items():
-            for row, judgement in enumerate(cells, row_index):
-                self.create_formcell(judgement, column, row)
+            for row, entry in enumerate(cells, row_index):
+                self.create_formcell(entry, column, row)
         # increase row_index and return
-        row_index += maximum_cogset
+        row_index += maximum_size
 
         return row_index
 
