@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+import re
 import csv
 import typing as t
 from pathlib import Path
 
 import pycldf
+import openpyxl as op
 
 from lexedata.exporter.cognates import BaseExcelWriter
-from lexedata import cli, types
+from lexedata import cli, types, util
 
 
 class MatrixExcelWriter(BaseExcelWriter):
@@ -44,9 +46,10 @@ class MatrixExcelWriter(BaseExcelWriter):
         all_forms: t.MutableMapping[
             types.Parameter_ID, t.List[types.Form]
         ] = t.DefaultDict(list)
-        c_f_row_reference = self.dataset["FormTable", "parameterReference"].name
-        for row in self.dataset["FormTable"]:
-            all_forms[row[c_f_row_reference]].append(row)
+        for row in util.cache_table(
+            self.dataset
+        ).values():  # TODO check parameterReference foreign key target
+            all_forms[row["parameterReference"]].append(row)
         return all_forms
 
     def form_to_cell_value(self, form: types.Form) -> str:
@@ -58,6 +61,27 @@ class MatrixExcelWriter(BaseExcelWriter):
 
     def after_filling(self):
         pass
+
+    def write_row_header(self, cogset, row):
+        try:
+            c_comment = self.dataset["ParameterTable", "comment"].name
+        except (KeyError):
+            c_comment = None
+        for col, (db_name, header) in enumerate(self.header, 1):
+            if db_name == "":
+                continue
+            column = self.dataset[self.row_table, db_name]
+            if column.separator is None:
+                value = cogset[db_name]
+            else:
+                value = column.separator.join([str(v) for v in cogset[db_name]])
+            cell = self.ws.cell(row=row, column=col, value=value)
+            # Transfer the cognateset comment to the first Excel cell.
+            if c_comment and col == 1 and cogset.get(c_comment):
+                cell.comment = op.comments.Comment(
+                    re.sub(f"-?{__package__}", "", cogset[c_comment] or "").strip(),
+                    "lexedata.exporter",
+                )
 
 
 if __name__ == "__main__":

@@ -3,7 +3,6 @@ import re
 import typing as t
 import urllib.parse
 from pathlib import Path
-import traceback
 
 import pycldf
 import openpyxl as op
@@ -41,13 +40,15 @@ class BaseExcelWriter:
 
         self.URL_BASE = database_url
 
+        self.wb = op.Workbook()
+        self.ws: op.worksheet.worksheet.Worksheet = self.wb.active
+
     def create_excel(
         self,
         out: Path,
         size_sort: bool = False,
         rows: t.Optional[types.RowObject] = None,
         language_order="name",
-        status_update: t.Optional[str] = None,
         logger: cli.logging.Logger = cli.logger,
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
@@ -69,23 +70,18 @@ class BaseExcelWriter:
         language_order: column name, languages appear ordered by given column name from
             LanguageTable
 
-        status_update: string, writen to status_column of singleton cognates.
-
         """
         # cldf names
 
         c_name = self.dataset["LanguageTable", "name"].name
         c_id = self.dataset["LanguageTable", "id"].name
         c_form_id = self.dataset["FormTable", "id"].name
-        c_language = self.dataset["FormTable", "languageReference"].name
         c_form_concept_reference = self.dataset["FormTable", "parameterReference"].name
 
-        wb = op.Workbook()
-        ws: op.worksheet.worksheet.Worksheet = wb.active
-        if status_update is not None:
+        if self.singleton_status is not None:
             if ("Status_Column", "Status_Column") not in self.header:
                 logger.warning(
-                    f"You requested that I set the status of new singleton cognate sets to {status_update}, but your CognatesetTable has no Status_Column to write it to. If you want a Status "
+                    f"You requested that I set the status of new singleton cognate sets to {self.singleton_status}, but your CognatesetTable has no Status_Column to write it to. If you want a Status "
                 )
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
@@ -109,10 +105,7 @@ class BaseExcelWriter:
             # TODO: This should be based on the foreign key relation
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
-        ws.append(excel_header)
-
-        # load all forms
-        all_forms = {f[c_form_id]: f for f in self.dataset["FormTable"]}
+        self.ws.append(excel_header)
 
         # map form_id to id of associated concept
         concept_id_by_form_id = dict()
@@ -125,11 +118,6 @@ class BaseExcelWriter:
 
         # Again, row_index 2 is indeed row 2, row 1 is header
         row_index = 1 + 1
-
-        try:
-            c_comment = self.dataset[self.row_table, "comment"].name
-        except KeyError:
-            c_comment = None
 
         if rows is None:
             rows = self.collect_rows()
@@ -148,50 +136,22 @@ class BaseExcelWriter:
             # write all forms of this cognateset to excel
             new_row_index = self.create_formcells(
                 cogset,
-                ws,
+                self.ws,
                 all_judgements[cogset[self.row_id]],
                 row_index,
             )
             # write rows for cognatesets
             for row in range(row_index, new_row_index):
-                for col, (db_name, header) in enumerate(self.header, 1):
-                    # db_name is '' when add_central_concepts is activated
-                    # and there is no concept column in cognateset table
-                    # else read value from cognateset table
-                    if header == "Central_Concept" and db_name == "":
-                        # this is the concept associated to the first cognate in this cognateset
-                        value = concept_id_by_form_id[
-                            all_judgements[cogset[c_cogset_id]][0][c_cognate_form]
-                        ]
-                    else:
-                        if db_name == "":
-                            continue
-                        column = self.dataset[self.row_table, db_name]
-                        if column.separator is None:
-                            value = cogset[db_name]
-                        else:
-                            value = column.separator.join(
-                                [str(v) for v in cogset[db_name]]
-                            )
-                    cell = ws.cell(row=row, column=col, value=value)
-                    # Transfer the cognateset comment to the first Excel cell.
-                    if c_comment and col == 1 and cogset.get(c_comment):
-                        cell.comment = op.comments.Comment(
-                            re.sub(
-                                f"-?{__package__}", "", cogset[c_comment] or ""
-                            ).strip(),
-                            "lexedata.exporter",
-                        )
+                self.write_row_header(cogset, row)
 
             row_index = new_row_index
 
-        self.after_filling()
-        wb.save(filename=out)
+        self.after_filling(row_index)
+        self.wb.save(filename=out)
 
     def create_formcells(
         self,
         cogset: types.CogSet,
-        ws: op.worksheet.worksheet.Worksheet,
         all_forms: t.Dict[str, types.Form],
         row_index: int,
     ) -> int:
@@ -205,8 +165,6 @@ class BaseExcelWriter:
         which can then be filled by the following cognate set.
 
         """
-        c_form = self.dataset["CognateTable", "formReference"].name
-        c_language = self.dataset["FormTable", "languageReference"].name
         # Read the forms from the database and group them by language
         forms = t.DefaultDict[int, t.List[types.Form]](list)
         for form in all_forms:
@@ -219,15 +177,13 @@ class BaseExcelWriter:
         maximum_cogset = max([len(c) for c in forms.values()])
         for column, cells in forms.items():
             for row, judgement in enumerate(cells, row_index):
-                self.create_formcell(judgement, ws, column, row)
+                self.create_formcell(judgement, self.ws, column, row)
         # increase row_index and return
         row_index += maximum_cogset
 
         return row_index
 
-    def create_formcell(
-        self, judgement, ws: op.worksheet.worksheet.Worksheet, column: int, row: int
-    ) -> None:
+    def create_formcell(self, judgement, column: int, row: int) -> None:
         """Fill the given cell with the form's data.
 
         In the cell described by ws, column, row, dump the data for the form:
@@ -236,7 +192,7 @@ class BaseExcelWriter:
 
         """
         cell_value = self.form_to_cell_value(judgement)
-        form_cell = ws.cell(row=row, column=column, value=cell_value)
+        form_cell = self.ws.cell(row=row, column=column, value=cell_value)
         c_id = self.dataset["FormTable", "id"].name
         try:
             c_comment = self.dataset["CognateTable", "comment"].name
@@ -260,6 +216,7 @@ class ExcelWriter(BaseExcelWriter):
         dataset: pycldf.Dataset,
         database_url: t.Optional[str] = None,
         singleton_cognate: bool = False,
+        singleton_status: t.Optional[str] = None,
     ):
         super().__init__(dataset=dataset, database_url=database_url)
         # assert that all required tables are present in Dataset
@@ -278,28 +235,58 @@ class ExcelWriter(BaseExcelWriter):
                 "This script presupposes a separate CognateTable. Call `lexedata.edit.add_cognate_table` to automatically add one."
             )
         self.singleton = singleton_cognate
+        self.singleton_status = singleton_status
         self.row_id = self.dataset["CognatesetTable", "id"].name
 
-    def collect_rows(self):
-        ...
-
-        c_cognate_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
-        c_cognate_form = self.dataset["CognateTable", "formReference"].name
-        c_cogset_name = self.dataset["CognatesetTable", "name"].name
-
+    def write_row_header(self, cogset, row_number: int):
         try:
             c_comment = self.dataset["CognatesetTable", "comment"].name
         except KeyError:
             c_comment = None
+        for col, (db_name, header) in enumerate(self.header, 1):
+            # db_name is '' when add_central_concepts is activated
+            # and there is no concept column in cognateset table
+            # else read value from cognateset table
+            if header == "Central_Concept" and db_name == "":
+                # this is the concept associated to the first cognate in this cognateset
+                raise NotImplementedError(
+                    "You expect central conceps in your cognate set table, but you don't have any central concepts stored with your cognate sets"
+                )
+            else:
+                if db_name == "":
+                    continue
+                column = self.dataset[self.row_table, db_name]
+                if column.separator is None:
+                    value = cogset[db_name]
+                else:
+                    value = column.separator.join([str(v) for v in cogset[db_name]])
+            cell = self.ws.cell(row=row_number, column=col, value=value)
+            # Transfer the cognateset comment to the first Excel cell.
+            if c_comment and col == 1 and cogset.get(c_comment):
+                cell.comment = op.comments.Comment(
+                    re.sub(f"-?{__package__}", "", cogset[c_comment] or "").strip(),
+                    "lexedata.exporter",
+                )
+
+    def collect_rows(self):
+        c_cognate_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
 
         # load all cognates by cognateset id
         all_judgements: t.Dict[CognatesetID, t.List[types.CogSet]] = {}
         for j in self.dataset["CognateTable"]:
             all_judgements.setdefault(j[c_cognate_cognateset], []).append(j)
 
-    def after_filling(self):
-        # TODO: fixme
-        return None
+    def after_filling(self, row_index):
+        c_cognate_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
+        c_cognate_form = self.dataset["CognateTable", "formReference"].name
+        c_cogset_id = self.dataset["CognatesetTable", "id"].name
+        c_cogset_name = self.dataset["CognatesetTable", "name"].name
+
+        all_judgements: t.Dict[CognatesetID, t.List[types.CogSet]] = {}
+        for j in self.dataset["CognateTable"]:
+            all_judgements.setdefault(j[c_cognate_cognateset], []).append(j)
+
+        all_forms = self.collect_forms_by_row()
 
         # write remaining forms to singleton congatesets if switch is activated
         if self.singleton:
@@ -326,21 +313,26 @@ class ExcelWriter(BaseExcelWriter):
                 # write form to file
                 form = all_forms[form_id]
                 self.create_formcell(
-                    (form, dict()), ws, self.lan_dict[form[c_language]], row_index
+                    (form, dict()),
+                    self.ws,
+                    self.lan_dict[form["languageReference"]],
+                    row_index,
                 )
                 # write singleton cognateset to excel
                 for col, (db_name, header) in enumerate(self.header, 1):
                     if db_name == c_cogset_id:
-                        value = f"X{i+1}_{form[c_language]}"
+                        value = f"X{i+1}_{form['languageReference']}"
                     elif db_name == c_cogset_name:
-                        value = concept_id_by_form_id[form_id]
+                        value = all_forms[form_id]["parameterReference"]
                     elif db_name == c_cogset_concept:
-                        value = concept_id_by_form_id[form_id]
-                    elif header == "Status_Column" and status_update is not None:
-                        value = status_update
+                        value = all_forms[form_id]["parameterReference"]
+                    elif (
+                        header == "Status_Column" and self.singleton_status is not None
+                    ):
+                        value = self.singleton_status
                     else:
                         value = ""
-                    ws.cell(row=row_index, column=col, value=value)
+                    self.ws.cell(row=row_index, column=col, value=value)
                 row_index += 1
 
     def set_header(self):
@@ -423,7 +415,6 @@ class ExcelWriter(BaseExcelWriter):
 
         # corresponding concepts
         # (multiple concepts) and others (single concept)
-        c_concept = self.dataset["FormTable", "parameterReference"].name
         if isinstance(form["parameterReference"], list):
             for f in form["parameterReference"]:
                 translations.append(f)
@@ -436,7 +427,6 @@ class ExcelWriter(BaseExcelWriter):
             return form["segments"]
         except (KeyError):
             logger.warning("No segments column found. Falling back to cldf form.")
-            c_f_form = self.dataset["FormTable", "form"].name
             return form["form"]
 
     def collect_forms_by_row(
@@ -510,13 +500,14 @@ if __name__ == "__main__":
         cogsets = list(dataset["CognatesetTable"])
     except (KeyError):
         cli.Exit.INVALID_DATASET(
-            f"Dataset has no explicit CognatesetTable. If you have cognate codes, try to make them explicit."
+            "Dataset has no explicit CognatesetTable. Add one using `lexedata.edit.add_table CognatesetTable`."
         )
 
     E = ExcelWriter(
         dataset,
         database_url=args.url_template,
         singleton_cognate=args.add_singletons_with_status is None,
+        singleton_status=args.add_singletons_with_status,
     )
 
     try:
@@ -544,5 +535,4 @@ if __name__ == "__main__":
         size_sort=args.size_sort,
         rows=cogsets,
         language_order=args.sort_languages_by,
-        status_update=args.add_singletons_with_status,
     )
