@@ -516,3 +516,17 @@ def test_order_merge():
     Someone wrote in their homophones to be merged that 3, 2, 1 shoud be merged.
     Presumably, that means the values in form 3 have precedence, and for concatenate, they should appear in order 3,2,1.
     """
+
+
+def test_merge_report_parser():
+    """Currently, there are two formats implemented in the homophones merger.
+
+    One is becoming deprecated.
+
+    Once we have properly deprecated it and started using the new,
+    human-readable one, test whether that format is parsed cleanly.
+
+    Include test cases where the format is not followed strictly, with typos or
+    changes in whitespace.
+
+    """
