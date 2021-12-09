@@ -83,6 +83,3 @@ def test_toexcel_filtered(cldf_wordlist, working_and_nonworking_bibfile, caplog)
     assert (len(list(writer.ws.iterrows())) == 2) or (
         re.search("entries {'Woman'}", caplog.text)
     )
-
-
-# TODO: Test feeding a concept list to the matrix exporter

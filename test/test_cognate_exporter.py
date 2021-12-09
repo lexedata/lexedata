@@ -161,3 +161,10 @@ def test_missing_required_column():
             dataset=dataset, singleton_cognate=True, singleton_status="NEW"
         )
         excel_writer.create_excel()
+
+
+def test_included_segments():
+    """Generate a data set with alignments and segment slices.
+
+    Test that the correct segments get included in the excel export.
+    """

@@ -271,8 +271,6 @@ class ExcelWriter(BaseExcelWriter):
                     "You expect central conceps in your cognate set table, but you don't have any central concepts stored with your cognate sets"
                 )
             else:
-                if db_name == "":
-                    continue
                 column = self.dataset[self.row_table, db_name]
                 if column.separator is None:
                     value = cogset[db_name]
@@ -280,7 +278,7 @@ class ExcelWriter(BaseExcelWriter):
                     value = column.separator.join([str(v) for v in cogset[db_name]])
             cell = self.ws.cell(row=row_number, column=col, value=value)
             # Transfer the cognateset comment to the first Excel cell.
-            if c_comment and col == 1 and cogset.get(c_comment):
+            if c_comment and col == 1 and cogset.get("comment"):
                 cell.comment = op.comments.Comment(
                     re.sub(f"-?{__package__}", "", cogset[c_comment] or "").strip(),
                     "lexedata.exporter",
