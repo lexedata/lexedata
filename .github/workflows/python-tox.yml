@@ -27,7 +27,7 @@ jobs:
         then
           pip install pycldf
         else
-          pip install pycldf==${{ matrix.cldf }}
+          pip install pycldf==${{ matrix.pycldf }}
         fi
     - name: Install other dependencies
       run: |

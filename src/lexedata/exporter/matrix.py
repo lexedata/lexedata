@@ -78,7 +78,6 @@ if __name__ == "__main__":
     E = MatrixExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
         database_url=args.url_template,
-        # TODO: maybe remove the add_central_concepts argument from this function?
     )
     E.create_excel(
         args.excel,
