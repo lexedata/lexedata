@@ -118,6 +118,7 @@ if __name__ == "__main__":
     E = MatrixExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
         database_url=args.url_template,
+        logger=logger,
     )
     E.create_excel(
         args.excel,

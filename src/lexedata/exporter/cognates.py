@@ -45,13 +45,14 @@ class BaseExcelWriter:
         self.wb = op.Workbook()
         self.ws: op.worksheet.worksheet.Worksheet = self.wb.active
 
+        self.logger = logger
+
     def create_excel(
         self,
         out: Path,
         size_sort: bool = False,
         rows: t.Optional[types.RowObject] = None,
         language_order="name",
-        logger: cli.logging.Logger = cli.logger,
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -238,7 +239,7 @@ class ExcelWriter(BaseExcelWriter):
         self.row_id = self.dataset["CognatesetTable", "id"].name
         if self.singleton_status is not None:
             if ("Status_Column", "Status_Column") not in self.header:
-                logger.warning(
+                self.logger.warning(
                     f"You requested that I set the status of new singleton cognate sets to {self.singleton_status}, but your CognatesetTable has no Status_Column to write it to. If you want a Status "
                 )
 
@@ -363,7 +364,7 @@ class ExcelWriter(BaseExcelWriter):
                 # expecting that an error message here will be more useful than
                 # silently messing with data. If the check fails, we take the
                 # whole segment and warn.
-                logger.warning(
+                self.logger.warning(
                     f"In form {form['id']}, with judgement{form['judgement_id']}, segment slice {form['segmentSlice']} is invalid."
                 )
                 included_segments = range(len(form["segments"]))
@@ -403,11 +404,11 @@ class ExcelWriter(BaseExcelWriter):
             translations.append(form["parameterReference"])
         return "{:} ‘{:}’{:}".format(transcription, ", ".join(translations), suffix)
 
-    def get_segments(self, form: types.Form, logger: cli.logger = cli.logger):
+    def get_segments(self, form: types.Form):
         try:
             return form["segments"]
         except (KeyError):
-            logger.warning("No segments column found. Falling back to cldf form.")
+            self.logger.warning("No segments column found. Falling back to cldf form.")
             return form["form"]
 
     def collect_forms_by_row(
@@ -505,6 +506,7 @@ if __name__ == "__main__":
         database_url=args.url_template,
         singleton_cognate=args.add_singletons_with_status is None,
         singleton_status=args.add_singletons_with_status,
+        logger=logger,
     )
 
     try:
