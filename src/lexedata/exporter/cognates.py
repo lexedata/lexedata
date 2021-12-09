@@ -48,7 +48,7 @@ class BaseExcelWriter:
     def create_excel(
         self,
         size_sort: bool = False,
-        rows: t.Optional[types.RowObject] = None,
+        rows: t.Optional[t.Iterable[types.Row_ID]] = None,
         language_order="name",
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
@@ -100,16 +100,24 @@ class BaseExcelWriter:
         # Again, row_index 2 is indeed row 2, row 1 is header
         row_index = 1 + 1
 
-        if rows is None:
-            rows = self.collect_rows()
+        row_objects = self.collect_rows()
+        if rows is not None:
+            row_objects = [
+                row_object for row_object in row_objects if row_object["id"] in rows
+            ]
+            if {row_object["id"] for row_object in row_objects} - set(rows):
+                self.logger.warning(
+                    "You asked me to include the entries %s in the export, but I did not find those IDs.",
+                    {row_object["id"] for row_object in row_objects} - set(rows),
+                )
 
         forms_by_row = self.collect_forms_by_row()
 
         # iterate over all rows
         for row in cli.tq(
-            rows,
+            row_objects,
             task="Writing rows to Excel",
-            total=len(rows),
+            total=len(row_objects),
             logger=self.logger,
         ):
             # possibly a row can appear without any forms. Unlikely, but just

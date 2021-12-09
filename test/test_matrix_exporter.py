@@ -1,3 +1,5 @@
+import re
+import logging
 from pathlib import Path
 
 import pytest
@@ -68,6 +70,19 @@ def test_cell_comments_export():
     assert (
         col[-1].comment.content == "A Comment!"
     ), "Comment should match the comment from the form table"
+
+
+def test_toexcel_filtered(cldf_wordlist, working_and_nonworking_bibfile, caplog):
+    filled_cldf_wordlist = working_and_nonworking_bibfile(cldf_wordlist)
+    writer = MatrixExcelWriter(
+        dataset=filled_cldf_wordlist[0],
+        database_url=str(filled_cldf_wordlist[1]),
+    )
+    with caplog.at_level(logging.WARNING):
+        writer.create_excel(rows=["Woman"])
+    assert (len(list(writer.ws.iterrows())) == 2) or (
+        re.search("entries {'Woman'}", caplog.text)
+    )
 
 
 # TODO: Test feeding a concept list to the matrix exporter
