@@ -23,60 +23,24 @@ WARNING = "\u26A0"
 CognatesetID = str
 
 
-class ExcelWriter:
-    """Class logic for cognateset Excel export."""
-
-    header: t.List[t.Tuple[str, str]]
+class BaseExcelWriter:
+    """Class logic for matrix-shaped Excel export."""
 
     def __init__(
         self,
         dataset: pycldf.Dataset,
         database_url: t.Optional[str] = None,
-        singleton_cognate: bool = False,
     ):
         self.dataset = dataset
-        # assert that all required tables are present in Dataset
-        try:
-            for _ in dataset["CognatesetTable"]:
-                break
-        except (KeyError, FileNotFoundError):
-            cli.Exit.INVALID_DATASET(
-                "This script presupposes a separate CognatesetTable. Call `lexedata.edit.add_table CognatesetTable` to automatically add one."
-            )
-        try:
-            for _ in dataset["CognateTable"]:
-                break
-        except (KeyError, FileNotFoundError):
-            cli.Exit.NO_COGNATETABLE(
-                "This script presupposes a separate CognateTable. Call `lexedata.edit.add_cognate_table` to automatically add one."
-            )
-        self.singleton = singleton_cognate
         self.set_header()
-        if database_url:
-            self.URL_BASE = database_url
-        else:
-            self.URL_BASE = "https://example.org/{:s}"
 
-    def set_header(self):
-        c_id = self.dataset["CognatesetTable", "id"].name
-        try:
-            c_comment = self.dataset["CognatesetTable", "comment"].name
-        except KeyError:
-            c_comment = None
-        self.header = []
-        for column in self.dataset["CognatesetTable"].tableSchema.columns:
-            if column.name == c_id:
-                self.header.insert(0, (c_id, "CogSet"))
-            elif column.name == c_comment:
-                continue
-            else:
-                self.header.append((column.name, column.name))
+        self.URL_BASE = database_url
 
     def create_excel(
         self,
         out: Path,
         size_sort: bool = False,
-        cogset_order: t.Optional[str] = None,
+        row_order: t.Optional[str] = None,
         language_order="name",
         status_update: t.Optional[str] = None,
         logger: cli.logging.Logger = cli.logger,
@@ -188,8 +152,8 @@ class ExcelWriter:
                 key=lambda x: len(all_judgements[x[c_cogset_id]]),
                 reverse=True,
             )
-        if cogset_order is not None:
-            cogsets.sort(key=lambda c: c[cogset_order])
+        if row_order is not None:
+            cogsets.sort(key=lambda c: c[row_order])
 
         # iterate over all cogsets
         for cogset in cli.tq(
@@ -281,6 +245,51 @@ class ExcelWriter:
                     ws.cell(row=row_index, column=col, value=value)
                 row_index += 1
         wb.save(filename=out)
+
+
+class ExcelWriter(BaseExcelWriter):
+    """Class logic for cognateset Excel export."""
+
+    header: t.List[t.Tuple[str, str]]
+
+    def __init__(
+        self,
+        dataset: pycldf.Dataset,
+        database_url: t.Optional[str] = None,
+        singleton_cognate: bool = False,
+    ):
+        super().__init__(dataset=dataset, database_url=database_url)
+        # assert that all required tables are present in Dataset
+        try:
+            for _ in dataset["CognatesetTable"]:
+                break
+        except (KeyError, FileNotFoundError):
+            cli.Exit.INVALID_DATASET(
+                "This script presupposes a separate CognatesetTable. Call `lexedata.edit.add_table CognatesetTable` to automatically add one."
+            )
+        try:
+            for _ in dataset["CognateTable"]:
+                break
+        except (KeyError, FileNotFoundError):
+            cli.Exit.NO_COGNATETABLE(
+                "This script presupposes a separate CognateTable. Call `lexedata.edit.add_cognate_table` to automatically add one."
+            )
+        self.singleton = singleton_cognate
+
+    def set_header(self):
+        c_id = self.dataset["CognatesetTable", "id"].name
+        try:
+            c_comment = self.dataset["CognatesetTable", "comment"].name
+        except KeyError:
+            c_comment = None
+        self.header = []
+        for column in self.dataset["CognatesetTable"].tableSchema.columns:
+            if column.name == c_id:
+                self.header.insert(0, (c_id, "CogSet"))
+            elif column.name == c_comment:
+                continue
+            else:
+                self.header.append((column.name, column.name))
 
     def create_formcells_for_cogset(
         self,
@@ -480,7 +489,7 @@ if __name__ == "__main__":
     E.create_excel(
         args.excel,
         size_sort=args.size_sort,
-        cogset_order=cogset_order,
+        row_order=cogset_order,
         language_order=args.sort_languages_by,
         status_update=args.add_singletons_with_status,
     )
