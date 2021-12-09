@@ -247,9 +247,9 @@ def test_cell_comments_export():
     ws_out = openpyxl.load_workbook(out_filename).active
     for col in ws_out.iter_cols():
         pass
-    assert col[
-        -1
-    ].comment.content, "Last row of last column should contain a judgement, with a comment attached to it."
+    assert (
+        col[-1].comment and col[-1].comment.content
+    ), "Last row of last column should contain a judgement, with a comment attached to it."
     assert (
         col[-1].comment.content == "A judgement comment"
     ), "Comment should match the comment from the cognate table"

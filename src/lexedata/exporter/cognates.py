@@ -192,11 +192,7 @@ class BaseExcelWriter:
         """
         cell_value = self.form_to_cell_value(judgement)
         form_cell = self.ws.cell(row=row, column=column, value=cell_value)
-        try:
-            c_comment = self.dataset["CognateTable", "comment"].name
-        except (KeyError):
-            c_comment = None
-        comment = judgement.get(c_comment, None)
+        comment = judgement.get("comment")
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
         if self.URL_BASE:
@@ -274,9 +270,6 @@ class ExcelWriter(BaseExcelWriter):
             return
         # write remaining forms to singleton congatesets if switch is activated
 
-        c_cogset_id = self.dataset["CognatesetTable", "id"].name
-        c_cogset_name = self.dataset["CognatesetTable", "name"].name
-
         all_forms = util.cache_table(self.dataset)
 
         # remove all forms that appear in judgements
@@ -288,27 +281,21 @@ class ExcelWriter(BaseExcelWriter):
             for form in k:
                 all_forms.pop(form["id"], None)
         # create for remaining forms singleton cognatesets and write to file
-        try:
-            c_cogset_concept = self.dataset[
-                "CognatesetTable", "parameterReference"
-            ].name
-        except KeyError:
-            c_cogset_concept = None
         for i, form_id in enumerate(all_forms):
             # write form to file
             form = all_forms[form_id]
             self.create_formcell(
-                (form, dict()),
+                form,
                 self.lan_dict[form["languageReference"]],
                 row_index,
             )
             # write singleton cognateset to excel
             for col, (db_name, header) in enumerate(self.header, 1):
-                if db_name == c_cogset_id:
+                if db_name == "id":
                     value = f"X{i+1}_{form['languageReference']}"
-                elif db_name == c_cogset_name:
-                    value = all_forms[form_id]["parameterReference"]
-                elif db_name == c_cogset_concept:
+                elif db_name == "name":
+                    value = form_id
+                elif db_name == "parameterReference":
                     value = all_forms[form_id]["parameterReference"]
                 elif header == "Status_Column" and self.singleton_status is not None:
                     value = self.singleton_status
@@ -430,6 +417,10 @@ class ExcelWriter(BaseExcelWriter):
             c_j_slice = self.dataset["CognateTable", "segmentSlice"].name
         except KeyError:
             c_j_slice = None
+        try:
+            c_j_comment = self.dataset["CognateTable", "comment"].name
+        except KeyError:
+            c_j_comment = None
         c_j_form = self.dataset["CognateTable", "formReference"].name
         for judgement in self.dataset["CognateTable"]:
             form_with_judgement_metadata: types.Form = types.Form(
@@ -439,6 +430,10 @@ class ExcelWriter(BaseExcelWriter):
                 c_j_cognateset
             ]
             form_with_judgement_metadata["segmentSlice"] = judgement.get(c_j_slice)
+            form_with_judgement_metadata["formComment"] = form_with_judgement_metadata[
+                "comment"
+            ]
+            form_with_judgement_metadata["comment"] = judgement.get(c_j_comment)
             # TODO: Add other printable judgement properties
             all_forms[judgement[c_j_cognateset]].append(form_with_judgement_metadata)
         return all_forms

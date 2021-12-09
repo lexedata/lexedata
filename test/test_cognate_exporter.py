@@ -25,8 +25,7 @@ def test_adding_singleton_cognatesets(caplog):
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     with caplog.at_level(logging.WARNING):
         excel_writer = ExcelWriter(
-            dataset=dataset,
-            singleton_cognate=True,
+            dataset=dataset, singleton_cognate=True, singleton_status="should fail"
         )
         output = dirname / "out.xlsx"
         excel_writer.create_excel(out=output)
@@ -154,7 +153,7 @@ def test_no_comment_column():
     )
     forms = util.cache_table(dataset).values()
     for form in forms:
-        assert writer.form_to_cell_value(form).strip() == "‘one, one’"
+        assert writer.form_to_cell_value(form).strip() == "e.ta.'kɾã ‘one, one’"
         break
 
 
