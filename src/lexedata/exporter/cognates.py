@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import abc
 import typing as t
 import urllib.parse
 from pathlib import Path
@@ -32,6 +33,7 @@ class BaseExcelWriter:
         self,
         dataset: pycldf.Dataset,
         database_url: t.Optional[str] = None,
+        logger: cli.logging.Logger = cli.logger,
     ):
         self.dataset = dataset
         self.set_header()
@@ -194,6 +196,13 @@ class BaseExcelWriter:
             link = self.URL_BASE.format(urllib.parse.quote(judgement["id"]))
             form_cell.hyperlink = link
 
+    def collect_rows(self):
+        return util.cache_table(self.dataset, self.row_table).values()
+
+    @abc.abstractmethod
+    def after_filling(self, row_index):
+        "What should happen after the last regular row has been written?"
+
 
 class ExcelWriter(BaseExcelWriter):
     """Class logic for cognateset Excel export."""
@@ -206,8 +215,9 @@ class ExcelWriter(BaseExcelWriter):
         database_url: t.Optional[str] = None,
         singleton_cognate: bool = False,
         singleton_status: t.Optional[str] = None,
+        logger: cli.logging.Logger = cli.logger,
     ):
-        super().__init__(dataset=dataset, database_url=database_url)
+        super().__init__(dataset=dataset, database_url=database_url, logger=logger)
         # assert that all required tables are present in Dataset
         try:
             for _ in dataset["CognatesetTable"]:
@@ -261,9 +271,6 @@ class ExcelWriter(BaseExcelWriter):
                     re.sub(f"-?{__package__}", "", cogset[c_comment] or "").strip(),
                     "lexedata.exporter",
                 )
-
-    def collect_rows(self):
-        return util.cache_table(self.dataset, "CognatesetTable").values()
 
     def after_filling(self, row_index):
         if not self.singleton:

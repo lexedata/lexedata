@@ -20,8 +20,9 @@ class MatrixExcelWriter(BaseExcelWriter):
         self,
         dataset: pycldf.Dataset,
         database_url: t.Optional[str] = None,
+        logger: cli.logging.Logger = cli.logger,
     ):
-        super().__init__(dataset=dataset, database_url=database_url)
+        super().__init__(dataset=dataset, database_url=database_url, logger=logger)
 
     def set_header(self):
         self.header = [("id", "ID")]
@@ -46,9 +47,6 @@ class MatrixExcelWriter(BaseExcelWriter):
     def form_to_cell_value(self, form: types.Form) -> str:
         # TODO: Placeholder, use proper structure here.
         return form["form"]
-
-    def collect_rows(self):
-        return util.cache_table(self.dataset, "ParameterTable").values()
 
     def after_filling(self, row_index: int):
         pass
