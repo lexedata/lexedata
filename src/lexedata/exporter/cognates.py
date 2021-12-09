@@ -38,8 +38,6 @@ class BaseExcelWriter:
         self.dataset = dataset
         self.set_header()
 
-        self.row_id = self.dataset[self.row_table, "id"].name
-
         self.URL_BASE = database_url
 
         self.wb = op.Workbook()
@@ -236,7 +234,6 @@ class ExcelWriter(BaseExcelWriter):
             )
         self.singleton = singleton_cognate
         self.singleton_status = singleton_status
-        self.row_id = self.dataset["CognatesetTable", "id"].name
         if self.singleton_status is not None:
             if ("Status_Column", "Status_Column") not in self.header:
                 self.logger.warning(
