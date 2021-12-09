@@ -10,13 +10,11 @@ from helper_functions import empty_copy_of_cldf_wordlist, copy_to_temp
 from lexedata.util.fs import get_dataset
 from lexedata.exporter.cognates import ExcelWriter
 
-
 try:
     from pycldf.dataset import SchemaError
 except ImportError:
-    # TODO: Deprecate old pycldf versions, so we can rely on its existence.
-    class SchemaError(Exception):
-        pass
+    # SchemaError was introduced in pycldf 1.24.0
+    SchemaError = KeyError
 
 
 def test_adding_singleton_cognatesets(caplog):
