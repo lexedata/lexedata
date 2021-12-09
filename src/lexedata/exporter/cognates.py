@@ -76,41 +76,33 @@ class BaseExcelWriter:
 
         c_name = self.dataset["LanguageTable", "name"].name
         c_id = self.dataset["LanguageTable", "id"].name
-        c_form_id = self.dataset["FormTable", "id"].name
-        c_form_concept_reference = self.dataset["FormTable", "parameterReference"].name
 
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
+
         # TODO: wrap the following two blocks into a
         # get_sorted_languages() -> t.OrderedDict[languageReference, Column Header/Titel/Name]
         # function
+        languages = list(util.cache_table(self.dataset, "LanguageTable").values())
         if language_order:
-            c_sort = self.dataset["LanguageTable", f"{language_order}"].name
-            languages = sorted(
-                self.dataset["LanguageTable"], key=lambda x: x[c_sort], reverse=False
+            c_sort = (
+                util.cldf_property(
+                    self.dataset["LanguageTable", language_order].propertyUrl
+                )
+                or self.dataset["LanguageTable", language_order].name
             )
-        else:
-            # sorted returns a list, so better return a list here as well
-            languages = list(self.dataset["LanguageTable"])
+            languages.sort(key=lambda x: x[c_sort], reverse=False)
+
         for col, lan in cli.tq(
             enumerate(languages, len(excel_header) + 1),
             task="Writing languages to excel header",
             total=len(languages),
         ):
-            # TODO: This should be based on the foreign key relation
+            # TODO: This should be based on the foreign key relation of languageReference
             self.lan_dict[lan[c_id]] = col
             excel_header.append(lan[c_name])
         self.ws.append(excel_header)
-
-        # map form_id to id of associated concept
-        concept_id_by_form_id = dict()
-        for f in self.dataset["FormTable"]:
-            concept = f[c_form_concept_reference]
-            if isinstance(concept, str):
-                concept_id_by_form_id[f[c_form_id]] = concept
-            else:
-                concept_id_by_form_id[f[c_form_id]] = concept[0]
 
         # Again, row_index 2 is indeed row 2, row 1 is header
         row_index = 1 + 1
