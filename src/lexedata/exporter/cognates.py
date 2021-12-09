@@ -78,11 +78,6 @@ class BaseExcelWriter:
         c_form_id = self.dataset["FormTable", "id"].name
         c_form_concept_reference = self.dataset["FormTable", "parameterReference"].name
 
-        if self.singleton_status is not None:
-            if ("Status_Column", "Status_Column") not in self.header:
-                logger.warning(
-                    f"You requested that I set the status of new singleton cognate sets to {self.singleton_status}, but your CognatesetTable has no Status_Column to write it to. If you want a Status "
-                )
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
@@ -231,6 +226,11 @@ class ExcelWriter(BaseExcelWriter):
         self.singleton = singleton_cognate
         self.singleton_status = singleton_status
         self.row_id = self.dataset["CognatesetTable", "id"].name
+        if self.singleton_status is not None:
+            if ("Status_Column", "Status_Column") not in self.header:
+                logger.warning(
+                    f"You requested that I set the status of new singleton cognate sets to {self.singleton_status}, but your CognatesetTable has no Status_Column to write it to. If you want a Status "
+                )
 
     def write_row_header(self, cogset, row_number: int):
         try:

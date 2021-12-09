@@ -24,21 +24,12 @@ class MatrixExcelWriter(BaseExcelWriter):
         super().__init__(dataset=dataset, database_url=database_url)
 
     def set_header(self):
-        try:
-            c_id = self.dataset["ParameterTable", "id"].name
-            self.header = [(c_id, "ID")]
-        except KeyError:
-            c_id = self.dataset["FormTable", "parameterReference"].name
-            self.header = [(c_id, "ID")]
-        try:
-            c_name = self.dataset["ParameterTable", "name"].name
-            self.header.append((c_name, "Name"))
-        except KeyError:
-            pass
+        self.header = [("id", "ID")]
+        self.header.append(("name", "Name"))
 
         try:
-            c_concepticon = self.dataset["ParameterTable", "name"].name
-            self.header.append((c_concepticon, "Concepticon"))
+            self.dataset["ParameterTable", "concepticonReference"].name
+            self.header.append(("concepticonReference", "Concepticon"))
         except KeyError:
             pass
 
@@ -54,12 +45,12 @@ class MatrixExcelWriter(BaseExcelWriter):
 
     def form_to_cell_value(self, form: types.Form) -> str:
         # TODO: Placeholder, use proper structure here.
-        return form["Unified_Form"]
+        return form["form"]
 
     def collect_rows(self):
         return util.cache_table(self.dataset, "ParameterTable").values()
 
-    def after_filling(self):
+    def after_filling(self, row_index: int):
         pass
 
     def write_row_header(self, cogset, row):
