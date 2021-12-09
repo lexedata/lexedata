@@ -206,6 +206,10 @@ class BaseExcelWriter:
 
         """
 
+    @abc.abstractmethod
+    def set_header(self):
+        "Define the header for the first few columns"
+
 
 class ExcelWriter(BaseExcelWriter):
     """Class logic for cognateset Excel export."""
