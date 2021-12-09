@@ -41,7 +41,7 @@ class BaseExcelWriter:
         self,
         out: Path,
         size_sort: bool = False,
-        row_order: t.Optional[str] = None,
+        rows: t.Optional[types.RowObject] = None,
         language_order="name",
         status_update: t.Optional[str] = None,
         logger: cli.logging.Logger = cli.logger,
@@ -69,34 +69,12 @@ class BaseExcelWriter:
 
         """
         # cldf names
-        try:
-            c_name = self.dataset["LanguageTable", "name"].name
-            c_id = self.dataset["LanguageTable", "id"].name
-            c_form_id = self.dataset["FormTable", "id"].name
-            c_language = self.dataset["FormTable", "languageReference"].name
-            c_form_concept_reference = self.dataset[
-                "FormTable", "parameterReference"
-            ].name
-            c_cognate_cognateset = self.dataset[
-                "CognateTable", "cognatesetReference"
-            ].name
-            c_cognate_form = self.dataset["CognateTable", "formReference"].name
-            c_cogset_id = self.dataset["CognatesetTable", "id"].name
-            c_cogset_name = self.dataset["CognatesetTable", "name"].name
-        except KeyError:
-            # TODO: Wow, this code so fragile! Did I come up with it?? I asked
-            # for a better way to resolve it in
-            # https://github.com/cldf/pycldf/issues/145, we'll see whether that
-            # leads somewhere.
-            formatted_lines = traceback.format_exc().splitlines()
-            match = re.match(r'.*"(.*?)", "(.*?)".*', formatted_lines[2])
-            cli.Exit.INVALID_COLUMN_NAME(
-                f"The {match.group(1)} is missing the column {match.group(2)} which is required by cldf."
-            )
-        try:
-            c_comment = self.dataset["CognatesetTable", "comment"].name
-        except KeyError:
-            c_comment = None
+
+        c_name = self.dataset["LanguageTable", "name"].name
+        c_id = self.dataset["LanguageTable", "id"].name
+        c_form_id = self.dataset["FormTable", "id"].name
+        c_language = self.dataset["FormTable", "languageReference"].name
+        c_form_concept_reference = self.dataset["FormTable", "parameterReference"].name
 
         wb = op.Workbook()
         ws: op.worksheet.worksheet.Worksheet = wb.active
@@ -141,39 +119,33 @@ class BaseExcelWriter:
             else:
                 concept_id_by_form_id[f[c_form_id]] = concept[0]
 
-        # load all cognates by cognateset id
-        all_judgements: t.Dict[CognatesetID, t.List[types.CogSet]] = {}
-        for j in self.dataset["CognateTable"]:
-            all_judgements.setdefault(j[c_cognate_cognateset], []).append(j)
-
         # Again, row_index 2 is indeed row 2, row 1 is header
         row_index = 1 + 1
-        cogsets = list(self.dataset["CognatesetTable"])
-        # Sort first by size, then by the specified column, so that if both
-        # happen, the cognatesets are globally sorted by the specified column
-        # and within one group by size.
-        if size_sort:
-            cogsets.sort(
-                key=lambda x: len(all_judgements[x[c_cogset_id]]),
-                reverse=True,
-            )
-        if row_order is not None:
-            cogsets.sort(key=lambda c: c[row_order])
 
-        # iterate over all cogsets
+        try:
+            c_comment = self.dataset[self.row_table, "comment"].name
+        except KeyError:
+            c_comment = None
+
+        if rows is None:
+            rows = self.collect_rows()
+
+        all_judgements = self.collect_forms_by_row()
+
+        # iterate over all rows
         for cogset in cli.tq(
-            cogsets,
-            task="Writing cognates and cognatesets to excel",
-            total=len(cogsets),
+            rows,
+            task="Writing rows to Excel",
+            total=len(rows),
         ):
             # possibly a cogset can appear without any judgment, if so ignore it
-            if cogset[c_cogset_id] not in all_judgements:
+            if cogset[self.row_id] not in all_judgements:
                 continue
             # write all forms of this cognateset to excel
-            new_row_index = self.create_formcells_for_cogset(
-                all_judgements[cogset[c_cogset_id]],
+            new_row_index = self.create_formcells(
+                cogset,
                 ws,
-                all_forms,
+                all_judgements[cogset[self.row_id]],
                 row_index,
             )
             # write rows for cognatesets
@@ -190,7 +162,7 @@ class BaseExcelWriter:
                     else:
                         if db_name == "":
                             continue
-                        column = self.dataset["CognatesetTable", db_name]
+                        column = self.dataset[self.row_table, db_name]
                         if column.separator is None:
                             value = cogset[db_name]
                         else:
@@ -208,6 +180,120 @@ class BaseExcelWriter:
                         )
 
             row_index = new_row_index
+
+        self.after_filling()
+        wb.save(filename=out)
+
+    def create_formcells(
+        self,
+        cogset: types.CogSet,
+        ws: op.worksheet.worksheet.Worksheet,
+        all_forms: t.Dict[str, types.Form],
+        row_index: int,
+    ) -> int:
+        """Writes all forms for given cognate set to Excel.
+
+        Take all forms for a given cognate set as given by the database, create
+        a hyperlink cell for each form, and write those into rows starting at
+        row_index.
+
+        Return the row number of the first empty row after this cognate set,
+        which can then be filled by the following cognate set.
+
+        """
+        c_form = self.dataset["CognateTable", "formReference"].name
+        c_language = self.dataset["FormTable", "languageReference"].name
+        # Read the forms from the database and group them by language
+        forms = t.DefaultDict[int, t.List[types.Form]](list)
+        for form in all_forms:
+            forms[self.lan_dict[form[c_language]]].append(form)
+
+        if not forms:
+            return row_index + 1
+
+        # maximum of rows to be added
+        maximum_cogset = max([len(c) for c in forms.values()])
+        for column, cells in forms.items():
+            for row, judgement in enumerate(cells, row_index):
+                self.create_formcell(judgement, ws, column, row)
+        # increase row_index and return
+        row_index += maximum_cogset
+
+        return row_index
+
+    def create_formcell(
+        self, judgement, ws: op.worksheet.worksheet.Worksheet, column: int, row: int
+    ) -> None:
+        """Fill the given cell with the form's data.
+
+        In the cell described by ws, column, row, dump the data for the form:
+        Write into the the form data, and supply a comment from the judgement
+        if there is one.
+
+        """
+        cell_value = self.form_to_cell_value(judgement)
+        form_cell = ws.cell(row=row, column=column, value=cell_value)
+        c_id = self.dataset["FormTable", "id"].name
+        try:
+            c_comment = self.dataset["CognateTable", "comment"].name
+        except (KeyError):
+            c_comment = None
+        comment = judgement.get(c_comment, None)
+        if comment:
+            form_cell.comment = op.comments.Comment(comment, __package__)
+        if self.URL_BASE:
+            link = self.URL_BASE.format(urllib.parse.quote(judgement[c_id]))
+            form_cell.hyperlink = link
+
+
+class ExcelWriter(BaseExcelWriter):
+    """Class logic for cognateset Excel export."""
+
+    header: t.List[t.Tuple[str, str]]
+
+    def __init__(
+        self,
+        dataset: pycldf.Dataset,
+        database_url: t.Optional[str] = None,
+        singleton_cognate: bool = False,
+    ):
+        super().__init__(dataset=dataset, database_url=database_url)
+        # assert that all required tables are present in Dataset
+        try:
+            for _ in dataset["CognatesetTable"]:
+                break
+        except (KeyError, FileNotFoundError):
+            cli.Exit.INVALID_DATASET(
+                "This script presupposes a separate CognatesetTable. Call `lexedata.edit.add_table CognatesetTable` to automatically add one."
+            )
+        try:
+            for _ in dataset["CognateTable"]:
+                break
+        except (KeyError, FileNotFoundError):
+            cli.Exit.NO_COGNATETABLE(
+                "This script presupposes a separate CognateTable. Call `lexedata.edit.add_cognate_table` to automatically add one."
+            )
+        self.singleton = singleton_cognate
+        self.row_id = self.dataset["CognatesetTable", "id"].name
+
+    def collect_rows(self):
+        ...
+
+        c_cognate_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
+        c_cognate_form = self.dataset["CognateTable", "formReference"].name
+        c_cogset_name = self.dataset["CognatesetTable", "name"].name
+
+        try:
+            c_comment = self.dataset["CognatesetTable", "comment"].name
+        except KeyError:
+            c_comment = None
+
+        # load all cognates by cognateset id
+        all_judgements: t.Dict[CognatesetID, t.List[types.CogSet]] = {}
+        for j in self.dataset["CognateTable"]:
+            all_judgements.setdefault(j[c_cognate_cognateset], []).append(j)
+
+    def after_filling(self):
         # write remaining forms to singleton congatesets if switch is activated
         if self.singleton:
             # remove all forms that appear in judgements
@@ -249,37 +335,6 @@ class BaseExcelWriter:
                         value = ""
                     ws.cell(row=row_index, column=col, value=value)
                 row_index += 1
-        wb.save(filename=out)
-
-
-class ExcelWriter(BaseExcelWriter):
-    """Class logic for cognateset Excel export."""
-
-    header: t.List[t.Tuple[str, str]]
-
-    def __init__(
-        self,
-        dataset: pycldf.Dataset,
-        database_url: t.Optional[str] = None,
-        singleton_cognate: bool = False,
-    ):
-        super().__init__(dataset=dataset, database_url=database_url)
-        # assert that all required tables are present in Dataset
-        try:
-            for _ in dataset["CognatesetTable"]:
-                break
-        except (KeyError, FileNotFoundError):
-            cli.Exit.INVALID_DATASET(
-                "This script presupposes a separate CognatesetTable. Call `lexedata.edit.add_table CognatesetTable` to automatically add one."
-            )
-        try:
-            for _ in dataset["CognateTable"]:
-                break
-        except (KeyError, FileNotFoundError):
-            cli.Exit.NO_COGNATETABLE(
-                "This script presupposes a separate CognateTable. Call `lexedata.edit.add_cognate_table` to automatically add one."
-            )
-        self.singleton = singleton_cognate
 
     def set_header(self):
         c_id = self.dataset["CognatesetTable", "id"].name
@@ -296,70 +351,7 @@ class ExcelWriter(BaseExcelWriter):
             else:
                 self.header.append((column.name, column.name))
 
-    def create_formcells_for_cogset(
-        self,
-        cogset: types.CogSet,
-        ws: op.worksheet.worksheet.Worksheet,
-        all_forms: t.Dict[str, types.Form],
-        row_index: int,
-    ) -> int:
-        """Writes all forms for given cognate set to Excel.
-
-        Take all forms for a given cognate set as given by the database, create
-        a hyperlink cell for each form, and write those into rows starting at
-        row_index.
-
-        Return the row number of the first empty row after this cognate set,
-        which can then be filled by the following cognate set.
-
-        """
-        c_form = self.dataset["CognateTable", "formReference"].name
-        c_language = self.dataset["FormTable", "languageReference"].name
-        # Read the forms from the database and group them by language
-        forms = t.DefaultDict[int, t.List[types.Form]](list)
-        for judgement in cogset:
-            form_id = judgement[c_form]
-            form = all_forms[form_id]
-            forms[self.lan_dict[form[c_language]]].append((form, judgement))
-
-        if not forms:
-            return row_index + 1
-
-        # maximum of rows to be added
-        maximum_cogset = max([len(c) for c in forms.values()])
-        for column, cells in forms.items():
-            for row, judgement in enumerate(cells, row_index):
-                self.create_formcell(judgement, ws, column, row)
-        # increase row_index and return
-        row_index += maximum_cogset
-
-        return row_index
-
-    def create_formcell(
-        self, judgement, ws: op.worksheet.worksheet.Worksheet, column: int, row: int
-    ) -> None:
-        """Fill the given cell with the form's data.
-
-        In the cell described by ws, column, row, dump the data for the form:
-        Write into the the form data, and supply a comment from the judgement
-        if there is one.
-
-        """
-        cell_value = self.form_to_cell_value(judgement[0], judgement[1])
-        form_cell = ws.cell(row=row, column=column, value=cell_value)
-        c_id = self.dataset["FormTable", "id"].name
-        try:
-            c_comment = self.dataset["CognateTable", "comment"].name
-        except (KeyError):
-            c_comment = None
-        comment = judgement[1].get(c_comment, None)
-        if comment:
-            form_cell.comment = op.comments.Comment(comment, __package__)
-        if self.URL_BASE is not None:
-            link = self.URL_BASE.format(urllib.parse.quote(judgement[0][c_id]))
-            form_cell.hyperlink = link
-
-    def form_to_cell_value(self, form: types.Form, meta: types.Judgement) -> str:
+    def form_to_cell_value(self, form: types.Form) -> str:
         """Build a string describing the form itself
 
         Provide the best transcription and all translations of the form strung
@@ -492,10 +484,22 @@ if __name__ == "__main__":
             f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
         )
 
+    cogsets.sort(key=lambda c: c[args.sort_cognatesets_by])
+
+    cogsets = list(self.dataset["CognatesetTable"])
+    # Sort first by size, then by the specified column, so that if both
+    # happen, the cognatesets are globally sorted by the specified column
+    # and within one group by size.
+    if size_sort:
+        cogsets.sort(
+            key=lambda x: len(all_judgements[x[c_cogset_id]]),
+            reverse=True,
+        )
+
     E.create_excel(
         args.excel,
         size_sort=args.size_sort,
-        row_order=cogset_order,
+        rows=cogsets,
         language_order=args.sort_languages_by,
         status_update=args.add_singletons_with_status,
     )

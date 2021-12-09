@@ -1,15 +1,26 @@
 # -*- coding: utf-8 -*-
 import csv
+import typing as t
 from pathlib import Path
 
 import pycldf
 
 from lexedata.exporter.cognates import BaseExcelWriter
-from lexedata import cli
+from lexedata import cli, types
 
 
 class MatrixExcelWriter(BaseExcelWriter):
     """Class logic for Excel matrix export."""
+
+    row_table = "ParameterTable"
+
+    def __init__(
+        self,
+        dataset: pycldf.Dataset,
+        database_url: t.Optional[str] = None,
+    ):
+        super().__init__(dataset=dataset, database_url=database_url)
+        self.row_id = self.dataset["ParameterTable", "id"].name
 
     # TODO: Transfer code from cognates.py to here, think about how the two scripts interact.
 
@@ -31,6 +42,25 @@ class MatrixExcelWriter(BaseExcelWriter):
             self.header.append((c_concepticon, "Concepticon"))
         except KeyError:
             pass
+
+    def collect_forms_by_row(self) -> t.Mapping[types.Parameter_ID, t.List[types.Form]]:
+        all_forms: t.MutableMapping[
+            types.Parameter_ID, t.List[types.Form]
+        ] = t.DefaultDict(list)
+        c_f_row_reference = self.dataset["FormTable", "parameterReference"].name
+        for row in self.dataset["FormTable"]:
+            all_forms[row[c_f_row_reference]].append(row)
+        return all_forms
+
+    def form_to_cell_value(self, form: types.Form) -> str:
+        # TODO: Placeholder, use proper structure here.
+        return str(form)
+
+    def collect_rows(self):
+        return list(self.dataset["ParameterTable"])
+
+    def after_filling(self):
+        pass
 
 
 if __name__ == "__main__":
@@ -81,6 +111,6 @@ if __name__ == "__main__":
     )
     E.create_excel(
         args.excel,
-        language_order=args.language_sort_column,
-        concepts=args.concept_filter,
+        language_order=args.sort_languages_by,
+        rows=concept_list,
     )
