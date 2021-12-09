@@ -72,11 +72,6 @@ class BaseExcelWriter:
             LanguageTable
 
         """
-        # cldf names
-
-        c_name = self.dataset["LanguageTable", "name"].name
-        c_id = self.dataset["LanguageTable", "id"].name
-
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
@@ -100,8 +95,8 @@ class BaseExcelWriter:
             total=len(languages),
         ):
             # TODO: This should be based on the foreign key relation of languageReference
-            self.lan_dict[lan[c_id]] = col
-            excel_header.append(lan[c_name])
+            self.lan_dict[lan["id"]] = col
+            excel_header.append(lan.get("name", lan["id"]))
         self.ws.append(excel_header)
 
         # Again, row_index 2 is indeed row 2, row 1 is header
@@ -191,8 +186,22 @@ class BaseExcelWriter:
         return util.cache_table(self.dataset, self.row_table).values()
 
     @abc.abstractmethod
+    def collect_forms_by_row(self):
+        "Collect forms by row object (ie. concept or cognate set)"
+
+    @abc.abstractmethod
     def after_filling(self, row_index):
         "What should happen after the last regular row has been written?"
+
+    @abc.abstractmethod
+    def write_row_header(self, row_object: types.RowObject, row_index: int):
+        """Write a row header
+
+        Write into the first few columns of the row `row_index` of self.ws the
+        metadata of a row, eg. concept ID and gloss or cognateset ID,
+        cognateset name and status.
+
+        """
 
 
 class ExcelWriter(BaseExcelWriter):
