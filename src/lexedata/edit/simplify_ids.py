@@ -169,7 +169,7 @@ def update_ids(
         for row in cli.tq(
             ds[other_table],
             total=ds[other_table].common_props.get("dc:extent"),
-            task="",
+            task="Replacing changed IDs",
         ):
             for column in columns:
                 row[column] = mapping.get(row[column], row[column])

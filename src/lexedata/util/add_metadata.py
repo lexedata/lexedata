@@ -159,7 +159,7 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
                 ds[ds.primary_table].tableSchema.columns.remove(to_be_replaced)
 
     for column in more_columns.values():
-        logger.info(f"Also added column {column.name}, as expected from a FormTable.")
+        logger.info(f"Also added column {column.name}, as expected for a FormTable.")
 
     ds[ds.primary_table].tableSchema.columns.sort(
         key=lambda k: colnames.index(k.name) if k.name in colnames else 1e10

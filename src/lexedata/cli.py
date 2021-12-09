@@ -23,6 +23,7 @@ class Exit(IntEnum):
     INVALID_COLUMN_NAME = 6
     INVALID_DATASET = 7
     INVALID_INPUT = 8
+    FILE_NOT_FOUND = 9
 
     def __call__(self, message: t.Optional[str] = None):
         if message is None:
