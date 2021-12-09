@@ -105,10 +105,10 @@ class BaseExcelWriter:
             row_objects = [
                 row_object for row_object in row_objects if row_object["id"] in rows
             ]
-            if {row_object["id"] for row_object in row_objects} - set(rows):
+            if set(rows) - {row_object["id"] for row_object in row_objects}:
                 self.logger.warning(
                     "You asked me to include the entries %s in the export, but I did not find those IDs.",
-                    {row_object["id"] for row_object in row_objects} - set(rows),
+                    set(rows) - {row_object["id"] for row_object in row_objects},
                 )
 
         forms_by_row = self.collect_forms_by_row()
@@ -280,7 +280,7 @@ class ExcelWriter(BaseExcelWriter):
             # Transfer the cognateset comment to the first Excel cell.
             if c_comment and col == 1 and cogset.get("comment"):
                 cell.comment = op.comments.Comment(
-                    re.sub(f"-?{__package__}", "", cogset[c_comment] or "").strip(),
+                    re.sub(f"-?{__package__}", "", cogset["comment"]).strip(),
                     "lexedata.exporter",
                 )
 
@@ -348,17 +348,36 @@ class ExcelWriter(BaseExcelWriter):
         Provide the best transcription and all translations of the form strung
         together.
 
-        >>> ds = util.fs.new_wordlist(FormTable=[])
+        >>> ds = util.fs.new_wordlist(FormTable=[], CognatesetTable=[], CognateTable=[])
         >>> E = ExcelWriter(dataset=ds)
-        >>> E.form_to_cell_value({"form": "a"})
-        k a w e n a t j a k a
-        d i +dúpe
-        +iíté+ k h ú
-        tákeː+toː
-        h o n _tiem_litimuleni
-        hont i e m _litimuleni
+        >>> E.form_to_cell_value({"form": "f", "parameterReference": "c"})
+        'f ‘c’'
+        >>> E.form_to_cell_value(
+        ...   {"form": "f", "parameterReference": "c", "formComment": "Not empty"})
+        'f ‘c’ ⚠'
+        >>> E.form_to_cell_value(
+        ...   {"form": "fo", "parameterReference": "c", "segments": ["f", "o"]})
+        '{ f o } ‘c’'
+        >>> E.form_to_cell_value(
+        ...   {"form": "fo",
+        ...    "parameterReference": "c",
+        ...    "segments": ["f", "o"],
+        ...    "segmentSlice": ["1:1"]})
+        '{ f }o ‘c’'
+
+        TODO: This function should at some point support alignments, so that
+        the following call will return '{ - f - }o ‘c’' instead.
+
+        >>> E.form_to_cell_value(
+        ...   {"form": "fo",
+        ...    "parameterReference": "c",
+        ...    "segments": ["f", "o"],
+        ...    "segmentSlice": ["1:1"],
+        ...    "alignment": ["", "f", ""]})
+        '{ f }o ‘c’'
+
         """
-        segments = self.get_segments(form)
+        segments = form.get("segments")
         if not segments:
             transcription = form["form"]
         else:
@@ -379,7 +398,10 @@ class ExcelWriter(BaseExcelWriter):
                 # silently messing with data. If the check fails, we take the
                 # whole segment and warn.
                 self.logger.warning(
-                    f"In form {form['id']}, with judgement{form['judgement_id']}, segment slice {form['segmentSlice']} is invalid."
+                    "In judgement %s, for form %s, segment slice %s is invalid. I will use the whole form.",
+                    form["id"],
+                    form["cognateReference"],
+                    ",".join(form["segmentSlice"]),
                 )
                 included_segments = range(len(form["segments"]))
 
@@ -403,8 +425,7 @@ class ExcelWriter(BaseExcelWriter):
 
         suffix = ""
         try:
-            c_comment = self.dataset["FormTable", "comment"].name
-            if form.get(c_comment):
+            if form.get("formComment"):
                 suffix = f" {WARNING:}"
         except (KeyError):
             pass
@@ -418,13 +439,6 @@ class ExcelWriter(BaseExcelWriter):
             translations.append(form["parameterReference"])
         return "{:} ‘{:}’{:}".format(transcription, ", ".join(translations), suffix)
 
-    def get_segments(self, form: types.Form):
-        try:
-            return form["segments"]
-        except (KeyError):
-            self.logger.warning("No segments column found. Falling back to cldf form.")
-            return form["form"]
-
     def collect_forms_by_row(
         self,
     ) -> t.Mapping[types.Cognateset_ID, t.List[types.Form]]:
@@ -435,6 +449,7 @@ class ExcelWriter(BaseExcelWriter):
             types.Cognateset_ID, t.List[types.Form]
         ] = t.DefaultDict(list)
         c_j_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
+        c_j_id = self.dataset["CognateTable", "id"].name
         try:
             c_j_slice = self.dataset["CognateTable", "segmentSlice"].name
         except KeyError:
@@ -448,6 +463,7 @@ class ExcelWriter(BaseExcelWriter):
             form_with_judgement_metadata: types.Form = types.Form(
                 forms[judgement[c_j_form]]
             )
+            form_with_judgement_metadata["cognateReference"] = judgement[c_j_id]
             form_with_judgement_metadata["cognatesetReference"] = judgement[
                 c_j_cognateset
             ]

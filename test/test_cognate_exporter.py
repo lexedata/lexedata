@@ -120,22 +120,6 @@ def test_no_cognate_table(caplog):
     assert "lexedata.edit.add_cognate_table" in caplog.text
 
 
-def test_no_segment_column(caplog):
-    dataset, _ = copy_to_temp(
-        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
-    )
-    dataset.remove_columns("FormTable", "Segments")
-    writer = ExcelWriter(
-        dataset=dataset,
-    )
-    forms = util.cache_table(dataset).values()
-    for form in forms:
-        assert writer.get_segments(form) is form["form"] and re.search(
-            r".*No segments column found. Falling back to cldf form.*", caplog.text
-        )
-        caplog.clear()
-
-
 def test_no_comment_column():
     dataset, _ = copy_to_temp(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
@@ -163,8 +147,21 @@ def test_missing_required_column():
         excel_writer.create_excel()
 
 
-def test_included_segments():
-    """Generate a data set with alignments and segment slices.
+def test_included_segments(caplog):
+    ds = util.fs.new_wordlist(FormTable=[], CognatesetTable=[], CognateTable=[])
+    E = ExcelWriter(dataset=ds)
+    E.form_to_cell_value({"form": "f", "parameterReference": "c"})
+    with caplog.at_level(logging.WARNING):
+        cell = E.form_to_cell_value(
+            {
+                "id": "0",
+                "cognateReference": "j",
+                "form": "fo",
+                "parameterReference": "c",
+                "segments": ["f", "o"],
+                "segmentSlice": ["3:1"],
+            }
+        )
+        assert cell == "{ f o } ‘c’"
 
-    Test that the correct segments get included in the excel export.
-    """
+    assert re.search("segment slice '3:1' is invalid", caplog.text) is None
