@@ -57,7 +57,7 @@ class MatrixExcelWriter(BaseExcelWriter):
         return form["Unified_Form"]
 
     def collect_rows(self):
-        return list(self.dataset["ParameterTable"])
+        return util.cache_table(self.dataset, "ParameterTable").values()
 
     def after_filling(self):
         pass
