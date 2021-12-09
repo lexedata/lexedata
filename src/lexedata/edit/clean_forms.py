@@ -6,8 +6,8 @@ R = t.TypeVar("R", bound=t.Dict[str, t.Any])
 
 def clean_forms(
     table: t.Iterable[R],
-    form_column_name,
-    variants_column_name,
+    form_column_name="form",
+    variants_column_name="Variants",
     split_at=[",", ";"],
     split_at_and_keep=["~"],
     logger: cli.logging.Logger = cli.logger,
@@ -15,8 +15,9 @@ def clean_forms(
     """Split all forms that contain separators into form+variants.
 
     >>> for row in clean_forms([
-    ...   {'F': 'a ~ æ', 'V': []}
-    ...   {'F': 'bə-, be-', 'V': ['b-']}])):
+    ...   {'F': 'a ~ æ', 'V': []},
+    ...   {'F': 'bə-, be-', 'V': ['b-']}],
+    ...   "F", "V"):
     ...   print(row)
     {'F': 'a', 'V': ['~æ']}
     {'F': 'bə-', 'V': ['b-', 'be-']}
