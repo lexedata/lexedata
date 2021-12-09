@@ -20,9 +20,6 @@ class MatrixExcelWriter(BaseExcelWriter):
         database_url: t.Optional[str] = None,
     ):
         super().__init__(dataset=dataset, database_url=database_url)
-        self.row_id = self.dataset["ParameterTable", "id"].name
-
-    # TODO: Transfer code from cognates.py to here, think about how the two scripts interact.
 
     def set_header(self):
         try:
@@ -54,7 +51,7 @@ class MatrixExcelWriter(BaseExcelWriter):
 
     def form_to_cell_value(self, form: types.Form) -> str:
         # TODO: Placeholder, use proper structure here.
-        return str(form)
+        return form["Unified_Form"]
 
     def collect_rows(self):
         return list(self.dataset["ParameterTable"])

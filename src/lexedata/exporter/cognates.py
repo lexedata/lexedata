@@ -8,8 +8,7 @@ import traceback
 import pycldf
 import openpyxl as op
 
-from lexedata import types
-from lexedata import cli
+from lexedata import types, cli, util
 from lexedata.util import parse_segment_slices
 
 
@@ -27,6 +26,9 @@ CognatesetID = str
 class BaseExcelWriter:
     """Class logic for matrix-shaped Excel export."""
 
+    row_table: str
+    header: t.List[t.Tuple[str, str]]
+
     def __init__(
         self,
         dataset: pycldf.Dataset,
@@ -34,6 +36,8 @@ class BaseExcelWriter:
     ):
         self.dataset = dataset
         self.set_header()
+
+        self.row_id = self.dataset[self.row_table, "id"].name
 
         self.URL_BASE = database_url
 
@@ -206,7 +210,7 @@ class BaseExcelWriter:
         # Read the forms from the database and group them by language
         forms = t.DefaultDict[int, t.List[types.Form]](list)
         for form in all_forms:
-            forms[self.lan_dict[form[c_language]]].append(form)
+            forms[self.lan_dict[form["languageReference"]]].append(form)
 
         if not forms:
             return row_index + 1
@@ -249,7 +253,7 @@ class BaseExcelWriter:
 class ExcelWriter(BaseExcelWriter):
     """Class logic for cognateset Excel export."""
 
-    header: t.List[t.Tuple[str, str]]
+    row_table = "CognatesetTable"
 
     def __init__(
         self,
@@ -294,6 +298,9 @@ class ExcelWriter(BaseExcelWriter):
             all_judgements.setdefault(j[c_cognate_cognateset], []).append(j)
 
     def after_filling(self):
+        # TODO: fixme
+        return None
+
         # write remaining forms to singleton congatesets if switch is activated
         if self.singleton:
             # remove all forms that appear in judgements
@@ -370,16 +377,23 @@ class ExcelWriter(BaseExcelWriter):
         else:
             transcription = ""
             # TODO: use CLDF property instead of column name
-            if not meta.get("Segment_Slice"):
-                meta["Segment_Slice"] = ["0:{:d}".format(len(segments))]
-            # What if segments overlap or cross? Overlap shouldn't happen, but
-            # we don't check here. Crossing might happen, but this
-            # serialization cannot reflect it, so we enforce order, expecting
-            # that an error message here will be more useful than silently
-            # messing with data.
-            included_segments = set(
-                parse_segment_slices(meta["Segment_Slice"], enforce_ordered=True)
-            )
+            try:
+                included_segments = set(
+                    parse_segment_slices(form["segmentSlice"], enforce_ordered=True)
+                )
+            except KeyError:
+                included_segments = range(len(form["segments"]))
+            except ValueError:
+                # What if segments overlap or cross? Overlap shouldn't happen,
+                # but we don't check here. Crossing might happen, but this
+                # serialization cannot reflect it, so we enforce order,
+                # expecting that an error message here will be more useful than
+                # silently messing with data. If the check fails, we take the
+                # whole segment and warn.
+                logger.warning(
+                    f"In form {form['id']}, with judgement{form['judgement_id']}, segment slice {form['segmentSlice']} is invalid."
+                )
+                included_segments = set(range(len(form["segments"])))
 
             included = False
             for i, s in enumerate(segments):
@@ -410,21 +424,39 @@ class ExcelWriter(BaseExcelWriter):
         # corresponding concepts
         # (multiple concepts) and others (single concept)
         c_concept = self.dataset["FormTable", "parameterReference"].name
-        if isinstance(form[c_concept], list):
-            for f in form[c_concept]:
+        if isinstance(form["parameterReference"], list):
+            for f in form["parameterReference"]:
                 translations.append(f)
         else:
-            translations.append(form[c_concept])
+            translations.append(form["parameterReference"])
         return "{:} ‘{:}’{:}".format(transcription, ", ".join(translations), suffix)
 
     def get_segments(self, form: types.Form, logger: cli.logger = cli.logger):
         try:
-            c_segments = self.dataset["FormTable", "Segments"].name
-            return form[c_segments]
+            return form["segments"]
         except (KeyError):
             logger.warning("No segments column found. Falling back to cldf form.")
             c_f_form = self.dataset["FormTable", "form"].name
-            return form[c_f_form]
+            return form["form"]
+
+    def collect_forms_by_row(
+        self,
+    ) -> t.Mapping[types.Cognateset_ID, t.List[types.Form]]:
+        forms: t.Mapping[types.Form_ID, types.Form] = util.cache_table(
+            self.dataset
+        )  # TODO: index_column = reference target of CognateTable's formReference
+        all_forms: t.MutableMapping[
+            types.Cognateset_ID, t.List[types.Form]
+        ] = t.DefaultDict(list)
+        c_j_cognateset = dataset["CognateTable", "cognatesetReference"].name
+        c_j_form = dataset["CognateTable", "formReference"].name
+        for judgement in self.dataset["CognateTable"]:
+            form_with_judgement_metadata: types.Form = types.Form(
+                forms[judgement[c_j_form]]
+            )
+            form_with_judgement_metadata.update(judgement)
+            all_forms[judgement[c_j_cognateset]].append(form_with_judgement_metadata)
+        return all_forms
 
 
 if __name__ == "__main__":
@@ -472,11 +504,21 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
+
+    dataset = pycldf.Wordlist.from_metadata(args.metadata)
+    try:
+        cogsets = list(dataset["CognatesetTable"])
+    except (KeyError):
+        cli.Exit.INVALID_DATASET(
+            f"Dataset has no explicit CognatesetTable. If you have cognate codes, try to make them explicit."
+        )
+
     E = ExcelWriter(
-        pycldf.Wordlist.from_metadata(args.metadata),
+        dataset,
         database_url=args.url_template,
         singleton_cognate=args.add_singletons_with_status is None,
     )
+
     try:
         cogset_order = E.dataset["CognatesetTable", args.sort_cognatesets_by].name
     except (KeyError):
@@ -484,17 +526,18 @@ if __name__ == "__main__":
             f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
         )
 
-    cogsets.sort(key=lambda c: c[args.sort_cognatesets_by])
-
-    cogsets = list(self.dataset["CognatesetTable"])
+    cogsets = list(dataset["CognatesetTable"])
     # Sort first by size, then by the specified column, so that if both
     # happen, the cognatesets are globally sorted by the specified column
     # and within one group by size.
-    if size_sort:
+    if args.size_sort:
+        raise NotImplementedError
         cogsets.sort(
-            key=lambda x: len(all_judgements[x[c_cogset_id]]),
+            key=lambda x: ...,
             reverse=True,
         )
+
+    cogsets.sort(key=lambda c: c[cogset_order])
 
     E.create_excel(
         args.excel,
