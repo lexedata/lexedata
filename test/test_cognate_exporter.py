@@ -3,8 +3,6 @@ import logging
 from pathlib import Path
 
 import pytest
-import tempfile
-import openpyxl as op
 
 from lexedata import util
 from helper_functions import empty_copy_of_cldf_wordlist, copy_to_temp
@@ -22,24 +20,23 @@ def test_adding_singleton_cognatesets(caplog):
     dataset = get_dataset(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
-    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     with caplog.at_level(logging.WARNING):
         excel_writer = ExcelWriter(
             dataset=dataset, singleton_cognate=True, singleton_status="should fail"
         )
-        output = dirname / "out.xlsx"
-        excel_writer.create_excel(out=output)
+        excel_writer.create_excel()
     assert re.search("no Status_Column to write", caplog.text)
 
     # load central concepts from output
-    ws = op.load_workbook(output).active
     cogset_index = 0
-    for row in ws.iter_rows(min_row=1, max_row=1):
+    for row in excel_writer.ws.iter_rows(min_row=1, max_row=1):
         for cell in row:
             if cell.value == "CogSet":
                 cogset_index = cell.column - 1
     # when accessing the row as a tuple the index is not 1-based as for excel sheets
-    cogset_ids = [row[cogset_index].value for row in ws.iter_rows(min_row=2)]
+    cogset_ids = [
+        row[cogset_index].value for row in excel_writer.ws.iter_rows(min_row=2)
+    ]
     assert cogset_ids == [
         "one1",
         "one1",
@@ -63,24 +60,20 @@ def test_adding_singleton_cognatesets_with_status(caplog):
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
     dataset.add_columns("CognatesetTable", "Status_Column")
-    dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     with caplog.at_level(logging.WARNING):
         excel_writer = ExcelWriter(
             dataset=dataset, singleton_cognate=True, singleton_status="NEW"
         )
-        output = dirname / "out.xlsx"
-        excel_writer.create_excel(out=output)
+        excel_writer.create_excel()
     assert re.search("no Status_Column to write", caplog.text) is None
 
-    # load central concepts from output
-    ws = op.load_workbook(output).active
     cogset_index = 0
-    for row in ws.iter_rows(min_row=1, max_row=1):
+    for row in excel_writer.ws.iter_rows(min_row=1, max_row=1):
         for cell in row:
             if cell.value == "Status_Column":
                 cogset_index = cell.column - 1
     # when accessing the row as a tuple the index is not 1-based as for excel sheets
-    status = [row[cogset_index].value for row in ws.iter_rows(min_row=2)]
+    status = [row[cogset_index].value for row in excel_writer.ws.iter_rows(min_row=2)]
     assert status == [
         None,
         None,

@@ -47,7 +47,6 @@ class BaseExcelWriter:
 
     def create_excel(
         self,
-        out: Path,
         size_sort: bool = False,
         rows: t.Optional[types.RowObject] = None,
         language_order="name",
@@ -63,8 +62,6 @@ class BaseExcelWriter:
 
         Parameters
         ==========
-        out: The path of the Excel file to be written.
-
         size_sort: If true, cognatesets are ordered by the number of cognates
             corresponding to the cognateset
 
@@ -189,7 +186,7 @@ class BaseExcelWriter:
 
     @abc.abstractmethod
     def form_to_cell_value(self, form: types.Form):
-        "Format a form into text for an excel cell"
+        "Format a form into text for an Excel cell value"
 
     @abc.abstractmethod
     def collect_forms_by_row(self):
