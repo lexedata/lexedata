@@ -113,7 +113,7 @@ def test_roundtrip(cldf_wordlist, working_and_nonworking_bibfile):
         (row[c_formReference], row[c_cogsetReference])
         for row in dataset["CognateTable"].iterdicts()
     }
-    writer = ExcelWriter(dataset)
+    writer = ExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
 
@@ -153,7 +153,7 @@ def test_roundtrip_separator_column(cldf_wordlist, working_and_nonworking_bibfil
         row["CommaSeparatedTags"] = tag
     dataset.write(CognatesetTable=write_back)
 
-    writer = ExcelWriter(dataset)
+    writer = ExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.create_excel(out_filename)
 
@@ -240,7 +240,7 @@ def test_cell_comments_export():
     )
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
 
-    E = ExcelWriter(dataset)
+    E = ExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
     E.set_header()
     E.create_excel(out_filename, size_sort=False, language_order="Name")
 

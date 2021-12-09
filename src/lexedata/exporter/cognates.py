@@ -12,6 +12,14 @@ from lexedata import types
 from lexedata import cli
 from lexedata.util import parse_segment_slices
 
+try:
+    from pycldf.dataset import SchemaError
+except ImportError:
+    # TODO: Deprecate old pycldf versions, so we can rely on its existence.
+    class SchemaError(Exception):
+        pass
+
+
 WARNING = "\u26A0"
 
 # ----------- Remark: Indices in excel are always 1-based. -----------
@@ -82,7 +90,11 @@ class BaseExcelWriter:
             c_cognate_form = self.dataset["CognateTable", "formReference"].name
             c_cogset_id = self.dataset["CognatesetTable", "id"].name
             c_cogset_name = self.dataset["CognatesetTable", "name"].name
-        except KeyError:
+        except (KeyError, SchemaError):
+            # TODO: Wow, this code so fragile! Did I come up with it?? I asked
+            # for a better way to resolve it in
+            # https://github.com/cldf/pycldf/issues/145, we'll see whether that
+            # leads somewhere.
             formatted_lines = traceback.format_exc().splitlines()
             match = re.match(r'.*"(.*?)", "(.*?)".*', formatted_lines[2])
             cli.Exit.INVALID_COLUMN_NAME(
@@ -90,7 +102,7 @@ class BaseExcelWriter:
             )
         try:
             c_comment = self.dataset["CognatesetTable", "comment"].name
-        except KeyError:
+        except (KeyError, SchemaError):
             c_comment = None
 
         wb = op.Workbook()
@@ -222,7 +234,7 @@ class BaseExcelWriter:
                 c_cogset_concept = self.dataset[
                     "CognatesetTable", "parameterReference"
                 ].name
-            except KeyError:
+            except (KeyError, SchemaError):
                 c_cogset_concept = None
             for i, form_id in enumerate(all_forms):
                 # write form to file
@@ -263,14 +275,14 @@ class ExcelWriter(BaseExcelWriter):
         try:
             for _ in dataset["CognatesetTable"]:
                 break
-        except (KeyError, FileNotFoundError):
+        except (KeyError, FileNotFoundError, SchemaError):
             cli.Exit.INVALID_DATASET(
                 "This script presupposes a separate CognatesetTable. Call `lexedata.edit.add_table CognatesetTable` to automatically add one."
             )
         try:
             for _ in dataset["CognateTable"]:
                 break
-        except (KeyError, FileNotFoundError):
+        except (KeyError, FileNotFoundError, SchemaError):
             cli.Exit.NO_COGNATETABLE(
                 "This script presupposes a separate CognateTable. Call `lexedata.edit.add_cognate_table` to automatically add one."
             )
@@ -280,7 +292,7 @@ class ExcelWriter(BaseExcelWriter):
         c_id = self.dataset["CognatesetTable", "id"].name
         try:
             c_comment = self.dataset["CognatesetTable", "comment"].name
-        except KeyError:
+        except (KeyError, SchemaError):
             c_comment = None
         self.header = []
         for column in self.dataset["CognatesetTable"].tableSchema.columns:
@@ -345,13 +357,14 @@ class ExcelWriter(BaseExcelWriter):
         c_id = self.dataset["FormTable", "id"].name
         try:
             c_comment = self.dataset["CognateTable", "comment"].name
-        except KeyError:
+        except (KeyError, SchemaError):
             c_comment = None
         comment = judgement[1].get(c_comment, None)
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
-        link = self.URL_BASE.format(urllib.parse.quote(judgement[0][c_id]))
-        form_cell.hyperlink = link
+        if self.URL_BASE is not None:
+            link = self.URL_BASE.format(urllib.parse.quote(judgement[0][c_id]))
+            form_cell.hyperlink = link
 
     def form_to_cell_value(self, form: types.Form, meta: types.Judgement) -> str:
         """Build a string describing the form itself
@@ -406,7 +419,7 @@ class ExcelWriter(BaseExcelWriter):
             c_comment = self.dataset["FormTable", "comment"].name
             if form.get(c_comment):
                 suffix = f" {WARNING:}"
-        except KeyError:
+        except (KeyError, SchemaError):
             pass
 
         # corresponding concepts
@@ -423,7 +436,7 @@ class ExcelWriter(BaseExcelWriter):
         try:
             c_segments = self.dataset["FormTable", "Segments"].name
             return form[c_segments]
-        except KeyError:
+        except (KeyError, pycldf.dataset.SchemaError):
             logger.warning("No segments column found. Falling back to cldf form.")
             c_f_form = self.dataset["FormTable", "form"].name
             return form[c_f_form]
@@ -481,7 +494,7 @@ if __name__ == "__main__":
     )
     try:
         cogset_order = E.dataset["CognatesetTable", args.sort_cognatesets_by].name
-    except KeyError:
+    except (KeyError, SchemaError):
         cli.Exit.INVALID_COLUMN_NAME(
             f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
         )

@@ -2,13 +2,21 @@ import re
 import logging
 from pathlib import Path
 
-import openpyxl as op
-import tempfile
 import pytest
+import tempfile
+import openpyxl as op
 
 from helper_functions import empty_copy_of_cldf_wordlist, copy_to_temp
 from lexedata.util.fs import get_dataset
 from lexedata.exporter.cognates import ExcelWriter
+
+
+try:
+    from pycldf.dataset import SchemaError
+except ImportError:
+    # TODO: Deprecate old pycldf versions, so we can rely on its existence.
+    class SchemaError(Exception):
+        pass
 
 
 def test_adding_singleton_cognatesets(caplog):
@@ -17,7 +25,10 @@ def test_adding_singleton_cognatesets(caplog):
     )
     dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     with caplog.at_level(logging.WARNING):
-        excel_writer = ExcelWriter(dataset=dataset, singleton_cognate=True)
+        excel_writer = ExcelWriter(
+            dataset=dataset,
+            singleton_cognate=True,
+        )
         output = dirname / "out.xlsx"
         excel_writer.create_excel(out=output, status_update="(ignored)")
     assert re.search("no Status_Column to write", caplog.text)
@@ -93,12 +104,14 @@ def test_no_cognateset_table(caplog):
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
     dataset.remove_table("CognatesetTable")
-    with pytest.raises(SystemExit):
+    # TODO: SystemExit or dataset error?
+    with pytest.raises((SystemExit, SchemaError)) as exc_info:
         ExcelWriter(
             dataset=dataset,
         )
-    assert "presupposes a separate CognatesetTable" in caplog.text
-    assert "lexedata.edit.add_table" in caplog.text
+    if exc_info.type == SystemExit:
+        assert "presupposes a separate CognatesetTable" in caplog.text
+        assert "lexedata.edit.add_table" in caplog.text
 
 
 def test_no_cognate_table(caplog):
