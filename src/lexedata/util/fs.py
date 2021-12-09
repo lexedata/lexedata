@@ -6,10 +6,13 @@ from pathlib import Path
 
 import pycldf
 
+from lexedata import types
 from lexedata.util.add_metadata import add_metadata
 
 
-def new_wordlist(path: t.Optional[Path] = None, **data):
+def new_wordlist(
+    path: t.Optional[Path] = None, **data
+) -> types.Wordlist[str, str, str, str, str]:
     """Create a new CLDF wordlist.
 
     By default, the wordlist is created in a new temporary directory, but you

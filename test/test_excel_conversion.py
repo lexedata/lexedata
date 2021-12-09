@@ -100,8 +100,9 @@ def test_toexcel_runs(cldf_wordlist, working_and_nonworking_bibfile):
         dataset=filled_cldf_wordlist[0],
         database_url=str(filled_cldf_wordlist[1]),
     )
+    writer.create_excel()
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
-    writer.create_excel(out_filename)
+    writer.wb.save(filename=out_filename)
 
 
 def test_roundtrip(cldf_wordlist, working_and_nonworking_bibfile):
@@ -113,18 +114,15 @@ def test_roundtrip(cldf_wordlist, working_and_nonworking_bibfile):
         (row[c_formReference], row[c_cogsetReference])
         for row in dataset["CognateTable"].iterdicts()
     }
-    writer = ExcelWriter(dataset)
-    _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
-    writer.create_excel(out_filename)
+    writer = ExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
+    writer.create_excel()
 
     # Reset the existing cognatesets and cognate judgements, to avoid
     # interference with the the data in the Excel file
     dataset["CognateTable"].write([])
     dataset["CognatesetTable"].write([])
 
-    ws = openpyxl.load_workbook(out_filename).active
-
-    import_cognates_from_excel(ws, dataset)
+    import_cognates_from_excel(writer.ws, dataset)
 
     new_judgements = {
         (row[c_formReference], row[c_cogsetReference])
@@ -153,12 +151,11 @@ def test_roundtrip_separator_column(cldf_wordlist, working_and_nonworking_bibfil
         row["CommaSeparatedTags"] = tag
     dataset.write(CognatesetTable=write_back)
 
-    writer = ExcelWriter(dataset)
+    writer = ExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
-    writer.create_excel(out_filename)
+    writer.create_excel()
 
-    ws = openpyxl.load_workbook(out_filename).active
-    import_cognates_from_excel(ws, dataset)
+    import_cognates_from_excel(writer.ws, dataset)
 
     reread_tags = [
         (c[c_id], c["CommaSeparatedTags"]) for c in dataset["CognatesetTable"]
@@ -240,16 +237,15 @@ def test_cell_comments_export():
     )
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
 
-    E = ExcelWriter(dataset)
+    E = ExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
     E.set_header()
-    E.create_excel(out_filename, size_sort=False, language_order="Name")
+    E.create_excel(size_sort=False, language_order="Name")
 
-    ws_out = openpyxl.load_workbook(out_filename).active
-    for col in ws_out.iter_cols():
+    for col in E.ws.iter_cols():
         pass
-    assert col[
-        -1
-    ].comment.content, "Last row of last column should contain a judgement, with a comment attached to it."
+    assert (
+        col[-1].comment and col[-1].comment.content
+    ), "Last row of last column should contain a judgement, with a comment attached to it."
     assert (
         col[-1].comment.content == "A judgement comment"
     ), "Comment should match the comment from the cognate table"

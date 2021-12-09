@@ -92,6 +92,7 @@ Form_ID = t.TypeVar("Form_ID", bound=t.Union[str, int])
 Parameter_ID = t.TypeVar("Parameter_ID", bound=t.Union[str, int])
 Cognate_ID = t.TypeVar("Cognate_ID", bound=t.Union[str, int])
 Cognateset_ID = t.TypeVar("Cognateset_ID", bound=t.Union[str, int])
+Row_ID = t.Union[Cognateset_ID, Parameter_ID]
 
 
 class Wordlist(
