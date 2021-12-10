@@ -28,47 +28,40 @@ class Object(t.Dict[str, t.Any]):
 class RowObject(Object):
     """A row in a lexical dataset, i.e. a concept or cognateset"""
 
-    pass
+    __table__: str
+
+
+R = t.TypeVar("R", bound=RowObject)
 
 
 class Concept(RowObject):
     """concept"""
 
-    @property
-    def __table__(self) -> str:
-        return "ParameterTable"
+    __table__ = "ParameterTable"
 
 
 class CogSet(RowObject):
     """cognate set"""
 
-    @property
-    def __table__(self) -> str:
-        return "CognatesetTable"
+    __table__ = "CognatesetTable"
 
 
 class Form(Object):
     """form"""
 
-    @property
-    def __table__(self) -> str:
-        return "FormTable"
+    __table__ = "FormTable"
 
 
 class Language(Object):
     """language"""
 
-    @property
-    def __table__(self) -> str:
-        return "LanguageTable"
+    __table__ = "LanguageTable"
 
 
 class Source(Object):
     """source"""
 
-    @property
-    def __table__(self) -> str:
-        return "SourceTable"
+    __table__ = "SourceTable"
 
 
 class Reference(Object):
@@ -82,9 +75,7 @@ class Reference(Object):
 class Judgement(RowObject):
     """cognate judgement"""
 
-    @property
-    def __table__(self) -> str:
-        return "CognateTable"
+    __table__ = "CognateTable"
 
 
 Language_ID = t.TypeVar("Language_ID", bound=t.Union[str, int])
