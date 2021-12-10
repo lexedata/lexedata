@@ -43,7 +43,7 @@ class CognateEditParser(ExcelCognateParser):
         ) and not properties.get(self.db.dataset["CognatesetTable", "id"].name):
             # TODO: Get official logger, or turn this into an Error that can be caught elsewhere.
             cli.logger.warning(
-                "Row %d had no cognateset name and no ID, but other metadata: %s. If there are any entries in this row, I'm not sure what to do with them so I will ignore them.",
+                "Row %d had no cognateset name and no ID, but other metadata: %s. If there are any entries in this row, they have been grouped with the previous row.",
                 row[0].row,
                 properties,
             )
