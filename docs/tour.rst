@@ -164,6 +164,7 @@ With the new metadata file and the new columns, the data set now looks like this
     bantu.xlsx
     forms.csv
     Wordlist-metadata.json
+    $ cldf validate Wordlist-metadata.json
     $ head Wordlist-metadata.json
     {
         "@context": [
@@ -186,20 +187,151 @@ With the new metadata file and the new columns, the data set now looks like this
     duala_bird,Duala,bird,inɔ̌n,,1,,
     duala_bite,Duala,bite,kukwa,,6,,
     duala_black,Duala,black,wínda,,21,,
-    $ cldf validate Wordlist-metadata.json
 
-First, we change the template metadata file to include an actual description of
-what most people might understand when we say “metadata”: Authors, provenience,
-etc.
+The ``cldf validate`` script only outputs problems, so if it prints out nothing,
+it means that the data set conforms to the CLDF standard!
+
+Now that we have a good starting point, we can start working with the data and
+improving it. First, we change the template metadata file to include an actual
+description of what most people might understand when we say “metadata”:
+Authors, provenience, etc.
 
     ::
 
-       [model ie_vocabulary]
-       model = covarion
-       data = ie_cognates.csv
+        {
+            "@context": [
+                "http://www.w3.org/ns/csvw",
+                {
+                    "@language": "en"
+                }
+            ],
+            "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#Wordlist",
+            "dc:contributor": [
+                "https://github.com/Anaphory/lexedata/blob/master/src/lexedata/edit/add_metadata.py"
+            ],
+            "dialect": {
+                "commentPrefix": null
+            },
+            "tables": [
+                {
+                    "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
+                    "dc:extent": 1592,
+                    "tableSchema": {
+                        "columns": [
+                            {
+                                "datatype": {
+                                    "base": "string",
+                                    "format": "[a-zA-Z0-9_\\-]+"
+                                },
+                                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+                                "required": true,
+                                "name": "ID"
+                            },
+                            {
+                                "dc:description": "A reference to a language (or variety) the form belongs to",
+                                "dc:extent": "singlevalued",
+                                "datatype": "string",
+                                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#languageReference",
+                                "required": true,
+                                "name": "Language_ID"
+                            },
+                            {
+                                "dc:description": "A reference to the meaning denoted by the form",
+                                "datatype": "string",
+                                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#parameterReference",
+                                "required": true,
+                                "name": "Parameter_ID"
+                            },
+                            {
+                                "dc:description": "The written expression of the form. If possible the transcription system used for the written form should be described in CLDF metadata (e.g. via adding a common property `dc:conformsTo` to the column description using concept URLs of the GOLD Ontology (such as [phonemicRep](http://linguistics-ontology.org/gold/2010/phonemicRep) or [phoneticRep](http://linguistics-ontology.org/gold/2010/phoneticRep)) as values).",
+                                "dc:extent": "singlevalued",
+                                "datatype": "string",
+                                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#form",
+                                "required": true,
+                                "name": "Form"
+                            },
+                            {
+                                "datatype": "string",
+                                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#comment",
+                                "required": false,
+                                "name": "Comment"
+                            },
+                            {
+                                "datatype": "string",
+                                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
+                                "name": "Cognateset_ID"
+                            },
+                            {
+                                "dc:extent": "multivalued",
+                                "datatype": "string",
+                                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#segments",
+                                "required": false,
+                                "separator": " ",
+                                "name": "Segments"
+                            },
+                            {
+                                "datatype": "string",
+                                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#source",
+                                "required": false,
+                                "separator": ";",
+                                "name": "Source"
+                            }
+                        ],
+                        "primaryKey": [
+                            "ID"
+                        ]
+                    },
+                    "url": "forms.csv"
+                }
+            ]
+        }
 
-    -- ie_vocabulary.conf
+    -- Wordlist-metadata.json
 
-::
+Another useful step is to make languages, concepts, and cognate codes explicit.
+Currently, all the dataset knows about these their names. We can generate a
+scaffold for metadata about languages etc. with another tool. ::
+
+    $ python -m lexedata.edit.add_table LanguageTable
+    $ python -m lexedata.edit.add_table ParameterTable
+
+“Parameter” is CLDF speak for the things sampled per-language. In a
+StructureDataset this might be typological features, in a Wordlist the
+ParameterTable contains the concepts.
+
+Every form belongs to one language, and every language has multiple forms. This
+is a simple 1:n relationship. Every form has and one or more concepts associated
+to it (in this way, CLDF supports annotating polysemies) and every concept has
+several forms, in different languages but also synonyms within a single
+language. This can easily be reflected by entries in the FormTable.
+
+The logic behind cognate judgements is slightly different. A form belong to one
+or more cognate sets, but in addition to the cognate class, there may be
+additional properties of a cognate judgement, such as alignments, segments the
+judgement is about (if it is a partial cognate judgement), comments (“dubious:
+m~t is unexplained”) or the source claiming the etymological relationship.
+Because of this, there is a separate table for cognate judgements, the
+CognateTable, and *that* table then refers to a CognatesetTable we can make
+explicit. ::
+
+    $ python -m lexedata.edit.add_cognate_table
+    CRITICAL:lexedata:You must specify whether cognateset have dataset-wide unique ids or not (--unique-id)
+
+In our example dataset, cognate class “1” for all is not cognate with class “1”
+for arm, so we need to tell ``add_cognate_table`` that these IDs are only unique
+within a concept::
+
+    $ python -m lexedata.edit.add_cognate_table --unique-id concept
+    $ python -m lexedata.edit.add_table CognatesetTable
+
+Now all the external properties of a form can be annotated with explicit
+metadata in their own table files::
 
     $ ls
+    bantu.xlsx
+    cognates.csv
+    cognatesets.csv
+    forms.csv
+    languages.csv
+    parameters.csv
+    Wordlist-metadata.json
