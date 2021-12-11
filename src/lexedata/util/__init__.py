@@ -29,7 +29,9 @@ def ensure_list(maybe_string: t.Union[t.List[str], str, None]) -> t.List[str]:
         return [maybe_string]
 
 
-def cldf_property(url: csvw.metadata.URITemplate) -> t.Optional[str]:
+def cldf_property(url: t.Optional[csvw.metadata.URITemplate]) -> t.Optional[str]:
+    if url is None:
+        return None
     if url.uri.startswith("http://cldf.clld.org/v1.0/terms.rdf#"):
         # len("http://cldf.clld.org/v1.0/terms.rdf#") == 36
         return url.uri[36:]

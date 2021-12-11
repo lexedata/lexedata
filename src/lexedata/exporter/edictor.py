@@ -9,7 +9,6 @@ integers.
 # TODO: Underscores are treated specially by Edictor in a way we cannot support yet.
 
 import csv
-import sys
 import itertools
 import typing as t
 from pathlib import Path
@@ -17,17 +16,12 @@ from pathlib import Path
 import pycldf
 
 
-import lexedata.cli as cli
-import lexedata.types as types
+from lexedata import cli, types, util
 import lexedata.report.nonconcatenative_morphemes
 from lexedata.util import parse_segment_slices, ensure_list
 
 
-def rename(form_column, dataset):
-    try:
-        function = dataset["FormTable", form_column].propertyUrl.expand().split("#")[-1]
-    except (KeyError, AttributeError):
-        function = form_column
+def rename(form_column):
     return {
         "languageReference": "DOCULECT",
         "parameterReference": "CONCEPT",
@@ -37,8 +31,7 @@ def rename(form_column, dataset):
         "segments": "TOKENS",
         "id": "CLDF_id",
         "LINGPY_ID": "ID",
-        "ID": "CLDF_ID",
-    }.get(function, form_column)
+    }.get(form_column, form_column)
 
 
 def glue_in_alignment(
@@ -155,37 +148,19 @@ def forms_to_tsv(
     cognatesets: t.Iterable[str],
     logger: cli.logging.Logger = cli.logger,
 ):
-    # required fields
     try:
-        c_cognate_cognateset = dataset["CognateTable", "cognatesetReference"].name
-        c_cognate_form = dataset["CognateTable", "formReference"].name
-        c_cognate_id = dataset["CognateTable", "id"].name
-        c_segment_slice = dataset["CognateTable", "segmentSlice"].name
-        c_alignment = dataset["CognateTable", "alignment"].name
+        dataset["FormTable", "segments"].name
     except KeyError:
-        # TODO: why not use directly: cli.EXIT.NO_COGNATETABLE(message) ?
-        logger.critical(
-            """Edictor export requires your dataset to have an explicit CognateTable containing the judgements,
-            with all of IDs, forms, cognatesets, segment slices and alignments.
-            Run `lexedata.edit.construct_cognate_table` if you have cognate sets in your FormTable.
-            Run `lexedata.edit.cognate_code_data` if you want to start from automatic cognate detection."""
-        )
-        sys.exit(cli.Exit.NO_COGNATETABLE)
-    c_form_language = dataset["FormTable", "languageReference"].name
-    c_form_concept = dataset["FormTable", "parameterReference"].name
-    c_form_id = dataset["FormTable", "id"].name
-    c_form_form = dataset["FormTable", "form"].name
-    try:
-        c_form_segments = dataset["FormTable", "segments"].name
-    except KeyError:
-        # TODO: same: why not use cli:Exit....() directly?
-        logger.critical(
+        cli.Exit.NO_SEGMENTS(
             """Edictor export requires your dataset to have segments in the FormTable.
         Run `lexedata.edit.add_segments` to automatically add segments based on your forms."""
         )
-        # TODO: Exit.NO_SEGMENTS is not an `int`, so the exit code of the
-        # python run is actually 1, not 4 as we wanted.
-        sys.exit(cli.Exit.NO_SEGMENTS)
+
+    delimiters = {
+        util.cldf_property(c.propertyUrl) or c.name: c.separator
+        for c in dataset["FormTable"].tableSchema.columns
+        if c.separator
+    }
 
     # prepare the header for the tsv output
     # the first column must be named ID and contain 1-based integer IDs
@@ -196,42 +171,53 @@ def forms_to_tsv(
     tsv_header.append("cognatesetReference")
     if "alignment" not in tsv_header:
         tsv_header.append("alignment")
-
-    delimiters = {
-        c.name: c.separator
-        for c in dataset["FormTable"].tableSchema.columns
-        if c.separator
-    }
+    if "parameterReference" in delimiters:
+        tsv_header.append("_parameterReference")
 
     # select forms and cognates given restriction of languages and concepts, cognatesets respectively
     forms = {}
-    for form in dataset["FormTable"]:
-        if form[c_form_form] is None or form[c_form_form] == "-":
+    for f, form in util.cache_table(dataset).items():
+        if form["form"] is None or form["form"] == "-":
             continue
-        if form[c_form_language] in languages:
-            if concepts.intersection(ensure_list(form[c_form_concept])):
-                # Normalize the form:
-                # 1. No list-valued entries
-                for c, d in delimiters.items():
-                    if c == c_form_segments:
-                        continue
-                    try:
-                        form[c] = d.join(form[c])
-                    except TypeError:
+        if form["languageReference"] in languages and concepts.intersection(
+            ensure_list(form["parameterReference"])
+        ):
+            # Normalize the form:
+            # 1. No list-valued entries
+            for c, d in delimiters.items():
+                if c == "segments":
+                    continue
+                if c == "parameterReference":
+                    form["_parameterReference"] = form["parameterReference"]
+                    form["parameterReference"] = form["parameterReference"][0]
+                    continue
+
+                form[c] = d.join(str(e) for e in form[c])
+
+            if not form.get("segments"):
+                logger.warning(
+                    "No segments found for form %s. You can generate segments using `lexedata.edit.add_segments`.",
+                    form["id"],
+                )
+
+            # 2. No tabs, newlines in entries
+            for c, v in form.items():
+                if type(v) == str:
+                    if "\\!t" in form[c] or "\\!n" in form[c]:
                         logger.warning(
-                            f"No segments found for form {form[c_form_id]}. You can generate segments using `lexedata.edit.add_segments`."
+                            "Your data contains the special characters '\\!t' or '\\!n', which I will introduce for escaping tabs and newlines for edictor. These characters will not survive the back-import."
                         )
-                # 2. No tabs, newlines in entries
-                for c, v in form.items():
-                    if type(v) == str:
-                        form[c] = form[c].replace("\t", "!t").replace("\n", "!n")
-                forms[form[c_form_id]] = form
+                    form[c] = form[c].replace("\t", "\\!t").replace("\n", "\\!n")
+
+            forms[f] = form
+
     cognateset_cache: t.Mapping[t.Optional[str], int]
     if "CognatesetTable" in dataset:
+        id = dataset["CognatesetTable", "id"].name
         cognateset_cache = {
-            cognateset["ID"]: c
+            cognateset[id]: c
             for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
-            if cognateset["ID"] in cognatesets
+            if cognateset[id] in cognatesets
         }
     else:
         if cognatesets is None:
@@ -246,38 +232,57 @@ def forms_to_tsv(
 
     judgements_about_form: t.Mapping[
         types.Form_ID, t.Tuple[t.List[str], t.List[int]]
-    ] = {
-        id: ([f"({s})" for s in form[c_form_segments]], [])
-        for id, form in forms.items()
-    }
+    ] = {id: ([f"({s})" for s in form["segments"]], []) for id, form in forms.items()}
     # Compose all judgements, last-one-rules mode.
-    for j in dataset["CognateTable"]:
-        if j[c_cognate_form] in forms and cognateset_cache.get(j[c_cognate_cognateset]):
-            j[c_alignment] = [s or "" for s in j[c_alignment]]
+    for j in util.cache_table(dataset, "CognateTable").values():
+        if j["formReference"] in forms and cognateset_cache.get(
+            j["cognatesetReference"]
+        ):
+            if j.get("alignment"):
+                j["alignment"] = [s or "" for s in j["alignment"]]
+            else:
+                j["alignment"] = forms[j["formReference"]]["segments"]
+
             try:
                 segments_judged = list(
                     parse_segment_slices(
-                        segment_slices=j[c_segment_slice], enforce_ordered=False
+                        segment_slices=j["segmentSlice"], enforce_ordered=False
                     )
+                )
+            except TypeError:
+                logger.warning(
+                    "In judgement %s: No segment slice given. Assuming whole form.",
+                    j["id"],
+                )
+                segments_judged = list(
+                    range(len(forms[j["formReference"]]["segments"]))
+                )
+            except KeyError:
+                segments_judged = list(
+                    range(len(forms[j["formReference"]]["segments"]))
                 )
             except ValueError:
                 logger.warning(
-                    f"In judgement {j[c_cognate_id]}: Index error due to bad segment slice. Skipped."
+                    "In judgement %s: Index error due to bad segment slice %s. Skipped.",
+                    j["id"],
+                    ",".join(j["segmentSlice"]),
                 )
                 continue
-            global_alignment, cogsets = judgements_about_form[j[c_cognate_form]]
+            global_alignment, cogsets = judgements_about_form[j["formReference"]]
             segment_start, segment_end = min(segments_judged), max(segments_judged) + 1
             try:
                 glue_in_alignment(
                     global_alignment,
                     cogsets,
-                    j[c_alignment],
-                    j[c_cognate_cognateset],
+                    j["alignment"],
+                    j["cognatesetReference"],
                     slice(segment_start, segment_end),
                 )
             except IndexError:
                 logger.warning(
-                    f"In judgement {j[c_cognate_id]}: Index error due to bad segment slice. Skipped."
+                    "In judgement %s: Index error due to bad segment slice %s. Skipped.",
+                    j["id"],
+                    ",".join(j["segmentSlice"]),
                 )
                 continue
 
@@ -298,18 +303,22 @@ def write_edictor_file(
     cognateset_numbers,
 ):
     """Write the judgements of a dataset to file, in edictor format."""
-    c_form_id = dataset["FormTable", "id"].name
     delimiters = {
-        c.name: c.separator
+        util.cldf_property(c.propertyUrl) or c.name: c.separator
         for c in dataset["FormTable"].tableSchema.columns
         if c.separator
     }
 
-    tsv_header = list(dataset["FormTable"].tableSchema.columndict.keys())
+    tsv_header = [
+        util.cldf_property(c.propertyUrl) or c.name
+        for c in dataset["FormTable"].tableSchema.columns
+    ]
 
     tsv_header.insert(0, "LINGPY_ID")
     tsv_header.append("cognatesetReference")
     tsv_header.append("alignment")
+    if "parameterReference" in delimiters:
+        tsv_header.append("_parameterReference")
 
     # write output to tsv
     out = csv.DictWriter(
@@ -317,7 +326,7 @@ def write_edictor_file(
         fieldnames=tsv_header,
         delimiter="\t",
     )
-    out.writerow({column: rename(column, dataset) for column in tsv_header})
+    out.writerow({column: rename(column) for column in tsv_header})
     out_cognatesets: t.List[t.Optional[str]]
     for f, (id, form) in enumerate(forms.items(), 1):
         # store original form id in other field and get cogset integer id
@@ -336,7 +345,7 @@ def write_edictor_file(
                 )
 
         # if there is a cogset, add its integer id. otherwise set id to 0
-        judgement = judgements_about_form[this_form[c_form_id]]
+        judgement = judgements_about_form[this_form["id"]]
         this_form["cognatesetReference"] = " ".join(
             str(cognateset_numbers.get(e, 0)) for e in (judgement[1] or [None])
         )

@@ -29,20 +29,30 @@ class CognateEditParser(ExcelCognateParser):
             self.db.dataset["CognatesetTable", k].separator for k in self.row_header
         ]
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
-        properties: t.Dict[t.Optional[str], t.Any] = {
+        properties: t.Dict[str, t.Any] = {
             n: (v if sep is None else v.split(sep))
             for n, sep, v in zip(self.row_header, self.row_prop_separators, data)
+            if n
+            if v
         }
-        if not any(properties.values()):
+        if not properties:
             return None
 
-        # delete all possible None entries coming from row_header
-        cogset: t.Dict[str, t.Any] = {
-            key: value for key, value in properties.items() if key is not None
-        }
+        try:
+            c_s_name = self.db.dataset["CognatesetTable", "name"].name
+        except KeyError:
+            c_s_name = None
 
-        while None in properties.keys():
-            del properties[None]
+        if not properties.get(c_s_name) and not properties.get(
+            self.db.dataset["CognatesetTable", "id"].name
+        ):
+            # TODO: Get official logger, or turn this into an Error that can be caught elsewhere.
+            cli.logger.warning(
+                "Row %d had no cognateset name and no ID, but other metadata: %s. If there are any entries in this row, they have been grouped with the previous row.",
+                row[0].row,
+                properties,
+            )
+            return None
 
         comments: t.List[str] = []
         for cell in row[: self.left - 1]:
@@ -50,8 +60,9 @@ class CognateEditParser(ExcelCognateParser):
             if c is not None:
                 comments.append(c)
         comment = "\t".join(comments).strip()
-        cogset[self.db.dataset["CognatesetTable", "comment"].name] = comment
-        return CogSet(cogset)
+        properties[self.db.dataset["CognatesetTable", "comment"].name] = comment
+
+        return CogSet(properties)
 
 
 def header_from_cognate_excel(

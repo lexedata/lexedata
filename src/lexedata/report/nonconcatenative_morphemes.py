@@ -53,13 +53,16 @@ def segment_to_cognateset(
                 which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [
                     set() for _ in form[c_form_segments]
                 ]
-            try:
-                segments_judged = list(parse_segment_slices(j[c_cognate_slice]))
-            except ValueError:
-                logger.warning(
-                    f"In judgement {j[c_cognate_id]}, segment slice {j[c_cognate_slice]} has start after end."
-                )
-                continue
+            if j.get(c_cognate_slice):
+                try:
+                    segments_judged = list(parse_segment_slices(j[c_cognate_slice]))
+                except ValueError:
+                    logger.warning(
+                        f"In judgement {j[c_cognate_id]}, segment slice {j[c_cognate_slice]} has start after end."
+                    )
+                    continue
+            else:
+                segments_judged = list(range(len(form[c_form_segments])))
             old_s = None
             already: t.MutableMapping[types.Cognateset_ID, t.List[int]] = t.DefaultDict(
                 list

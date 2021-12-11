@@ -17,6 +17,7 @@ from lexedata.types import (
     Concept,
     CogSet,
     Judgement,
+    R,
 )
 from lexedata.util import (
     string_to_id,
@@ -30,7 +31,7 @@ import lexedata.util.excel as cell_parsers
 from lexedata.edit.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
-Ob = t.TypeVar("O", bound=Object)
+Ob = t.TypeVar("Ob", bound=Object)
 
 # NOTE: Excel uses 1-based indices, this shows up in a few places in this file.
 
@@ -158,12 +159,12 @@ class DB:
             form.setdefault(column.name, []).append(row[id])
         return True
 
-    def insert_into_db(self, object: Ob) -> None:
+    def insert_into_db(self, object: Object) -> None:
         id = self.dataset[object.__table__, "id"].name
         assert object[id] not in self.cache[object.__table__]
         self.cache[object.__table__][object[id]] = object
 
-    def make_id_unique(self, object: Ob) -> str:
+    def make_id_unique(self, object: Object) -> str:
         id = self.dataset[object.__table__, "id"].name
         raw_id = object[id]
         i = 0
@@ -202,11 +203,11 @@ class DB:
         pass
 
 
-class ExcelParser:
+class ExcelParser(t.Generic[R]):
     def __init__(
         self,
         output_dataset: pycldf.Dataset,
-        row_object: Object = Concept,
+        row_type: t.Type[R],
         top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
         # The following column names should be generated from CLDF terms. This
@@ -220,11 +221,11 @@ class ExcelParser:
         fuzzy=0,
     ) -> None:
         self.row_header = row_header
+        self.row_type = row_type
         try:
             self.cell_parser = cellparser(output_dataset)
         except TypeError:
             self.cell_parser = cellparser
-        self.row_object = row_object
         self.top = top
         self.left = len(row_header) + 1
         self.check_for_match = check_for_match
@@ -240,7 +241,7 @@ class ExcelParser:
         return True
 
     def on_row_not_found(
-        self, row_object: t.Dict[str, t.Any], cell_identifier: t.Optional[str] = None
+        self, row_object: R, cell_identifier: t.Optional[str] = None
     ) -> bool:
         """Create row object"""
         return True
@@ -265,13 +266,10 @@ class ExcelParser:
             Comment=comment,
         )
 
-    def properties_from_row(
-        self, row: t.List[openpyxl.cell.Cell]
-    ) -> t.Optional[RowObject]:
-        row_object = self.row_object()
-        c_id = self.db.dataset[row_object.__table__, "id"].name
-        c_comment = self.db.dataset[row_object.__table__, "comment"].name
-        c_name = self.db.dataset[row_object.__table__, "name"].name
+    def properties_from_row(self, row: t.List[openpyxl.cell.Cell]) -> t.Optional[R]:
+        c_id = self.db.dataset[self.row_type.__table__, "id"].name
+        c_comment = self.db.dataset[self.row_type.__table__, "comment"].name
+        c_name = self.db.dataset[self.row_type.__table__, "name"].name
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
         properties = dict(zip(self.row_header, data))
         # delete all possible None entries coming from row_header
@@ -286,7 +284,7 @@ class ExcelParser:
         properties[c_id] = properties[c_name]
         # create new row object
 
-        return self.row_object(properties)
+        return self.row_type(properties)
 
     def parse_all_languages(
         self, sheet: openpyxl.worksheet.worksheet.Worksheet
@@ -331,7 +329,7 @@ class ExcelParser:
         status_update: t.Optional[str] = None,
     ) -> None:
         languages = self.parse_all_languages(sheet)
-        row_object = None
+        row_object: t.Optional[R] = None
         for row in cli.tq(
             sheet.iter_rows(min_row=self.top),
             task="Parsing cells",
@@ -343,7 +341,10 @@ class ExcelParser:
             properties = self.properties_from_row(row_header)
             if properties:
                 c_r_id = self.db.dataset[properties.__table__, "id"].name
-                c_r_name = self.db.dataset[properties.__table__, "name"].name
+                try:
+                    c_r_name = self.db.dataset[properties.__table__, "name"].name
+                except KeyError:
+                    c_r_name = None
                 similar = self.db.find_db_candidates(
                     properties, self.check_for_row_match
                 )
@@ -362,7 +363,10 @@ class ExcelParser:
                         self.db.insert_into_db(properties)
                     else:
                         continue
-                # check the fields of properties are not empty, if so, set row object to properties
+                # check the fields of properties are not empty, if so, set row
+                # object to properties. This means that if there is no
+                # properties object, of if it is empty, the previous row object
+                # is re-used. This is intentional.
                 if any(properties.values()):
                     row_object = properties
 
@@ -382,14 +386,17 @@ class ExcelParser:
                     continue
 
                 # Parse the cell, which results (potentially) in multiple forms
-                if properties.__table__ == "FormTable":
-                    c_f_form = self.db.dataset[properties.__table__, "form"].name
+                if row_object.__table__ == "FormTable":
+                    raise NotImplementedError(
+                        "TODO: I am confused why what I'm doing right now ever landed on my agenda, but you seem to have gotten me to attempt it. Please contact the developers and tell them what you did, so they can implement the thing you tried to do properly!"
+                    )
+                    c_f_form = self.db.dataset[row_object.__table__, "form"].name
                 for params in self.cell_parser.parse(
                     cell_with_forms,
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
-                    if properties.__table__ == "FormTable":
+                    if row_object.__table__ == "FormTable":
                         if params[c_f_form] == "?":
                             continue
                         else:
@@ -409,7 +416,7 @@ class ExcelParser:
     def handle_form(
         self,
         params,
-        row_object: RowObject,
+        row_object: R,
         cell_with_forms,
         this_lan: str,
         status_update: t.Optional[str],
@@ -444,11 +451,11 @@ class ExcelParser:
                 self.db.associate(form_id, row_object)
 
 
-class ExcelCognateParser(ExcelParser):
+class ExcelCognateParser(ExcelParser[CogSet]):
     def __init__(
         self,
         output_dataset: pycldf.Dataset,
-        row_object: Object = CogSet,
+        row_type=CogSet,
         top: int = 2,
         cellparser: cell_parsers.NaiveCellParser = cell_parsers.CellParser,
         row_header=["set", "Name", None],
@@ -458,7 +465,7 @@ class ExcelCognateParser(ExcelParser):
     ) -> None:
         super().__init__(
             output_dataset=output_dataset,
-            row_object=row_object,
+            row_type=CogSet,
             top=top,
             cellparser=cellparser,
             check_for_match=check_for_match,
@@ -487,7 +494,7 @@ class ExcelCognateParser(ExcelParser):
         )
 
     def on_row_not_found(
-        self, row_object: t.Dict[str, t.Any], cell_identifier: t.Optional[str] = None
+        self, row_object: CogSet, cell_identifier: t.Optional[str] = None
     ) -> bool:
         """Create row object"""
         return True
@@ -524,13 +531,11 @@ class ExcelCognateParser(ExcelParser):
 
     def properties_from_row(
         self, row: t.List[openpyxl.cell.Cell]
-    ) -> t.Optional[RowObject]:
-        row_object = self.row_object
-        row_object = row_object()
+    ) -> t.Optional[CogSet]:
         # TODO: get_cell_comment with unicode normalization or not? -> yes, comments also
-        c_id = self.db.dataset[row_object.__table__, "id"].name
-        c_comment = self.db.dataset[row_object.__table__, "comment"].name
-        c_name = self.db.dataset[row_object.__table__, "name"].name
+        c_id = self.db.dataset[self.row_type.__table__, "id"].name
+        c_comment = self.db.dataset[self.row_type.__table__, "comment"].name
+        c_name = self.db.dataset[self.row_type.__table__, "name"].name
         data = [clean_cell_value(cell) for cell in row[: self.left - 1]]
         properties = dict(zip(self.row_header, data))
         # delete all possible None entries coming from row_header
@@ -544,12 +549,12 @@ class ExcelCognateParser(ExcelParser):
         # cldf_name serves as cldf_id candidate
         properties[c_id] = properties.get(c_id) or properties[c_name]
         # create new row object
-        return self.row_object(properties)
+        return self.row_type(properties)
 
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None
     ) -> bool:
-        c_id = self.db.dataset[self.row_object, "id"].name
+        c_id = self.db.dataset[self.row_type.__table__, "id"].name
         assert (
             row.__table__ == "CognatesetTable"
         ), "Expected CognateSet, but got {:}".format(row.__class__)
@@ -566,7 +571,7 @@ class ExcelCognateParser(ExcelParser):
     def handle_form(
         self,
         params,
-        row_object: RowObject,
+        row_object: CogSet,
         cell_with_forms,
         this_lan,
         status_update: t.Optional[str],
@@ -619,9 +624,11 @@ class ExcelCognateParser(ExcelParser):
 def excel_parser_from_dialect(
     output_dataset: pycldf.Wordlist, dialect: t.NamedTuple, cognate: bool
 ) -> t.Type[ExcelParser]:
+    Row: t.Type[RowObject]
+    Parser: t.Type[ExcelParser]
     if cognate:
-        Row: t.Type[RowObject] = CogSet
-        Parser: t.Type[ExcelParser] = ExcelCognateParser
+        Row = CogSet
+        Parser = ExcelCognateParser
     else:
         Row = Concept
         Parser = ExcelParser
@@ -650,11 +657,12 @@ def excel_parser_from_dialect(
         def __init__(
             self,
             output_dataset: pycldf.Dataset,
+            row_type=Row,
         ) -> None:
             super().__init__(
                 output_dataset=output_dataset,
                 top=top,
-                row_object=Row,
+                row_type=Row,
                 row_header=row_header,
                 cellparser=cell_parsers.CellParser,
                 check_for_match=dialect.check_for_match,
@@ -792,7 +800,7 @@ def load_dataset(
         # add Status_Column if not existing
         if status_update:
             add_status_column_to_table(dataset=dataset, table_name="FormTable")
-        EP = EP(dataset)
+        EP = EP(dataset, row_type=Concept)
 
         EP.db.empty_cache()
 
@@ -822,7 +830,7 @@ def load_dataset(
         # add Status_Column if not existing
         if status_update:
             add_status_column_to_table(dataset=dataset, table_name="CognateTable")
-        ECP = ECP(dataset)
+        ECP = ECP(dataset, row_type=CogSet)
         ECP.db.cache_dataset()
         for sheet in openpyxl.load_workbook(cognate_lexicon).worksheets:
             ECP.parse_cells(sheet, status_update=status_update)
