@@ -343,40 +343,38 @@ def test_edictor_exporter_no_na_forms():
         dataset=dataset, languages=WorldSet(), concepts=WorldSet(), cognatesets=cognates
     )
     assert forms == {
-        "L2C1": OrderedDict(
-            [
-                ("ID", "L2C1"),
-                ("Language_ID", "L2"),
-                ("Parameter_ID", "C;1"),
-                ("Form", "L2C1"),
-                ("orthographic", None),
-                ("phonemic", None),
-                ("phonetic", None),
-                ("variants", ""),
-                ("Segments", []),
-                ("Comment", None),
-                ("procedural_comment", None),
-                ("Value", " "),
-                ("Source", ""),
-            ]
-        ),
-        "L1C2": OrderedDict(
-            [
-                ("ID", "L1C2"),
-                ("Language_ID", "L1"),
-                ("Parameter_ID", "C;2"),
-                ("Form", "L1C2"),
-                ("orthographic", None),
-                ("phonemic", None),
-                ("phonetic", None),
-                ("variants", ""),
-                ("Segments", []),
-                ("Comment", None),
-                ("procedural_comment", None),
-                ("Value", " "),
-                ("Source", ""),
-            ]
-        ),
+        "L2C1": {
+            "id": "L2C1",
+            "languageReference": "L2",
+            "parameterReference": "C",
+            "form": "L2C1",
+            "orthographic": None,
+            "phonemic": None,
+            "phonetic": None,
+            "variants": "",
+            "segments": [],
+            "comment": None,
+            "procedural_comment": None,
+            "value": " ",
+            "source": "",
+            "_parameterReference": ["C", "1"],
+        },
+        "L1C2": {
+            "id": "L1C2",
+            "languageReference": "L1",
+            "parameterReference": "C",
+            "form": "L1C2",
+            "orthographic": None,
+            "phonemic": None,
+            "phonetic": None,
+            "variants": "",
+            "segments": [],
+            "comment": None,
+            "procedural_comment": None,
+            "value": " ",
+            "source": "",
+            "_parameterReference": ["C", "2"],
+        },
     }
 
 

@@ -3,6 +3,7 @@ import io
 import lexedata.importer.edictor as importer
 import lexedata.exporter.edictor as exporter  # noqa
 import lexedata.util.fs
+from lexedata import util
 
 
 def test_match_cognatesets_1():
@@ -81,15 +82,16 @@ def test_forms_to_csv():
     )
     assert forms == {
         "form1": {
-            "Language_ID": "axav1032",
-            "Parameter_ID": "one",
-            "Form": "the form",
-            "Segments": ["ð", "ə", "f", "o", "m"],
-            "ID": "form1",
-            "Source": "",
-            "Comment": None,
+            "languageReference": "axav1032",
+            "segments": ["ð", "ə", "f", "o", "m"],
+            "form": "the form",
+            "parameterReference": "one",
+            "source": "",
+            "id": "form1",
+            "comment": None,
         }
     }
+
     assert judgements == {
         "form1": (["ð", "+", "(ə)", "(f)", "(o)", "(m)"], ["c1", None])
     }
@@ -124,7 +126,11 @@ def test_write_edictor_singleton_dataset():
     judgements_about_form = {"form1": (["ð", "(ə)", "(f)", "(o)", "(m)"], ["c1"])}
     cognateset_numbers = {"c1": 2}
     exporter.write_edictor_file(
-        dataset, file, forms, judgements_about_form, cognateset_numbers
+        dataset,
+        file,
+        util.cache_table(dataset),
+        judgements_about_form,
+        cognateset_numbers,
     )
     rows = [line.strip().split("\t") for line in file.getvalue().split("\n")[:3]]
     assert rows[2] == [""]
@@ -135,8 +141,8 @@ def test_write_edictor_singleton_dataset():
         "IPA": "the form",
         "CLDF_id": "form1",
         "TOKENS": "ð ə f o m",
-        "Source": "",
-        "Comment": "",
+        "source": "",
+        "comment": "",
         "COGID": "2",
         "ALIGNMENT": "ð ( ə f o m )",
     }

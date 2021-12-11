@@ -13,6 +13,7 @@ from helper_functions import (
     copy_to_temp_bad_bib,
     empty_copy_of_cldf_wordlist,
 )
+from mock_excel import MockSingleExcelSheet
 import lexedata.importer.excel_matrix as f
 from lexedata.exporter.cognates import ExcelWriter
 from lexedata.importer.cognates import import_cognates_from_excel
@@ -249,3 +250,32 @@ def test_cell_comments_export():
     assert (
         col[-1].comment.content == "A judgement comment"
     ), "Comment should match the comment from the cognate table"
+
+
+def test_excel_messy_row():
+    # TODO: Build a dataset with forms F1, F2, F3 in languages L1, L2 and
+    # CognateTable columns ID and Status
+    MockSingleExcelSheet(
+        [
+            [
+                "CogSet",
+                "Status" "L1",
+                "L2",
+            ],
+            [
+                "S1",
+                "valid",
+                "F1",
+                "F2",
+            ],
+            [
+                "",
+                "invalid",
+                "F3",
+            ],
+        ]
+    )
+    # TODO: Add links to form cells, or change form cell parser
+    # TODO: Cognate-import this dataset
+    # TODO: Check for warning in caplog
+    # TODO: Check that cognateset S1 contains form F3

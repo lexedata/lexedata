@@ -336,10 +336,7 @@ class ExcelWriter(BaseExcelWriter):
             elif column.name == c_comment:
                 continue
             else:
-                try:
-                    property = util.cldf_property(column.propertyUrl)
-                except AttributeError:
-                    property = column.name
+                property = util.cldf_property(column.propertyUrl) or column.name
                 self.header.append((property, column.name))
 
     def form_to_cell_value(self, form: types.Form) -> str:
