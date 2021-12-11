@@ -314,4 +314,4 @@ def test_excel_messy_row(caplog):
     ]
 
     # Check for warning in caplog
-    assert re.search("[Rr]ow 3 .* no cognateset .* 'Status': 'invalid'", caplog.text)
+    assert re.search("[Rr]ow 3 .* no cognate ?set .*'Status': 'invalid'", caplog.text)
