@@ -259,35 +259,19 @@ def match_cognatesets(
     return matching
 
 
-if __name__ == "__main__":
-    parser = cli.parser(
-        description="Export #FormTable to tsv format for import to edictor"
-    )
-    parser.add_argument(
-        "--source",
-        default=None,
-        metavar="MESSAGE",
-        # TODO: Source is not really the right place, even though it's used for
-        # this in one of our datasets.
-        help="Set the source of all new cognate sets and all new cognate judgements to MESSAGE.",
-    )
-
-    parser.add_argument(
-        "--input-file",
-        "-i",
-        type=Path,
-        default="cognate.tsv",
-        help="Path to the input file",
-    )
-    args = parser.parse_args()
-    logger = cli.setup_logging(args)
-
-    dataset = pycldf.Dataset.from_metadata(args.metadata)
-    new_cogsets = load_forms_from_tsv(
-        dataset=dataset,
-        input_file=args.input_file,
-    )
-
+def edictor_to_cldf(
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+    new_cogsets: t.Mapping[
+        types.Cognateset_ID, t.List[t.Tuple[types.Form_ID, range, t.Sequence[str]]]
+    ],
+    source: t.List[str] = [],
+):
     ref_cogsets: t.MutableMapping[
         types.Cognateset_ID, t.List[t.Tuple[types.Form_ID, range, t.Sequence[str]]]
     ] = t.DefaultDict(list)
@@ -321,7 +305,7 @@ if __name__ == "__main__":
                         "cognatesetReference": cognateset,
                         "alignment": alignment,
                         "segmentSlice": util.indices_to_segment_slice(slice),
-                        "source": args.source,
+                        "source": source,
                         # TODO: Any more parameters? Status update?
                     }
                 )
@@ -335,3 +319,35 @@ if __name__ == "__main__":
     dataset["CognateTable"].write(
         [{m[k]: v for k, v in j.items() if k in m} for j in cognate]
     )
+
+
+if __name__ == "__main__":
+    parser = cli.parser(
+        description="Export #FormTable to tsv format for import to edictor"
+    )
+    parser.add_argument(
+        "--source",
+        default=None,
+        metavar="MESSAGE",
+        # TODO: Source is not really the right place, even though it's used for
+        # this in one of our datasets.
+        help="Set the source of all new cognate sets and all new cognate judgements to MESSAGE.",
+    )
+
+    parser.add_argument(
+        "--input-file",
+        "-i",
+        type=Path,
+        default="cognate.tsv",
+        help="Path to the input file",
+    )
+    args = parser.parse_args()
+    logger = cli.setup_logging(args)
+
+    dataset = pycldf.Dataset.from_metadata(args.metadata)
+    new_cogsets = load_forms_from_tsv(
+        dataset=dataset,
+        input_file=args.input_file,
+    )
+
+    edictor_to_cldf(dataset=dataset, new_cogsets=new_cogsets, source=[args.source])

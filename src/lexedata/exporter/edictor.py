@@ -148,34 +148,13 @@ def forms_to_tsv(
     cognatesets: t.Iterable[str],
     logger: cli.logging.Logger = cli.logger,
 ):
-    # required fields
-    try:
-        c_cognate_cognateset = dataset["CognateTable", "cognatesetReference"].name
-        c_cognate_form = dataset["CognateTable", "formReference"].name
-        c_cognate_id = dataset["CognateTable", "id"].name
-        c_segment_slice = dataset["CognateTable", "segmentSlice"].name
-        c_alignment = dataset["CognateTable", "alignment"].name
-    except KeyError:
-        # TODO: why not use directly: cli.EXIT.NO_COGNATETABLE(message) ?
-        logger.critical(
-            """Edictor export requires your dataset to have an explicit CognateTable containing the judgements,
-            with all of IDs, forms, cognatesets, segment slices and alignments.
-            Run `lexedata.edit.construct_cognate_table` if you have cognate sets in your FormTable.
-            Run `lexedata.edit.cognate_code_data` if you want to start from automatic cognate detection."""
-        )
-        cli.Exit.NO_COGNATETABLE()
-
     try:
         dataset["FormTable", "segments"].name
     except KeyError:
-        # TODO: same: why not use cli:Exit....() directly?
-        logger.critical(
+        cli.Exit.NO_SEGMENTS(
             """Edictor export requires your dataset to have segments in the FormTable.
         Run `lexedata.edit.add_segments` to automatically add segments based on your forms."""
         )
-        # TODO: Exit.NO_SEGMENTS is not an `int`, so the exit code of the
-        # python run is actually 1, not 4 as we wanted.
-        cli.Exit.NO_SEGMENTS()
 
     delimiters = {
         util.cldf_property(c.propertyUrl) or c.name: c.separator
@@ -255,33 +234,55 @@ def forms_to_tsv(
         types.Form_ID, t.Tuple[t.List[str], t.List[int]]
     ] = {id: ([f"({s})" for s in form["segments"]], []) for id, form in forms.items()}
     # Compose all judgements, last-one-rules mode.
-    for j in dataset["CognateTable"]:
-        if j[c_cognate_form] in forms and cognateset_cache.get(j[c_cognate_cognateset]):
-            j[c_alignment] = [s or "" for s in j[c_alignment]]
+    for j in util.cache_table(dataset, "CognateTable").values():
+        if j["formReference"] in forms and cognateset_cache.get(
+            j["cognatesetReference"]
+        ):
+            if j.get("alignment"):
+                j["alignment"] = [s or "" for s in j["alignment"]]
+            else:
+                j["alignment"] = forms[j["formReference"]]["segments"]
+
             try:
                 segments_judged = list(
                     parse_segment_slices(
-                        segment_slices=j[c_segment_slice], enforce_ordered=False
+                        segment_slices=j["segmentSlice"], enforce_ordered=False
                     )
+                )
+            except TypeError:
+                logger.warning(
+                    "In judgement %s: No segment slice given. Assuming whole form.",
+                    j["id"],
+                )
+                segments_judged = list(
+                    range(len(forms[j["formReference"]]["segments"]))
+                )
+            except KeyError:
+                segments_judged = list(
+                    range(len(forms[j["formReference"]]["segments"]))
                 )
             except ValueError:
                 logger.warning(
-                    f"In judgement {j[c_cognate_id]}: Index error due to bad segment slice. Skipped."
+                    "In judgement %s: Index error due to bad segment slice %s. Skipped.",
+                    j["id"],
+                    ",".join(j["segmentSlice"]),
                 )
                 continue
-            global_alignment, cogsets = judgements_about_form[j[c_cognate_form]]
+            global_alignment, cogsets = judgements_about_form[j["formReference"]]
             segment_start, segment_end = min(segments_judged), max(segments_judged) + 1
             try:
                 glue_in_alignment(
                     global_alignment,
                     cogsets,
-                    j[c_alignment],
-                    j[c_cognate_cognateset],
+                    j["alignment"],
+                    j["cognatesetReference"],
                     slice(segment_start, segment_end),
                 )
             except IndexError:
                 logger.warning(
-                    f"In judgement {j[c_cognate_id]}: Index error due to bad segment slice. Skipped."
+                    "In judgement %s: Index error due to bad segment slice %s. Skipped.",
+                    j["id"],
+                    ",".join(j["segmentSlice"]),
                 )
                 continue
 
@@ -316,6 +317,8 @@ def write_edictor_file(
     tsv_header.insert(0, "LINGPY_ID")
     tsv_header.append("cognatesetReference")
     tsv_header.append("alignment")
+    if "parameterReference" in delimiters:
+        tsv_header.append("_parameterReference")
 
     # write output to tsv
     out = csv.DictWriter(

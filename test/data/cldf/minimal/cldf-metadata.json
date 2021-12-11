@@ -181,10 +181,12 @@
                         "name": "Cognateset"
                     },
                     {
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#segmentSlice",
                         "datatype": "string",
                         "name": "Segment_Slice"
                     },
                     {
+                        "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#alignment",
                         "datatype": "string",
                         "name": "Alignment"
                     },

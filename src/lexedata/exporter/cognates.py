@@ -385,6 +385,13 @@ class ExcelWriter(BaseExcelWriter):
                 included_segments = set(
                     parse_segment_slices(form["segmentSlice"], enforce_ordered=True)
                 )
+            except TypeError:
+                self.logger.warning(
+                    "In judgement %s, for form %s, there was no segment slice. I will use the whole form.",
+                    form["cognateReference"],
+                    form["id"],
+                )
+                included_segments = range(len(form["segments"]))
             except KeyError:
                 included_segments = range(len(form["segments"]))
             except ValueError:
@@ -396,8 +403,8 @@ class ExcelWriter(BaseExcelWriter):
                 # whole segment and warn.
                 self.logger.warning(
                     "In judgement %s, for form %s, segment slice %s is invalid. I will use the whole form.",
-                    form["id"],
                     form["cognateReference"],
+                    form["id"],
                     ",".join(form["segmentSlice"]),
                 )
                 included_segments = range(len(form["segments"]))

@@ -38,9 +38,14 @@ class CognateEditParser(ExcelCognateParser):
         if not properties:
             return None
 
-        if not properties.get(
-            self.db.dataset["CognatesetTable", "name"].name
-        ) and not properties.get(self.db.dataset["CognatesetTable", "id"].name):
+        try:
+            c_s_name = self.db.dataset["CognatesetTable", "name"].name
+        except KeyError:
+            c_s_name = None
+
+        if not properties.get(c_s_name) and not properties.get(
+            self.db.dataset["CognatesetTable", "id"].name
+        ):
             # TODO: Get official logger, or turn this into an Error that can be caught elsewhere.
             cli.logger.warning(
                 "Row %d had no cognateset name and no ID, but other metadata: %s. If there are any entries in this row, they have been grouped with the previous row.",

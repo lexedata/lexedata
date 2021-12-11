@@ -341,7 +341,10 @@ class ExcelParser(t.Generic[R]):
             properties = self.properties_from_row(row_header)
             if properties:
                 c_r_id = self.db.dataset[properties.__table__, "id"].name
-                c_r_name = self.db.dataset[properties.__table__, "name"].name
+                try:
+                    c_r_name = self.db.dataset[properties.__table__, "name"].name
+                except KeyError:
+                    c_r_name = None
                 similar = self.db.find_db_candidates(
                     properties, self.check_for_row_match
                 )

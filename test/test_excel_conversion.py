@@ -1,3 +1,4 @@
+import re
 import pytest
 import logging
 import tempfile
@@ -16,7 +17,10 @@ from helper_functions import (
 from mock_excel import MockSingleExcelSheet
 import lexedata.importer.excel_matrix as f
 from lexedata.exporter.cognates import ExcelWriter
-from lexedata.importer.cognates import import_cognates_from_excel
+from lexedata.importer.cognates import (
+    import_cognates_from_excel,
+)
+from lexedata import util
 
 
 @pytest.fixture(
@@ -175,16 +179,16 @@ def test_cell_comments():
     ws = openpyxl.load_workbook(excel_filename).active
     import_cognates_from_excel(ws, dataset)
     cognates = {
-        cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognateTable"]
+        cog["ID"]: {
+            k: v for k, v in cog.items() if k in {"Form_ID", "Cognateset", "Comment"}
+        }
+        for cog in dataset["CognateTable"]
     }
     assert cognates == {
         "autaa_Woman-cogset": {
             "Cognateset": "cogset",
             "Comment": "Comment on judgement",
             "Form_ID": "autaa_Woman",
-            "ID": "autaa_Woman-cogset",
-            "Segment_Slice": None,
-            "Alignment": None,
         }
     }
     cognatesets = {
@@ -212,16 +216,16 @@ def test_cell_comments_and_comment_column(caplog):
     assert "from the cell comments" in caplog.text
 
     cognates = {
-        cog["ID"]: {k: v for k, v in cog.items()} for cog in dataset["CognateTable"]
+        cog["ID"]: {
+            k: v for k, v in cog.items() if k in {"Form_ID", "Cognateset", "Comment"}
+        }
+        for cog in dataset["CognateTable"]
     }
     assert cognates == {
         "autaa_Woman-cogset": {
             "Cognateset": "cogset",
             "Comment": "Comment on judgement",
             "Form_ID": "autaa_Woman",
-            "ID": "autaa_Woman-cogset",
-            "Segment_Slice": None,
-            "Alignment": None,
         }
     }
     cognatesets = {
@@ -252,14 +256,33 @@ def test_cell_comments_export():
     ), "Comment should match the comment from the cognate table"
 
 
-def test_excel_messy_row():
-    # TODO: Build a dataset with forms F1, F2, F3 in languages L1, L2 and
+def test_excel_messy_row(caplog):
+    # Build a dataset with forms F1, F2, F3 in languages L1, L2 and
     # CognateTable columns ID and Status
-    MockSingleExcelSheet(
+    dataset = util.fs.new_wordlist(
+        FormTable=[
+            {"ID": "F1", "Language_ID": "L1", "Form": "f1", "Parameter_ID": "C"},
+            {"ID": "F2", "Language_ID": "L2", "Form": "f1", "Parameter_ID": "C"},
+            {"ID": "F3", "Language_ID": "L1", "Form": "f1", "Parameter_ID": "C"},
+        ],
+        LanguageTable=[{"ID": "L1", "Name": "L1"}, {"ID": "L2", "Name": "L2"}],
+        ParameterTable=[{"ID": "C"}],
+        CognateTable=[],
+        CognatesetTable=[],
+    )
+    # TODO: Ensure FormTable does not need a value
+    dataset.add_columns("FormTable", "value")
+    dataset["FormTable", "value"].required = False
+    dataset.add_columns("CognatesetTable", "Status")
+    dataset.add_columns("CognatesetTable", "comment")
+
+    # Construct a sheet with a messy cognateset header
+    messy_sheet = MockSingleExcelSheet(
         [
             [
                 "CogSet",
-                "Status" "L1",
+                "Status",
+                "L1",
                 "L2",
             ],
             [
@@ -275,7 +298,20 @@ def test_excel_messy_row():
             ],
         ]
     )
-    # TODO: Add links to form cells, or change form cell parser
-    # TODO: Cognate-import this dataset
-    # TODO: Check for warning in caplog
-    # TODO: Check that cognateset S1 contains form F3
+    for cell in [(2, 3), (3, 3), (2, 4)]:
+        messy_sheet.cell(*cell).hyperlink = "/{:}".format(messy_sheet.cell(*cell).value)
+
+    # Cognate-import this dataset
+    with caplog.at_level(logging.INFO):
+        import_cognates_from_excel(
+            messy_sheet,
+            dataset,
+        )
+
+    # Check that cognateset S1 contains form F3
+    assert ("F3", "S1") in [
+        (j["Form_ID"], j["Cognateset_ID"]) for j in dataset["CognateTable"]
+    ]
+
+    # Check for warning in caplog
+    assert re.search("[Rr]ow 3 .* no cognateset .* 'Status': 'invalid'", caplog.text)

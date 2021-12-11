@@ -130,7 +130,7 @@ def test_no_comment_column():
     )
     forms = util.cache_table(dataset).values()
     for form in forms:
-        assert writer.form_to_cell_value(form).strip() == "e.ta.'kɾã ‘one, one’"
+        assert writer.form_to_cell_value(form).strip() == "{ e t a k ɾ ã } ‘one, one’"
         break
 
 

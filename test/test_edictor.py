@@ -1,9 +1,16 @@
 import io
+from pathlib import Path
+import pycldf
+
+from lexedata.types import WorldSet
 
 import lexedata.importer.edictor as importer
-import lexedata.exporter.edictor as exporter  # noqa
+import lexedata.exporter.edictor as exporter
 import lexedata.util.fs
 from lexedata import util
+import tempfile
+
+from test_excel_conversion import cldf_wordlist, working_and_nonworking_bibfile  # noqa
 
 
 def test_match_cognatesets_1():
@@ -147,3 +154,37 @@ def test_write_edictor_singleton_dataset():
         "ALIGNMENT": "ð ( ə f o m )",
     }
     assert "<memory>" in file.getvalue()
+
+
+def test_roundtrip(cldf_wordlist, working_and_nonworking_bibfile):  # noqa
+    """Check that a small dataset survives the round trip to edictor"""
+    filled_cldf_wordlist = working_and_nonworking_bibfile(cldf_wordlist)
+    dataset, target = filled_cldf_wordlist
+
+    # Export to edictor
+    forms, judgements_about_form, cognateset_mapping = exporter.forms_to_tsv(
+        dataset=dataset,
+        languages=WorldSet(),
+        concepts=WorldSet(),
+        cognatesets=WorldSet(),
+    )
+
+    _, f = tempfile.mkstemp(".tsv", "edictor")
+    filename = Path(f)
+
+    with filename.open("w", encoding="utf-8") as file:
+        exporter.write_edictor_file(
+            dataset, file, forms, judgements_about_form, cognateset_mapping
+        )
+
+    # Re-import
+    new_cogsets = importer.load_forms_from_tsv(
+        dataset=dataset,
+        input_file=filename,
+    )
+
+    importer.edictor_to_cldf(dataset=dataset, new_cogsets=new_cogsets)
+
+    expected = pycldf.Wordlist.from_metadata(target)
+    for table in expected.tables:
+        assert list(dataset[table.url]) == list(expected[table.url])
