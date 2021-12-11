@@ -35,6 +35,7 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
      - The segment slice must be a valid (1-based, inclusive) slice into the segments of the form
      - The alignment must match the segment slice applied to the segments of the form
      - The length of the alignment must match the lengths of other alignments of that cognate set
+     - Missing forms (Including "-" for “concept not available in language” must not be in cognatesets)
 
     Having no cognates is a valid choice for a dataset, so this function returns True if no CognateTable was found.
 
@@ -107,6 +108,19 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
         # All further checks don't make sense, return early.
         return True
 
+    try:
+        c_f_form = dataset[referenced_table, "form"].name
+
+        def form_given(row):
+            return row[c_f_form] and row[c_f_form].strip() != "-"
+
+    except KeyError:
+        if dataset[referenced_table] == dataset["FormTable"]:
+            log_or_raise("FormTable does not have a #form column.", log=log)
+
+        def form_given(row):
+            return True
+
     # Check whether each row is valid.
     all_judgements_okay = True
     forms = cache_table(
@@ -114,13 +128,33 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
         columns={"segments": dataset[referenced_table, "segments"].name},
         table=referenced_table,
         index_column=referenced_column,
+        filter=form_given,
     )
-    cognateset_alignment_lengths: t.DefaultDict[t.Set[int]] = t.DefaultDict(set)
+    missing_forms = cache_table(
+        dataset,
+        columns={},
+        table=referenced_table,
+        index_column=referenced_column,
+        filter=lambda row: not form_given(row),
+    )
+    cognateset_alignment_lengths: t.DefaultDict[t.Any, t.Set[int]] = t.DefaultDict(set)
 
     for f, j, judgement in dataset["CognateTable"].iterdicts(
         log=log, with_metadata=True
     ):
-        form_segments = forms[judgement[c_form]]
+        try:
+            form_segments = forms[judgement[c_form]]
+        except KeyError:
+            if judgement[c_form] in missing_forms:
+                log_or_raise(
+                    "In {}, row {}: NA form was judged to be in cognate set.".format(
+                        f, j
+                    ),
+                    log=log,
+                )
+            # The case of a missing foreign key in general is already handled
+            # by the basic CLDF validator.
+            continue
         if c_sslice is not None:
             if not judgement[c_sslice]:
                 log_or_raise("In {}, row {}: Empty segment slice".format(f, j), log=log)
@@ -138,7 +172,7 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
                 )
                 all_judgements_okay = False
         else:
-            included_segments = range(len(form_segments))
+            included_segments = list(range(len(form_segments)))
 
         if c_alignment:
             # Length of alignment should match length of every other alignment in this cognate set.

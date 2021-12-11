@@ -175,7 +175,8 @@ def cache_table(
     dataset,
     table: t.Optional[str] = None,
     columns: t.Optional[t.Mapping[str, str]] = None,
-    index_column="id",
+    index_column: str = "id",
+    filter: t.Callable[[t.Mapping[str, t.Any]], bool] = lambda e: True,
 ) -> t.Mapping[str, t.Mapping[str, t.Any]]:
     """Load a dataset table into memory as a dictionary of dictionaries.
 
@@ -234,6 +235,7 @@ def cache_table(
             task=f"Caching table {table}",
             total=dataset[table].common_props.get("dc:extent"),
         )
+        if filter(row)
     }
 
 
