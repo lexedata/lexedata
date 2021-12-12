@@ -221,7 +221,7 @@ Authors, provenience, etc.
                             {
                                 "datatype": {
                                     "base": "string",
-                                    "format": "[a-zA-Z0-9_\\-]+"
+                                    "format": "[a-zA-Z0-9_-]+"
                                 },
                                 "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
                                 "required": true,
@@ -293,11 +293,15 @@ Currently, all the dataset knows about these their names. We can generate a
 scaffold for metadata about languages etc. with another tool. ::
 
     $ python -m lexedata.edit.add_table LanguageTable
+    INFO:lexedata:Found 14 different entries for your new LanguageTable.
     $ python -m lexedata.edit.add_table ParameterTable
+    INFO:lexedata:Found 100 different entries for your new ParameterTable.
+    WARNING:lexedata:Your references to the ParameterTable are not URL safe.
+    Run ‘lexedata.edit.simplify_ids’ to fix that.
 
 “Parameter” is CLDF speak for the things sampled per-language. In a
 StructureDataset this might be typological features, in a Wordlist the
-ParameterTable contains the concepts.
+ParameterTable contains the concepts. The warning we will ignore for now.
 
 Every form belongs to one language, and every language has multiple forms. This
 is a simple 1:n relationship. Every form has and one or more concepts associated
@@ -321,17 +325,115 @@ In our example dataset, cognate class “1” for all is not cognate with class 
 for arm, so we need to tell ``add_cognate_table`` that these IDs are only unique
 within a concept::
 
-    $ python -m lexedata.edit.add_cognate_table --unique-id concept
+    $ python -m lexedata.edit.add_cognate_table -q --unique-id concept
     $ python -m lexedata.edit.add_table CognatesetTable
+    INFO:lexedata:Found 651 different entries for your new CognatesetTable.
 
 Now all the external properties of a form can be annotated with explicit
-metadata in their own table files::
+metadata in their own table files, for example for the languages:
 
-    $ ls
-    bantu.xlsx
-    cognates.csv
-    cognatesets.csv
-    forms.csv
-    languages.csv
-    parameters.csv
-    Wordlist-metadata.json
+    ::
+
+        ID,Name,Macroarea,Latitude,Longitude,Glottocode,ISO639P3code
+        Bushoong,Bushoong,,,,,
+        Duala,Duala,,,,,
+        Fwe,Fwe,,,,,
+        Ha,Ha,,,,,
+        Kikuyu,Kikuyu,,,,,
+        Kiyombi,Kiyombi,,,,,
+        Lega,Lega,,,,,
+        Luganda,Luganda,,,,,
+        Ngombe,Ngombe,,,,,
+        Ntomba,Ntomba,,,,,
+        Nyamwezi,Nyamwezi,,,,,
+        Nzadi,Nzadi,,,,,
+        Nzebi,Nzebi,,,,,
+        Swahili,Swahili,,,,,
+
+    -- languages.csv
+
+If you edit files by hand, it's always good to check CLDF compliance afterwards
+– small typos are just too easy to make, and they don't catch the eye. ::
+    
+    $ cldf validate Wordlist-metadata.json
+    WARNING parameters.csv:37:1 ID: invalid lexical value for string: go to
+    WARNING parameters.csv:70:1 ID: invalid lexical value for string: rain (v)
+    WARNING parameters.csv:77:1 ID: invalid lexical value for string: sick, be
+    WARNING parameters.csv:80:1 ID: invalid lexical value for string: sleep (v)
+    WARNING parameters.csv:37:1 ID: invalid lexical value for string: go to
+    WARNING parameters.csv:70:1 ID: invalid lexical value for string: rain (v)
+    WARNING parameters.csv:77:1 ID: invalid lexical value for string: sick, be
+    WARNING parameters.csv:80:1 ID: invalid lexical value for string: sleep (v)
+    WARNING forms.csv:39 Key `go to` not found in table parameters.csv
+    WARNING forms.csv:72 Key `rain (v)` not found in table parameters.csv
+    WARNING forms.csv:79 Key `sick, be` not found in table parameters.csv
+    WARNING forms.csv:82 Key `sleep (v)` not found in table parameters.csv
+    [...]
+
+Ah, we had been warned about something like this above. We can easily fix this
+by removing the 'format' restriction from ParameterTable's ID column::
+
+    $ patch -u --verbose > /dev/null << EOF
+    > --- Wordlist-metadata.json	2021-12-12 02:04:28.519080902 +0100
+    > +++ Wordlist-metadata.json~	2021-12-12 02:05:36.161817085 +0100
+    > @@ -181,8 +181,7 @@
+    >                  "columns": [
+    >                      {
+    >                          "datatype": {
+    > -                            "base": "string",
+    > -                            "format": "[a-zA-Z0-9_\\\-]+"
+    > +                            "base": "string"
+    >                          },
+    >                          "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#id",
+    >                          "required": true,
+    > @@ -329,4 +328,4 @@
+    >              "url": "cognatesets.csv"
+    >          }
+    >      ]
+    > -}
+    > \ No newline at end of file
+    > +}
+    > EOF
+
+Extended extended CLDF compatibility
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We have taken this dataset from a somewhat ideosyncratic format to metadata-free
+CLDF and to a dataset with extended CLDF compliance. The ``cldf validate``
+script checks for strict conformance with the CLDF standard. However, there are
+some assumptions which lexedata and also some other CLDF-aware tools tend to
+make which are not strictly mandated by the CLDF specifications. One such
+assumption is the one that led to the issue above:
+
+    Each CLDF data table SHOULD contain a column which uniquely identifies a row
+    in the table. This column SHOULD be marked using:
+
+     - a propertyUrl of http://cldf.cld.org/v1.0/terms.rdf#id
+     - the column name ID in the case of metadata-free conformance.
+
+    To allow usage of identifiers as path components of URIs and ensure they are
+    portable across systems, identifiers SHOULD be composed of alphanumeric
+    characters, underscore ``_`` and hyphen ``-`` only, i.e. match the regular
+    expression ``[a-zA-Z0-9\-_]+`` (see RFC 3986).
+
+    -- https://github.com/cldf/cldf#identifier
+
+Because of the potential use in URLs, our table adder adds tables with the ID
+format that we encountered above. This specification uses the word 'SHOULD', not
+'MUST', which `allows to ignore the requirement in certain circumstances`_
+(https://datatracker.ietf.org/doc/html/rfc2119#section-3) and thus ``cldf
+validate`` does not enforce it. We have however a separate report script that
+points out this and other deviations from sensible assumptions. ::
+
+    $ python -m lexedata.report.extended_cldf_validate
+    WARNING ID column of parameters.csv should be {}
+
+We can fix this using another tool from the lexedata toolbox. ::
+
+    $ python -m lexedata.edit.simplify_ids --table parameters.csv
+
+Merging polysemous forms
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+…
+

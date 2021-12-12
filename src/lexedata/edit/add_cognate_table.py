@@ -8,26 +8,10 @@ If the dataset has a cognatesetReference anywhere else, admit you don't know wha
 
 import pycldf
 
+
 from lexedata.util import cache_table
 from lexedata import cli
 from lexedata import util
-
-
-def add_explicit_cognateset_table(
-    dataset: pycldf.Wordlist, logger: cli.logging.Logger = cli.logger
-) -> None:
-    if "CognatesetTable" in dataset:
-        return
-    dataset.add_component("CognatesetTable")
-
-    c_cognateset = dataset["CognateTable", "cognatesetReference"].name
-
-    cognatesets = set()
-    logger.info("Aggregating cognate sets to write to separate table…")
-    for judgement in cli.tq(dataset["CognateTable"]):
-        cognatesets.add(judgement[c_cognateset])
-
-    dataset.write(CognatesetTable=[{"ID": id} for id in sorted(cognatesets)])
 
 
 def add_cognate_table(
@@ -96,13 +80,24 @@ def add_cognate_table(
             cognate_judgements.append(judgement)
 
     # Delete the cognateset column
-    try:
-        cols = dataset["FormTable"].tableSchema.columns
-        ix = cols.index(dataset["FormTable", "cognatesetReference"])
+    cols = dataset["FormTable"].tableSchema.columns
+    remove = {
+        dataset["FormTable", c].name
+        for c in ["cognatesetReference", "segmentSlice", "alignment"]
+        if ("FormTable", c) in dataset
+    }
+
+    def clean_form(form):
+        for c in remove:
+            form.pop(c, None)
+        return form
+
+    forms = [clean_form(form) for form in dataset["FormTable"]]
+    for c in remove:
+        ix = cols.index(dataset["FormTable", c])
         del cols[ix]
-        dataset.write(FormTable=list(dataset["FormTable"]))
-    except ValueError:
-        pass
+
+    dataset.write(FormTable=forms)
 
     dataset.write(CognateTable=cognate_judgements)
 
@@ -130,4 +125,3 @@ if __name__ == "__main__":
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
     add_cognate_table(dataset, split=split)
-    add_explicit_cognateset_table(dataset, logger)
