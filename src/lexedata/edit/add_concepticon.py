@@ -228,19 +228,19 @@ if __name__ == "__main__":
         help="Set Concepticon reference even if one exists already",
     )
     parser.add_argument(
-        "--add_concept_set_names",
+        "--add-concept-set-names",
         action="store_true",
         default=False,
         help="Add/update a column containing Concepticon's concept set names (glosses)",
     )
     parser.add_argument(
-        "--add_definitions",
+        "--add-definitions",
         action="store_true",
         default=False,
         help="Add/update a column containing Concepticon's concept set definitions, for quick disambiguation",
     )
     parser.add_argument(
-        "--gloss_language",
+        "--gloss-language",
         "-l",
         action="append",
         default=[],
@@ -248,12 +248,13 @@ if __name__ == "__main__":
         help="Maps from column names to 2-letter language codes. For example, if your ParameterTable has a column 'GLOSS', which contains English glosses, and a colum 'PORTUGUESE' with Portuguese translations, run this script with the arguments `-l GLOSS=en -l PORTUGUESE=pt`. If no language mappings are given, the assumption is that the #id column contains English glosses.",
     )
     parser.add_argument(
-        "--status_update",
+        "--status-update",
         type=str,
         default="automatic Concepticon link",
         help="Text written to Status_Column. Set to 'None' for no status update. (default: automatic Concepticon link)",
     )
     args = parser.parse_args()
+    logger = cli.setup_logging(args)
     if args.status_update == "None":
         args.status_update = None
 

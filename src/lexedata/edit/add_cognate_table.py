@@ -41,6 +41,7 @@ def add_cognate_table(
             pass
     cognate_judgements = []
     forms = cache_table(dataset, columns=columns)
+    forms_without_segments = 0
     for f, form in cli.tq(
         forms.items(), task="Extracting cognate judgements from forms…"
     ):
@@ -60,6 +61,8 @@ def add_cognate_table(
                 judgement["Segment_Slice"] = form["segmentSlice"]
             except KeyError:
                 try:
+                    if not form["segments"]:
+                        raise ValueError("No segments")
                     if (
                         "+" in form["segments"]
                         and dataset["FormTable", "cognatesetReference"].separator
@@ -70,14 +73,24 @@ def add_cognate_table(
                     judgement["Segment_Slice"] = [
                         "1:{:d}".format(len(form["segments"]))
                     ]
-                except (KeyError, TypeError):
-                    logger.warning(
-                        f"No segments found for form {f} ({form['form']}). You can generate segments using `lexedata.edit.segment_using_clts`."
-                    )
+                except (KeyError, TypeError, ValueError):
+                    forms_without_segments += 1
+                    if forms_without_segments >= 5:
+                        pass
+                    else:
+                        logger.warning(
+                            f"No segments found for form {f} ({form['form']})."
+                        )
             # What does an alignment mean without segments or their slices?
             # Doesn't matter, if we were given one, we take it.
             judgement["Alignment"] = form.get("alignment")
             cognate_judgements.append(judgement)
+
+    if forms_without_segments >= 5:
+        logger.warning(
+            "No segments found for %d forms. You can generate segments using `lexedata.edit.segment_using_clts`.",
+            forms_without_segments,
+        )
 
     # Delete the cognateset column
     cols = dataset["FormTable"].tableSchema.columns

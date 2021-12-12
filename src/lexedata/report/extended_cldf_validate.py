@@ -9,10 +9,15 @@ core.
 import typing as t
 
 import pycldf
-from clldutils.misc import log_or_raise
+
+# from clldutils.misc import log_or_raise
 
 from lexedata import cli
 from lexedata.util import parse_segment_slices, cache_table
+
+
+def log_or_raise(message, log=None):
+    logger.warning(message)
 
 
 def check_segmentslice_separator(dataset, log=None) -> bool:
@@ -120,7 +125,7 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
     for f, j, judgement in dataset["CognateTable"].iterdicts(
         log=log, with_metadata=True
     ):
-        form_segments = forms[judgement[c_form]]
+        form_segments = forms[judgement[c_form]]["segments"]
         if c_sslice is not None:
             if not judgement[c_sslice]:
                 log_or_raise("In {}, row {}: Empty segment slice".format(f, j), log=log)
@@ -200,6 +205,7 @@ def check_id_format(ds):
                     "[a-zA-Z0-9_\\-]+",
                     "[a-zA-Z0-9_-]+",
                     "[a-zA-Z0-9\\-_]+",
+                    "[a-z0-9_]+",
                 }:
                     logger.warning(
                         "Table %s has a string ID column %s with format %s. I am too dumb to check whether that's a subset of [a-zA-Z0-9_-]+ (which is fine) or not (in which case maybe change it).",

@@ -1,6 +1,6 @@
-==================
+##################
 A tour of lexedata
-==================
+##################
 
 This tutorial will take you on a tour through the command line functionality of
 the lexedata package. We will start with a small lexical dataset in an
@@ -23,8 +23,9 @@ tutorial further assumes you have a working :doc:`installation of lexedata <inst
 interface, but you can use a Git GUI instead. (Not using version control for
 your data is dangerous, because lexedata does not include an ‘undo’ function.)
 
+*****************************
 Importing a dataset into CLDF
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*****************************
 
 First, create a new empty directory. We will collect the data and run
 the analyses inside that folder. Open a command line interface, and
@@ -132,13 +133,20 @@ but otherwise the dataset is fine. ::
       warnings.warn(
 
 Working with git
-~~~~~~~~~~~~~~~~
+================
 
-This is the point where it really makes sense to start working with ``git``.
-(This aspect is still missing from this tutorial.)
+This is the point where it really makes sense to start working with ``git``. ::
+
+    $ git init
+    Initialized empty Git repository in [...]bantu/.git/
+    $ git add forms.csv
+    $ git commit -m "Initial import"
+    [master (root-commit) [...]] Initial import
+     1 file changed, 1593 insertions(+)
+     create mode 100644 forms.csv
 
 Adding metadata and explicit tables
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===================================
 
 A better structure for a lexical dataset – or any dataset, really – is to
 provide metadata. A CLDF dataset is described by a metadata file in JSON format.
@@ -190,7 +198,14 @@ With the new metadata file and the new columns, the data set now looks like this
     duala_black,Duala,black,wínda,,21,,
 
 The ``cldf validate`` script only outputs problems, so if it prints out nothing,
-it means that the data set conforms to the CLDF standard!
+it means that the data set conforms to the CLDF standard! That's a good starting
+point to create a new commit. ::
+
+    $ git add Wordlist-metadata.json
+    $ git commit -m "Add metadata file"
+    [master [...]] Add metadata file
+     1 file changed, 87 insertions(+)
+     create mode 100644 Wordlist-metadata.json
 
 Now that we have a good starting point, we can start working with the data and
 improving it. First, we change the template metadata file to include an actual
@@ -289,6 +304,14 @@ Authors, provenience, etc.
 
     -- Wordlist-metadata.json
 
+And commit. ::
+
+    $ git commit -am "Add metadata"
+    [...]
+
+Adding satelite tables
+-----------------------
+    
 Another useful step is to make languages, concepts, and cognate codes explicit.
 Currently, all the dataset knows about these their names. We can generate a
 scaffold for metadata about languages etc. with another tool. ::
@@ -307,7 +330,15 @@ Every form belongs to one language, and every language has multiple forms. This
 is a simple 1:n relationship. Every form has and one or more concepts associated
 to it (in this way, CLDF supports annotating polysemies) and every concept has
 several forms, in different languages but also synonyms within a single
-language. This can easily be reflected by entries in the FormTable.
+language. This can easily be reflected by entries in the FormTable. So far, so
+good. ::
+
+    $ git add languages.csv parameters.csv
+    $ git commit -am "Add language and concept tables"
+    [master [...]] Add language and concept tables
+     3 files changed, 246 insertions(+), 1 deletion(-)
+     create mode 100644 languages.csv
+     create mode 100644 parameters.csv
 
 The logic behind cognate judgements is slightly different. A form belongs to one
 or more cognate sets, but in addition to the cognate class, there may be
@@ -326,9 +357,40 @@ for arm, so we need to tell ``add_cognate_table`` that these IDs are only unique
 within a concept::
 
     $ python -m lexedata.edit.add_cognate_table -q --unique-id concept
+    WARNING:lexedata:No segments found for form duala_all (ɓɛ́sɛ̃).
+    WARNING:lexedata:No segments found for form duala_arm (dia).
+    WARNING:lexedata:No segments found for form duala_ashes (mabúdú).
+    WARNING:lexedata:No segments found for form duala_bark (bwelé).
+    WARNING:lexedata:No segments found for 1585 forms. You can generate segments using `lexedata.edit.segment_using_clts`.
+
+.. _segments:
+Add phonemic segments
+---------------------
+
+The cognate table needs to represent whether some or all of a form is judged to
+be cognate, and for that it needs the segments to be present. So before we
+continue, we use git to undo the creation of the cognate table. ::
+
+    $ git checkout .
+    Updated 2 paths from the index
+
+Then we add the segments using the dedicated script. ::
+
+    $ python -m lexedata.edit.add_segments
+    [...]
+
+With the segments in place, we can add the cognate table back in and proceed to
+add the cognateset table. ::
+    
+    $ python -m lexedata.edit.add_cognate_table -q --unique-id concept
     $ python -m lexedata.edit.add_table CognatesetTable
     INFO:lexedata:Found 651 different entries for your new CognatesetTable.
+    $ git add cognates.csv cognatesets.csv
+    $ git commit -am "Add cognate and cognateset tables"
+    [...]
 
+Create a consistent data set
+----------------------------
 Now all the external properties of a form can be annotated with explicit
 metadata in their own table files, for example for the languages:
 
@@ -355,6 +417,8 @@ metadata in their own table files, for example for the languages:
 If you edit files by hand, it's always good to check CLDF compliance afterwards
 – small typos are just too easy to make, and they don't catch the eye. ::
     
+    $ git commit -am "Update language metadata"
+    [...]
     $ cldf validate Wordlist-metadata.json
     WARNING parameters.csv:37:1 ID: invalid lexical value for string: go to
     WARNING parameters.csv:70:1 ID: invalid lexical value for string: rain (v)
@@ -398,9 +462,11 @@ by removing the 'format' restriction from ParameterTable's ID column::
 Now the dataset conforms to cldf::
     
     $ cldf validate Wordlist-metadata.json
+    $ git commit -am "Make dataset valid!"
+    [...]
 
 Extended extended CLDF compatibility
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+====================================
 
 We have taken this dataset from a somewhat ideosyncratic format to metadata-free
 CLDF and to a dataset with extended CLDF compliance. The ``cldf validate``
@@ -429,22 +495,273 @@ format that we encountered above. This specification uses the word 'SHOULD', not
 validate`` does not enforce it. We do however provide a separate report script
 that points out this and other deviations from sensible assumptions. ::
 
-    $ python -m lexedata.report.extended_cldf_validate
+    $ python -m lexedata.report.extended_cldf_validate 2>&1 | head -n 2
     WARNING:lexedata:Table parameters.csv has an unconstrained ID column ID. Consider setting its format to [a-zA-Z0-9_-]+ and/or running `lexedata.edit.simplify_ids`.
-    [...]
+    INFO:lexedata:Caching table forms.csv
 
-As the We can fix this using another tool from the lexedata toolbox. ::
+As that message tells us (I have cut off all the later messages, showing only
+the first two lines of output), we can fix this using another tool from the
+lexedata toolbox::
 
     $ python -m lexedata.edit.simplify_ids --table parameters.csv
     INFO:lexedata:Handling table parameters.csv…
     [...]
+    $ git commit -am "Regenerate concept IDs"
+    [...]
+
+This was however not the only issue with the data. ::
+
+    $ python -m lexedata.report.extended_cldf_validate -q
+    WARNING:lexedata:In cognates.csv, row 2: Referenced segments in form resolve to ɓ ɛ́ s ɛ̃, while alignment contains segments .
+    WARNING:lexedata:In cognates.csv, row 3: Referenced segments in form resolve to d i a, while alignment contains segments .
+    WARNING:lexedata:In cognates.csv, row 4: Referenced segments in form resolve to m a b ú d ú, while alignment contains segments .
+    WARNING:lexedata:In cognates.csv, row 5: Referenced segments in form resolve to b w e l é, while alignment contains segments .
+    WARNING:lexedata:In cognates.csv, row 6: Referenced segments in form resolve to d i b u m, while alignment contains segments .
+    WARNING:lexedata:In cognates.csv, row 7: Referenced segments in form resolve to é n d ɛ̃ n ɛ̀, while alignment contains segments .
+    WARNING:lexedata:In cognates.csv, row 8: Referenced segments in form resolve to i n ɔ̌ n, while alignment contains segments .
+    [...]
+
+The alignment column of the cognate table is empty, so for no form is there a
+match between the segments assigned to a cognate set (the segment slice, applied
+to the segments in the FormTable) and the segments occuring in the alignment.
+The easy way out here is the alignment script – which is not very clever, but
+working on the cognate data in detail is a later step. ::
+
+    $ python -m lexedata.edit.align
+    INFO:lexedata:Caching table FormTable
+    100%|██████████| 1592/1592 [...]
+    INFO:lexedata:Aligning the cognate segments
+    100%|██████████| 1585/1585 [...]
+    $ git commit -am "Align"
+    [...]
+
+Lastly, with accented unicode characters, there are (simlified) two different
+conventions: Storing the characters as composed as possible (so è would be a
+single character) or as decomposed as possible (storing è as a combining `
+character and e). We generally use the composed “NFC” convention, so if you are
+in doubt, you can always normalize them to that convention. ::
+
+    $ python -m lexedata.edit.normalize_unicode
+    INFO:lexedata:Normalizing forms.csv…
+    INFO:lexedata:Normalizing languages.csv…
+    INFO:lexedata:Normalizing parameters.csv…
+    INFO:lexedata:Normalizing cognates.csv…
+    INFO:lexedata:Normalizing cognatesets.csv…
+    $ python -m lexedata.report.extended_cldf_validate -q
+    $ git commit -am "Get data ready to start editing"
+    [...]
+
+We have told the extended validator to be quiet, so no output means it has
+nothing to complain about: Our dataset is not only valid CLDF, but also
+compatible with the general assumptions of lexedata.
+
+********************
+Editing the data set
+********************
+
+We are about to start editing. In the process, we may introduce new issues into
+the dataset. Therefore it makes sense to mark this current version with a git
+tag. If we ever need to return to this version, the tag serves as a memorable
+anchor. ::
+
+    $ git tag import_complete
+
+Adding status columns
+=====================
+
+While editing datasets, it is often useful to track the status of different
+objects. This holds in particular when some non-obvious editing steps are done
+automatically. Due to this, lexedata supports status columns. Many scripts fill
+the status column of a table they manipulate with a short message. The ``align``
+script has already done that for us::
+
+    $ head -n3 cognates.csv
+    ID,Form_ID,Cognateset_ID,Segment_Slice,Alignment,Source,Status_Column
+    duala_all,duala_all,all_1,1:4,ɓ ɛ́ s ɛ̃ - -,,automatically aligned
+    duala_arm,duala_arm,arm_7,1:3,d i a,,automatically aligned
+
+Most scripts do not add a status column if there is none. To make use of this
+functionality, we therefore add status columns to all tables. ::
+
+    $ python -m lexedata.edit.add_status_column 
+    INFO:lexedata:Tables to have a status column: ['forms.csv', 'cognatesets.csv', 'cognates.csv', 'parameters.csv']
+    INFO:lexedata:Table cognates.csv already contains a Status_Column.
+    $ git commit -am "Add status columns"
+    [...]
+
+Improve Forms
+=============
+
+We have already standardized the unicode representation of the forms and added
+segments, but another improvement is useful. Some forms still contain variants
+or additional non-linguistic information. This needs to be cleaned. A large
+chunk of the cleanup can be prepared automatically. ::
+
+    $ python -m lexedata.edit.clean_forms
+
+Afterwards a few things still need to be fixed manually. ::
+
+    $ echo patch, or sed 
+    patch, or sed
+
+Improve Concepts
+================
+
+The first items we want to edit are the concepts, and the links between the
+forms and the concepts. Currently, our parameter table lists for every concept
+only a name and an ID derived from the name. There is also space for a
+description, which we have left unfilled.
+
+For many subsequent tasks, it is useful to know whether concepts are related or
+not. The `CLICS³ database <https://clics.clld.org/>`_ contains a network of
+colexifications: Concepts that are expressed by the same form in vastly
+different languages can be assumed to be related. Lexedata comes with a copy of
+the CLICS³ network, but in order to use it, we need to map concepts to
+`Concepticon <https://concepticon.clld.org>`_, a catalog of concepts found in
+different word lists.
+
+Guess Concepticon links
+-----------------------
+
+Concepticon comes with some functionality to guess concepticon IDs based on
+concept glosses. The concepticon script only takes one gloss language into
+account. Lexedata provides a script that can take multiple gloss languages – we
+don't have those here, but the lexedata script can also add Concepticon's
+normalized glosses and definitions to our parameter table, so we use that script
+here. Our “Name” column in the ParameterTable contains English (“en”) glosses,
+so pass that information to the script::
+
+    $ python -m lexedata.edit.add_concepticon -q -l Name=en --add-concept-set-names --add-definitions
+    OrderedDict([('ID', 'bark'), ('Name', 'bark'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('1204', 3), ('1206', 1)]
+    OrderedDict([('ID', 'breast'), ('Name', 'breast'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('1402', 3), ('1592', 1)]
+    OrderedDict([('ID', 'burn'), ('Name', 'burn'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('2102', 3), ('141', 2), ('1428', 2)]
+    OrderedDict([('ID', 'cold'), ('Name', 'cold'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('1287', 3), ('102', 1), ('2483', 1)]
+    [...]
+    
+The output shows the concepts in our dataset with some ambiguous mappings to concepticon. Now is the time to check andif necessary fix the mappings. ::
+
+    $ cat parameters.csv 
+    ID,Name,Description,Status_Column,Concepticon_ID,Concepticon_Gloss,Concepticon_Definition
+    all,all,,automatic Concepticon link,98,ALL,The totality of.
+    arm,arm,,automatic Concepticon link,1673,ARM,"The upper limb, extending from the shoulder to the wrist and sometimes including the hand."
+    [...]
+    $ sed -i.bak -s 's/^go_to.*/go_to,go to,,Concepticon link checked,695,GO,To get from one place to another by any means./' parameters.csv
+    $ sed -i.bak -s 's/automatic Concepticon link/Concepticon link checked/' parameters.csv
 
 Merging polysemous forms
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
-…
+There are a few identical forms in different concepts. Because we have connected
+our concepts to Concepticon, and therefore we have access to their CLICS³
+network, the homophones report can tell us whether two concepts are connected
+and thus likely polysemies of a single word::
 
-.. _segments:
+    $ python -m lexedata.report.homophones -o homophones.txt
+    $ cat homophones.txt
+    Bushoong, 'dǐin (PL: mǐin) (Bastin et al 1999)': Connected:
+         bushoong_name (name)
+         bushoong_tooth (tooth)
+    Nzadi, 'o-tûm': Unconnected:
+         nzadi_dig (dig)
+         nzadi_heart_s2 (heart)
+    Lega, 'ɛnda': Connected:
+         lega_go_to (go_to)
+         lega_walk (walk)
+    Kikuyu, 'rĩa': Connected:
+         kikuyu_eat (eat)
+         kikuyu_what (what)
+    Kikuyu, 'erũ': Unconnected:
+         kikuyu_new (new)
+         kikuyu_white (white)
+    Swahili, 'jua': Connected:
+         swahili_know (know)
+         swahili_sun (sun)
+    Ha, 'inda': Unconnected:
+         ha_belly (belly)
+         ha_louse (louse)
+    Fwe, 'ya': Unconnected:
+         fwe_go_to (go_to)
+         fwe_new (new)
 
-Adding phonemic segments
-~~~~~~~~~~~~~~~~~~~~~~~~
+The output is not as helpful as we might have hoped (that ‘walk’ and ‘go to’ are
+connected makes sense, but many of the other items are confusingly connected or
+confusingly disconnected). We can edit this [1]_ to keep the polysemies ::
+
+    $ cat > polysemies.txt << EOF
+    > Lega, 'ɛnda':
+    >   lega_go_to (go_to)
+    >   lega_walk (walk)
+    > Kikuyu, 'erũ':
+    >   kikuyu_new (new)
+    >   kikuyu_white (white)
+    > Swahili, 'jua': Connected:
+    >   swahili_know (know)
+    >   swahili_sun (sun)
+    > EOF
+
+and feed this file into the ‘homophones merger’, which turns separate forms into
+polysemous forms connected to multiple concepts. ::
+
+    $ python -m lexedata.edit.merge_homophones polysemies.txt
+    WARNING:lexedata:I had to set a separator for your forms' concepts. I set it to ';'.
+    INFO:lexedata:Going through forms and merging
+    100%|██████████| 1592/1592 [...]
+
+Improve Forms
+=============
+
+Split off variants and comments
+re-segment, with overwriting
+re-align, with overwriting
+
+Improve Cognatesets
+===================
+
+Merge cognatesets
+-----------------
+
+From merging polysemous forms, which were in different cognate sets, we get
+morphemes which are now allocated to two different cognate sets.
+
+nonconcatenative_morphemes.py
+
+These can be used to merge the corresponding cognate sets.
+
+  TODO: The script to merge this kind of indirectly connected cognate sets does
+  not exist. What should it do?
+
+Central Concepts
+----------------
+
+Singletons
+----------
+
+Singletons
+----------
+Align
+
+****************************************
+Computer-assisted historical linguistics
+****************************************
+
+Cognate Excel
+=============
+
+Edictor
+=======
+
+*************
+Further steps
+*************
+
+Matrix exporter
+===============
+
+Phylogenetics
+=============
+
+.. rubric:: Footnotes
+
+.. [1] The syntax I used to describe files before does not like indented lines
+       in the file, but they are integral to the structure of the polysemies
+       list.
