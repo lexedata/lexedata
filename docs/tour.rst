@@ -309,7 +309,7 @@ to it (in this way, CLDF supports annotating polysemies) and every concept has
 several forms, in different languages but also synonyms within a single
 language. This can easily be reflected by entries in the FormTable.
 
-The logic behind cognate judgements is slightly different. A form belong to one
+The logic behind cognate judgements is slightly different. A form belongs to one
 or more cognate sets, but in addition to the cognate class, there may be
 additional properties of a cognate judgement, such as alignments, segments the
 judgement is about (if it is a partial cognate judgement), comments (“dubious:
@@ -395,6 +395,10 @@ by removing the 'format' restriction from ParameterTable's ID column::
     > +}
     > EOF
 
+Now the dataset conforms to cldf::
+    
+    $ cldf validate Wordlist-metadata.json
+
 Extended extended CLDF compatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -408,8 +412,8 @@ assumption is the one that led to the issue above:
     Each CLDF data table SHOULD contain a column which uniquely identifies a row
     in the table. This column SHOULD be marked using:
 
-     - a propertyUrl of http://cldf.cld.org/v1.0/terms.rdf#id
-     - the column name ID in the case of metadata-free conformance.
+    - a propertyUrl of http://cldf.cld.org/v1.0/terms.rdf#id
+    - the column name ID in the case of metadata-free conformance.
 
     To allow usage of identifiers as path components of URIs and ensure they are
     portable across systems, identifiers SHOULD be composed of alphanumeric
@@ -420,16 +424,16 @@ assumption is the one that led to the issue above:
 
 Because of the potential use in URLs, our table adder adds tables with the ID
 format that we encountered above. This specification uses the word 'SHOULD', not
-'MUST', which `allows to ignore the requirement in certain circumstances`_
-(https://datatracker.ietf.org/doc/html/rfc2119#section-3) and thus ``cldf
-validate`` does not enforce it. We have however a separate report script that
-points out this and other deviations from sensible assumptions. ::
+'MUST', which `allows to ignore the requirement in certain circumstances
+<https://datatracker.ietf.org/doc/html/rfc2119#section-3>` and thus ``cldf
+validate`` does not enforce it. We do however provide a separate report script
+that points out this and other deviations from sensible assumptions. ::
 
     $ python -m lexedata.report.extended_cldf_validate
     WARNING:lexedata:Table parameters.csv has an unconstrained ID column ID. Consider setting its format to [a-zA-Z0-9_-]+ and/or running `lexedata.edit.simplify_ids`.
     [...]
 
-We can fix this using another tool from the lexedata toolbox. ::
+As the We can fix this using another tool from the lexedata toolbox. ::
 
     $ python -m lexedata.edit.simplify_ids --table parameters.csv
     INFO:lexedata:Handling table parameters.csv…
