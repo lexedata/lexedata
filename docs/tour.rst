@@ -17,9 +17,9 @@ can, even in places where a GUI tool would be handy: Our continuous integration
 tester cannot use the GUI.) ::
 
 Lexedata is a collection of command line tools. If you have never worked on the
-command line before, check out `our quick primer on the command line`_. This
-tutorial further assumes you have a working `installation of lexedata`_ and
-`git`_. The tutorial will manipulate the Git repository using Git's command line
+command line before, check out :doc:`our quick primer on the command line <cli>`. This
+tutorial further assumes you have a working :doc:`installation of lexedata <install>` and
+:doc:`git`. The tutorial will manipulate the Git repository using Git's command line
 interface, but you can use a Git GUI instead. (Not using version control for
 your data is dangerous, because lexedata does not include an ‘undo’ function.)
 
@@ -60,7 +60,7 @@ concept (a cell can have multiple forms separated by comma), and the second row
 contains cognacy judgements for those forms.
 
 This is one of several formats supported by lexedata for import. The
-corresponding importer is called `excel_interleaved` and it works like this::
+corresponding importer is called ``excel_interleaved`` and it works like this::
 
     $ python -m lexedata.importer.excel_interleaved --help
     usage: excel_interleaved.py [-h] [--sheet SHEET] [--directory DIRECTORY]
@@ -122,7 +122,8 @@ us a FormTable in the file ``forms.csv``::
     duala_bite,Duala,bite,kukwa,,6
     duala_black,Duala,black,wínda,,21
 
-A well-structured ``forms.cvs`` is a valid, `“metadata-free”`_ CLDF wordlist. In
+A well-structured ``forms.cvs`` is a valid, `“metadata-free”
+<https://github.com/cldf/cldf#metadata-free-conformance>`_ CLDF wordlist. In
 this case, the data contains a column that CLDF does not know out-of-the-box,
 but otherwise the dataset is fine. ::
 
@@ -156,7 +157,7 @@ Lexedata has recognized the cognate judgement column correctly as what it is and
 also added two new columns to the dataset for sources (so we can track the
 origin of the data in a well-structured way) and for phonemic segmentation,
 which is useful in particular when working with sound correspondences on a
-segment-by-segment level. We will add segments in `a future section`_.
+segment-by-segment level. We will add segments in :ref:`a future section <segments>`.
 
 With the new metadata file and the new columns, the data set now looks like this::
 
@@ -439,3 +440,7 @@ Merging polysemous forms
 
 …
 
+.. _segments:
+
+Adding phonemic segments
+~~~~~~~~~~~~~~~~~~~~~~~~
