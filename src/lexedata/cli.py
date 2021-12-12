@@ -21,9 +21,10 @@ class Exit(IntEnum):
     NO_SEGMENTS = 4
     INVALID_ID = 5
     INVALID_COLUMN_NAME = 6
-    INVALID_DATASET = 7
-    INVALID_INPUT = 8
-    FILE_NOT_FOUND = 9
+    INVALID_TABLE_NAME = 7
+    INVALID_DATASET = 8
+    INVALID_INPUT = 9
+    FILE_NOT_FOUND = 10
 
     def __call__(self, message: t.Optional[str] = None):
         if message is None:

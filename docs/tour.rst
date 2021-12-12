@@ -296,8 +296,7 @@ scaffold for metadata about languages etc. with another tool. ::
     INFO:lexedata:Found 14 different entries for your new LanguageTable.
     $ python -m lexedata.edit.add_table ParameterTable
     INFO:lexedata:Found 100 different entries for your new ParameterTable.
-    WARNING:lexedata:Your references to the ParameterTable are not URL safe.
-    Run ‘lexedata.edit.simplify_ids’ to fix that.
+    WARNING:lexedata:Some of your reference values are not valid as IDs: ['go to', 'rain (v)', 'sick, be', 'sleep (v)']
 
 “Parameter” is CLDF speak for the things sampled per-language. In a
 StructureDataset this might be typological features, in a Wordlist the
@@ -426,11 +425,14 @@ validate`` does not enforce it. We have however a separate report script that
 points out this and other deviations from sensible assumptions. ::
 
     $ python -m lexedata.report.extended_cldf_validate
-    WARNING ID column of parameters.csv should be {}
+    WARNING:lexedata:Table parameters.csv has an unconstrained ID column ID. Consider setting its format to [a-zA-Z0-9_-]+ and/or running `lexedata.edit.simplify_ids`.
+    [...]
 
 We can fix this using another tool from the lexedata toolbox. ::
 
     $ python -m lexedata.edit.simplify_ids --table parameters.csv
+    INFO:lexedata:Handling table parameters.csv…
+    [...]
 
 Merging polysemous forms
 ~~~~~~~~~~~~~~~~~~~~~~~~

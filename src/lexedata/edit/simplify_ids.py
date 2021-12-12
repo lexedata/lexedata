@@ -208,13 +208,19 @@ if __name__ == "__main__":
         # TODO: implement this
         raise NotImplementedError
 
-    if args.table:
-        # TODO: implement this
-        raise NotImplementedError
-
     ds = pycldf.Wordlist.from_metadata(args.metadata)
 
-    for table in ds.tables:
+    if args.table:
+        tables = []
+        for table in args.table:
+            try:
+                tables.append(ds[table])
+            except KeyError:
+                cli.Exit.INVALID_TABLE_NAME(f"No table {table} in dataset.")
+    else:
+        tables = ds.tables
+
+    for table in tables:
         logger.info(f"Handling table {table.url.string}…")
         ttype = ds.get_tabletype(table)
         c_id = table.get_column("http://cldf.clld.org/v1.0/terms.rdf#id")

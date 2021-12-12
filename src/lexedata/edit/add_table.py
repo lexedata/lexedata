@@ -6,6 +6,8 @@ Warn about `ConceptTable`, but proceed adding a ParameterTable.
 Suggest running `lexedata.edit.simplify_ids` if the references we resolve here are not properly ID-shaped.
 """
 
+import typing as t
+
 import pycldf
 
 from lexedata import cli, util
@@ -48,14 +50,16 @@ if __name__ == "__main__":
             f"I don't know how to add a {args.table:s}. Is it a well-defined CLDF component, according to https://cldf.clld.org/v1.0/terms.rdf#components ?"
         )
 
-    if "Name" in new_table.tableSchema.columndict:
+    invalid_ids = []
 
-        def new_row(item):
+    def new_row(item: str):
+        try:
+            item = new_table.tableSchema.columndict["ID"].datatype.parse(item)
+        except ValueError:
+            invalid_ids.append(item)
+        if "Name" in new_table.tableSchema.columndict:
             return {"ID": item, "Name": item}
-
-    else:
-
-        def new_row(item):
+        else:
             return {"ID": item}
 
     reference_properties = {
@@ -64,14 +68,21 @@ if __name__ == "__main__":
         if term.references == args.table
     }
 
-    referenced_items = set()
+    referenced_items: t.Set[str] = set()
     for table in ds.tables:
         for column in table.tableSchema.columns:
             if util.cldf_property(column.propertyUrl) in reference_properties:
-                referenced_items |= {row[column.name] for row in table}
+                referenced_items |= {
+                    column.datatype.formatted(row[column.name]) for row in table
+                }
 
     logger.info(
         "Found %d different entries for your new %s.", len(referenced_items), args.table
     )
 
     ds.write(**{args.table: [new_row(item) for item in sorted(referenced_items)]})
+
+    if invalid_ids:
+        logger.warning(
+            "Some of your reference values are not valid as IDs: %s", invalid_ids
+        )
