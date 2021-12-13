@@ -138,7 +138,10 @@ Working with git
 This is the point where it really makes sense to start working with ``git``. ::
 
     $ git init
+    [...]
     Initialized empty Git repository in [...]bantu/.git/
+    $ git config user.name 'Lexedata'
+    $ git config user.email 'lexedata@example.com'
     $ git add forms.csv
     $ git commit -m "Initial import"
     [master (root-commit) [...]] Initial import
@@ -715,21 +718,6 @@ functionality, we therefore add status columns to all tables. ::
     INFO:lexedata:Table cognates.csv already contains a Status_Column.
     $ git commit -am "Add status columns"
     [...]
-
-Improve Forms
-=============
-
-We have already standardized the unicode representation of the forms and added
-segments, but another improvement is useful. Some forms still contain variants
-or additional non-linguistic information. This needs to be cleaned. A large
-chunk of the cleanup can be prepared automatically. ::
-
-    $ python -m lexedata.edit.clean_forms
-
-Afterwards a few things still need to be fixed manually. ::
-
-    $ echo patch, or sed 
-    patch, or sed
 
 Improve Concepts
 ================
