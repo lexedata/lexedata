@@ -86,10 +86,10 @@ def must_be_equal(
     >>> must_be_equal([])
 
     """
-    forms = set(sequence)
-    assert len(forms) <= 1
     try:
-        return forms.pop()
+        c = sequence[0]
+        for other_c in sequence:
+            assert c == other_c
     except KeyError:
         return None
 

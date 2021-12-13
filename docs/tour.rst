@@ -363,9 +363,8 @@ within a concept::
     WARNING:lexedata:No segments found for form duala_bark (bwelé).
     WARNING:lexedata:No segments found for 1585 forms. You can generate segments using `lexedata.edit.segment_using_clts`.
 
-.. _segments:
-Add phonemic segments
----------------------
+Clean the data
+==============
 
 The cognate table needs to represent whether some or all of a form is judged to
 be cognate, and for that it needs the segments to be present. So before we
@@ -374,13 +373,141 @@ continue, we use git to undo the creation of the cognate table. ::
     $ git checkout .
     Updated 2 paths from the index
 
+Adding segments at this stage is dangerous: Some of our forms still contain
+comments etc., and as first step we should move those out of the actual `form
+<https://cldf.clld.org/v1.0/terms.rdf#form>`̲ column. ::
+
+    $ python -m lexedata.edit.clean_forms
+    INFO:lexedata:Line 106: Split form 'lopoho ~ mpoho ~ lòpòhó' into 3 elements.
+    INFO:lexedata:Line 113: Split form 'lokúa ~ nkúa' into 2 elements.
+    INFO:lexedata:Line 116: Split form 'yǒmbi ~ biómbi' into 2 elements.
+    INFO:lexedata:Line 154: Split form 'lopíko ~ mpíko' into 2 elements.
+    INFO:lexedata:Line 162: Split form 'ngómbá ~ ngòmbá' into 2 elements.
+    INFO:lexedata:Line 165: Split form 'lokála ~ nkála' into 2 elements.
+    INFO:lexedata:Line 169: Split form 'moólo ~ miólo' into 2 elements.
+    INFO:lexedata:Line 171: Split form 'mbókà ~ mambóka' into 2 elements.
+    INFO:lexedata:Line 194: Split form 'yěmi ~ elemi' into 2 elements.
+    INFO:lexedata:Line 211: Split form 'búdùlù ~ pùdùlù' into 2 elements.
+    INFO:lexedata:Line 212: Split form 'émpósù ~ ímpósù' into 2 elements.
+    INFO:lexedata:Line 214: Split form 'nɛ́nɛ ~ nɛ́nɛ́nɛ' into 2 elements.
+    [...]
+    
+Good job! Sometimes the form that is more interesting for historical linguistics
+may have ended up in the ‘variants’ column, but overall, this is a big
+improvement.
+
+.. _segments:
+Add phonemic segments
+---------------------
+
 Then we add the segments using the dedicated script. ::
 
-    $ python -m lexedata.edit.add_segments
+    $ python -m lexedata.edit.add_segments -q
+    WARNING:lexedata:In form duala_one (line 67): Impossible sound '/' encountered in pɔ́ / ewɔ́ – You cannot use CLTS extended normalization with this script. The slash was skipped and not included in the segments.
+    WARNING:lexedata:In form duala_snake (line 84): Unknown sound ' encountered in nam'a bwaba
+    WARNING:lexedata:In form ngombe_all (line 210): Unknown sound ń encountered in ńsò
+    WARNING:lexedata:In form ngombe_cold (line 227): Unknown sound ḿ encountered in ḿpyo
+    WARNING:lexedata:In form bushoong_dog_s2 (line 363): Unknown sound m̀ encountered in m̀mbwá
+    WARNING:lexedata:In form bushoong_neck_s2 (line 411): Unknown sound ʼ encountered in ikɔ́l’l
+    WARNING:lexedata:In form bushoong_sleep_v (line 430): Unknown sound ' encountered in abem't
+    WARNING:lexedata:In form nzebi_bone (line 564): Unknown sound š encountered in lə̀-šiʃí
+    WARNING:lexedata:In form nzebi_give (line 587): Unknown sound š encountered in šɛ
+    WARNING:lexedata:In form nzebi_hair (line 589): Unknown sound * encountered in lə̀-náàŋgá * náàŋgá
+    WARNING:lexedata:In form nzebi_nail (line 612): Unknown sound * encountered in lə̀-ɲâdà * ɲâdà
+    WARNING:lexedata:In form nzebi_path (line 618): Unknown sound * encountered in ndzilá * mà-ndzilá
+    WARNING:lexedata:In form nzebi_person (line 619): Unknown sound * encountered in mùù-tù * bàà-tà
+    WARNING:lexedata:In form nzebi_seed (line 627): Unknown sound š encountered in ì-šɛ̂dí
+    WARNING:lexedata:In form nzadi_arm (line 655): Unknown sound ` encountered in lwǒ`
+    WARNING:lexedata:In form nzadi_new_s2 (line 740): Unknown sound * encountered in odzá:ng * nzáng
+    WARNING:lexedata:In form nzadi_rain_s2 (line 750): Unknown sound ɩ́ encountered in mbvɩ́l
+    WARNING:lexedata:In form nzadi_tongue (line 779): Unknown sound ɩ́ encountered in lɩlɩ́m
+    WARNING:lexedata:In form nzadi_tongue (line 779): Unknown sound ɩ encountered in lɩlɩ́m
+    WARNING:lexedata:In form lega_woman_s2 (line 903): Unknown sound o̩ encountered in mo̩-kazi
+    WARNING:lexedata:In form kikuyu_long_s2 (line 963): Unknown sound ( encountered in raiha (be long
+    WARNING:lexedata:In form kikuyu_tail_s2 (line 1009): Unknown sound ' encountered in gĩ-tong'oe
+    WARNING:lexedata:In form swahili_bite (line 1141): Unknown sound ' encountered in ng'ata
+    | LanguageID   | Sound   |   Occurrences | Comment                                                                                     |
+    |--------------+---------+---------------+---------------------------------------------------------------------------------------------|
+    | Duala        |         |             1 | illegal symbol                                                                              |
+    | Duala        | '       |             1 | unknown sound                                                                               |
+    | Ngombe       | ń      |             1 | unknown sound                                                                               |
+    | Ngombe       | ḿ      |             1 | unknown sound                                                                               |
+    | Bushoong     | m̀      |             1 | unknown sound                                                                               |
+    | Bushoong     | ʼ       |             1 | unknown sound                                                                               |
+    | Bushoong     | '       |             1 | unknown sound                                                                               |
+    | Nzebi        | š      |             3 | unknown sound                                                                               |
+    | Nzebi        | *       |             4 | unknown sound                                                                               |
+    | Nzadi        | ↄ       |             8 | 'ↄ' replaced by 'ɔ' in segments. Run with `--replace-form` to apply this also to the forms. |
+    | Nzadi        | `       |             1 | unknown sound                                                                               |
+    | Nzadi        | *       |             1 | unknown sound                                                                               |
+    | Nzadi        | ɩ́      |             2 | unknown sound                                                                               |
+    | Nzadi        | ɩ       |             1 | unknown sound                                                                               |
+    | Lega         | o̩      |             1 | unknown sound                                                                               |
+    | Kikuyu       | (       |             1 | unknown sound                                                                               |
+    | Kikuyu       | '       |             1 | unknown sound                                                                               |
+    | Swahili      | '       |             1 | unknown sound                                                                               |
+
+Some of those warnings relate to unsplit forms. We should clean up a bit, and
+tell ``clean_forms`` about new separators and re-run::
+
+    $ git checkout .
+    Updated 2 paths from the index
+    $ sed -i.bak -e '/kikuyu_long_s2/s/(be long/(be long)/' forms.csv
+    $ python -m lexedata.edit.clean_forms -k '~' -k '*' -s ',' -s ';' -s '/'
+    INFO:lexedata:Line 66: Split form 'pɔ́ / ewɔ́' into 2 elements.
+    [...]
+    INFO:lexedata:Line 588: Split form 'lə̀-náàŋgá * náàŋgá' into 2 elements.
+    INFO:lexedata:Line 611: Split form 'lə̀-ɲâdà * ɲâdà' into 2 elements.
+    INFO:lexedata:Line 617: Split form 'ndzilá * mà-ndzilá' into 2 elements.
+    INFO:lexedata:Line 618: Split form 'mùù-tù * bàà-tà' into 2 elements.
+    INFO:lexedata:Line 625: Split form 'mɔ ~ mɔ́ɔ̀nɔ̀' into 2 elements.
+    INFO:lexedata:Line 725: Split form 'i-baa ~ i-báːl' into 2 elements.
+    INFO:lexedata:Line 739: Split form 'odzá:ng * nzáng' into 2 elements.
+    [...]
+    $ python -m lexedata.edit.add_segments -q --replace-form
+    WARNING:lexedata:In form duala_snake (line 84): Unknown sound ' encountered in nam'a bwaba
+    WARNING:lexedata:In form ngombe_all (line 210): Unknown sound ń encountered in ńsò
+    WARNING:lexedata:In form ngombe_cold (line 227): Unknown sound ḿ encountered in ḿpyo
+    WARNING:lexedata:In form bushoong_dog_s2 (line 363): Unknown sound m̀ encountered in m̀mbwá
+    WARNING:lexedata:In form bushoong_neck_s2 (line 411): Unknown sound ʼ encountered in ikɔ́l’l
+    WARNING:lexedata:In form bushoong_sleep_v (line 430): Unknown sound ' encountered in abem't
+    WARNING:lexedata:In form nzebi_bone (line 564): Unknown sound š encountered in lə̀-šiʃí
+    WARNING:lexedata:In form nzebi_give (line 587): Unknown sound š encountered in šɛ
+    WARNING:lexedata:In form nzebi_seed (line 627): Unknown sound š encountered in ì-šɛ̂dí
+    WARNING:lexedata:In form nzadi_arm (line 655): Unknown sound ` encountered in lwǒ`
+    WARNING:lexedata:In form nzadi_rain_s2 (line 750): Unknown sound ɩ́ encountered in mbvɩ́l
+    WARNING:lexedata:In form nzadi_tongue (line 779): Unknown sound ɩ́ encountered in lɩlɩ́m
+    WARNING:lexedata:In form nzadi_tongue (line 779): Unknown sound ɩ encountered in lɩlɩ́m
+    WARNING:lexedata:In form lega_woman_s2 (line 903): Unknown sound o̩ encountered in mo̩-kazi
+    WARNING:lexedata:In form kikuyu_tail_s2 (line 1009): Unknown sound ' encountered in gĩ-tong'oe
+    WARNING:lexedata:In form swahili_bite (line 1141): Unknown sound ' encountered in ng'ata
+    | LanguageID   | Sound   |   Occurrences | Comment                                    |
+    |--------------+---------+---------------+--------------------------------------------|
+    | Duala        | '       |             1 | unknown sound                              |
+    | Ngombe       | ń      |             1 | unknown sound                              |
+    | Ngombe       | ḿ      |             1 | unknown sound                              |
+    | Bushoong     | m̀      |             1 | unknown sound                              |
+    | Bushoong     | ʼ       |             1 | unknown sound                              |
+    | Bushoong     | '       |             1 | unknown sound                              |
+    | Nzebi        | š      |             3 | unknown sound                              |
+    | Nzadi        | ↄ       |             8 | 'ↄ' replaced by 'ɔ' in segments and forms. |
+    | Nzadi        | `       |             1 | unknown sound                              |
+    | Nzadi        | ɩ́      |             2 | unknown sound                              |
+    | Nzadi        | ɩ       |             1 | unknown sound                              |
+    | Lega         | o̩      |             1 | unknown sound                              |
+    | Kikuyu       | '       |             1 | unknown sound                              |
+    | Swahili      | '       |             1 | unknown sound                              |
+
+There are a few unknown symbols left in the data, but most of it is clean IPA now. ::
+
+    $ git commit -am "Clean up forms"
     [...]
 
-With the segments in place, we can add the cognate table back in and proceed to
-add the cognateset table. ::
+Add more tables
+---------------
+
+With the segments in place, we can go back to adding the cognate table back in
+and proceed to add the cognateset table. ::
     
     $ python -m lexedata.edit.add_cognate_table -q --unique-id concept
     $ python -m lexedata.edit.add_table CognatesetTable
@@ -658,45 +785,66 @@ and thus likely polysemies of a single word::
 
     $ python -m lexedata.report.homophones -o homophones.txt
     $ cat homophones.txt
-    Bushoong, 'dǐin (PL: mǐin) (Bastin et al 1999)': Connected:
-         bushoong_name (name)
-         bushoong_tooth (tooth)
+    Ntomba, 'lopoho': Connected:
+    	 ntomba_bark (bark)
+    	 ntomba_skin (skin)
+    Ngombe, 'nɛ́nɛ': Connected:
+    	 ngombe_big (big)
+    	 ngombe_many (many)
+    Bushoong, 'yɛɛn': Connected:
+    	 bushoong_go_to (go_to)
+    	 bushoong_walk (walk)
+    Bushoong, 'dǐin': Connected:
+    	 bushoong_name (name)
+    	 bushoong_tooth (tooth)
     Nzadi, 'o-tûm': Unconnected:
-         nzadi_dig (dig)
-         nzadi_heart_s2 (heart)
+    	 nzadi_dig (dig)
+    	 nzadi_heart_s2 (heart)
     Lega, 'ɛnda': Connected:
-         lega_go_to (go_to)
-         lega_walk (walk)
+    	 lega_go_to (go_to)
+    	 lega_walk (walk)
     Kikuyu, 'rĩa': Connected:
-         kikuyu_eat (eat)
-         kikuyu_what (what)
+    	 kikuyu_eat (eat)
+    	 kikuyu_what (what)
     Kikuyu, 'erũ': Unconnected:
-         kikuyu_new (new)
-         kikuyu_white (white)
+    	 kikuyu_new (new)
+    	 kikuyu_white (white)
     Swahili, 'jua': Connected:
-         swahili_know (know)
-         swahili_sun (sun)
+    	 swahili_know (know)
+    	 swahili_sun (sun)
     Ha, 'inda': Unconnected:
-         ha_belly (belly)
-         ha_louse (louse)
+    	 ha_belly (belly)
+    	 ha_louse (louse)
+    Ha, 'gwa': Unconnected:
+    	 ha_fall (fall)
+    	 ha_rain_v (rain_v)
+    Fwe, 'wa': Unconnected:
+    	 fwe_fall (fall)
+    	 fwe_give_s2 (give)
     Fwe, 'ya': Unconnected:
-         fwe_go_to (go_to)
-         fwe_new (new)
+    	 fwe_go_to (go_to)
+    	 fwe_new (new)
 
-The output is not as helpful as we might have hoped (that ‘walk’ and ‘go to’ are
-connected makes sense, but many of the other items are confusingly connected or
-confusingly disconnected). We can edit this [1]_ to keep the polysemies ::
+The output is not as helpful as we might have hoped (that ‘bark’ and ‘skin’ are
+connected makes sense, but ‘eat’ and ‘what’ are connected and ‘new’ and ‘white’
+disconnected?). We can edit this [1]_ to keep the polysemies ::
 
     $ cat > polysemies.txt << EOF
-    > Lega, 'ɛnda':
-    >   lega_go_to (go_to)
-    >   lega_walk (walk)
-    > Kikuyu, 'erũ':
-    >   kikuyu_new (new)
-    >   kikuyu_white (white)
-    > Swahili, 'jua': Connected:
-    >   swahili_know (know)
-    >   swahili_sun (sun)
+    > Ntomba, 'lopoho': Connected:
+    > 	 ntomba_bark (bark)
+    > 	 ntomba_skin (skin)
+    > Ngombe, 'nɛ́nɛ': Connected:
+    > 	 ngombe_big (big)
+    > 	 ngombe_many (many)
+    > Bushoong, 'yɛɛn': Connected:
+    > 	 bushoong_go_to (go_to)
+    > 	 bushoong_walk (walk)
+    > Lega, 'ɛnda': Connected:
+    > 	 lega_go_to (go_to)
+    > 	 lega_walk (walk)
+    > Kikuyu, 'erũ': Unconnected:
+    > 	 kikuyu_new (new)
+    > 	 kikuyu_white (white)
     > EOF
 
 and feed this file into the ‘homophones merger’, which turns separate forms into
@@ -706,13 +854,6 @@ polysemous forms connected to multiple concepts. ::
     WARNING:lexedata:I had to set a separator for your forms' concepts. I set it to ';'.
     INFO:lexedata:Going through forms and merging
     100%|██████████| 1592/1592 [...]
-
-Improve Forms
-=============
-
-Split off variants and comments
-re-segment, with overwriting
-re-align, with overwriting
 
 Improve Cognatesets
 ===================

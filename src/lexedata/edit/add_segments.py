@@ -86,6 +86,7 @@ pre_replace = {
     "˺": "̚",
     "ˑ": ".",
     "oː́": "oó",
+    "\u2184": "ɔ",  # LATIN SMALL LETTER REVERSED C, instead of LATIN SMALL LETTER OPEN O
     "Ɂ": "ʔ",
     # "?": "ʔ",  # But this could also be marking an unknown sound – maybe the recording is messy
     # "'": "ˈ",  # But this could also be marking ejective consonants, so don't guess
@@ -143,8 +144,8 @@ def segment_form(
                 logger.warning(
                     f"{context_for_warnings}Unknown sound encountered in {formstring:}"
                 )
-                report.sounds[str(r)]["count"] += 1
-                report.sounds[str(r)]["comment"] = "unknown sound"
+                report.sounds[str(r)].count += 1
+                report.sounds[str(r)].comment = "unknown sound"
     i = len(raw_tokens) - 1
     while i >= 0:
         if split_diphthongs and raw_tokens[i].type == "diphthong":
@@ -257,14 +258,19 @@ def add_segments_to_dataset(
                 form = row[transcription].strip()
                 for wrong, right in pre_replace.items():
                     if wrong in form:
-                        report[row[c_f_lan]].sounds[wrong]["count"] += form.count(wrong)
-                        report[row[c_f_lan]].sounds[wrong][
-                            "comment"
-                        ] = f"'{wrong}' replaced by '{right}' in segments – run with `--replace-form` to apply this also to the forms."
+                        report[row[c_f_lan]].sounds[wrong].count += form.count(wrong)
+                        report[row[c_f_lan]].sounds[
+                            wrong
+                        ].comment = f"'{wrong}' replaced by '{right}' in segments"
                         form = form.replace(wrong, right)
                         # also replace symbol in #FormTable *form
                         if replace_form:
                             row[c_f_form] = row[c_f_form].replace(wrong, right)
+                            report[row[c_f_lan]].sounds[wrong].comment += " and forms."
+                        else:
+                            report[row[c_f_lan]].sounds[
+                                wrong
+                            ].comment += ". Run with `--replace-form` to apply this also to the forms."
                 row[dataset.column_names.forms.segments] = segment_form(
                     form,
                     report=report[row[c_f_lan]],
@@ -285,6 +291,7 @@ if __name__ == "__main__":
         nargs="?",
         default=None,
         help="Column containing the IPA transcriptions. Default: The CLDF #form column",
+        metavar="TRANSCRIPTION_COLUMN",
     )
     parser.add_argument(
         "--overwrite",
@@ -294,7 +301,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--replace_form",
+        "--replace-form",
         action="store_true",
         default=False,
         help="Apply the replacements performed on segments also to #form column of #FormTable",

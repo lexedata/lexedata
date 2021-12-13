@@ -44,12 +44,12 @@ LEXEDATA_COLUMNS = {
         name="Phonetic",
         aboutUrl="...",
     ),
-    "Variants": Column(
+    "variants": Column(
         datatype=Datatype(base="string", format=r"\s*(~|)\s*[/(<[].*[]/)>]\s*"),
         separator=",",
         default="",
         null=[""],
-        name="Variants",
+        name="variants",
     ),
     "Tags": Column(
         datatype=Datatype(base="string"),

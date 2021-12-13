@@ -192,14 +192,14 @@ def cache_table(
     ...  "Language_ID": "ache",
     ...  "Parameter_ID": "one",
     ...  "Form": "e.ta.'kɾã",
-    ...  "Variants": ["~[test phonetic variant]"]
+    ...  "variants": ["~[test phonetic variant]"]
     ... }])
     >>> forms = cache_table(ds)
     >>> forms["ache_one"]["languageReference"]
     'ache'
     >>> forms["ache_one"]["form"]
     "e.ta.'kɾã"
-    >>> forms["ache_one"]["Variants"]
+    >>> forms["ache_one"]["variants"]
     ['~[test phonetic variant]']
 
     We can also use it to look up a specific set of columns, and change the index column.
