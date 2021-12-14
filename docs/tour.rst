@@ -65,6 +65,7 @@ This is one of several formats supported by lexedata for import. The
 corresponding importer is called ``excel_interleaved`` and it works like this::
 
     $ python -m lexedata.importer.excel_interleaved --help
+    [...]
     usage: excel_interleaved.py [-h] [--sheet SHEET] [--directory DIRECTORY]
                                 [--loglevel LOGLEVEL] [-q] [-v]
                                 EXCEL
