@@ -423,7 +423,7 @@ def test_merge_3():
             "phonemic": "",
             "phonetic": "e.ta.'kɾã",
             "variants": ["~2"],
-            "Segments": ["b"],
+            "Segments": ["a"],
             "Comment": "dos",
             "procedural_comment": "",
             "Value": "value2",
@@ -438,7 +438,7 @@ def test_merge_3():
             "phonemic": "",
             "phonetic": "e.ta.'kɾã",
             "variants": ["~3"],
-            "Segments": [None],
+            "Segments": ["a"],
             "Comment": "tres",
             "procedural_comment": "",
             "Value": "value3",
@@ -500,7 +500,7 @@ def test_merge_3():
         and first_form["Source"] == ["ache_s4", "ache_s5", "ache_s6"]
         and first_form["Value"] == "value1; value2; value3"
         and first_form["Comment"] == "uno; dos; tres"
-        and first_form["Segments"] == ["a", "b"]
+        and first_form["Segments"] == ["a"]
     )
     # Create tmp dataset with four form, two of which have identical #forms,
     # but different transcriptions, one only an orthographic one, the other one
