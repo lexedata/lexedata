@@ -72,6 +72,7 @@ corresponding importer is called ``excel_interleaved`` and it works like this::
                                 EXCEL
 
     Import data in the "interleaved" format from an xls spreadsheet [...]
+    [...]
 
     positional arguments:
       EXCEL                 The Excel file to parse
