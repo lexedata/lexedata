@@ -146,6 +146,7 @@ def update_ids(
     logger.info(f"Writing {table.url.string} back to file…")
     table.write(rows)
 
+    # TODO: Split off into separate function and use only that in merge_homophones
     c_id.datatype.format = ID_FORMAT.pattern
 
     foreign_keys_to_here = {
@@ -159,6 +160,7 @@ def update_ids(
         }
         for other_table in ds.tables
     }
+
     for other_table, columns in foreign_keys_to_here.items():
         if not columns:
             continue

@@ -412,7 +412,7 @@ Add phonemic segments
 
 Then we add the segments using the dedicated script. ::
 
-    $ python -m lexedata.edit.add_segments -q
+    $ python -m lexedata.edit.add_segments -q # doctest: +NORMALIZE_WHITESPACE
     WARNING:lexedata:In form duala_one (line 67): Impossible sound '/' encountered in pɔ́ / ewɔ́ – You cannot use CLTS extended normalization with this script. The slash was skipped and not included in the segments.
     WARNING:lexedata:In form duala_snake (line 84): Unknown sound ' encountered in nam'a bwaba
     WARNING:lexedata:In form ngombe_all (line 210): Unknown sound ń encountered in ńsò
@@ -474,7 +474,7 @@ tell ``clean_forms`` about new separators and re-run::
     INFO:lexedata:Line 725: Split form 'i-baa ~ i-báːl' into 2 elements.
     INFO:lexedata:Line 739: Split form 'odzá:ng * nzáng' into 2 elements.
     [...]
-    $ python -m lexedata.edit.add_segments -q --replace-form
+    $ python -m lexedata.edit.add_segments -q --replace-form # doctest: +NORMALIZE_WHITESPACE
     WARNING:lexedata:In form duala_snake (line 84): Unknown sound ' encountered in nam'a bwaba
     WARNING:lexedata:In form ngombe_all (line 210): Unknown sound ń encountered in ńsò
     WARNING:lexedata:In form ngombe_cold (line 227): Unknown sound ḿ encountered in ḿpyo
@@ -827,8 +827,8 @@ disconnected?). We can edit this [1]_ to keep the polysemies ::
 
     $ cat > polysemies.txt << EOF
     > Ntomba, 'lopoho': Connected:
-    > 	 ntomba_bark (bark)
     > 	 ntomba_skin (skin)
+    > 	 ntomba_bark (bark)
     > Ngombe, 'nɛ́nɛ': Connected:
     > 	 ngombe_big (big)
     > 	 ngombe_many (many)
@@ -850,12 +850,29 @@ polysemous forms connected to multiple concepts. ::
     WARNING:lexedata:I had to set a separator for your forms' concepts. I set it to ';'.
     INFO:lexedata:Going through forms and merging
     100%|██████████| 1592/1592 [...]
+    $ grep ntomba_skin cognates.csv
+    ntomba_bark,ntomba_skin,bark_22,1:6,l o p o h o,,automatically aligned
+    ntomba_skin,ntomba_skin,skin_27,1:6,l o p o h o,,automatically aligned
+    $ git commit -am "Annotate polysemies"
+    [...]
 
 Improve Cognatesets
 ===================
 
+Now the data set is in a very good shape. We can now start with the historical
+linguistics, and edit cognatesets and alignments.
+
 Merge cognatesets
 -----------------
+
+With combining polysemous forms comes that we now have forms which are in two
+cognate sets. Apart from this artefact of how we handle the data, cognate sets
+which do not represent disjoint, consecutive groups of segments also occur when
+morpheme boundaries have been eroded or when a language has non-concatenative
+morphemes, which is the case that gives the name to our script reporting these.
+::
+
+    $ python -m lexedata.report.nonconcatenative_morphemes
 
 From merging polysemous forms, which were in different cognate sets, we get
 morphemes which are now allocated to two different cognate sets.

@@ -18,7 +18,7 @@ def segment_to_cognateset(
     ],
     cognatesets: t.Optional[t.Iterable[types.Cognateset_ID]],
     logger: cli.logging.Logger = cli.logger,
-):
+) -> t.Mapping[types.Form_ID, t.Sequence[t.Set[types.Cognateset_ID]]]:
     # required fields
     c_cognate_cognateset = dataset.column_names.cognates.cognatesetReference
     c_form_segments = dataset.column_names.forms.segments
@@ -44,7 +44,7 @@ def segment_to_cognateset(
     cognateset_cache[None] = 0
 
     which_segment_belongs_to_which_cognateset: t.Dict[
-        str, t.List[t.Set[types.Cognateset_ID]]
+        types.Form_ID, t.List[t.Set[types.Cognateset_ID]]
     ] = {}
     for j in dataset["CognateTable"]:
         if j[c_cognate_form] in forms and cognateset_cache.get(j[c_cognate_cognateset]):

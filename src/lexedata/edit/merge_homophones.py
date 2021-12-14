@@ -17,6 +17,7 @@ from collections import defaultdict
 import pycldf
 
 from lexedata import cli, util, types
+from lexedata.edit.simplify_ids import update_ids
 
 # The cell value type, which tends to be string, lists of string, or int:
 C = t.TypeVar("C")
@@ -346,24 +347,31 @@ def default(
         return must_be_equal(sequence, target)
 
 
+# TODO: Options given on the command line should have preference over defaults,
+# no matter whether they are given in terms of names ("Parameter_ID") or
+# property URLs ("parameterReference")
 default_mergers: t.Mapping[str, Merger] = t.DefaultDict(
     lambda: default,
     {
-        "Form": must_be_equal,
         "form": must_be_equal,
+        "Form": must_be_equal,
         "languageReference": must_be_equal,
         "Language_ID": must_be_equal,
+        "source": union,
         "Source": union,
         "parameterReference": union,
         "Parameter_ID": union,
         "variants": union,
+        "comment": concatenate,
         "Comment": concatenate,
+        "value": concatenate,
         "Value": concatenate,
         "status": constant_factory("MERGED: Review necessary"),
         "orthographic": transcription("<{}>"),
         "phonemic": transcription("/{}/"),
         "phonetic": transcription("[{}]"),
-        "Segments": union,
+        "segments": must_be_equal,
+        "Segments": must_be_equal,
     },
 )
 
@@ -436,13 +444,18 @@ def merge_forms(
         types.Cognateset_ID,
     ],
     mergers: t.Mapping[str, Merger],
-    homophone_groups: t.Mapping[types.Form_ID, t.Sequence[types.Form_ID]],
+    homophone_groups: t.MutableMapping[types.Form_ID, t.Sequence[types.Form_ID]],
     logger: cli.logging.Logger = cli.logger,
 ) -> t.Iterable[types.Form]:
     """Merge forms from a dataset.
 
     TODO: Construct an example that shows that the order given in
     `homophone_groups` is maintained.
+
+    Side Effects
+    ============
+    Changes homophone_groups:
+        Groups that are skipped are removed
 
     """
     merge_targets = {
@@ -489,6 +502,7 @@ def merge_forms(
                     logger.info(
                         f"Merging form {id} with forms {[f[c_f_id] for f in group]} was skipped."
                     )
+                    del homophone_groups[id]
                     pass
                 unknown.remove(id)
 
@@ -653,4 +667,15 @@ The following merge functions are predefined, each takes the given entries for o
                 logger=logger,
             )
         )
+    )
+
+    update_ids(
+        dataset,
+        dataset["FormTable"],
+        {
+            old: target
+            for target, olds in homophone_groups.items()
+            for old in olds
+            if target != old
+        },
     )
