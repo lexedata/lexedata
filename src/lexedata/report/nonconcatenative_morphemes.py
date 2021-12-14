@@ -87,7 +87,7 @@ def segment_to_cognateset(
             for cs, segments in already.items():
                 segments_string = ",".join(indices_to_segment_slice(segments))
                 logger.warning(
-                    f"In judgement {j[c_cognate_id]}, segments {segments_string} are associated with cognate set {j[c_cognate_cognateset]}, but was already in {cognatesets}."
+                    f"In judgement {j[c_cognate_id]}, segments {segments_string} are associated with cognate set {j[c_cognate_cognateset]}, but were already in {cs}."
                 )
 
     return which_segment_belongs_to_which_cognateset
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    segment_to_cognateset(
+    by_form = segment_to_cognateset(
         dataset=pycldf.Dataset.from_metadata(args.metadata),
         cognatesets=args.cognatesets,
         logger=logger,

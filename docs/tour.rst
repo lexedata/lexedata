@@ -832,27 +832,33 @@ disconnected?). We can edit this [1]_ to keep the polysemies ::
     > Ngombe, 'nɛ́nɛ': Connected:
     > 	 ngombe_big (big)
     > 	 ngombe_many (many)
+    > Kikuyu, 'erũ': Unconnected:
+    > 	 kikuyu_new (new)
+    > 	 kikuyu_white (white)
     > Bushoong, 'yɛɛn': Connected:
     > 	 bushoong_go_to (go_to)
     > 	 bushoong_walk (walk)
     > Lega, 'ɛnda': Connected:
     > 	 lega_go_to (go_to)
     > 	 lega_walk (walk)
-    > Kikuyu, 'erũ': Unconnected:
-    > 	 kikuyu_new (new)
-    > 	 kikuyu_white (white)
     > EOF
 
 and feed this file into the ‘homophones merger’, which turns separate forms into
 polysemous forms connected to multiple concepts. ::
-
+  
+    $ grep 'kikuyu_\(white\|new\)' forms.csv cognates.csv 
+    forms.csv:kikuyu_new,Kikuyu,new,erũ,,e r ũ,,
+    forms.csv:kikuyu_white,Kikuyu,white,erũ,,e r ũ,,
+    cognates.csv:kikuyu_new,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_white,kikuyu_white,white_2,1:3,e r ũ,,automatically aligned
     $ python -m lexedata.edit.merge_homophones polysemies.txt
     WARNING:lexedata:I had to set a separator for your forms' concepts. I set it to ';'.
     INFO:lexedata:Going through forms and merging
     100%|██████████| 1592/1592 [...]
-    $ grep ntomba_skin cognates.csv
-    ntomba_bark,ntomba_skin,bark_22,1:6,l o p o h o,,automatically aligned
-    ntomba_skin,ntomba_skin,skin_27,1:6,l o p o h o,,automatically aligned
+    $ grep 'kikuyu_\(white\|new\)' forms.csv cognates.csv 
+    forms.csv:kikuyu_new,Kikuyu,new;white,erũ,,e r ũ,,
+    cognates.csv:kikuyu_new,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_white,kikuyu_new,white_2,1:3,e r ũ,,automatically aligned
     $ git commit -am "Annotate polysemies"
     [...]
 
@@ -860,7 +866,7 @@ Improve Cognatesets
 ===================
 
 Now the data set is in a very good shape. We can now start with the historical
-linguistics, and edit cognatesets and alignments.
+linguistics, editing cognatesets and alignments.
 
 Merge cognatesets
 -----------------
@@ -873,6 +879,11 @@ morphemes, which is the case that gives the name to our script reporting these.
 ::
 
     $ python -m lexedata.report.nonconcatenative_morphemes
+    WARNING:lexedata:In judgement ntomba_skin, segments 1:6 are associated with cognate set skin_27, but were already in bark_22.
+    WARNING:lexedata:In judgement ngombe_many, segments 1:4 are associated with cognate set many_12, but were already in big_1.
+    WARNING:lexedata:In judgement bushoong_walk, segments 1:4 are associated with cognate set walk_1, but were already in go_to_1.
+    WARNING:lexedata:In judgement lega_walk, segments 1:4 are associated with cognate set walk_1, but were already in go_to_2.
+    WARNING:lexedata:In judgement kikuyu_white, segments 1:3 are associated with cognate set white_2, but were already in new_3.
 
 From merging polysemous forms, which were in different cognate sets, we get
 morphemes which are now allocated to two different cognate sets.

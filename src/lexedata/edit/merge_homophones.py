@@ -469,8 +469,6 @@ def merge_forms(
     c_f_id = data["FormTable", "id"].name
 
     buffer: t.Dict[types.Form_ID, types.Form] = {}
-    for f in data["FormTable"]:
-        buffer[f[c_f_id]] = f
 
     unknown = set()
     form: types.Form
@@ -481,11 +479,13 @@ def merge_forms(
         total=data["FormTable"].common_props.get("dc:extent"),
     ):
         id: types.Form_ID = form[c_f_id]
+        buffer[id] = form
         if id in merge_targets:
             unknown.add(id)
             target_id = merge_targets[id]
             group = homophone_groups[target_id]
             if all(i in buffer for i in group):
+                breakpoint()
                 try:
                     buffer[target_id] = merge_group(
                         [buffer[i] for i in group],
@@ -504,12 +504,13 @@ def merge_forms(
                     )
                     del homophone_groups[id]
                     pass
-                unknown.remove(id)
+                for i in group:
+                    unknown.remove(i)
 
-    for f in buffer:
-        if f in unknown:
-            break
-        yield buffer[f]
+        for f in list(buffer):
+            if f in unknown:
+                break
+            yield buffer.pop(f)
 
 
 def parse_merge_override(string: str) -> t.Tuple[str, Merger]:
