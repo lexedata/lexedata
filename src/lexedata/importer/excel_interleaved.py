@@ -113,9 +113,14 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("excel", type=Path, help="The Excel file to parse")
     parser.add_argument(
-        "--sheet", action="append", default=[], help="Excel sheet name(s) to import"
+        "excel", type=Path, help="The Excel file to parse", metavar="EXCEL"
+    )
+    parser.add_argument(
+        "--sheet",
+        action="append",
+        default=[],
+        help="Excel sheet name(s) to import (default: all sheets)",
     )
     parser.add_argument(
         "--directory",

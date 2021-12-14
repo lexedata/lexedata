@@ -1,29 +1,3 @@
-from pathlib import Path
-import tempfile
-from collections import OrderedDict
-
-import pytest
-import pycldf
-import openpyxl as op
-
-from lexedata.importer.excel_matrix import load_dataset
-from lexedata.importer.excel_interleaved import import_interleaved
-from lexedata.importer.excel_long_format import add_single_languages
-
-from lexedata.exporter.edictor import forms_to_tsv
-
-from lexedata.edit.add_segments import add_segments_to_dataset
-from lexedata.edit.add_concepticon import create_concepticon_for_concepts
-from lexedata.edit.detect_cognates import cognate_code_to_file
-from lexedata.edit.add_singleton_cognatesets import create_singeltons
-
-from lexedata.report.homophones import list_homophones
-
-from lexedata.types import WorldSet
-from lexedata.util.fs import copy_dataset
-from helper_functions import copy_metadata, copy_to_temp
-import lexedata.cli as cli
-
 """Test Lexedata handling of NA values
 
 In https://github.com/cldf/cldf/issues/108, we started a discussion concerning
@@ -54,6 +28,32 @@ Special handling of these three different NA forms alongside valid forms is
 tested by this module. It affects multiple different components of Lexedata.
 
 """
+import io
+from pathlib import Path
+import tempfile
+from collections import OrderedDict
+
+import pytest
+import pycldf
+import openpyxl as op
+
+from lexedata.importer.excel_matrix import load_dataset
+from lexedata.importer.excel_interleaved import import_interleaved
+from lexedata.importer.excel_long_format import add_single_languages
+
+from lexedata.exporter.edictor import forms_to_tsv
+
+from lexedata.edit.add_segments import add_segments_to_dataset
+from lexedata.edit.add_concepticon import create_concepticon_for_concepts
+from lexedata.edit.detect_cognates import cognate_code_to_file
+from lexedata.edit.add_singleton_cognatesets import create_singeltons
+
+from lexedata.report.homophones import list_homophones
+
+from lexedata.types import WorldSet
+from lexedata.util.fs import copy_dataset
+from helper_functions import copy_metadata, copy_to_temp
+import lexedata.cli as cli
 
 
 # Test the importers
@@ -661,7 +661,6 @@ def test_homohpones_skips_na_forms(capsys):
         Path(__file__).parent / r"data/cldf/minimal/cldf-metadata.json"
     )
     target = target.parent
-    output = target / "out.txt"
     dataset.write(
         FormTable=forms,
         ParameterTable=[{"ID": "C1", "Name": "one"}, {"ID": "C2", "Name": "two"}],
@@ -675,15 +674,14 @@ def test_homohpones_skips_na_forms(capsys):
         overwrite=False,
         status_update=None,
     )
-    list_homophones(dataset=dataset, output=output)
-    out = output.open("r", encoding="utf8")
-    assert set(out.readlines()) == set(
-        [
-            "L1, form: Unknown (but at least one concept not found):\n",
-            "\t L1C1, (C2)\n",
-            "\t L1C3, (C2)\n",
-        ]
-    )
+    output = io.StringIO()
+    list_homophones(dataset=dataset, out=output)
+    assert set(output.getvalue().split("\n")) == {
+        "L1, 'form': Unknown (but at least one concept not found):",
+        "\t L1C1 (C2)",
+        "\t L1C3 (C2)",
+        "",
+    }
 
 
 def test_extended_cldf_validate():

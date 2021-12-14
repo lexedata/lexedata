@@ -1,17 +1,3 @@
 [run]
-branch = True
-
-[report]
-exclude_lines =
-    # Manual way to exclude blocks
-    pragma: no cover
-
-    # Debug-only code
-    def __repr__
-
-    # Defensive assertions
-    raise AssertionError
-    raise NotImplementedError
-
-    # Command line interface code
-    if __name__ == .__main__.:
+branch=True
+data_file=/home/gereon/Develop/lexedata/.coverage
