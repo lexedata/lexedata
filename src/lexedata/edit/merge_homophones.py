@@ -485,7 +485,6 @@ def merge_forms(
             target_id = merge_targets[id]
             group = homophone_groups[target_id]
             if all(i in buffer for i in group):
-                breakpoint()
                 try:
                     buffer[target_id] = merge_group(
                         [buffer[i] for i in group],
