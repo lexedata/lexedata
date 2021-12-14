@@ -16,6 +16,10 @@ function as test case. This is also the reason we use the command line where we
 can, even in places where a GUI tool would be handy: Our continuous integration
 tester cannot use the GUI.) ::
 
+    $ python -m lexedata.importer.excel_interleaved --help
+    [...]
+    $ export LANG=C
+
 Lexedata is a collection of command line tools. If you have never worked on the
 command line before, check out :doc:`our quick primer on the command line <cli>`. This
 tutorial further assumes you have a working :doc:`installation of lexedata <install>` and
@@ -51,8 +55,6 @@ it as ``Bantu.xlsx`` in this folder.)
 
 If you look at this data, you will see that ::
 
-    $ python -m lexedata.importer.excel_interleaved --help
-    [...]
     $ python -c 'from openpyxl import load_workbook
     > for row in load_workbook("bantu.xlsx").active.iter_rows():
     >   print(*[c.value or "" for c in row], sep="\t")'
@@ -177,9 +179,9 @@ segment-by-segment level. We will add segments in :ref:`a future section <segmen
 With the new metadata file and the new columns, the data set now looks like this::
 
     $ ls
+    Wordlist-metadata.json
     bantu.xlsx
     forms.csv
-    Wordlist-metadata.json
     $ cldf validate Wordlist-metadata.json
     $ head Wordlist-metadata.json
     {
