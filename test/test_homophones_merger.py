@@ -100,8 +100,8 @@ def test_union():
     assert merge_homophones.union([["this"], ["text"], ["text"]]) == ["this", "text"]
     assert merge_homophones.union([["text"], ["this"], ["text"]]) == ["text", "this"]
     assert merge_homophones.union(["this", "text"]) == "this; text"
-    assert merge_homophones.union(["this", "", "text"]) == "this; ; text"
-    assert merge_homophones.union(["this", None, "text"]) == "this; ; text"
+    assert merge_homophones.union(["this", "", "text"]) == "this; text"
+    assert merge_homophones.union(["this", None, "text"]) == "this; text"
     assert merge_homophones.union([["this"], [], ["text"]]) == ["this", "text"]
     assert merge_homophones.union([["this", "text"], [], ["text"]]) == ["this", "text"]
     with pytest.raises(NotImplementedError):
@@ -115,8 +115,7 @@ def test_simple():
     assert merge_homophones.first(["this", "text"]) == "this"
     assert merge_homophones.first(["this", "", "text"]) == "this"
     assert merge_homophones.first(["this", None, "text"]) == "this"
-    assert merge_homophones.first([None, "this", "text"]) is None
-    # assert M["first-not-null"]([None, "this", "text"]) == "this"
+    assert merge_homophones.first([None, "this", "text"]) == "this"
     assert merge_homophones.first([["this"], [], ["text"]]) == ["this"]
     assert merge_homophones.first([["this", "text"], [], ["text"]]) == [
         "this",

@@ -117,9 +117,6 @@ def treat_brackets(
                 if opening_b not in form and closing_b not in form:
                     continue
 
-                if form.count(opening_b) != form.count(closing_b):
-                    continue
-
                 form, new_variants, new_comments = unbracket_single_form(
                     form, opening_b, closing_b
                 )
@@ -132,7 +129,6 @@ def treat_brackets(
                 comment_column_name: "; ".join(comment),
             }
         except Skip as e:
-            print("skipped")
             logger.error(
                 "Line %d: Form '%s' has %s. I did not modify the row.",
                 r,

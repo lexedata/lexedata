@@ -142,15 +142,17 @@ def first(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """
-    Take the first entry, no matter whether the others match or not
+    """Take the first nonzero entry, no matter whether the others match or not
+
     >>> first([1, 2])
     1
     >>> first([])
+    >>> first([None, 1, 2])
+    1
 
     """
     try:
-        return sequence[0]
+        return [s for s in sequence if s][0]
     except IndexError:
         return None
 
@@ -171,8 +173,8 @@ def transcription(wrapper: str = "{}"):
         sequence: t.Sequence[C],
         target: MaybeRow = None,
     ) -> t.Optional[C]:
-        all_transcriptions: t.Optional[t.List[C]] = union([[s] for s in sequence])
-        if not any(all_transcriptions):
+        all_transcriptions: t.Optional[t.List[C]] = union([[s] for s in sequence if s])
+        if not all_transcriptions:
             return None
         else:
             if target is not None:
@@ -207,13 +209,35 @@ def concatenate(
     >>> concatenate(["a", "b"])
     'a; b'
 
+    >>> concatenate([]) is None
+    True
+    >>> concatenate([[1, 2], [2, 4]])
+    [1, 2, 2, 4]
+    >>> concatenate([None, [1], [3]])
+    [1, 3]
+    >>> concatenate([[1, 1], [2]])
+    [1, 1, 2]
+    >>> concatenate([["a", "b"], ["c", "a"]])
+    ['a', 'b', 'c', 'a']
+    >>> concatenate([None, "a", "b"])
+    '; a; b'
+    >>> concatenate(["a", "b", "a", ""])
+    'a; b; a; '
+    >>> concatenate(["a", "b", None, "a"])
+    'a; b; ; a'
+    >>> concatenate(["a", "b", "a; c", None])
+    'a; b; a; c; '
+
     """
-    if isinstance(sequence[0], str) or sequence[0] is None:
-        unique = [s if s is not None else "" for s in sequence]
-        return SEPARATOR.join(unique)
-    elif isiterable(sequence[0]):
+    values = [s for s in sequence if s is not None]
+    if not values:
+        return None
+    elif isinstance(values[0], str):
+        all_as_string = [s or "" for s in sequence]
+        return SEPARATOR.join(all_as_string)
+    elif isiterable(values[0]):
         # Assume list values, and accept the type error if not
-        return sum(sequence, [])
+        return sum(values, [])
     else:
         raise NotImplementedError
 
@@ -227,8 +251,8 @@ def union(
     Iterables are flattened. Strings are considered sequences of '; '-separated
     strings and flattened accordingly. Empty values are ignored.
 
-    >>> union([])
-    None
+    >>> union([]) is None
+    True
     >>> union([[1, 2], [2, 4]])
     [1, 2, 4]
     >>> union([None, [1], [3]])
@@ -244,7 +268,9 @@ def union(
     >>> union(["a", "b", "a", None])
     'a; b'
     >>> union(["a", "b", "a; c", None])
-    'a; b'
+    'a; b; c'
+    >>> union([['one', 'one'], ['one1', 'one1'], ['two1', None], ['one'], ['one']])
+    ['one', 'one1', 'two1']
 
     """
     values = [s for s in sequence if s is not None]
@@ -254,15 +280,15 @@ def union(
         unique = []
         for entry in values:
             for component in entry.split(SEPARATOR):
-                if component not in unique:
+                if component and component not in unique:
                     unique.append(component)
         return SEPARATOR.join(unique)
-    elif isiterable(sequence[0]):
+    elif isiterable(values[0]):
         # Assume list values, and accept the type error if not
         unique = []
-        for entry in sequence:
+        for entry in values:
             for component in entry:
-                if component not in unique:
+                if component and component not in unique:
                     unique.append(component)
         return unique
     else:
@@ -358,16 +384,16 @@ def merge_group(
     """Merge one group of homophones
 
     >>> merge_group(
-    ...   [{"P": [1, 1]}, {"P": [2]}],
-    ...   {"P": [1, 1]}, {"P": union}, dataset)
-    {'P': [1, 2]}
+    ...   [{"Parameter_ID": [1, 1]}, {"Parameter_ID": [2]}],
+    ...   {"Parameter_ID": [1, 1]}, {"Parameter_ID": union}, util.fs.new_wordlist())
+    {'Parameter_ID': [1, 2]}
 
     The target is assumed to be already included in the forms.
 
     >>> merge_group(
-    ...   [{"T": [1, 1]}, {"T": [2]}],
-    ...   {"T": [1, 1]}, {"T": concatenate}, dataset)
-    {'T': [1, 1, 2]}
+    ...   [{"Parameter_ID": [1, 1]}, {"Parameter_ID": [2]}],
+    ...   {"Parameter_ID": [1, 1]}, {"Parameter_ID": concatenate}, util.fs.new_wordlist())
+    {'Parameter_ID': [1, 1, 2]}
 
     """
     c_f_id = dataset["FormTable", "id"].name

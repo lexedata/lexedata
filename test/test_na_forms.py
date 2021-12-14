@@ -677,9 +677,10 @@ def test_homohpones_skips_na_forms(capsys):
     output = io.StringIO()
     list_homophones(dataset=dataset, out=output)
     assert set(output.getvalue().split("\n")) == {
-        "L1, form: Unknown (but at least one concept not found):",
-        "\t L1C1, (C2)",
-        "\t L1C3, (C2)",
+        "L1, 'form': Unknown (but at least one concept not found):",
+        "\t L1C1 (C2)",
+        "\t L1C3 (C2)",
+        "",
     }
 
 

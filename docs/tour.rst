@@ -383,6 +383,7 @@ comments etc., and as first step we should move those out of the actual `form
 <https://cldf.clld.org/v1.0/terms.rdf#form>`̲ column. ::
 
     $ python -m lexedata.edit.clean_forms
+    ERROR:lexedata:Line 962: Form 'raiha (be long' has unbalanced brackets. I did not modify the row.
     INFO:lexedata:Line 106: Split form 'lopoho ~ mpoho ~ lòpòhó' into 3 elements.
     INFO:lexedata:Line 113: Split form 'lokúa ~ nkúa' into 2 elements.
     INFO:lexedata:Line 116: Split form 'yǒmbi ~ biómbi' into 2 elements.
