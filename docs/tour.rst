@@ -41,9 +41,8 @@ collected by Hilde Gunnink. The data set is a subset of an earlier version
 The data is stored in an Excel file which you can download from
 the lexedata repository ::
 
-    $ curl -L https://github.com/Anaphory/lexedata/blob/master/test/data/excel/small.xlsx?raw=true -o bantu.xlsx
+    $ curl -L https://github.com/Anaphory/lexedata/blob/scriptdoctest/docs/examples/bantu.xlsx?raw=true -o bantu.xlsx
     [... Download progress]
-    $ cp ~/Develop/lexedata/docs/examples/bantu.xlsx bantu.xlsx
 
 (curl is a command line tool to download files from URLs, available
 under Linux and Windows. You can, of course, download the file
