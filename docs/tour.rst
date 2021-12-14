@@ -77,7 +77,7 @@ corresponding importer is called ``excel_interleaved`` and it works like this::
     positional arguments:
       EXCEL                 The Excel file to parse
 
-    optional arguments:
+    option[...]:
       -h, --help            show this help message and exit
       --sheet SHEET         Excel sheet name(s) to import (default: all sheets)
       --directory DIRECTORY
