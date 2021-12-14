@@ -805,7 +805,7 @@ and thus likely polysemies of a single word::
     Kikuyu, 'erũ': Unconnected:
     	 kikuyu_new (new)
     	 kikuyu_white (white)
-    Swahili, 'jua': Connected:
+    Swahili, 'jua': Unconnected:
     	 swahili_know (know)
     	 swahili_sun (sun)
     Ha, 'inda': Unconnected:
