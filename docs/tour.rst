@@ -51,6 +51,8 @@ it as ``Bantu.xlsx`` in this folder.)
 
 If you look at this data, you will see that ::
 
+    $ python -m lexedata.importer.excel_interleaved --help
+    [...]
     $ python -c 'from openpyxl import load_workbook
     > for row in load_workbook("bantu.xlsx").active.iter_rows():
     >   print(*[c.value or "" for c in row], sep="\t")'
@@ -65,7 +67,6 @@ This is one of several formats supported by lexedata for import. The
 corresponding importer is called ``excel_interleaved`` and it works like this::
 
     $ python -m lexedata.importer.excel_interleaved --help
-    [...]
     usage: excel_interleaved.py [-h] [--sheet SHEET] [--directory DIRECTORY]
                                 [--loglevel LOGLEVEL] [-q] [-v]
                                 EXCEL
