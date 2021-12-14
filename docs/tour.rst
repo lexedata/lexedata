@@ -36,8 +36,10 @@ start terminal and execute ::
     $ cd bantu
 
 For this tutorial, we will be using lexical data from the Bantu family,
-collected by XXX. The data is stored in an Excel file which you can download
-from the lexedata repository ::
+collected by Hilde Gunnink. The data set is a subset of an earlier version 
+(deliberately, so this tour can show some steps in the cleaning process) of her lexical dataset.
+The data is stored in an Excel file which you can download from
+the lexedata repository ::
 
     $ curl -L https://github.com/Anaphory/lexedata/blob/master/test/data/excel/small.xlsx?raw=true -o bantu.xlsx
     [... Download progress]

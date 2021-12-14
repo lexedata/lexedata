@@ -11,11 +11,11 @@ logger = logging.getLogger("lexedata")
 logging.basicConfig(level=logging.INFO)
 
 
-# TODO: Maybe we should have these in cli and consolidate them between
-# different CLI scripts? Maybe we can even store the messages there, too, and
-# have a unified critical exit interface that needs only the name of the script
-# and the exit code and does everything?
 class Exit(IntEnum):
+    # TODO: Is there a good way to define, structure and unify these error
+    # codes? Currently, we are testing a quite random property
+    # (Exit.INVALID_DATASET throws SystemExit with code 8), with some system
+    # here maybe testing would be worth it.
     CLI_ARGUMENT_ERROR = 2
     NO_COGNATETABLE = 3
     NO_SEGMENTS = 4

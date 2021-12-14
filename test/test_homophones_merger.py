@@ -278,6 +278,13 @@ def test_merge_group_assertion_error(copy_dataset, caplog):
 
 
 def test_merge_1(copy_dataset):
+    """Test merger on different data formats.
+
+    For each of our standard data sets: Create tmp dataset with two identical
+    forms (apart from ID) and no other form. Run merging function, with these
+    two IDs. Check that the result has exactly one form, with the first ID
+
+    """
     dataset, _ = copy_dataset
     c_f_id = dataset["FormTable", "id"].name
     first_form = next(dataset["FormTable"].iterdicts())
@@ -289,12 +296,9 @@ def test_merge_1(copy_dataset):
     buffer = merge_homophones.merge_forms(
         data=dataset,
         mergers=merge_homophones.default_mergers,
-        homophone_groups={first_id: [new_first_id]},
+        homophone_groups={first_id: [first_id, new_first_id]},
     )
     assert [f[c_f_id] for f in buffer] == [first_form[c_f_id]]
-    # Create tmp dataset with two identical forms (apart from ID)
-    # run merging function, with these two IDs
-    # Check that the result has exactly one form, with the first ID
 
 
 def test_merge_2():
@@ -372,7 +376,9 @@ def test_merge_2():
     buffer = [
         e
         for e in merge_homophones.merge_forms(
-            data=dataset, mergers=merger, homophone_groups={"ache_one": ["ache_one1"]}
+            data=dataset,
+            mergers=merger,
+            homophone_groups={"ache_one": ["ache_one", "ache_one1"]},
         )
     ]
     assert (
@@ -480,7 +486,7 @@ def test_merge_3():
         for e in merge_homophones.merge_forms(
             data=dataset,
             mergers=merger,
-            homophone_groups={"ache_one": ["ache_one1", "ache_one2"]},
+            homophone_groups={"ache_one": ["ache_one", "ache_one1", "ache_one2"]},
         )
     ]
     first_form = buffer[0]
@@ -488,7 +494,7 @@ def test_merge_3():
         len(buffer) == 3
         and first_form[c_f_id] == first_id
         and first_form["Language_ID"] == "ache"
-        and first_form["Parameter_ID"] == ["one", "one", "one1", "two1", ""]
+        and first_form["Parameter_ID"] == ["one", "one1", "two1"]
         and first_form["orthographic"] == "etakɾã"
         and first_form["phonemic"] == "etakɾã"
         and first_form["variants"] == ["~1", "~2", "~3"]

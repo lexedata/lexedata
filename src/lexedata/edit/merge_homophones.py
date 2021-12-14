@@ -90,7 +90,8 @@ def must_be_equal(
         c = sequence[0]
         for other_c in sequence:
             assert c == other_c
-    except KeyError:
+        return c
+    except IndexError:
         return None
 
 
@@ -110,7 +111,7 @@ def must_be_equal_or_null(
     >>> must_be_equal_or_null([1, 1, None])
     1
     """
-    return must_be_equal(list(filter(bool, sequence)))
+    return must_be_equal([x for x in sequence if x is not None])
 
 
 def warn(
@@ -171,7 +172,7 @@ def transcription(wrapper: str = "{}"):
         target: MaybeRow = None,
     ) -> t.Optional[C]:
         all_transcriptions: t.Optional[t.List[C]] = union([[s] for s in sequence])
-        if all_transcriptions is None:
+        if not any(all_transcriptions):
             return None
         else:
             if target is not None:
@@ -226,10 +227,14 @@ def union(
     Iterables are flattened. Strings are considered sequences of '; '-separated
     strings and flattened accordingly. Empty values are ignored.
 
+    >>> union([])
+    None
     >>> union([[1, 2], [2, 4]])
     [1, 2, 4]
     >>> union([None, [1], [3]])
     [1, 3]
+    >>> union([[1, 1], [2]])
+    [1, 2]
     >>> union([["a", "b"], ["c", "a"]])
     ['a', 'b', 'c']
     >>> union([None, "a", "b"])
@@ -242,12 +247,12 @@ def union(
     'a; b'
 
     """
-    if isinstance(sequence[0], str) or sequence[0] is None:
+    values = [s for s in sequence if s is not None]
+    if not values:
+        return None
+    if isinstance(values[0], str):
         unique = []
-
-        for entry in sequence:
-            if entry is None:
-                entry = ""
+        for entry in values:
             for component in entry.split(SEPARATOR):
                 if component not in unique:
                     unique.append(component)
@@ -257,8 +262,6 @@ def union(
         unique = []
         for entry in sequence:
             for component in entry:
-                if component is None:
-                    continue
                 if component not in unique:
                     unique.append(component)
         return unique
@@ -311,6 +314,8 @@ def default(
     """
     if isiterable(sequence[0]):
         return union(sequence, target)
+    elif type(sequence[0]) == str or sequence[0] is None:
+        return union(sequence, target)
     else:
         return must_be_equal(sequence, target)
 
@@ -350,6 +355,21 @@ def merge_group(
     ],
     logger: cli.logging.Logger = cli.logger,
 ) -> types.Form:
+    """Merge one group of homophones
+
+    >>> merge_group(
+    ...   [{"P": [1, 1]}, {"P": [2]}],
+    ...   {"P": [1, 1]}, {"P": union}, dataset)
+    {'P': [1, 2]}
+
+    The target is assumed to be already included in the forms.
+
+    >>> merge_group(
+    ...   [{"T": [1, 1]}, {"T": [2]}],
+    ...   {"T": [1, 1]}, {"T": concatenate}, dataset)
+    {'T': [1, 1, 2]}
+
+    """
     c_f_id = dataset["FormTable", "id"].name
     for column in target:
         if column == c_f_id:
@@ -375,23 +395,7 @@ def merge_group(
                     f"The merge function {merger_name} is not implemented for type {type(forms[0])}. \n"
                     f"Given input: {[form[column] for form in forms]}"
                 )
-            # make sure nothing in the target is overwritten with None or empty string
-            if (merge_result is None or merge_result == "") and (
-                target[column] is not None or target[column] != ""
-            ):
-                continue
-            # don't overwrite target value, but add return value from merging function
-            if target[column] is None:
-                target[column] = merge_result
-            else:
-                if (
-                    isinstance(target[column], str)
-                    and isinstance(merge_result, str)
-                    and merge_result != target[column]
-                ):
-                    target[column] += SEPARATOR + merge_result
-                elif target[column] != merge_result:
-                    target[column] += merge_result
+            target[column] = merge_result
         except KeyError:
             cli.Exit.INVALID_COLUMN_NAME(f"Column {column} is not in FormTable.")
     return target
@@ -409,16 +413,21 @@ def merge_forms(
     homophone_groups: t.Mapping[types.Form_ID, t.Sequence[types.Form_ID]],
     logger: cli.logging.Logger = cli.logger,
 ) -> t.Iterable[types.Form]:
+    """Merge forms from a dataset.
+
+    TODO: Construct an example that shows that the order given in
+    `homophone_groups` is maintained.
+
+    """
     merge_targets = {
         variant: target
         for target, variants in homophone_groups.items()
         for variant in variants
     }
-    c_f_id = data["FormTable", "id"].name
+    for target in homophone_groups:
+        assert merge_targets[target] == target
 
-    for ids_to_merge in homophone_groups.values():
-        for form_id in ids_to_merge:
-            assert merge_targets[form_id] in homophone_groups
+    c_f_id = data["FormTable", "id"].name
 
     buffer: t.Dict[types.Form_ID, types.Form] = {}
     for f in data["FormTable"]:
@@ -484,27 +493,27 @@ def parse_homophones_report(
     The format of the input file is the same as the output of the homophones report
     >>> from io import StringIO
     >>> file = StringIO("ache, e.ta.'kɾã: Unknown (but at least one concept not found)\n"
-    ... "    ache_one (one, one)\n"
-    ... "    ache_two_3 (two, two)\n")
+    ... "    ache_one (one)\n"
+    ... "    ache_single_3 (single)\n")
     >>> parse_homophones_report(file)
-    defaultdict(<class 'list'>, {'ache_one': ['ache_two_3']})
+    defaultdict(<class 'list'>, {'ache_one': ['ache_one', 'ache_single_3']})
     """
     homophone_groups: t.Mapping[types.Form_ID, t.List[types.Form_ID]] = defaultdict(
         list
     )
-    first_id = True
-    target_id = ""
+    target_id: t.Optional[types.Form_ID] = None
     for line in report:
         match = re.match(r"\s+?(\w+?) .*", line)
         if match:
             id = match.group(1)
-            if first_id:
+            if target_id is None:
+                # TODO: In principle, IDs can be non-strings, in particular
+                # integers. So parsing according to the ID column's data type
+                # would be good here.
                 target_id = id
-                first_id = False
-            else:
-                homophone_groups[target_id].append(id)
+            homophone_groups[target_id].append(id)
         else:
-            first_id = True
+            target_id = None
     return homophone_groups
 
 

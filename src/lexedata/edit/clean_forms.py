@@ -87,21 +87,21 @@ def treat_brackets(
 
     """Make sure forms contain no brackets.
 
-    >>> for row in clean_forms([
+    >>> for row in treat_brackets([
     ...   {'F': 'a(m)ba', 'V': [], 'C': ''},
     ...   {'F': 'da (dialectal)', 'V': [], 'C': ''},
-    ...   {'F': 'tu(m) (informal)', 'V': [], 'C': '2p'},
+    ...   {'F': 'tu(m) (informal)', 'V': [], 'C': '2p'}],
     ...   "F", "V", "C"):
     ...   print(row)
-    {'F': 'amba', 'V': ['a(m)ba'], 'C': ''}
+    {'F': 'amba', 'V': ['aba'], 'C': ''}
     {'F': 'da', 'V': [], 'C': '(dialectal)'}
-    {'F': 'tum', 'V': ['tu(m)'], 'C': '2p; (informal)'}
+    {'F': 'tum', 'V': ['tu'], 'C': '2p; (informal)'}
 
     Skipping works even when it is noticed only late in the process.
 
-    >>> for row in clean_forms([
+    >>> for row in treat_brackets([
     ...   {'F': 'a[m]ba (unbalanced', 'V': [], 'C': ''},
-    ...   {'F': 'tu(m) (informal', 'V': [], 'C': ''},
+    ...   {'F': 'tu(m) (informal', 'V': [], 'C': ''}],
     ...   "F", "V", "C", [("[", "]"), ("(", ")")]):
     ...   print(row)
     {'F': 'a[m]ba (unbalanced', 'V': [], 'C': ''}
@@ -125,12 +125,14 @@ def treat_brackets(
                 )
                 variants.extend(new_variants)
                 comment.extend(new_comments)
-            row[form_column_name] = form
-            row[variants_column_name] = variants
-            row[comment_column_name] = "; ".join(comment)
             # TODO: Should we have a message here?
-            yield row
+            yield row | {
+                form_column_name: form,
+                variants_column_name: variants,
+                comment_column_name: "; ".join(comment),
+            }
         except Skip as e:
+            print("skipped")
             logger.error(
                 "Line %d: Form '%s' has %s. I did not modify the row.",
                 r,
