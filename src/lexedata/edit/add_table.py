@@ -1,6 +1,7 @@
-"""
-Creates an empty table with all the references to that table found in the dataset. It can be used to add 
-LanguageTable, CognatesetTable, and ParameterTable (i.e. the table with the concepts). For a CognateTable, see the help of lexedata.edit.add_cognate_table. 
+"""Creates an empty table with all the references to that table found in the dataset.
+
+This script can be used to add LanguageTable, CognatesetTable, and ParameterTable (i.e. the table with the concepts).
+For a CognateTable, see the help of lexedata.edit.add_cognate_table. 
 
 """
 
