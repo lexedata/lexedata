@@ -1,9 +1,9 @@
-"""
-Given a table name: Find all the references to that table and create an empty table of that type filled with all those.
+"""Creates an empty table with all the references to that table found in the dataset.
 
-Should definitely work for: LanguageTable, CognatesetTable, and ParameterTable (i.e. the table with the concepts).
-Warn about `ConceptTable`, but proceed adding a ParameterTable.
-Suggest running `lexedata.edit.simplify_ids` if the references we resolve here are not properly ID-shaped.
+This script can be used to add LanguageTable, CognatesetTable, and
+ParameterTable (i.e. the table with the concepts). For a CognateTable, see the
+help of lexedata.edit.add_cognate_table.
+
 """
 
 import typing as t
@@ -84,5 +84,6 @@ if __name__ == "__main__":
 
     if invalid_ids:
         logger.warning(
-            "Some of your reference values are not valid as IDs: %s", invalid_ids
+            "Some of your reference values are not valid as IDs: %s. You can transform them into valid ids by running lexedata.edit.simplify_ids",
+            invalid_ids,
         )
