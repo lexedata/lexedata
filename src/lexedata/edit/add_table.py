@@ -1,7 +1,8 @@
 """Creates an empty table with all the references to that table found in the dataset.
 
-This script can be used to add LanguageTable, CognatesetTable, and ParameterTable (i.e. the table with the concepts).
-For a CognateTable, see the help of lexedata.edit.add_cognate_table. 
+This script can be used to add LanguageTable, CognatesetTable, and
+ParameterTable (i.e. the table with the concepts). For a CognateTable, see the
+help of lexedata.edit.add_cognate_table.
 
 """
 
@@ -84,5 +85,5 @@ if __name__ == "__main__":
     if invalid_ids:
         logger.warning(
             "Some of your reference values are not valid as IDs: %s. You can transform them into valid ids by running lexedata.edit.simplify_ids",
-            invalid_ids
+            invalid_ids,
         )
