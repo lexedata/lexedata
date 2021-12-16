@@ -82,5 +82,6 @@ if __name__ == "__main__":
 
     if invalid_ids:
         logger.warning(
-            "Some of your reference values are not valid as IDs: %s. You can transform them into valid ids by running lexedata.edit.simplify_ids", invalid_ids
+            "Some of your reference values are not valid as IDs: %s. You can transform them into valid ids by running lexedata.edit.simplify_ids",
+            invalid_ids
         )
