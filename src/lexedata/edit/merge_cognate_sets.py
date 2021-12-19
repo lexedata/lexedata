@@ -58,7 +58,8 @@ def merge_group(
 
     >>> merge_group(
     ...   [{"parameterReference": [1, 1]}, {"parameterReference": [2]}],
-    ...   {"parameterReference": [1, 1]}, {"parameterReference": default}, util.fs.new_wordlist())
+    ...     {"parameterReference": [1, 1]}, {"parameterReference": default},
+    ...   util.fs.new_wordlist(CognatesetTable=[]))
     {'parameterReference': [1, 2]}
 
     The target is assumed to be already included in the forms.
