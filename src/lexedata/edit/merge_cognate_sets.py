@@ -54,19 +54,14 @@ def merge_group(
     ],
     logger: cli.logging.Logger = cli.logger,
 ) -> types.CogSet:
-    """Merge one group of homophones
+    """Merge one group of cognate sets
 
     >>> merge_group(
-    ...   [{"Parameter_ID": [1, 1]}, {"Parameter_ID": [2]}],
-    ...   {"Parameter_ID": [1, 1]}, {"Parameter_ID": union}, util.fs.new_wordlist())
-    {'Parameter_ID': [1, 2]}
+    ...   [{"parameterReference": [1, 1]}, {"parameterReference": [2]}],
+    ...   {"parameterReference": [1, 1]}, {"parameterReference": default}, util.fs.new_wordlist())
+    {'parameterReference': [1, 2]}
 
     The target is assumed to be already included in the forms.
-
-    >>> merge_group(
-    ...   [{"Parameter_ID": [1, 1]}, {"Parameter_ID": [2]}],
-    ...   {"Parameter_ID": [1, 1]}, {"Parameter_ID": concatenate}, util.fs.new_wordlist())
-    {'Parameter_ID': [1, 1, 2]}
 
     """
     c_s_id = dataset["CognatesetTable", "id"].name
@@ -84,7 +79,7 @@ def merge_group(
             except AssertionError:
                 merger_name = merger.__name__
                 # We cannot deal with this block, but others may be fine.
-                logger.Error(
+                logger.error(
                     f"Merging cognate sets: {[f[c_s_id] for f in cogsets]} with target: {target[c_s_id]} on column: {column}\n"
                     f"The merge function {merger_name} requires the input data to be equal. \n"
                     f"Given input: {[cogset[column] for cogset in cogsets]}"

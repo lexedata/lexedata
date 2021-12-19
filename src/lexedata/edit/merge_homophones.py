@@ -240,7 +240,7 @@ def concatenate(
         # Assume list values, and accept the type error if not
         return sum(values, [])
     else:
-        raise NotImplementedError
+        raise TypeError(f"Don't know how to concatenate {type(values[0])}")
 
 
 def union(
@@ -293,7 +293,7 @@ def union(
                     unique.append(component)
         return unique
     else:
-        raise NotImplementedError
+        raise TypeError(f"Don't know how to union {type(values[0])}")
 
 
 def constant_factory(c: C) -> Merger[C]:
@@ -416,14 +416,17 @@ def merge_group(
             try:
                 merge_result = merger([form[column] for form in forms], target)
             except AssertionError:
+                # We cannot deal with this block, but others may be fine.
                 merger_name = merger.__name__
-                cli.Exit.INVALID_INPUT(
+                logger.error(
                     f"Merging forms: {[f[c_f_id] for f in forms]} with target: {target[c_f_id]} on column: {column}\n"
                     f"The merge function {merger_name} requires the input data to be equal. \n"
                     f"Given input: {[form[column] for form in forms]}"
                 )
-            except NotImplementedError:
+                raise Skip
+            except TypeError:
                 merger_name = merger.__name__
+                # Other groups will have the same issue.
                 cli.Exit.INVALID_INPUT(
                     f"Merging forms: {[f[c_f_id] for f in forms]} with target: {target[c_f_id]} \n"
                     f"The merge function {merger_name} is not implemented for type {type(forms[0])}. \n"
