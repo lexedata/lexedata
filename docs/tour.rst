@@ -22,7 +22,7 @@ tester cannot use the GUI.) ::
 
 Lexedata is a collection of command line tools. If you have never worked on the
 command line before, check out :doc:`our quick primer on the command line <cli>`. This
-tutorial further assumes you have a working :doc:`installation of lexedata <install>` and
+tutorial further assumes you have a working :doc:`installation` of lexedata and
 :doc:`git`. The tutorial will manipulate the Git repository using Git's command line
 interface, but you can use a Git GUI instead. (Not using version control for
 your data is dangerous, because lexedata does not include an ‘undo’ function.)
@@ -383,8 +383,8 @@ continue, we use git to undo the creation of the cognate table. ::
     Updated 2 paths from the index
 
 Adding segments at this stage is dangerous: Some of our forms still contain
-comments etc., and as first step we should move those out of the actual `form
-<https://cldf.clld.org/v1.0/terms.rdf#form>`̲ column. ::
+comments etc., and as first step we should move those out of the actual
+`form <https://cldf.clld.org/v1.0/terms.rdf#form>`_ column. ::
 
     $ python -m lexedata.edit.clean_forms
     ERROR:lexedata:Line 962: Form 'raiha (be long' has unbalanced brackets. I did not modify the row.
@@ -407,6 +407,7 @@ may have ended up in the ‘variants’ column, but overall, this is a big
 improvement.
 
 .. _segments:
+
 Add phonemic segments
 ---------------------
 
@@ -985,7 +986,7 @@ we can load in Edictor and edit there.
 This is not the point to show you the workings of Edictor. I have edited things
 a bit, the result is in the documentation. ::
 
-    $ curl -L https://github.com/Anaphory/lexedata/blob/tour/docs/examples/cognate.tsv?raw=true -o new_cognate.tsv
+    $ curl -L https://github.com/Anaphory/lexedata/blob/master/docs/examples/cognate.tsv?raw=true -o new_cognate.tsv
     [...]
     $ python -m lexedata.importer.edictor -i new_cognate.tsv
     [...]
