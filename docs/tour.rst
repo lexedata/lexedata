@@ -986,6 +986,7 @@ This is not the point to show you the workings of Edictor. I have edited things
 a bit, the result is in the documentation. ::
 
     $ curl -L https://github.com/Anaphory/lexedata/blob/tour/docs/examples/cognate.tsv?raw=true -o new_cognate.tsv
+    [...]
     $ python -m lexedata.importer.edictor -i new_cognate.tsv
     [...]
     INFO:lexedata:The header of your edictor file will be interpreted as ['', 'id', 'languageReference', '', 'form', 'comment', 'segments', 'source', 'variants', 'cognatesetReference', 'alignment', 'parameterReference'].
