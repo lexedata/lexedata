@@ -101,7 +101,7 @@ def load_forms_from_tsv(
             "ID": "",
         }
     )
-    if "_PARAMETERREFERENCE" in input.fieldnames:
+    if "_PARAMETERREFERENCE" in [f.upper() for f in input.fieldnames]:
         form_table_upper["_PARAMETERREFERENCE"] = "parameterReference"
         form_table_upper["CONCEPT"] = ""
 

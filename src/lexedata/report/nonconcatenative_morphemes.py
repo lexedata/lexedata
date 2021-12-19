@@ -64,7 +64,7 @@ def segment_to_cognateset(
                     )
                     continue
             else:
-                segments_judged = list(range(len(form[c_form_segments])))
+                segments_judged = list(range(len(form["segments"])))
             old_s = None
             already: t.MutableMapping[types.Cognateset_ID, t.List[int]] = t.DefaultDict(
                 list
