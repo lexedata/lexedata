@@ -329,7 +329,7 @@ scaffold for metadata about languages etc. with another tool. ::
     INFO:lexedata:Found 14 different entries for your new LanguageTable.
     $ python -m lexedata.edit.add_table ParameterTable
     INFO:lexedata:Found 100 different entries for your new ParameterTable.
-    WARNING:lexedata:Some of your reference values are not valid as IDs: ['go to', 'rain (v)', 'sick, be', 'sleep (v)']
+    WARNING:lexedata:Some of your reference values are not valid as IDs: ['go to', 'rain (v)', 'sick, be', 'sleep (v)']. You can transform them into valid ids by running lexedata.edit.simplify_ids
 
 “Parameter” is CLDF speak for the things sampled per-language. In a
 StructureDataset this might be typological features, in a Wordlist the
