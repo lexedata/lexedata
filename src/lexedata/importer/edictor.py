@@ -71,9 +71,6 @@ def load_forms_from_tsv(
     ============
     This function overwrites dataset's FormTable
     """
-    c_f_segments = dataset["FormTable", "segments"].name
-    c_f_id = dataset["FormTable", "id"].name
-
     input = csv.DictReader(
         input_file.open(encoding="utf-8"),
         delimiter="\t",
@@ -87,30 +84,30 @@ def load_forms_from_tsv(
     ] = collections.defaultdict(list)
 
     form_table_upper = {
-        (util.cldf_property(column.propertyUrl) or column.name).upper(): column.name
+        (util.cldf_property(column.propertyUrl) or column.name).upper(): (
+            util.cldf_property(column.propertyUrl) or column.name
+        )
         for column in dataset["FormTable"].tableSchema.columns
     }
     form_table_upper.update(
         {
-            "DOCULECT": dataset["FormTable", "languageReference"].name,
-            "CONCEPT": dataset["FormTable", "parameterReference"].name,
-            "IPA": dataset["FormTable", "form"].name,
+            "DOCULECT": "languageReference",
+            "CONCEPT": "parameterReference",
+            "IPA": "form",
             "COGID": "cognatesetReference",
             "ALIGNMENT": "alignment",
-            "TOKENS": c_f_segments,
-            "CLDF_ID": c_f_id,
+            "TOKENS": "segments",
+            "CLDF_ID": "id",
             "ID": "",
         }
     )
-    if "_PARAMETERREFERENCE" in input.fieldnames:
-        form_table_upper["_PARAMETERREFERENCE"] = (
-            dataset["FormTable", "parameterReference"].name,
-        )
+    if "_PARAMETERREFERENCE" in [f.upper() for f in input.fieldnames]:
+        form_table_upper["_PARAMETERREFERENCE"] = "parameterReference"
         form_table_upper["CONCEPT"] = ""
 
-    separators: t.List[t.Optional[str]] = [None for _ in input.fieldnames]
+    separators: t.MutableMapping[str, t.Optional[str]] = {}
     # TODO: What's the logic behind going backwards through this? We are not modifying fieldnames.
-    for i in range(len(input.fieldnames) - 1, -1, -1):
+    for i in range(len(input.fieldnames)):
         if i == 0 and input.fieldnames[0] != "ID":
             raise ValueError(
                 "When importing from Edictor, expected the first column to be named 'ID', but found %s",
@@ -127,12 +124,14 @@ def load_forms_from_tsv(
             )
 
         if input.fieldnames[i] == "cognatesetReference":
-            separators[i] = " "
+            separators[input.fieldnames[i]] = " "
         elif input.fieldnames[i] == "alignment":
-            separators[i] = " "
+            separators[input.fieldnames[i]] = " "
 
         try:
-            separators[i] = dataset["FormTable", input.fieldnames[i]].separator
+            separators[input.fieldnames[i]] = dataset[
+                "FormTable", input.fieldnames[i]
+            ].separator
         except KeyError:
             pass
 
@@ -140,16 +139,18 @@ def load_forms_from_tsv(
         "The header of your edictor file will be interpreted as %s.", input.fieldnames
     )
 
+    affected_forms: t.Set[types.Form_ID] = set()
     for line in cli.tq(
         input, task="Importing form rows from edictor…", total=len(forms)
     ):
         # Column "" is the re-named Lingpy-ID column, so the first one.
-        if line[""].startswith("#"):
+        if not any(line.values()) or line[""].startswith("#"):
             # One of Edictor's comment rows, storing settings
             continue
 
-        for (key, value), sep in zip(line.items(), separators):
+        for (key, value) in line.items():
             value = value.replace("\\!t", "\t").replace("\\!n", "\n")
+            sep = separators[key]
             if sep is not None:
                 if not value:
                     line[key] = []
@@ -158,28 +159,43 @@ def load_forms_from_tsv(
             else:
                 line[key] = value
 
+        affected_forms.add(line["id"])
+
         try:
             for segments, cognateset, alignment in extract_partial_judgements(
-                line[c_f_segments],
+                line["segments"],
                 line["cognatesetReference"],
                 line["alignment"],
                 logger,
             ):
                 edictor_cognatesets[cognateset].append(
-                    (line[c_f_id], segments, alignment)
+                    (line["id"], segments, alignment)
                 )
-            forms[line[c_f_id]] = line
+            forms[line["id"]] = line
         except IndexError:
             logger.warning(
                 f"In form with Lingpy-ID {line['']}: Cognateset judgements {line['cognatesetReference']} and alignment {line['alignment']} did not match. At least one morpheme skipped."
             )
     edictor_cognatesets.pop(0, None)
 
+    columns = {
+        (util.cldf_property(column.propertyUrl) or column.name): column.name
+        for column in dataset["FormTable"].tableSchema.columns
+    }
     # Deliberately make use of the property of `write` to discard any entries
     # that don't correspond to existing columns. Otherwise, we'd still have to
     # get rid of the alignment, cognatesetReference and Lingpy-ID columns.
-    dataset["FormTable"].write(forms.values())
-    return edictor_cognatesets
+    dataset["FormTable"].write(
+        (
+            {
+                columns[property]: value
+                for property, value in form.items()
+                if columns.get(property)
+            }
+            for form in forms.values()
+        )
+    )
+    return edictor_cognatesets, affected_forms
 
 
 def match_cognatesets(
@@ -270,33 +286,38 @@ def edictor_to_cldf(
     new_cogsets: t.Mapping[
         types.Cognateset_ID, t.List[t.Tuple[types.Form_ID, range, t.Sequence[str]]]
     ],
+    affected_forms: t.Set[types.Form_ID],
     source: t.List[str] = [],
 ):
     ref_cogsets: t.MutableMapping[
         types.Cognateset_ID, t.List[t.Tuple[types.Form_ID, range, t.Sequence[str]]]
     ] = t.DefaultDict(list)
+    cognate: t.List[types.Judgement] = []
     judgements_lookup: t.MutableMapping[
-        t.Tuple[types.Form_ID, types.Cognateset_ID], types.CogSet
-    ] = {}
+        types.Form_ID, t.MutableMapping[types.Cognateset_ID, types.Judgement]
+    ] = t.DefaultDict(dict)
     for j in util.cache_table(dataset, "CognateTable").values():
-        ref_cogsets[j["cognatesetReference"]].append(
-            (j["formReference"], j["segmentSlice"], j["alignment"])
-        )
-        judgements_lookup[j["formReference"], j["cognatesetReference"]] = j
+        if j["formReference"] in affected_forms:
+            ref_cogsets[j["cognatesetReference"]].append(
+                (j["formReference"], j["segmentSlice"], j["alignment"])
+            )
+            judgements_lookup[j["formReference"]][j["cognatesetReference"]] = j
+        else:
+            cognate.append(j)
     matches = match_cognatesets(new_cogsets, ref_cogsets)
 
-    cognate = []
     for cognateset, judgements in new_cogsets.items():
         cognateset = matches[cognateset]
         if cognateset is None:
             cognateset = "_".join(f for f, _, _ in judgements)
         for form, slice, alignment in judgements:
-            was = judgements_lookup.get((form, cognateset))
+            was: types.Judgement = judgements_lookup.get(form, {}).get(cognateset)
             if was:
                 was["segmentSlice"] = util.indices_to_segment_slice(slice)
                 was["alignment"] = alignment
                 cognate.append(was)
                 continue
+            judgements_lookup
             cognate.append(
                 types.Judgement(
                     {
@@ -319,11 +340,12 @@ def edictor_to_cldf(
     dataset["CognateTable"].write(
         [{m[k]: v for k, v in j.items() if k in m} for j in cognate]
     )
+    # TODO: write new sets to cognateset table
 
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Export #FormTable to tsv format for import to edictor"
+        description="Import the tsv format used by Edictor and Lingpy. Try to only change the subset of forms and cognatesets contained in the TSV, from a partial export."
     )
     parser.add_argument(
         "--source",
@@ -345,9 +367,14 @@ if __name__ == "__main__":
     logger = cli.setup_logging(args)
 
     dataset = pycldf.Dataset.from_metadata(args.metadata)
-    new_cogsets = load_forms_from_tsv(
+    new_cogsets, affected_forms = load_forms_from_tsv(
         dataset=dataset,
         input_file=args.input_file,
     )
 
-    edictor_to_cldf(dataset=dataset, new_cogsets=new_cogsets, source=[args.source])
+    edictor_to_cldf(
+        dataset=dataset,
+        new_cogsets=new_cogsets,
+        affected_forms=affected_forms,
+        source=[args.source],
+    )

@@ -91,7 +91,7 @@ def test_concatenations():
         "text",
         "text",
     ]
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         assert merge_homophones.concatenate([1, 3])
 
 
@@ -104,7 +104,7 @@ def test_union():
     assert merge_homophones.union(["this", None, "text"]) == "this; text"
     assert merge_homophones.union([["this"], [], ["text"]]) == ["this", "text"]
     assert merge_homophones.union([["this", "text"], [], ["text"]]) == ["this", "text"]
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         assert merge_homophones.union([1, 3])
 
 
@@ -264,12 +264,11 @@ def test_merge_group_assertion_error(copy_dataset, caplog):
     mergers = merge_homophones.default_mergers
     with caplog.at_level(logging.ERROR):
         with pytest.raises(
-            SystemExit,
-        ) as exit:
+            merge_homophones.Skip,
+        ):
             merge_homophones.merge_group(
                 forms=forms, target=target, mergers=mergers, dataset=dataset
             )
-            print(exit.value)
         assert re.search(
             r".+\nThe merge function must_be_equal requires the input data to be equal.+\n.+",
             caplog.text,
