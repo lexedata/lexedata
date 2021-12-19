@@ -45,7 +45,7 @@ collected by Hilde Gunnink. The data set is a subset of an earlier version
 The data is stored in an Excel file which you can download from
 the lexedata repository ::
 
-    $ curl -L https://github.com/Anaphory/lexedata/blob/scriptdoctest/docs/examples/bantu.xlsx?raw=true -o bantu.xlsx
+    $ curl -L https://github.com/Anaphory/lexedata/blob/master/docs/examples/bantu.xlsx?raw=true -o bantu.xlsx
     [... Download progress]
 
 (curl is a command line tool to download files from URLs, available
@@ -860,7 +860,9 @@ polysemous forms connected to multiple concepts. ::
     cognates.csv:kikuyu_new,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
     cognates.csv:kikuyu_white,kikuyu_new,white_2,1:3,e r ũ,,automatically aligned
     $ git commit -am "Annotate polysemies"
-    [...]
+    [master [...]] Annotate polysemies
+     4 files changed, 3295 insertions(+), 3281 deletions(-)
+     rewrite parameters.csv (100%)
 
 Improve Cognatesets
 ===================
@@ -871,59 +873,150 @@ linguistics, editing cognatesets and alignments.
 Merge cognatesets
 -----------------
 
-With combining polysemous forms comes that we now have forms which are in two
-cognate sets. Apart from this artefact of how we handle the data, cognate sets
-which do not represent disjoint, consecutive groups of segments also occur when
-morpheme boundaries have been eroded or when a language has non-concatenative
-morphemes, which is the case that gives the name to our script reporting these.
-::
+From combining polysemous forms, we now have forms which are in two cognate
+sets. Apart from this artefact of how we handle the data, cognate sets which do
+not represent disjoint, consecutive groups of segments also occur when morpheme
+boundaries have been eroded or when a language has non-concatenative morphemes,
+which is the case that gives the name to our script reporting these. ::
 
-    $ python -m lexedata.report.nonconcatenative_morphemes
+    $ python -m lexedata.report.nonconcatenative_morphemes > overlapping_cogsets
+    INFO:lexedata:Caching table FormTable
+    100%|██████████| 1587/1587 [00:00<00:00, [...]it/s]
     WARNING:lexedata:In judgement ntomba_skin, segments 1:6 are associated with cognate set skin_27, but were already in bark_22.
     WARNING:lexedata:In judgement ngombe_many, segments 1:4 are associated with cognate set many_12, but were already in big_1.
     WARNING:lexedata:In judgement bushoong_walk, segments 1:4 are associated with cognate set walk_1, but were already in go_to_1.
     WARNING:lexedata:In judgement lega_walk, segments 1:4 are associated with cognate set walk_1, but were already in go_to_2.
     WARNING:lexedata:In judgement kikuyu_white, segments 1:3 are associated with cognate set white_2, but were already in new_3.
+    $ cat overlapping_cogsets
+    Cluster of overlapping cognate sets:
+    	 bark_22 (['lopoho', 'émpósù', 'yooʃ', 'ləpwi'])
+    	 skin_27 (['lopoho', 'liposo', 'ləpwí'])
+    Cluster of overlapping cognate sets:
+    	 big_1 (['éndɛ̃nɛ̀', 'nɛ́nɛ́', 'nɛ́nɛ', 'nɛ́n', 'neni', 'bùnɛ̂nɛ̀', 'nɛnɛ', 'nene', 'nene', 'nini', 'nene'])
+    	 many_12 (['nɛ́nɛ'])
+    Cluster of overlapping cognate sets:
+    	 go_to_1 (['ha', 'yɛɛn', 'ɛɛndə', 'ja', 'ya'])
+    	 go_to_2 (['kɛ', 'yenda', 'okɛ', 'ɛnda', 'enda', 'genda', 'genda'])
+    	 walk_1 (['kɛndɛ', 'yɛɛn', 'kweenda', 'yɛ̀ndɛ̀', 'okyán', 'ɛnda', 'yenda'])
+    Cluster of overlapping cognate sets:
+    	 new_3 (['erũ'])
+    	 white_2 (['ɛ́lɔ', 'erũ', 'eru', 'era'])
 
-From merging polysemous forms, which were in different cognate sets, we get
-morphemes which are now allocated to two different cognate sets.
+There are other ways to merge cognate sets, which we will see in a moment, but
+this kind of structured report is suitable for automatic merging, in the same
+manner as the homophones::
 
-nonconcatenative_morphemes.py
+    $ python -m lexedata.edit.merge_cognate_sets overlapping_cogsets
+    [...]
+    INFO:lexedata:Writing cognates.csv back to file…
 
-These can be used to merge the corresponding cognate sets.
-
-  TODO: The script to merge this kind of indirectly connected cognate sets does
-  not exist. What should it do?
+(TODO: This script does not yet merge the two different judgements that
+associate one form with the now one cognate set.)
 
 Central Concepts
 ----------------
 
-Singletons
-----------
+Our cognate sets can now contain forms associated with multiple concepts. For
+further work it is often useful to track ‘central’ concepts, or tentative
+semantic reconstructions, together with the cognate sets. Lexedata can generall
+help bootstrap this, using again the link to Concepticon and CLICS³. ::
 
-Singletons
-----------
-Align
+    $ python -m lexedata.edit.add_central_concepts 
+    [... progress output]
+    $ git commit -am "Add central concepts"
+    [...]
 
 ****************************************
 Computer-assisted historical linguistics
 ****************************************
 
+We can now modify the cognate judgements. Lexedata currently supports two ways
+to do this, both work by exporting the lexical data set to an external format
+more handy for editing, and then importing it back in.
+
 Cognate Excel
 =============
 
+The first export-import loop works to provide us with a large table showing the
+cognate sets per language, using `lexedata.exporter.cognates` and
+`lexedata.importer.cognates`. Showing that does not very well fit the format of
+this tutorial, so we will skip it for now. But feel free to try it out: If you
+commit your status before your try out this loop, you always have a safe state
+to come back to. If you also re-import and re-export frequently, you decrease
+the chance of accidentally introducing errors to the format which Lexedata
+cannot parse, or at least the time it takes you to find and correct such errors.
+
 Edictor
 =======
+
+The second export-import loop lexedata implements exports to the TSV format used
+by `edictor <https://edictor.digling.org>`_, a JavaScript-based in-browser
+editor for lexical data sets. (Edictor runs purely inside your browser on your
+computer, there is no data transmission involved.)
+
+For this example, we will look more closely at the concepts of locomotion. We
+have already seen some overlap between the forms for ‘go to’ and ‘walk’, so we
+will check those in more detail. First, we select the subset of the data that is
+interesting here. Let us consider the concepts
+
+    ::
+
+        ID
+        go_to
+        walk
+        path
+        come
+        stand
+
+    -- concepts_filter
+
+and all languages::
+
+    $ python -m lexedata.exporter.edictor --concepts-file concepts_filter
+    [... Some notes on progress]
+
+This gives us a tab-separated value file, by default named `cognate.tsv`, which
+we can load in Edictor and edit there.
+
+.. image:: example/Edictor.png
+  :width: 70%
+  :alt: Cognate class view in Edictor
+
+This is not the point to show you the workings of Edictor. I have edited things
+a bit, the result is in the documentation. ::
+
+    $ curl -L https://github.com/Anaphory/lexedata/blob/tour/docs/examples/cognate.tsv?raw=true -o new_cognate.tsv
+    $ python -m lexedata.importer.edictor -i new_cognate.tsv
+    [...]
+    INFO:lexedata:The header of your edictor file will be interpreted as ['', 'id', 'languageReference', '', 'form', 'comment', 'segments', 'source', 'variants', 'cognatesetReference', 'alignment', 'parameterReference'].
+    [...]
 
 *************
 Further steps
 *************
 
-Matrix exporter
-===============
-
 Phylogenetics
 =============
+
+There is of course still much room for improvement, but just for demonstration
+purposes::
+
+    $ python -m lexedata.exporter.phylogenetics --coding multistate
+    [...]
+    Bushoong  2,0,3,4,2,0,2,0,(7,8),1,2,1,(3,11),(7,8),13,0,0,12,(0,3),0,0,0,0,4,0,0,0,0,2,3,1,0,4,(0,1),7,0,(2,5),0,0,3,(2,3),(2,3),2,2,0,0,8,1,5,1,2,(0,6),5,1,7,2,5,3,0,0,(5,8),(1,6),5,4,0,2,0,0,5,4,4,6,0,5,0,7,4,11,6,5,3,0,(8,9),0,1,4,8,0,?,0,0,3,1,(0,3),0,0,3,0,(2,8),3
+    Duala     0,2,4,5,0,0,0,4,6,1,1,1,4,2,4,2,0,(4,6,7),0,0,3,0,0,7,0,0,0,1,2,0,4,0,0,5,1,3,7,3,1,3,1,7,1,2,2,3,10,2,5,3,0,0,4,0,5,0,8,2,3,0,0,5,3,3,1,0,0,0,3,7,3,3,2,0,1,3,7,11,9,2,1,6,(4,5),5,0,6,5,3,2,0,2,2,2,2,1,1,2,0,2,2
+    Fwe       0,0,0,0,0,0,0,0,0,0,0,0,(0,11),0,(2,13),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,(0,3),0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,4,0,1,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,6,3
+    Ha        0,0,2,?,7,0,(0,1,4),?,10,3,0,1,(0,10),3,(1,12,13),0,0,(0,1,5),0,0,(0,5),0,0,0,0,0,(0,2),0,0,8,0,(0,1),0,0,0,0,(1,7),0,0,3,(4,5),(5,6),7,0,(0,1),0,(3,7),1,4,0,4,3,1,0,6,0,7,3,0,0,(3,10),0,1,0,0,0,0,0,6,(0,8),8,6,0,(0,8),0,4,0,2,(0,12),0,0,0,0,3,0,0,0,2,0,0,0,3,0,6,0,0,0,0,(1,7,9),1
+    Kikuyu    0,0,7,(1,8),7,0,0,2,4,(2,8),3,3,(0,1),3,(3,7),3,0,2,1,(0,1),0,0,0,(1,3),0,0,0,0,0,6,6,1,0,0,0,1,7,(0,1),0,4,4,(3,4),6,0,1,0,4,1,(1,9),0,4,0,1,0,1,0,(1,2),3,0,1,0,3,0,0,0,0,0,0,(7,8,9),0,8,6,0,8,0,4,0,(3,4),1,6,2,(1,2),1,(1,2),0,1,0,(1,4),0,0,1,3,0,6,0,1,0,0,6,3
+    Kiyombi   1,0,4,2,0,0,0,6,5,4,1,1,0,9,6,0,0,9,0,0,0,0,0,0,0,0,0,0,4,6,7,5,0,4,6,0,3,0,0,3,2,6,3,4,0,1,9,1,8,0,0,4,2,2,3,2,5,3,1,0,6,7,3,0,0,0,0,0,5,4,5,6,0,6,0,7,0,13,5,5,0,0,9,6,0,5,1,0,?,0,0,3,1,0,0,?,3,0,3,3
+    Lega      0,0,0,8,7,0,0,2,9,1,0,1,0,?,0,2,0,13,0,0,0,0,0,2,0,0,0,2,?,0,1,2,2,4,4,0,7,0,1,3,4,3,7,0,1,0,11,1,2,0,6,0,1,0,7,0,8,3,0,0,10,4,2,1,0,0,0,0,5,1,8,6,0,2,0,0,0,11,(2,10,11,13),5,0,0,2,0,0,3,7,0,1,0,0,3,0,0,0,0,1,0,0,(0,3)
+    Luganda   3,1,(1,7),7,1,(0,4),0,2,3,9,4,1,(5,8,9),1,(7,10,11),0,0,(3,12),0,0,4,0,0,0,(0,2),(0,1),0,0,(0,1),7,0,3,3,0,(0,2),0,6,0,3,3,5,3,7,0,1,0,(2,6),1,3,2,7,2,1,0,6,0,7,3,0,0,(0,1,2,10,11),0,1,2,0,1,0,2,1,3,(1,2,8),2,1,(1,9),0,4,(1,9),(6,7,8),3,(0,1),3,(3,4),(0,3),0,0,2,0,0,0,0,(0,1),3,0,6,0,0,0,0,8,3
+    Ngombe    1,0,4,4,0,0,2,5,6,1,0,1,(4,11),(5,6),(5,13),(0,1),0,8,0,(2,3),2,0,(0,1),(0,6),3,0,0,0,(2,3),2,2,0,0,(2,3,5),0,0,5,0,0,3,(2,4),1,(1,4),3,0,0,8,1,5,(0,1),(2,3),(0,5),(0,5),(0,1),7,(0,1),4,1,2,2,(4,8),(2,5),(3,5),4,(0,2),(0,3),0,0,?,5,4,5,2,4,0,?,3,0,7,5,4,0,7,0,0,6,2,0,?,0,0,(1,3),1,(1,6),(0,1),1,6,1,4,3
+    Ntomba    4,0,3,4,2,0,2,2,4,1,0,1,0,4,13,0,0,12,0,4,0,0,0,4,0,0,3,0,2,2,1,0,4,5,0,2,2,0,0,(1,2,3),2,3,(2,4),2,0,0,8,1,6,1,2,5,5,0,7,1,4,3,0,0,0,6,4,4,0,2,0,0,2,(2,6),8,6,2,3,0,2,2,0,8,5,3,0,6,6,0,(4,6),(3,4),0,3,0,0,3,1,0,0,2,0,0,3,3
+    Nyamwezi  0,1,7,2,7,1,0,2,7,6,0,1,5,2,8,0,0,5,0,0,0,0,0,0,(0,2),0,0,0,0,6,5,(1,4),(0,1),4,(0,3),0,7,0,0,0,5,3,6,(0,6),1,0,5,1,10,0,4,(1,7),1,0,7,0,3,0,0,0,(0,10),0,0,2,0,0,0,0,?,2,8,(1,6),0,8,0,(4,5),0,(5,12),0,7,0,0,10,0,0,0,0,0,0,0,0,3,0,(4,5),0,0,6,0,7,(4,5)
+    Nzadi     1,0,6,4,(2,4,5,6),3,(2,3),1,5,1,0,(1,4,5),0,(11,12),13,1,0,11,0,0,0,0,0,(0,4),0,0,0,3,2,5,1,0,4,0,0,0,5,0,0,(3,5),2,6,(2,5),(2,5),0,2,9,1,(6,7),1,(0,1),4,?,(3,4),4,2,(3,4),3,0,0,(0,7,9),(0,9),0,5,(0,3),2,0,1,5,4,(6,7),(4,6),0,(0,4),0,1,(6,8),(0,10),4,(3,4,5),3,5,?,4,0,6,(6,8),0,4,(0,1,2),0,3,1,(0,1),0,0,5,0,1,3
+    Nzebi     0,0,5,6,3,0,0,7,6,5,1,1,2,10,6,0,0,10,2,0,1,0,0,5,0,0,4,3,2,4,3,0,?,6,5,0,4,0,0,3,3,6,4,2,0,1,9,1,5,0,0,4,3,0,7,1,6,3,0,3,0,8,0,0,0,0,0,0,5,4,3,(0,6),0,7,0,7,5,13,0,5,0,5,0,6,0,5,8,0,4,0,0,3,3,0,2,0,4,0,5,3
+    Swahili   0,1,7,3,8,2,1,(0,3),(1,2),7,0,2,(6,7),13,9,0,0,5,0,0,4,1,0,8,(0,1),0,1,0,0,1,5,1,0,4,0,0,7,2,2,0,5,3,6,1,0,0,1,1,9,0,5,0,1,0,2,0,2,(0,3),4,0,0,0,0,6,0,0,0,0,4,9,8,6,0,8,0,6,0,9,0,7,0,0,3,0,0,0,0,0,5,0,0,3,0,6,0,1,6,0,8,3
 
 .. rubric:: Footnotes
 

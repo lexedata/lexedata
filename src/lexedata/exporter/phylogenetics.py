@@ -590,7 +590,7 @@ def raw_multistate_alignment(alignment, long_sep: str = ","):
             elif len(s) == 1:
                 return str(s.pop())
             else:
-                return "({})".format("".join(str(c) for c in s))
+                return "({})".format("".join(str(c) for c in sorted(s)))
 
         separator = ""
 
@@ -602,7 +602,7 @@ def raw_multistate_alignment(alignment, long_sep: str = ","):
             elif len(s) == 1:
                 return str(s.pop())
             else:
-                return "({})".format(",".join(str(c) for c in s))
+                return "({})".format(",".join(str(c) for c in sorted(s)))
 
         separator = long_sep
 

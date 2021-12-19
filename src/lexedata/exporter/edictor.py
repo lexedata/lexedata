@@ -188,7 +188,7 @@ def forms_to_tsv(
                 if c == "segments":
                     continue
                 if c == "parameterReference":
-                    form["_parameterReference"] = form["parameterReference"]
+                    form["_parameterReference"] = d.join(str(e) for e in form[c])
                     form["parameterReference"] = form["parameterReference"][0]
                     continue
 
@@ -420,12 +420,19 @@ if __name__ == "__main__":
         description="Export #FormTable to tsv format for import to edictor"
     )
     # TODO: set these arguments correctly
+    # TODO: allow reading from a file instead of from command line, maybe as only option.
     parser.add_argument(
         "--languages",
         type=str,
         nargs="*",
         default=[],
         help="Language references for form selection",
+        metavar="LANGUAGE",
+    )
+    parser.add_argument(
+        "--languages-file",
+        type=Path,
+        help="If both LANGUAGES_FILE and LANGUAGE are given, take the union.",
     )
     parser.add_argument(
         "--concepts",
@@ -435,10 +442,20 @@ if __name__ == "__main__":
         help="",
     )
     parser.add_argument(
+        "--concepts-file",
+        type=Path,
+        help="",
+    )
+    parser.add_argument(
         "--cognatesets",
         type=str,
         nargs="*",
         default=[],
+        help="",
+    )
+    parser.add_argument(
+        "--cognatesets-file",
+        type=Path,
         help="",
     )
     parser.add_argument(
@@ -451,11 +468,30 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = cli.setup_logging(args)
     dataset = pycldf.Dataset.from_metadata(args.metadata)
+
+    if args.languages_file:
+        for r, row in enumerate(csv.reader(args.languages_file.open())):
+            if r == 0 and row[0] == dataset["LanguageTable", "id"].name:
+                continue
+            args.languages.append(row[0])
+
+    if args.concepts_file:
+        for r, row in enumerate(csv.reader(args.concepts_file.open())):
+            if r == 0 and row[0] == dataset["ParameterTable", "id"].name:
+                continue
+            args.concepts.append(row[0])
+
+    if args.cognatesets_file:
+        for r, row in enumerate(csv.reader(args.cognatesets_file.open())):
+            if r == 0 and row[0] == dataset["CognatesetTable", "id"].name:
+                continue
+            args.cognatesets.append(row[0])
+
     forms, judgements_about_form, cognateset_mapping = forms_to_tsv(
         dataset=dataset,
-        languages=args.languages or types.WorldSet(),
-        concepts=args.concepts or types.WorldSet(),
-        cognatesets=args.cognatesets or types.WorldSet(),
+        languages=set(args.languages) or types.WorldSet(),
+        concepts=set(args.concepts) or types.WorldSet(),
+        cognatesets=set(args.cognatesets) or types.WorldSet(),
         logger=logger,
     )
 

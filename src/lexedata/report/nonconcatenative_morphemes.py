@@ -2,10 +2,10 @@ import itertools
 import typing as t
 
 import pycldf
+import networkx.algorithms.community
 
-import lexedata.cli as cli
+from lexedata import cli, types, util
 from lexedata.util import parse_segment_slices, indices_to_segment_slice
-from lexedata import types
 
 
 def segment_to_cognateset(
@@ -18,16 +18,18 @@ def segment_to_cognateset(
     ],
     cognatesets: t.Optional[t.Iterable[types.Cognateset_ID]],
     logger: cli.logging.Logger = cli.logger,
-) -> t.Mapping[types.Form_ID, t.Sequence[t.Set[types.Cognateset_ID]]]:
+    forms_by_cogset: t.Mapping[types.Cognateset_ID, t.List[t.Sequence[str]]] = {},
+) -> t.Set[t.Tuple[types.Cognateset_ID, types.Cognateset_ID]]:
     # required fields
     c_cognate_cognateset = dataset.column_names.cognates.cognatesetReference
     c_form_segments = dataset.column_names.forms.segments
-    c_form_id = dataset.column_names.forms.id
     c_cognate_id = dataset.column_names.cognates.id
     c_cognate_form = dataset.column_names.cognates.formReference
     c_cognate_slice = dataset.column_names.cognates.segmentSlice
 
-    forms = {f[c_form_id]: f for f in dataset["FormTable"]}
+    mergers: t.Set[t.Tuple[types.Cognateset_ID, types.Cognateset_ID]] = set()
+
+    forms = util.cache_table(dataset)
     cognateset_cache: t.Mapping[t.Optional[types.Cognateset_ID], int]
     if "CognatesetTable" in dataset:
         cognateset_cache = {
@@ -51,7 +53,7 @@ def segment_to_cognateset(
             form = forms[j[c_cognate_form]]
             if j[c_cognate_form] not in which_segment_belongs_to_which_cognateset:
                 which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [
-                    set() for _ in form[c_form_segments]
+                    set() for _ in form["segments"]
                 ]
             if j.get(c_cognate_slice):
                 try:
@@ -67,6 +69,16 @@ def segment_to_cognateset(
             already: t.MutableMapping[types.Cognateset_ID, t.List[int]] = t.DefaultDict(
                 list
             )
+
+            try:
+                forms_by_cogset[j[c_cognate_cognateset]].append(
+                    [form["segments"][s] for s in segments_judged]
+                )
+            except KeyError:
+                # We are not supposed to add new keys. In this manner, a caller
+                # can decide which cognatesets are interesting to them.
+                pass
+
             for s in segments_judged:
                 if old_s is not None and old_s + 1 != s:
                     logger.warning(
@@ -89,8 +101,10 @@ def segment_to_cognateset(
                 logger.warning(
                     f"In judgement {j[c_cognate_id]}, segments {segments_string} are associated with cognate set {j[c_cognate_cognateset]}, but were already in {cs}."
                 )
+                if len(segments) >= len(segments_judged) / 2:
+                    mergers.add((cs, j[c_cognate_cognateset]))
 
-    return which_segment_belongs_to_which_cognateset
+    return mergers
 
 
 if __name__ == "__main__":
@@ -106,8 +120,21 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    by_form = segment_to_cognateset(
+    forms_by_cogset = t.DefaultDict(list)
+    merge_pairs = segment_to_cognateset(
         dataset=pycldf.Dataset.from_metadata(args.metadata),
         cognatesets=args.cognatesets,
         logger=logger,
+        forms_by_cogset=forms_by_cogset,
     )
+    graph = networkx.Graph()
+    graph.add_edges_from(merge_pairs)
+    # Sort to keep order persistent
+    for community in sorted(
+        networkx.algorithms.community.greedy_modularity_communities(graph),
+        key=lambda x: sorted(x),
+    ):
+        print("Cluster of overlapping cognate sets:")
+        for cognateset in sorted(community):
+            forms = ["".join(segments) for segments in forms_by_cogset[cognateset]]
+            print(f"\t {cognateset} ({forms})")
