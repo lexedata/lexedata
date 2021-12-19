@@ -986,7 +986,7 @@ we can load in Edictor and edit there.
 This is not the point to show you the workings of Edictor. I have edited things
 a bit, the result is in the documentation. ::
 
-    $ curl -L https://github.com/Anaphory/lexedata/blob/tour/docs/examples/cognate.tsv?raw=true -o new_cognate.tsv
+    $ curl -L https://github.com/Anaphory/lexedata/blob/master/docs/examples/cognate.tsv?raw=true -o new_cognate.tsv
     [...]
     $ python -m lexedata.importer.edictor -i new_cognate.tsv
     [...]
