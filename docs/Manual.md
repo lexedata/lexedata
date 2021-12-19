@@ -1,7 +1,5 @@
 # `lexedata` Manual
 
-.. toctree::
-
 You can access the Lexedata tools through commands in your terminal. Every command has the following general form:
 
 > python -m lexedata.*package*.*command* [--*optional_argument* VALUE] [--*switch*] POSITIONAL ARGUMENTS
