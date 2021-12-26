@@ -302,8 +302,8 @@ def root_meaning_code(
 
 
 class AbsenceHeuristic(enum.Enum):
-    CentralConcept = 0
-    HalfPrimaryConcepts = 1
+    CENTRALCONCEPT = 0
+    HALFPRIMARYCONCEPTS = 1
 
 
 # TODO: Maybe this would make sense tied closer to AbsenceHeuristic?
@@ -743,9 +743,19 @@ def add_partitions(data_object: ET.Element, partitions):
 
 
 if __name__ == "__main__":
+    import argparse
     parser = cli.parser(
         description="Export a CLDF dataset (or similar) to bioinformatics alignments"
     )
+
+
+    def create_absence_heuristics():
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, values, option_string=None):
+                values = AbsenceHeuristic.__getitem__(values.upper())
+                setattr(args, self.dest, values)
+        return customAction
+
     parser.add_argument(
         "--format",
         choices=("csv", "raw", "beast", "nexus"),
@@ -806,9 +816,10 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--absence-heuristic",
-        type=AbsenceHeuristic.__getitem__,
+        type=str,
+        action=create_absence_heuristics(),
         default=None,
-        choices=list(AbsenceHeuristic.__members__),
+        choices=list(m.split(".")[-1].lower() for m in AbsenceHeuristic.__members__),
         help="""In case of --coding=rootpresence, which heuristic should be used for the
         coding of absences? The default depends on whether the dataset contains
         a #parameterReference column in its CognatesetTable: If there is one,
@@ -822,7 +833,7 @@ if __name__ == "__main__":
     parser.add_argument("--stats-file", type=Path, help="A file to write statistics to")
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-
+    breakpoint()
     # Step 1: Load the raw data.
     dataset = pycldf.Dataset.from_metadata(args.metadata)
 
@@ -868,7 +879,7 @@ if __name__ == "__main__":
     alignment: t.Mapping[Language_ID, str]
     if args.coding == "rootpresence":
         relevant_concepts = apply_heuristics(
-            dataset, args.heuristic, primary_concepts=concepts
+            dataset, args.absence_heuristic, primary_concepts=concepts
         )
         binal, cognateset_indices = root_presence_code(
             ds, relevant_concepts=relevant_concepts, logger=logger
