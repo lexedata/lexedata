@@ -39,4 +39,8 @@ def test_get_foreignkey():
         table="FormTable",
         other_table="ParameterTable",
     )
-
+    assert get_foreignkey(
+        dataset=dataset,
+        table="LanguageTable",
+        other_table="CognateTable"
+    ) is None
