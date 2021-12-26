@@ -7,6 +7,7 @@ import unicodedata
 import unidecode as uni
 import networkx
 from lingpy.compare.strings import ldn_swap
+import pycldf
 
 import csvw
 import pkg_resources
@@ -243,3 +244,21 @@ def normalize_table_name(name, dataset, logger=logger):
     except KeyError:
         logger.warning("Could not find table {}".format(name))
         return None
+
+
+def get_foreignkey(
+        dataset: pycldf.Dataset,
+        table: str,
+        other_table: str,
+):
+    """
+    Return foreignkey connecting table to other_table
+    :param dataset: pycldf.Dataset
+    :param table: Tablename
+    :param other_table: Tablename
+    :return:
+    """
+    for foreign_key in dataset[table].tableSchema.foreignKeys:
+        if foreign_key.reference.resource == dataset[other_table].url:
+            return foreign_key.columnReference[0]
+
