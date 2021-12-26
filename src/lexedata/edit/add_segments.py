@@ -36,6 +36,7 @@ import cldfcatalog
 import attr
 
 import lexedata.cli as cli
+from lexedata.util import get_foreignkey
 
 clts_path = cldfcatalog.Config.from_file().get_clone("clts")
 clts = cldfbench.catalogs.CLTS(clts_path)
@@ -239,7 +240,7 @@ def add_segments_to_dataset(
     write_back = []
     c_f_segments = dataset["FormTable", "segments"].name
     c_f_id = dataset["FormTable", "id"].name
-    c_f_lan = dataset["FormTable", "languageReference"].name
+    c_f_lan = get_foreignkey(dataset=dataset, table="FormTable", other_table="LanguageTable")
     c_f_form = dataset["FormTable", "form"].name
     # report = t.Dict[str, t.Dict[str, t.Dict[str, str]]] = {}
     report = {f[c_f_lan]: SegmentReport() for f in dataset["FormTable"]}

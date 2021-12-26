@@ -6,7 +6,7 @@ import pycldf
 import networkx
 
 from lexedata import cli
-from lexedata.util import load_clics
+from lexedata.util import load_clics, get_foreignkey
 from lexedata.edit.add_status_column import add_status_column_to_table
 
 FormID = str
@@ -20,7 +20,7 @@ def load_concepts_by_form(
     """Look up all concepts for each form, and return them as dictionary."""
     concepts_by_form_id: t.Dict[FormID, t.Sequence[ConceptID]] = {}
     c_f_id = dataset.column_names.forms.id
-    c_f_concept = dataset.column_names.forms.parameterReference
+    c_f_concept = get_foreignkey(dataset=dataset, table="FormTable", other_table="ParameterTable")
     for form in cli.tq(
         dataset["FormTable"],
         task="Load concepts by form id",
@@ -147,7 +147,7 @@ def connected_concepts(
     ] = t.DefaultDict(list)
 
     # Check whether cognate judgements live in the FormTable …
-    c_cognateset = dataset.column_names.forms.cognatesetReference
+    c_cognateset = get_foreignkey(dataset=dataset, table="FormTable", other_table="CognatesetTable")
     c_form = dataset.column_names.forms.id
     table = dataset["FormTable"]
     # … or in a separate CognateTable
@@ -206,7 +206,7 @@ def add_central_concepts_to_cognateset_table(
         for cognateset, concepts in concepts_of_cognateset.items():
             central[cognateset] = central_concept(concepts, {}, None)
     dataset = reshape_dataset(dataset, add_column=add_column)
-    c_core_concept = dataset.column_names.cognatesets.parameterReference
+    c_core_concept = get_foreignkey(dataset=dataset, table="CognatesetTable", other_table="ParameterTable")
     if c_core_concept is None:
         raise ValueError(
             f"Dataset {dataset:} had no parameterReference column in a CognatesetTable"

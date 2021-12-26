@@ -5,6 +5,7 @@ import pycldf
 
 import lexedata.cli as cli
 import lexedata.types as types
+from lexedata.util import get_foreignkey
 
 
 def coverage_report(
@@ -43,15 +44,8 @@ def coverage_report(
         pass
 
     # get the foreign keys pointing to the required tables
-    foreign_key_parameter = ""
-    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
-        if foreign_key.reference.resource == dataset["ParameterTable"].url:
-            foreign_key_parameter = foreign_key.columnReference[0]
-
-    foreign_key_language = ""
-    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
-        if foreign_key.reference.resource == dataset["LanguageTable"].url:
-            foreign_key_language = foreign_key.columnReference[0]
+    foreign_key_parameter = get_foreignkey(dataset=dataset, table="FormTable", other_table="ParameterTable")
+    foreign_key_language = get_foreignkey(dataset=dataset, table="FormTable", other_table="LanguageTable")
 
     concepts: t.DefaultDict[str, t.Counter[str]] = t.DefaultDict(t.Counter)
     multiple_concepts = bool(dataset["FormTable", "parameterReference"].separator)
@@ -140,15 +134,8 @@ def coverage_report_concepts(
         )
         primary_concepts = [c[c_c_id] for c in dataset["ParameterTable"]]
     # get the foreign keys pointing to the required tables
-    foreign_key_parameter = ""
-    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
-        if foreign_key.reference.resource == dataset["ParameterTable"].url:
-            foreign_key_parameter = foreign_key.columnReference[0]
-
-    foreign_key_language = ""
-    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
-        if foreign_key.reference.resource == dataset["LanguageTable"].url:
-            foreign_key_language = foreign_key.columnReference[0]
+    foreign_key_parameter = get_foreignkey(dataset=dataset, table="FormTable", other_table="ParameterTable")
+    foreign_key_language = get_foreignkey(dataset=dataset, table="FormTable", other_table="LanguageTable")
 
     multiple_concepts = bool(dataset["FormTable", "parameterReference"].separator)
     c_concept = foreign_key_parameter
