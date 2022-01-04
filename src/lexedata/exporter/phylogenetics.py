@@ -750,7 +750,7 @@ if __name__ == "__main__":
 
 
     def create_absence_heuristics():
-        class customAction(argparse.Action):
+        class CustomAction(argparse.Action):
             def __call__(self, parser, args, values, option_string=None):
                 values = AbsenceHeuristic.__getitem__(values.upper())
                 setattr(args, self.dest, values)
