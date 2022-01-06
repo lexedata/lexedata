@@ -9,7 +9,7 @@ We recommend that you keep all these files in one folder which is versioned with
 The file `languages.csv` contains the different varieties included in your lexical dataset and their metadata. Every row is a variety.
 
  - Necessary columns: Language_ID
- - Typical columns: Neme
+ - Typical columns: Name
 
 
 ## parameters.csv

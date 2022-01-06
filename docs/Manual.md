@@ -46,7 +46,22 @@ The importation script using the long format can be used to add new data to an e
 ## Editing a CLDF dataset (lexedata.edit)
 The "edit" package includes a series of scripts to automate common targeted or batch edits in a lexical dataset. It also included scripts that create links to Concepticon (TODO: add link) and integrate with LingPy (TODO: add link).
 
-### CLDF structure
+### CLDF dataset structure and curation
+
+#### How to add a metadata file (add_metadata)
+If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see section XXX how to read a json file). The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
+
+#### How to add tables to your dataset (add_table)
+Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is `python -m lexedata.edit.add_table TABLE`. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see section 4.1.3).
+
+#### How to add a CognateTable (add_cognate_table)
+The output of LingPy has cognate judgements as a column within the FormTable, rather than in a separate CognateTable as is the standard in CLDF. This is also the format of a FormTable generated when importing an "interleaved" dataset with Lexeata (see section 3.1.3). In these cases, Lexedata can subsequently create an explicit CognateTable using the command `python -m lexedata.edit.add_cognate_table`. Note that you have to indicate if your cognate judgement IDs are unique within the same concept or are valid across the dataset. In other words, if for every concept you have a cognateset with the code 1, then you need to indicate the option `--unique-id concept`, while if you have cross-concept cognate sets you need to indicate the option `--unique-id dataset`.
+
+#### How to normalize unicode (normalize_unicode)
+Linguistic data come with a lot of special characters especially for the forms, but also for language names etc. Many of the input methods used for such datasets result in seemingly identical glyphs, which are not necessarily the same unicode character (and are therefore not considered identical by a computer) . Lexedata can normalize unicode across your dataset with the command `python -m lexedata.edit.normalize_unicode`. You can find more info about what unicode normalization [here] (https://towardsdatascience.com/what-on-earth-is-unicode-normalization-56c005c55ad0).
+
+#### Workflow and tracking aid (add_status_column)
+When developing and editing a comparative dataset for historical linguistics, you may need to keep track of operations, such as manual checks, input by collaborators etc. You may also wish to inspect manually some of the automatic operations of lexedata. To facilitate such tasks, you can add a "status column" in any of the CLDF tables using the command `python -m lexedata.edit.add_status_column`. How you use status columns is largely up to you. You may manually keep track of your workflow in this column using specific codewords of your choice. Lexedata scripts that perform automatic operations that are not trivial (such as alignments, automatic cognate set detection) usually leave a message in the status column (which is customizable).  
 
 #### Valid and transparent IDs (simplify_ids)
 In a CLDF dataset, all IDs need to be unique and be either numeric or restricted alphanumeric (i.e. containing only leters, numbers and underscores). Lexedata command `python -m lexedata.edit.simplify_ids` verifies that all IDs in the dataset are valid and changes them appropriately if necessary. You can also choose to make your IDs transparent (option `--transparent`) so that you can easily tell what they correspond to. With transparent IDs, instead of a numeric ID, a form will have an ID consisting of the languageID and the parameterID: e.g. the word "main" in French would have the ID stan1290_hand.
@@ -56,40 +71,31 @@ Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, 
 
 In case you want to replace an entire ID column of a table, then you need to add the new intended ID column to the table and use the command ```python -m lexedata.edit.replace_id_column TABLE REPLACEMENT```.
 
-#### How to add a metadata file (add_metadata)
-If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see section XXX how to read a json file). The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
 
-#### 4.1.4 How to add tables to your dataset (add_table)
-Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is `python -m lexedata.edit.add_table TABLE`. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see section XXX). 
+### Operations on FormTable
 
-### Data curation
-src/lexedata//edit/normalize_unicode.py
+src/lexedata//edit/merge_homophones.py
 
 #### Segment forms (add_segments)
 In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms included in your dataset. Lexedata can do this automatically using CLTS (TODO: add link). To use this functionality type: ```python -m lexedata.edit.add_segments TRANCRIPTION_COLUMN```, where transcription column refers to the column that contains the forms to be segmented (the #form column by default). A column "Segments" will be added to your FormTable. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review. You may choose to apply these corrections to the form column as well, using the switch `--replace_form`.
 
 
-src/lexedata//edit/add_singleton_cognatesets.py
-src/lexedata//edit/merge_homophones.py
-src/lexedata//edit/add_status_column.py
-
-### LingPy integration
-### Automatic cognate detection (detect_cognates)
-src/lexedata//edit/align.py
-
-#### 4.3.3 Adding an explicit CognateTable (add_cognate_table)
-The output of LingPy has cognate judgements as a column within the FormTable, rather than in a separate CognateTable as is the standard in CLDF. This is also the format of a FormTable generated when importing an "interleaved" dataset with Lexeata (see section XXX). In these cases, Lexedata can subsequently create an explicit CognateTable using the command `python -m lexedata.edit.add_cognate_table`. 
-
-
-### Concepticon integration
+### Operations on ParameterTable (concepts)
 
 #### Linking concepts to Concepticon (add_concepticon)
 Lexedata can automatically link the concepts present in a dataset with concept sets in the Concepticon (https://concepticon.clld.org/). The relevant command is ```python -m lexedata.edit.add_concepticon```.
-Your ParameterTable will now have a new columns: Concepticon ID, with the corresponding ID of a concept set in Concepticon. We recommend that you manually inspect these links for errors. In order to facilitate this task, you can also add columns for the concept set name (`--add_concept_set_name`) and the concepticon definition (`--add_definitions`). Finally, if your ParameterTable contains a Status Column (see section [4.2.5]), any links to the Concepticon will be tagged as automatic, or you can define a custom message using `--status_update "STATUS UPDATE"`. 
+Your ParameterTable will now have a new column: Concepticon ID, with the corresponding ID of a concept set in Concepticon. We recommend that you manually inspect these links for errors. In order to facilitate this task, you can also add columns for the concept set name (`--add_concept_set_name`) and the concepticon definition (`--add_definitions`). Finally, if your ParameterTable contains a Status Column (see section [4.2.5]), any links to the Concepticon will be tagged as automatic, or you can define a custom message using `--status_update "STATUS UPDATE"`.
+
+### Operations on CognateTable (judgements) and CognatesetTable
+
+### Automatic cognate detection (detect_cognates)
+src/lexedata//edit/align.py
 
 ### Adding central concepts to cognate sets (add_central_concepts)
 ```python -m lexedata.enrich.guess_concept_for_cognateset```
 ```--overwrite``` to overwrite existing central concepts for all cognatesets.
+
+src/lexedata//edit/add_singleton_cognatesets.py
 
 
 
