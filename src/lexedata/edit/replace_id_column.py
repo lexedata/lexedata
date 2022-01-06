@@ -3,7 +3,7 @@ from collections import defaultdict
 import pycldf
 
 import lexedata.cli as cli
-from lexedata.edit.simplify_ids import update_ids, string_to_id
+from lexedata.util.simplify_ids import update_ids, string_to_id
 
 if __name__ == "__main__":
     parser = cli.parser(

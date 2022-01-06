@@ -1,7 +1,7 @@
 import pycldf
 
 import lexedata.cli as cli
-from lexedata.edit.simplify_ids import update_ids
+from lexedata.util.simplify_ids import update_ids
 
 
 if __name__ == "__main__":
