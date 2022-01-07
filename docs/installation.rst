@@ -25,5 +25,4 @@ repository from GitHub. Now you should be ready to use lexedata!
 
 # Updating lexedata and Catalogs
 
-You can update lexedata when their is a new release by typing ``???``.
-Lexedata is dependent on various other packages, and is using catalogs, such as Glottolog, CLTS, and Concepticon. It is good to update those once in a while to get the most up-to-date information. You can update all three catalogs by typing ``cldfbench catupdate``.
+You can update lexedata when there is a new release by typing ``pip install --upgrade lexedata``. This will also update all the packages that lexedata is dependent on. However, lexedata is also using catalogs, such as Glottolog, CLTS, and Concepticon. It is good to update those once in a while to get the most up-to-date information. You can update all three catalogs by typing ``cldfbench catupdate``.
