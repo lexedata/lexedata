@@ -1,3 +1,4 @@
+import enum
 import typing as t
 from tabulate import tabulate
 
@@ -7,11 +8,16 @@ import lexedata.cli as cli
 import lexedata.types as types
 
 
+class Missing(enum.Enum):
+    IGNORE = 1
+    COUNT_NORMALLY = 1
+
+
 def coverage_report(
     dataset: pycldf.Dataset,
     min_percentage: float,
     with_concept: t.Iterable,
-    missing: bool,
+    missing: Missing,
     only_coded: bool = True,
 ) -> t.Tuple[t.List[str], t.List[str]]:
     if only_coded:
@@ -62,7 +68,7 @@ def coverage_report(
         languages.setdefault(form[c_language], {})
         if form[form_column_referred_to_by_judgements] not in coded:
             continue
-        if form[c_form] == "?" and missing:
+        if missing == Missing.IGNORE and (not form[c_form] or form[c_form] == "-"):
             continue
         if multiple_concepts:
             for c in form[c_concept]:
@@ -229,9 +235,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--missing",
-        action="store_true",
-        default=False,
-        help="Ignore missing forms, i.e. FormTable entries with CLDF #form '?'",
+        choices=list(Missing.__members__),
+        default="IGNORE",
+        help="How to report missing forms, i.e. forms with #form '' or '-'. The following options exist:"
+        "IGNORE: ignore all missing forms;"
+        "COUNT_NORMALLY: count all missing forms as if they were normal forms;",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
@@ -246,7 +254,7 @@ if __name__ == "__main__":
         dataset,
         args.min_percentage,
         args.with_concept,
-        missing=args.missing,
+        missing=Missing.__members__[args.missing],
         only_coded=args.coded,
     )
 
