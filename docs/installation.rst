@@ -22,3 +22,8 @@ In your terminal window type ``pip install lexedata``.
 This will install lexedata and all its dependencies on your computer and make it
 automatically updatable every time you pull a new version of the Lexedata
 repository from GitHub. Now you should be ready to use lexedata!
+
+# Updating lexedata and Catalogs
+
+You can update lexedata when their is a new release by typing ``???``.
+Lexedata is dependent on various other packages, and is using catalogs, such as Glottolog, CLTS, and Concepticon. It is good to update those once in a while to get the most up-to-date information. You can update all three catalogs by typing ``cldfbench catupdate``.
