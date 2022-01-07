@@ -8,26 +8,10 @@ If the dataset has a cognatesetReference anywhere else, admit you don't know wha
 
 import pycldf
 
+
 from lexedata.util import cache_table
 from lexedata import cli
 from lexedata import util
-
-
-def add_explicit_cognateset_table(
-    dataset: pycldf.Wordlist, logger: cli.logging.Logger = cli.logger
-) -> None:
-    if "CognatesetTable" in dataset:
-        return
-    dataset.add_component("CognatesetTable")
-
-    c_cognateset = dataset["CognateTable", "cognatesetReference"].name
-
-    cognatesets = set()
-    logger.info("Aggregating cognate sets to write to separate table…")
-    for judgement in cli.tq(dataset["CognateTable"]):
-        cognatesets.add(judgement[c_cognateset])
-
-    dataset.write(CognatesetTable=[{"ID": id} for id in sorted(cognatesets)])
 
 
 def add_cognate_table(
@@ -57,6 +41,7 @@ def add_cognate_table(
             pass
     cognate_judgements = []
     forms = cache_table(dataset, columns=columns)
+    forms_without_segments = 0
     for f, form in cli.tq(
         forms.items(), task="Extracting cognate judgements from forms…"
     ):
@@ -76,6 +61,8 @@ def add_cognate_table(
                 judgement["Segment_Slice"] = form["segmentSlice"]
             except KeyError:
                 try:
+                    if not form["segments"]:
+                        raise ValueError("No segments")
                     if (
                         "+" in form["segments"]
                         and dataset["FormTable", "cognatesetReference"].separator
@@ -86,23 +73,44 @@ def add_cognate_table(
                     judgement["Segment_Slice"] = [
                         "1:{:d}".format(len(form["segments"]))
                     ]
-                except (KeyError, TypeError):
-                    logger.warning(
-                        f"No segments found for form {f} ({form['form']}). You can generate segments using `lexedata.edit.segment_using_clts`."
-                    )
+                except (KeyError, TypeError, ValueError):
+                    forms_without_segments += 1
+                    if forms_without_segments >= 5:
+                        pass
+                    else:
+                        logger.warning(
+                            f"No segments found for form {f} ({form['form']})."
+                        )
             # What does an alignment mean without segments or their slices?
             # Doesn't matter, if we were given one, we take it.
             judgement["Alignment"] = form.get("alignment")
             cognate_judgements.append(judgement)
 
+    if forms_without_segments >= 5:
+        logger.warning(
+            "No segments found for %d forms. You can generate segments using `lexedata.edit.segment_using_clts`.",
+            forms_without_segments,
+        )
+
     # Delete the cognateset column
-    try:
-        cols = dataset["FormTable"].tableSchema.columns
-        ix = cols.index(dataset["FormTable", "cognatesetReference"])
+    cols = dataset["FormTable"].tableSchema.columns
+    remove = {
+        dataset["FormTable", c].name
+        for c in ["cognatesetReference", "segmentSlice", "alignment"]
+        if ("FormTable", c) in dataset
+    }
+
+    def clean_form(form):
+        for c in remove:
+            form.pop(c, None)
+        return form
+
+    forms = [clean_form(form) for form in dataset["FormTable"]]
+    for c in remove:
+        ix = cols.index(dataset["FormTable", c])
         del cols[ix]
-        dataset.write(FormTable=list(dataset["FormTable"]))
-    except ValueError:
-        pass
+
+    dataset.write(FormTable=forms)
 
     dataset.write(CognateTable=cognate_judgements)
 
@@ -130,4 +138,3 @@ if __name__ == "__main__":
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
     add_cognate_table(dataset, split=split)
-    add_explicit_cognateset_table(dataset, logger)

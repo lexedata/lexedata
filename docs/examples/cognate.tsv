@@ -1,0 +1,99 @@
+ID	CLDF_ID	DOCULECT	CONCEPT	IPA	COMMENT	TOKENS	SOURCE	VARIANTS	COGID	ALIGNMENT	_PARAMETERREFERENCE
+1	duala_come	Duala	come	pɔ		p ɔ			127	p ɔ -	come
+6	ntomba_come	Ntomba	come	yá		y á			125	- - y á - - - -	come
+11	ngombe_come	Ngombe	come	dóa		d ó a			126	d ó a	come
+12	ngombe_come_s2	Ngombe	come	kóyàkà	(Bastin et al 1999)	k ó y à k à			125	k ó y à k - à -	come
+19	bushoong_come	Bushoong	come	iy	(Bastin et al 1999)	i y			125	- - i y - - - -	come
+24	kiyombi_come	Kiyombi	come	kw-iitsa		k w i i t s a			125	k w i i t s a -	come
+29	nzebi_come	Nzebi	come	yà		y à		~yààdà	125	- - y à - - - -	come
+34	nzadi_come	Nzadi	come	o-ya		o y a			126	o y a	come
+35	nzadi_come_s2	Nzadi	come	o-zá		o z á			126	o z á	come
+41	lega_come	Lega	come	bwa	(<*du)	b w a			127	b w a	come
+45	kikuyu_come	Kikuyu	come	ũka		ũ k a			128	ũ k a	come
+51	nyamwezi_come	Nyamwezi	come	iza		i z a			125	- - i - - z a -	come
+57	swahili_come	Swahili	come	ja		j a			125	- - - - - j a -	come
+62	luganda_come	Luganda	come	jja		jː a			125	- - - - - jː a -	come
+67	ha_come	Ha	come	za		z a			125	- - - - - z a -	come
+72	fwe_come	Fwe	come	ke:zya		k eː z y a			125	k - eː - - z y a	come
+2	duala_go_to	Duala	go_to	ala		a l a			609	- a l a -	go_to
+7	ntomba_go_to	Ntomba	go_to	ha		h a			1	h a	go_to
+13	ngombe_go_to	Ngombe	go_to	kɛ	(Rood 1958)	k ɛ			235	- k - ɛ - - -	go_to
+20	bushoong_go_to	Bushoong	go_to	yɛɛn	(Vansina 1959)	y ɛɛ n			235	- - y ɛɛ n - -	go_to;walk
+25	kiyombi_go_to	Kiyombi	go_to	ɛɛndə		ɛ ɛ n d ə			235	- - ɛ ɛ n d ə	go_to
+30	nzebi_go_to	Nzebi	go_to	yenda	(marcher, partir)	y e n d a			235	- - y e n d a	go_to
+36	nzadi_go_to	Nzadi	go_to	o-kɛ		o k ɛ			235	o k - ɛ - - -	go_to
+42	lega_go_to	Lega	go_to	ɛnda		ɛ n d a			235	- - - ɛ n d a	go_to;walk
+46	kikuyu_go_to	Kikuyu	go_to	thiĩ		t h i ĩ			237	t h i ĩ	go_to
+52	nyamwezi_go_to	Nyamwezi	go_to	ja		j a			235	- - j a - - -	go_to
+58	swahili_go_to	Swahili	go_to	enda		e n d a			235	- - - e n d a	go_to
+63	luganda_go_to	Luganda	go_to	genda		g e n d a			235	- g - e n d a	go_to
+68	ha_go_to	Ha	go_to	genda		g e n d a			235	- g - e n d a	go_to
+73	fwe_go_to	Fwe	go_to	ya		y a			235	- - y a - - -	go_to
+3	duala_path	Duala	path	ngea		n g e a			424	n g e a - -	path
+8	ntomba_path	Ntomba	path	mbókà		m b ó k à		~mambóka	426	m b ó k à	path
+14	ngombe_path	Ngombe	path	njeá		n j e á			424	n j e á - -	path
+15	ngombe_path_s2	Ngombe	path	émbàlí	(Bastin et al 1999)	é m b à l í		~íbàlí	427	é m b à l í	path
+21	bushoong_path	Bushoong	path	bók	(Bastin et al 1999)	b ó k			426	b ó k - -	path
+26	kiyombi_path	Kiyombi	path	nzila		n z i l a			424	n z i l a -	path
+31	nzebi_path	Nzebi	path	ndzilá		n d z i l á		*mà-ndzilá	424	n d z i l á	path
+37	nzadi_path	Nzadi	path	mbvwâ		m b v w â			426	m b v w â	path
+43	lega_path	Lega	path	n-zela		n z e l a			424	n z e l a -	path
+47	kikuyu_path	Kikuyu	path	njĩra		n j ĩ r a			424	n j ĩ r a -	path
+53	nyamwezi_path	Nyamwezi	path	nzɪla		n z ɪ l a			424	n z ɪ l a -	path
+59	swahili_path	Swahili	path	njia		n j i a			424	n j i a - -	path
+64	luganda_path	Luganda	path	e-kkubo		e k k u b o			425	e k k u b o	path
+69	ha_path	Ha	path	inzira		i n z i r a			424	i n z i r a	path
+74	fwe_path	Fwe	path	n-jira		n j i r a			424	n j i r a -	path
+4	duala_stand	Duala	stand	tɛ́mɛ̀ mɔ́ny		t ɛ́ m ɛ̀ _ m ɔ́ n y			564	t ɛ́ m ɛ̀ _ m ɔ́ n y	stand
+9	ntomba_stand	Ntomba	stand	tɛ́lɛm		t ɛ́ l ɛ m			565	t ɛ́ l ɛ m - - -	stand
+16	ngombe_stand	Ngombe	stand	émaa	(être debout, tout droit); (Bastin et al 1999)	é m a a			559	é m a a - - - -	stand
+22	bushoong_stand	Bushoong	stand	yéemˈt	(Bastin et al 1999)	y é e m t			559	y é e m t - - -	stand
+27	kiyombi_stand	Kiyombi	stand	ku-telema	(se mettre debout)	k u t e l e m a			565	k u t e l e m a	stand
+32	nzebi_stand	Nzebi	stand	mù-tɛ̂lɛ́		m ù t ɛ̂ l ɛ́			565	m ù t ɛ̂ l ɛ́ - -	stand
+38	nzadi_stand	Nzadi	stand	omat		o m a t			563	o m a t	stand
+44	lega_stand	Lega	stand	emana		e m a n a			559	e m a n a - - -	stand
+48	kikuyu_stand	Kikuyu	stand	rũgama		r ũ g a m a		~rũngama	560	r ũ g a m a	stand
+49	kikuyu_stand_s2	Kikuyu	stand	ĩhanda		ĩ h a n d a			561	ĩ h a n d a	stand
+54	nyamwezi_stand	Nyamwezi	stand	ɪma		ɪ m a			559	ɪ m a - - - - -	stand
+60	swahili_stand	Swahili	stand	simama		s i m a m a			559	s i m a m a - -	stand
+65	luganda_stand	Luganda	stand	yimirira		y i m i r i r a			559	y i m i r i r a	stand
+70	ha_stand	Ha	stand	hagara	(stand up)	h a g a r a			562	h a g a r a	stand
+75	fwe_stand	Fwe	stand	zyimina		z y i m i n a			559	z y i m i n a -	stand
+5	duala_walk	Duala	walk	ɗangwa		ɗ a n g w a			610	ɗ a n g w a	walk
+10	ntomba_walk	Ntomba	walk	kɛndɛ		k ɛ n d ɛ			235	- k - ɛ n d ɛ	walk
+17	ngombe_walk	Ngombe	walk	dala		d a l a			609	d a l a -	walk
+18	ngombe_walk_s2	Ngombe	walk	táámbòlà	(Bastin et al 1999)	t áá m b ò l à			615	t áá m b ò l à	walk
+23	bushoong_walk_s2	Bushoong	walk	buuŋ	(Bastin et al 1999)	b u u ŋ			611	b u u ŋ	walk
+28	kiyombi_walk	Kiyombi	walk	kw-eenda		k w ee n d a			235	- k w ee n d a	walk
+33	nzebi_walk	Nzebi	walk	yɛ̀ndɛ̀		y ɛ̀ n d ɛ̀			235	- - y ɛ̀ n d ɛ̀	walk
+39	nzadi_walk	Nzadi	walk	okyán		o k y á n			235	o k y á n - -	walk
+40	nzadi_walk_s2	Nzadi	walk	olya		o l y a			609	- o l y a	walk
+50	kikuyu_walk	Kikuyu	walk	tembea		t e m b e a			615	t e m b e - a	walk
+55	nyamwezi_walk	Nyamwezi	walk	yʊʊmba		y ʊ ʊ m b a			613	y ʊ ʊ m b a	walk
+56	nyamwezi_walk_s2	Nyamwezi	walk	shimiinza		s h i m i i n z a			614	s h i m i i n z a	walk
+61	swahili_walk	Swahili	walk	tembea		t e m b e a			615	t e m b e - a	walk
+66	luganda_walk	Luganda	walk	tambula		t a m b u l a			615	t a m b u l a	walk
+71	ha_walk	Ha	walk	tambura		t a m b u r a			615	t a m b u r a	walk
+76	fwe_walk	Fwe	walk	yenda		y e n d a			235	- - y e n d a	walk
+#@highlight=TOKENS|ALIGNMENT
+#@sampa=IPA|TOKENS
+#@pinyin=CHINESE
+#@css=menu:show|database:hide
+#@basics=ALIGNMENT|CLDFID|COGID|COMMENT|CONCEPT|DOCULECT|IPA|PARAMETERREFERENCE|SOURCE|TOKENS|VARIANTS
+#@_selected_doculects=Bushoong|Duala|Fwe|Ha|Kikuyu|Kiyombi|Lega|Luganda|Ngombe|Ntomba|Nyamwezi|Nzadi|Nzebi|Swahili
+#@_selected_concepts=go_to|walk
+#@sorted_taxa=Bushoong|Duala|Fwe|Ha|Kikuyu|Kiyombi|Lega|Luganda|Ngombe|Ntomba|Nyamwezi|Nzadi|Nzebi|Swahili
+#@sorted_concepts=all|arm|ashes|bark|belly|big|bird|bite|black|blood|bone|breast|burn|cloud|cold|come|die|dig|dog|drink|dry|ear|eat|egg|elephant|eye|fall|fat|feather|finger|fire|fish|fly|full|give|go_to|hair|head|hear|heart|horn|house|kill|knee|know|laugh|leaf|leg|liver|long|louse|man|many|meat|milk|moon|mountain|mouth|nail|name|neck|new|night|nose|one|path|person|rain|rain_v|river|root|sand|see|seed|short|sick_be|sit|skin|sleep_v|small|smoke|snake|speak|stand|steal|stone|sun|tail|thirst|tongue|tooth|tree|two|walk|water|what|white|who|wind|woman
+#@display=filedisplay|partial
+#@missing_marker=Ø
+#@separator=
+#@gap_marker=-
+#@formatter=COGID
+#@root_formatter=COGID
+#@note_formatter=COMMENT
+#@pattern_formatter=undefined
+#@publish=undefined
+#@_almcol=ALIGNMENT
+#@filename=cognate.tsv
+#@navbar=true
+#@_morphology_mode=partial

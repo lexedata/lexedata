@@ -44,12 +44,12 @@ LEXEDATA_COLUMNS = {
         name="Phonetic",
         aboutUrl="...",
     ),
-    "Variants": Column(
-        datatype=Datatype(base="string", format=r"\s*(~|)\s*[[/(<].*[]/)>]\s*"),
+    "variants": Column(
+        datatype=Datatype(base="string", format=r"\s*(~|)\s*[/(<[].*[]/)>]\s*"),
         separator=",",
         default="",
         null=[""],
-        name="Variants",
+        name="variants",
     ),
     "Tags": Column(
         datatype=Datatype(base="string"),
@@ -116,7 +116,8 @@ def add_metadata(fname: Path, logger: cli.logging.Logger = cli.logger):
         if c.name not in understood_colnames
     }
     logger.info(
-        f"CLDF freely understood the columns {understood_colnames} in your forms.csv."
+        "CLDF freely understood the columns %s in your forms.csv.",
+        sorted(understood_colnames),
     )
 
     # Consider the columns that were not understood.

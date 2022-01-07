@@ -1,16 +1,16 @@
 import io
+import tempfile
 from pathlib import Path
+
 import pycldf
 
+import lexedata.util.fs
+from lexedata import util
 from lexedata.types import WorldSet
+from test_excel_conversion import cldf_wordlist, working_and_nonworking_bibfile  # noqa
 
 import lexedata.importer.edictor as importer
 import lexedata.exporter.edictor as exporter
-import lexedata.util.fs
-from lexedata import util
-import tempfile
-
-from test_excel_conversion import cldf_wordlist, working_and_nonworking_bibfile  # noqa
 
 
 def test_match_cognatesets_1():
@@ -178,12 +178,14 @@ def test_roundtrip(cldf_wordlist, working_and_nonworking_bibfile):  # noqa
         )
 
     # Re-import
-    new_cogsets = importer.load_forms_from_tsv(
+    new_cogsets, affected_forms = importer.load_forms_from_tsv(
         dataset=dataset,
         input_file=filename,
     )
 
-    importer.edictor_to_cldf(dataset=dataset, new_cogsets=new_cogsets)
+    importer.edictor_to_cldf(
+        dataset=dataset, new_cogsets=new_cogsets, affected_forms=affected_forms
+    )
 
     expected = pycldf.Wordlist.from_metadata(target)
     for table in expected.tables:

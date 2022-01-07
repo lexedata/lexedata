@@ -11,19 +11,20 @@ logger = logging.getLogger("lexedata")
 logging.basicConfig(level=logging.INFO)
 
 
-# TODO: Maybe we should have these in cli and consolidate them between
-# different CLI scripts? Maybe we can even store the messages there, too, and
-# have a unified critical exit interface that needs only the name of the script
-# and the exit code and does everything?
 class Exit(IntEnum):
+    # TODO: Is there a good way to define, structure and unify these error
+    # codes? Currently, we are testing a quite random property
+    # (Exit.INVALID_DATASET throws SystemExit with code 8), with some system
+    # here maybe testing would be worth it.
     CLI_ARGUMENT_ERROR = 2
     NO_COGNATETABLE = 3
     NO_SEGMENTS = 4
     INVALID_ID = 5
     INVALID_COLUMN_NAME = 6
-    INVALID_DATASET = 7
-    INVALID_INPUT = 8
-    FILE_NOT_FOUND = 9
+    INVALID_TABLE_NAME = 7
+    INVALID_DATASET = 8
+    INVALID_INPUT = 9
+    FILE_NOT_FOUND = 10
 
     def __call__(self, message: t.Optional[str] = None):
         if message is None:
@@ -34,8 +35,7 @@ class Exit(IntEnum):
 
 
 def tq(iter, task, logger=logger, total: t.Optional[t.Union[int, float]] = None):
-    if logger.getEffectiveLevel() >= logging.INFO:
-        # print(task)
+    if logger.getEffectiveLevel() <= logging.INFO:
         logger.info(task)
         return tqdm.tqdm(iter, total=total)
     else:

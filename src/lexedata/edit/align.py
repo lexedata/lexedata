@@ -7,6 +7,7 @@ If possible, align using existing lexstat scorer.
 import typing as t
 import pycldf
 
+from lexedata import util
 from lexedata.edit.add_status_column import add_status_column_to_table
 from lexedata import cli
 
@@ -29,21 +30,15 @@ def align(forms):
 def aligne_cognate_table(
     dataset: pycldf.Dataset, status_update: t.Optional[str] = None
 ):
-    f_id = dataset["FormTable", "id"].name
-    f_segments = dataset["FormTable", "segments"].name
-    f_language = dataset["FormTable", "languageReference"].name
-    # add Status_Column if not existing
+    # add Status_Column if not existing – TODO: make configurable
     if status_update:
         add_status_column_to_table(dataset=dataset, table_name="CognateTable")
 
-    forms = {}
-    for form in cli.tq(dataset["FormTable"]):
-        forms[form[f_id]] = form
+    forms = util.cache_table(dataset, "FormTable")
 
     c_id = dataset["CognateTable", "id"].name
     c_form_id = dataset["CognateTable", "formReference"].name
     c_cognateset_id = dataset["CognateTable", "cognatesetReference"].name
-    # TODO: how dos CognateTable get a segmentSlice column?
     c_slice = dataset["CognateTable", "segmentSlice"].name
     c_alignment = dataset["CognateTable", "alignment"].name
 
@@ -58,25 +53,22 @@ def aligne_cognate_table(
         form = forms[judgement[c_form_id]]
         morpheme = []
         if not judgement[c_slice]:
-            morpheme = form[f_segments]
-        for s in judgement[c_slice]:
-            if ":" in s:
-                i_, j_ = s.split(":")
-                i, j = int(i_), int(j_)
-            else:
-                i = int(s)
-                j = i + 1
-            morpheme.extend(form[f_segments][slice(i, j)])
+            morpheme = form["segments"]
+        else:
+            morpheme = [
+                form["segments"][i]
+                for i in util.parse_segment_slices(judgement[c_slice])
+            ]
         cognatesets.setdefault(judgement[c_cognateset_id], []).append(
-            ((form[f_language], morpheme), judgement[c_id])
+            ((form["languageReference"], morpheme), judgement[c_id])
         )
 
     for cognateset, morphemes in cognatesets.items():
         for alignment, id in align(morphemes):
             judgements[id][c_alignment] = alignment
             if status_update:
-                judgement["Status_Column"] = status_update
-    dataset["CognateTable"].write(judgements.values())
+                judgements[id]["Status_Column"] = status_update
+    dataset.write(CognateTable=judgements.values())
 
 
 if __name__ == "__main__":
@@ -85,9 +77,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--status-update",
         type=str,
-        default="Morphemes aligned",
+        default="automatically aligned",
         help="Text written to Status_Column. Set to 'None' for no status update. "
-        "(default: Morphemes aligned)",
+        "(default: automatically aligned)",
     )
     args = parser.parse_args()
     if args.status_update == "None":

@@ -16,8 +16,8 @@ from collections import defaultdict
 
 import pycldf
 
-import lexedata.cli as cli
-from lexedata import types
+from lexedata import cli, util, types
+from lexedata.edit.simplify_ids import update_ids
 
 # The cell value type, which tends to be string, lists of string, or int:
 C = t.TypeVar("C")
@@ -87,11 +87,12 @@ def must_be_equal(
     >>> must_be_equal([])
 
     """
-    forms = set(sequence)
-    assert len(forms) <= 1
     try:
-        return forms.pop()
-    except KeyError:
+        c = sequence[0]
+        for other_c in sequence:
+            assert c == other_c
+        return c
+    except IndexError:
         return None
 
 
@@ -111,7 +112,7 @@ def must_be_equal_or_null(
     >>> must_be_equal_or_null([1, 1, None])
     1
     """
-    return must_be_equal(list(filter(bool, sequence)))
+    return must_be_equal([x for x in sequence if x is not None])
 
 
 def warn(
@@ -142,15 +143,17 @@ def first(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """
-    Take the first entry, no matter whether the others match or not
+    """Take the first nonzero entry, no matter whether the others match or not
+
     >>> first([1, 2])
     1
     >>> first([])
+    >>> first([None, 1, 2])
+    1
 
     """
     try:
-        return sequence[0]
+        return [s for s in sequence if s][0]
     except IndexError:
         return None
 
@@ -171,8 +174,8 @@ def transcription(wrapper: str = "{}"):
         sequence: t.Sequence[C],
         target: MaybeRow = None,
     ) -> t.Optional[C]:
-        all_transcriptions: t.Optional[t.List[C]] = union([[s] for s in sequence])
-        if all_transcriptions is None:
+        all_transcriptions: t.Optional[t.List[C]] = union([[s] for s in sequence if s])
+        if not all_transcriptions:
             return None
         else:
             if target is not None:
@@ -197,7 +200,9 @@ def concatenate(
 ) -> t.Optional[C]:
     """Concatenate all entries, even if they are identical, in the given order
 
-    Strings are concatenated using '; ' as a separator. FOr iterables
+    Strings are concatenated using '; ' as a separator. Other iterables are
+    flattened.
+
     >>> concatenate([[1, 2], [2, 4]])
     [1, 2, 2, 4]
     >>> concatenate([["a", "b"], ["c", "a"]])
@@ -205,15 +210,37 @@ def concatenate(
     >>> concatenate(["a", "b"])
     'a; b'
 
+    >>> concatenate([]) is None
+    True
+    >>> concatenate([[1, 2], [2, 4]])
+    [1, 2, 2, 4]
+    >>> concatenate([None, [1], [3]])
+    [1, 3]
+    >>> concatenate([[1, 1], [2]])
+    [1, 1, 2]
+    >>> concatenate([["a", "b"], ["c", "a"]])
+    ['a', 'b', 'c', 'a']
+    >>> concatenate([None, "a", "b"])
+    '; a; b'
+    >>> concatenate(["a", "b", "a", ""])
+    'a; b; a; '
+    >>> concatenate(["a", "b", None, "a"])
+    'a; b; ; a'
+    >>> concatenate(["a", "b", "a; c", None])
+    'a; b; a; c; '
+
     """
-    if isinstance(sequence[0], str) or sequence[0] is None:
-        unique = [s if s is not None else "" for s in sequence]
-        return SEPARATOR.join(unique)
-    elif isiterable(sequence[0]):
+    values = [s for s in sequence if s is not None]
+    if not values:
+        return None
+    elif isinstance(values[0], str):
+        all_as_string = [s or "" for s in sequence]
+        return SEPARATOR.join(all_as_string)
+    elif isiterable(values[0]):
         # Assume list values, and accept the type error if not
-        return sum(sequence, [])
+        return sum(values, [])
     else:
-        raise NotImplementedError
+        raise TypeError(f"Don't know how to concatenate {type(values[0])}")
 
 
 def union(
@@ -222,42 +249,62 @@ def union(
 ) -> t.Optional[C]:
     """Concatenate all entries, without duplicates
 
-    Strings are concatenated using '; ' as a separator. For iterables
+    Iterables are flattened. Strings are considered sequences of '; '-separated
+    strings and flattened accordingly. Empty values are ignored.
+
+    >>> union([]) is None
+    True
     >>> union([[1, 2], [2, 4]])
     [1, 2, 4]
+    >>> union([None, [1], [3]])
+    [1, 3]
+    >>> union([[1, 1], [2]])
+    [1, 2]
     >>> union([["a", "b"], ["c", "a"]])
     ['a', 'b', 'c']
+    >>> union([None, "a", "b"])
+    'a; b'
+    >>> union(["a", "b", "a", ""])
+    'a; b'
     >>> union(["a", "b", "a", None])
-    'a; b; '
+    'a; b'
+    >>> union(["a", "b", "a; c", None])
+    'a; b; c'
+    >>> union([['one', 'one'], ['one1', 'one1'], ['two1', None], ['one'], ['one']])
+    ['one', 'one1', 'two1']
 
     """
-    if isinstance(sequence[0], str) or sequence[0] is None:
+    values = [s for s in sequence if s is not None]
+    if not values:
+        return None
+    if isinstance(values[0], str):
         unique = []
-
-        for entry in sequence:
-            if entry is None:
-                entry = ""
+        for entry in values:
             for component in entry.split(SEPARATOR):
-                if component not in unique:
+                if component and component not in unique:
                     unique.append(component)
         return SEPARATOR.join(unique)
-    elif isiterable(sequence[0]):
+    elif isiterable(values[0]):
         # Assume list values, and accept the type error if not
         unique = []
-        for entry in sequence:
+        for entry in values:
             for component in entry:
-                if component is None:
-                    component = ""
-                if component not in unique:
+                if component and component not in unique:
                     unique.append(component)
         return unique
     else:
-        raise NotImplementedError
+        raise TypeError(f"Don't know how to union {type(values[0])}")
 
 
 def constant_factory(c: C) -> Merger[C]:
-    """
+    """Create a merger taht always returns c.
+
+    This is useful eg. for the status column, which needs to be updated when
+    forms are merged, to a value that does not depend on the earlier status.
+
     >>> constant = constant_factory("a")
+    >>> constant([None, 'b'])
+    'a'
     >>> constant([])
     'a'
 
@@ -278,39 +325,53 @@ def default(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """
-    Union for sequence-shaped entries (strings, and lists with a separator in the metadata),
-    must_be_equal otherwise
+    """A default merger.
+
+    Union for sequence-shaped entries (strings, and lists with a separator in
+    the metadata), must_be_equal otherwise
+
     >>> default([1, 2]) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    AssertionError: assert 2 <= 1
+    AssertionError: ...
     >>> default([[1, 2], [3, 4]])
     [1, 2, 3, 4]
+    >>> default(["a; b", "a", "c; b"])
+    'a; b; c'
+
     """
     if isiterable(sequence[0]):
+        return union(sequence, target)
+    elif type(sequence[0]) == str or sequence[0] is None:
         return union(sequence, target)
     else:
         return must_be_equal(sequence, target)
 
 
+# TODO: Options given on the command line should have preference over defaults,
+# no matter whether they are given in terms of names ("Parameter_ID") or
+# property URLs ("parameterReference")
 default_mergers: t.Mapping[str, Merger] = t.DefaultDict(
     lambda: default,
     {
-        "Form": must_be_equal,
         "form": must_be_equal,
+        "Form": must_be_equal,
         "languageReference": must_be_equal,
         "Language_ID": must_be_equal,
+        "source": union,
         "Source": union,
         "parameterReference": union,
         "Parameter_ID": union,
         "variants": union,
+        "comment": concatenate,
         "Comment": concatenate,
+        "value": concatenate,
         "Value": concatenate,
         "status": constant_factory("MERGED: Review necessary"),
         "orthographic": transcription("<{}>"),
         "phonemic": transcription("/{}/"),
         "phonetic": transcription("[{}]"),
-        "Segments": union,
+        "segments": must_be_equal,
+        "Segments": must_be_equal,
     },
 )
 
@@ -326,53 +387,52 @@ def merge_group(
         types.Cognate_ID,
         types.Cognateset_ID,
     ],
-    logger: cli.logger = cli.logger,
+    logger: cli.logging.Logger = cli.logger,
 ) -> types.Form:
+    """Merge one group of homophones
+
+    >>> merge_group(
+    ...   [{"Parameter_ID": [1, 1]}, {"Parameter_ID": [2]}],
+    ...   {"Parameter_ID": [1, 1]}, {"Parameter_ID": union}, util.fs.new_wordlist())
+    {'Parameter_ID': [1, 2]}
+
+    The target is assumed to be already included in the forms.
+
+    >>> merge_group(
+    ...   [{"Parameter_ID": [1, 1]}, {"Parameter_ID": [2]}],
+    ...   {"Parameter_ID": [1, 1]}, {"Parameter_ID": concatenate}, util.fs.new_wordlist())
+    {'Parameter_ID': [1, 1, 2]}
+
+    """
     c_f_id = dataset["FormTable", "id"].name
     for column in target:
         if column == c_f_id:
             continue
         try:
-            try:
-                _, reference_name = dataset["FormTable", column].propertyUrl.uri.split(
-                    "#"
-                )
-            except AttributeError:
-                reference_name = column
+            reference_name = (
+                util.cldf_property(dataset["FormTable", column].propertyUrl) or column
+            )
             merger = mergers.get(column, mergers.get(reference_name, must_be_equal))
             try:
                 merge_result = merger([form[column] for form in forms], target)
             except AssertionError:
+                # We cannot deal with this block, but others may be fine.
                 merger_name = merger.__name__
-                cli.Exit.INVALID_INPUT(
+                logger.error(
                     f"Merging forms: {[f[c_f_id] for f in forms]} with target: {target[c_f_id]} on column: {column}\n"
                     f"The merge function {merger_name} requires the input data to be equal. \n"
                     f"Given input: {[form[column] for form in forms]}"
                 )
-            except NotImplementedError:
+                raise Skip
+            except TypeError:
                 merger_name = merger.__name__
+                # Other groups will have the same issue.
                 cli.Exit.INVALID_INPUT(
                     f"Merging forms: {[f[c_f_id] for f in forms]} with target: {target[c_f_id]} \n"
                     f"The merge function {merger_name} is not implemented for type {type(forms[0])}. \n"
                     f"Given input: {[form[column] for form in forms]}"
                 )
-            # make sure nothing in the target is overwritten with None or empty string
-            if (merge_result is None or merge_result == "") and (
-                target[column] is not None or target[column] != ""
-            ):
-                continue
-            # don't overwrite target value, but add return value from merging function
-            if target[column] is None:
-                target[column] = merge_result
-            else:
-                if (
-                    isinstance(target[column], str)
-                    and isinstance(merge_result, str)
-                    and merge_result != target[column]
-                ):
-                    target[column] += SEPARATOR + merge_result
-                elif target[column] != merge_result:
-                    target[column] += merge_result
+            target[column] = merge_result
         except KeyError:
             cli.Exit.INVALID_COLUMN_NAME(f"Column {column} is not in FormTable.")
     return target
@@ -387,28 +447,42 @@ def merge_forms(
         types.Cognateset_ID,
     ],
     mergers: t.Mapping[str, Merger],
-    homophone_groups: t.Mapping[types.Form_ID, t.Sequence[types.Form_ID]],
-    logger: cli.logger = cli.logger,
+    homophone_groups: t.MutableMapping[types.Form_ID, t.Sequence[types.Form_ID]],
+    logger: cli.logging.Logger = cli.logger,
 ) -> t.Iterable[types.Form]:
+    """Merge forms from a dataset.
+
+    TODO: Construct an example that shows that the order given in
+    `homophone_groups` is maintained.
+
+    Side Effects
+    ============
+    Changes homophone_groups:
+        Groups that are skipped are removed
+
+    """
     merge_targets = {
         variant: target
         for target, variants in homophone_groups.items()
         for variant in variants
     }
+    for target in homophone_groups:
+        assert merge_targets[target] == target
+
     c_f_id = data["FormTable", "id"].name
 
-    for ids_to_merge in homophone_groups.values():
-        for form_id in ids_to_merge:
-            assert merge_targets[form_id] in homophone_groups
-
     buffer: t.Dict[types.Form_ID, types.Form] = {}
-    for f in data["FormTable"]:
-        buffer[f[c_f_id]] = f
 
     unknown = set()
     form: types.Form
-    for form in data["FormTable"]:
+    for form in cli.tq(
+        data["FormTable"],
+        task="Going through forms and merging",
+        logger=logger,
+        total=data["FormTable"].common_props.get("dc:extent"),
+    ):
         id: types.Form_ID = form[c_f_id]
+        buffer[id] = form
         if id in merge_targets:
             unknown.add(id)
             target_id = merge_targets[id]
@@ -430,13 +504,15 @@ def merge_forms(
                     logger.info(
                         f"Merging form {id} with forms {[f[c_f_id] for f in group]} was skipped."
                     )
+                    del homophone_groups[id]
                     pass
-                unknown.remove(id)
+                for i in group:
+                    unknown.remove(i)
 
-    for f in buffer:
-        if f in unknown:
-            break
-        yield buffer[f]
+        for f in list(buffer):
+            if f in unknown:
+                break
+            yield buffer.pop(f)
 
 
 def parse_merge_override(string: str) -> t.Tuple[str, Merger]:
@@ -460,27 +536,27 @@ def parse_homophones_report(
     The format of the input file is the same as the output of the homophones report
     >>> from io import StringIO
     >>> file = StringIO("ache, e.ta.'kɾã: Unknown (but at least one concept not found)\n"
-    ... "    ache_one (one, one)\n"
-    ... "    ache_two_3 (two, two)\n")
+    ... "    ache_one (one)\n"
+    ... "    ache_single_3 (single)\n")
     >>> parse_homophones_report(file)
-    defaultdict(<class 'list'>, {'ache_one': ['ache_two_3']})
+    defaultdict(<class 'list'>, {'ache_one': ['ache_one', 'ache_single_3']})
     """
     homophone_groups: t.Mapping[types.Form_ID, t.List[types.Form_ID]] = defaultdict(
         list
     )
-    first_id = True
-    target_id = ""
+    target_id: t.Optional[types.Form_ID] = None
     for line in report:
         match = re.match(r"\s+?(\w+?) .*", line)
         if match:
             id = match.group(1)
-            if first_id:
+            if target_id is None:
+                # TODO: In principle, IDs can be non-strings, in particular
+                # integers. So parsing according to the ID column's data type
+                # would be good here.
                 target_id = id
-                first_id = False
-            else:
-                homophone_groups[target_id].append(id)
+            homophone_groups[target_id].append(id)
         else:
-            first_id = True
+            target_id = None
     return homophone_groups
 
 
@@ -545,9 +621,10 @@ The following merge functions are predefined, each takes the given entries for o
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        "merge_report",
-        help="Path pointing to the file containing the merge report generated by report/homophones.py",
+        "merge_file",
         type=Path,
+        help="Path pointing to the file containing the mergers, in the same format as output by report.homophones",
+        metavar="MERGE_FILE",
     )
     parser.add_argument(
         "--merge",
@@ -558,36 +635,50 @@ The following merge functions are predefined, each takes the given entries for o
         help="""Override merge defaults using COLUMN:MERGER syntax, eg. --merge Source:cancel_and_skip orthographic:transcription('~<{}>').""",
     )
     args = parser.parse_args()
-    dataset = pycldf.Wordlist.from_metadata(args.metadata)
-
     logger = cli.setup_logging(args)
-    # TODO: catch error of unkown merger
-    mergers = dict(default_mergers)
+
+    dataset = pycldf.Wordlist.from_metadata(args.metadata)
+    if not dataset["FormTable", "parameterReference"].separator:
+        logger.warning(
+            "I had to set a separator for your forms' concepts. I set it to ';'."
+        )
+        dataset["FormTable", "parameterReference"].separator = ";"
+
+    mergers: t.Dict[str, Merger] = dict(default_mergers)
     for column, merger in args.merge:
-        mergers[column] = merger
-    logger.info(
+        # TODO: catch error of unkown merger, and generally treat this better
+        mergers[column] = eval(merger)
+    logger.debug(
         "The homophones merger was initialized as follows\n Column : merger function\n"
-        + "\n".join("{}: {}".format(k, m.__name__) for k, m in mergers)
+        + "\n".join("{}: {}".format(k, m.__name__) for k, m in mergers.items())
     )
     # Parse the homophones instructions!
-    homophone_groups = parse_homophones_old_format(
-        args.merge_report.open("r", encoding="utf8"),
+    homophone_groups = parse_homophones_report(
+        args.merge_file.open("r", encoding="utf8"),
     )
     if homophone_groups == defaultdict(list):
         cli.Exit.INVALID_INPUT(
             f"The provided report {args.report} is empty or does not have the correct format."
         )
-    merged_forms = [
-        e
-        for e in cli.tq(
+
+    dataset.write(
+        FormTable=list(
             merge_forms(
-                data=pycldf.Dataset.from_metadata(args.metadata),
+                data=dataset,
                 mergers=mergers,
                 homophone_groups=homophone_groups,
                 logger=logger,
-            ),
-            logger=logger,
-            task=f"Merging {sum([len(v) for v in homophone_groups.values()])}",
+            )
         )
-    ]
-    dataset.write(FormTable=merged_forms)
+    )
+
+    update_ids(
+        dataset,
+        dataset["FormTable"],
+        {
+            old: target
+            for target, olds in homophone_groups.items()
+            for old in olds
+            if target != old
+        },
+    )

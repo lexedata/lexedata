@@ -11,7 +11,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--keep-forms",
         action="store_true",
-        default="false",
+        default=False,
         help="Do not overwrite forms.csv to add new columns, even if that means forms.csv and the metadata do not correspond to each other.",
     )
     args = parser.parse_args()
