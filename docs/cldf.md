@@ -38,16 +38,16 @@ The `cognates.csv` file contains all the individual cognate judgements included 
 - Necessary columns: Cognate_ID, Form_ID, Cognateset_ID
 - Typical columns: Comment, Segment_Slice
 
-## sources.bib
-This is a BibTeX file containing references to all sources used in the dataset. The entries in the Source column of the forms.csv (or any other table) must be identical to a handle (unique code) of a reference in the `sources.bib`.
+## The bibliography
+The `sources.bib` file contains references to all sources used in the dataset. The entries in the Source column of the forms.csv (or any other table) must be identical to a handle (unique code) of a reference in the `sources.bib`.
 
-## Wordlist-metadata.json
-The Wordlist-metadata.json file contains a detailed description of all the CSV files, their columns and their interrelationships. It is not required file for a CLDF dataset, but it is necessary for the vast majority of operations using lexedata. For simple datasets, lexedata can create automatically a json file (see section XXX). However, for more complex datasets, you would need to provide one yourself.
+## The metadata file
+The `Wordlist-metadata.json` file contains a detailed description of all the CSV files, their columns and their interrelationships. It is not required for a CLDF dataset, but it is necessary for the vast majority of operations using lexedata. For simple datasets, lexedata can create automatically a metadata file. However, for more complex datasets, you would need to provide one yourself.
 <!--- TODO: add some support for making a json file--->
 
-For an example of a simple .json file, see XXX. Every change to the structure of the dataset (e.g. insertion or deletion of a column in any file) needs to be reflected in the .json file for the dataset to be a valid cldf dataset.
+For an example of a simple metadata file, see XXX. Every change to the structure of the dataset (e.g. insertion or deletion of a column in any table) needs to be reflected in the netadata file for the dataset to be a valid cldf dataset.
 <!-- TO DO: add a reference to sample files and sample datasets --> 
-Below you can see a typical description of a .csv file in the .json file.
+Below you can see a typical description of a table in the metadata file.
 
 ![](figures/json.png)
 
