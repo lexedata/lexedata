@@ -44,6 +44,9 @@ One of three coding methods implemented in lexedata. This coding method converts
 **Secondary Concept:**
 Any concept that has not been systematically searched for in the languages of the dataset. When building a lexical dataset, it is typical procedure to start with a comparative wordlist including a number of basic concepts (e.g. a Swadesh list). Within lexedata, we call such concepts, that have been systematically searched for, primary. Additionaly secondary concepts may be present in a dataset for various reasons: they may be secondary meanings of basic forms or correspond to forms that are cognate to other basic forms. A dataset with within-concept cognate sets, often contains only primary concepts (however, it is possible that one has been keeping track of additional meanings for each word, thus leading to the inclusion of a number of secondary concepts as well.). A dataset with cross-concept cognate sets is very likely to include secondary concepts, especially if one has searched for cognate forms extensively among synonyms or closely related concepts to the primary concepts. (see also primary concept)
 
+**Segment_Slice column:**
+Segment_Slice is a column of the CognateTable that can be used to identify a particular section of the form, so that different parts of the form can be assigned to different cognate sets.
+
 **Status column:**
 A tracking column present in any of the cldf tables in order to facilitate workflow. Lexedata scripts can also update such columns with customizable messages to facilitate manual checking and tracking of automatic operations.
 
