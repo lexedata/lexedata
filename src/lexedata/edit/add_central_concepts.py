@@ -236,13 +236,10 @@ if __name__ == "__main__":
         description="""Add central concepts to cognatesets.
 
         Write a concept reference column to #CognatesetTable based on the
-        concepts linked to the cognateset through the cognate judgement, using
-        the central concepts according to CLICS if links to Concepticon are
-        available.
-
-        You probably want to run this with `--add-column` (the default) the
-        first time you run it, and with `--no-add-column --overwrite-existing`
-        after you heavily edited the cognate sets afterwards."""
+        concepts linked to the cognateset through the cognate judgements. If 
+        links to Concepticon are available, the central concept is calculated 
+        according to CLICS. Otherwise, the most common concept is retained 
+        as the central concept."""
     )
     parser.add_argument(
         "--overwrite",
