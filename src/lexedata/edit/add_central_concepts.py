@@ -235,7 +235,7 @@ if __name__ == "__main__":
     parser = cli.parser(
         description="""Add central concepts to cognatesets.
 
-        Write a concept reference column to #CognatesetTable based on the
+        Write a #ParameterReference column to #CognatesetTable based on the
         concepts linked to the cognateset through the cognate judgements. If 
         links to Concepticon are available, the central concept is calculated 
         according to CLICS. Otherwise, the most common concept is retained 
