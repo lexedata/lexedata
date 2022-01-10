@@ -26,7 +26,7 @@ python -m lexedata.importer.excel_long_format [path to excel file] --metadata [p
 ```
 You can exclude individual sheets from being imported by using the option `--exclude-sheet [sheet name]`.
 
-The long format assumes that each type of information is in a separate column and the content of a cell cannot be separated further in different cells (however, fields including separators are properly recognized provided that you have described them in the json file). Excel comments (or notes) are not supported with this importer script.
+The long format assumes that each type of information is in a separate column and the content of a cell cannot be separated further in different cells (however, fields including separators are properly recognized provided that you have described them in the json file). Excel comments (or notes) are not supported with this importer script and they will be ignored.
 
 #### Importing a lexical dataset using the "matrix" format
 
@@ -88,14 +88,19 @@ Your ParameterTable will now have a new column: Concepticon ID, with the corresp
 
 ### Operations on CognateTable (judgements) and CognatesetTable
 
-### Automatic cognate detection (detect_cognates)
-src/lexedata//edit/align.py
+#### Automatic cognate detection (detect_cognates)
 
-### Adding central concepts to cognate sets (add_central_concepts)
-```python -m lexedata.enrich.guess_concept_for_cognateset```
-```--overwrite``` to overwrite existing central concepts for all cognatesets.
+#### Automatic alignment (align)
 
-src/lexedata//edit/add_singleton_cognatesets.py
+#### Adding central concepts to cognate sets (add_central_concepts)
+
+If you are using cross-concept cognate sets, and you want to assign each cognate set to a certain concept (e.g. for the purposes of assigning absences in root presence coding), you can use lexedata to automatically add central concepts to your cognate sets. The central concept of each cognateset will be used as a proxy for assigning absences: If the central concept is attested in a language with a different root, then the root in question will be coded as absent for this language (see the glossary for more explanations for central concepts, coding methods and absence heuristics for root presence coding). 
+
+The central concept of each cognate set is determined by the CLICS graph of all the concepts associated with this cognate set (this requires having your concepts linked to the Concepticon). In the absence of Concepticon links, the central concept is the most common concept. In order to add central concepts to your dataset, type `python -m lexedata.edit.add_central_concepts`. This will add a #ParameterReference column to your CognatesetTable containing the central concept. You can of course manually review and edit the central concepts. If you rely on central concepts for coding and you heavily edit your cognate judgements, consider re-assigning central concepts with the switch `--overwrite`.
+
+#### Adding trivial cognate sets (add_singleton_cognatesets)
+
+Depending on your workflow, you may not have assigned forms to trivial (singleton) cognate sets, where they would be the only members. This could also be true for loanwords that are products of separate borrowing events, even if they have the same source. You can automatically assign any form that is not already in a cognate set to a trivial cognate set of one member (a singleton cognate set) using the command  `python -m lexedata.edit.add_singleton_cognate_sets`. 
 
 
 
