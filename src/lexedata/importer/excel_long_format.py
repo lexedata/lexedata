@@ -343,7 +343,7 @@ def add_single_languages(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description="Add forms from Excel file to dataset")
+    parser = cli.parser(description="Import forms and associated metadata from an excel file to a cldf dataset.")
     parser.add_argument(
         "excel", type=openpyxl.load_workbook, help="The Excel file to parse"
     )
@@ -351,9 +351,9 @@ if __name__ == "__main__":
         "--concept-name",
         type=str,
         help="Column to interpret as concept names "
-        "Default: assume the #parameterReference column, usually named 'Concept_ID' "
+        "By default, it is assumed that the #parameterReference column, usually named 'Concept_ID' "
         "or similar, matches the IDs of the concept. Use this "
-        "switch if you have concept Names in the wordlist instead.",
+        "switch if instead of concept IDs you have concept Names in the excel file instead.",
     )
     parser.add_argument(
         "--sheet",
