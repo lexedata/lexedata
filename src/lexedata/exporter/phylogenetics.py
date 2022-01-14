@@ -136,8 +136,7 @@ def read_wordlist(
             form_table_column = col_map.forms.id
             form_table_form = col_map.forms.form
             logger.warning(
-                "Your dataset has a cognatesetReference in the FormTable. Consider running lexedata.edit.explict_cognate_judgements to create an explicit cognate table, if this is your dataset."
-            )
+                "Your dataset has a cognatesetReference in the FormTable. Consider running lexedata.edit.add_cognate_table to create an explicit cognate table."
             cognatesets = util.cache_table(
                 dataset,
                 columns={
@@ -520,7 +519,7 @@ def root_presence_code(
         for concept, cognatesets in lexicon.items():
             if not cognatesets:
                 logger.warning(
-                    f"The root presence coder script got a language ({language}) with an improper lexicon: Concept {concept} is marked as present in the language, but no cognate sets are associated with it."
+                    f"The root presence coder script got a language ({language}) with an improper lexicon: There is a form associated with Concept {concept}, but no cognate sets are associated with it."
                 )
             for cognateset in cognatesets:
                 language_roots[language].add(cognateset)
@@ -780,16 +779,16 @@ def add_partitions(data_object: ET.Element, partitions):
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Export a CLDF dataset (or similar) to bioinformatics alignments"
+        description="Export a CLDF dataset (or similar) to a coded character matrix to be used as input for phylogenetic analyses."
     )
     parser.add_argument(
         "--format",
         choices=("csv", "raw", "beast", "nexus"),
         default="raw",
-        help="""Target format: `raw` for one language name per row, followed by spaces and
-            the alignment vector; `nexus` for a complete Nexus file; `beast`
-            for the <data> tag to copy to a BEAST file, and `csv` for a CSV
-            with languages in rows and features in columns.""",
+        help="""Output format: `raw` for one language name per row, followed by spaces and
+            the character state vector; `nexus` for a complete Nexus file; `beast`
+            for the <data> tag to copy to a BEAST file; `csv` for a CSV
+            with languages in rows and characters in columns.""",
     )
     parser.add_argument(
         "-b",
@@ -830,7 +829,7 @@ if __name__ == "__main__":
         "--coding",
         choices=("rootmeaning", "rootpresence", "multistate"),
         default="rootmeaning",
-        help="""Binarization method: In the `rootmeaning` coding system, every character
+        help="""Binarization method: In the `rootmeaning` coding method, every character
         describes the presence or absence of a particular root morpheme or
         cognate class in the word(s) for a given meaning; In the
         `rootpresence`, every character describes (up to the limitations of the
