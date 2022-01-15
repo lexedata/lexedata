@@ -261,4 +261,4 @@ def get_foreignkey(
     for foreign_key in dataset[table].tableSchema.foreignKeys:
         if foreign_key.reference.resource == dataset[other_table].url:
             return foreign_key.columnReference[0]
-    return None
+
