@@ -66,7 +66,7 @@ def update_integer_ids(
             no_integer_rows.add(row[c_id.name])
     logger.info("Adding integer IDs to other rows…")
 
-    mapping: t.Dict[str, int]
+    mapping: t.Dict[str, int] = dict()
     rows: t.List[t.Dict[str, t.Any]] = []
     for row in cli.tq(
         ds[table],
@@ -98,7 +98,6 @@ def update_integer_ids(
     for other_table, columns in foreign_keys_to_here.items():
         if not columns:
             continue
-        # logger.info(f"Applying changed foreign key to {other_table}…")
         rows = []
         for row in cli.tq(
             ds[other_table],
@@ -106,15 +105,17 @@ def update_integer_ids(
             total=ds[other_table].common_props.get("dc:extent"),
         ):
             for column in columns:
-                row[column] = mapping[str(row[column])]
+                # TODO: is this enough to handle columns with a separator? like parameterReference in forms table
+                if isinstance(row[column], list):
+                    row[column] = [mapping[v] for v in row[column]]
+                else:
+                    row[column] = mapping[row[column]]
             rows.append(row)
 
         for column in columns:
             ds[other_table, column].datatype = c_id.datatype
 
         logger.info(f"Writing {other_table} back to file…")
-        for column in columns:
-            ds[other_table, column].datatype = c_id.datatype
 
         ds[other_table].write(rows)
 
@@ -125,7 +126,7 @@ def update_ids(
     mapping: t.Mapping[str, str],
     logger: cli.logging.Logger = cli.logger,
 ):
-    """Update all IDs of the table in the database, also in foreign keys."""
+    """Update all IDs of the table in the database, also in foreign keys, according to mapping."""
     c_id = table.get_column("http://cldf.clld.org/v1.0/terms.rdf#id")
     rows = []
     for row in cli.tq(
@@ -138,7 +139,6 @@ def update_ids(
     logger.info(f"Writing {table.url.string} back to file…")
     table.write(rows)
 
-    # TODO: Split off into separate function and use only that in merge_homophones
     c_id.datatype.format = ID_FORMAT.pattern
 
     foreign_keys_to_here = {
@@ -166,8 +166,12 @@ def update_ids(
             task="Replacing changed IDs",
         ):
             for column in columns:
-                row[column] = mapping.get(row[column], row[column])
-            rows.append(row)
+                # TODO: is this enough to handle columns with a separator? like parameterReference in forms table
+                if isinstance(row[column], list):
+                    row[column] = [mapping.get(v, v) for v in row[column]]
+                else:
+                    row[column] = mapping.get(row[column], row[column])
+                rows.append(row)
         logger.info(f"Writing {other_table} back to file…")
         ds[other_table].write(rows)
 
