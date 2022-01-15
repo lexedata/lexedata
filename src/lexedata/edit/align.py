@@ -1,4 +1,4 @@
-"""Automatically align morphemes within each cognateset
+"""Automatically align morphemes within each cognateset.
 
 If possible, align using existing lexstat scorer.
 

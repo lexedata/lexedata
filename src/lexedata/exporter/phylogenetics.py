@@ -113,14 +113,17 @@ def read_wordlist(
         # Just in case that column was specified by property URL. We
         # definitely want the name. In any case, this will also throw a
         # helpful KeyError when the column does not exist.
+        form_table_form = col_map.forms.form
+        form_table_column = col_map.forms.id
         cognatesets = util.cache_table(
             dataset,
             columns={
-                "form": col_map.forms.id,
+                "form": form_table_column,
+                "transcription": form_table_form,
                 "code": dataset["FormTable", code_column].name,
             },
+            filter=lambda row: bool(row[col_map.forms.form]),
         )
-        form_table_column = col_map.forms.id
     else:
         # We search for cognatesetReferences in the FormTable or a separate
         # CognateTable.
@@ -130,13 +133,19 @@ def read_wordlist(
 
         if code_column:
             # This is not the CLDF way, warn the user.
+            form_table_column = col_map.forms.id
+            form_table_form = col_map.forms.form
             logger.warning(
                 "Your dataset has a cognatesetReference in the FormTable. Consider running lexedata.edit.explict_cognate_judgements to create an explicit cognate table, if this is your dataset."
             )
             cognatesets = util.cache_table(
-                dataset, columns={"form": col_map.forms.id, "code": code_column}
+                dataset,
+                columns={
+                    "form": form_table_column,
+                    "transcription": form_table_form,
+                    "code": code_column,
+                },
             )
-            form_table_column = col_map.forms.id
         else:
             # There was no cognatesetReference in the form table. If we
             # find them in CognateTable (I mean, they should be there!), we
@@ -200,9 +209,36 @@ def read_wordlist(
     else:
         data = t.DefaultDict(lambda: t.DefaultDict(set))
     for row in dataset["FormTable"].iterdicts():
-        if not cognates_by_form[row[form_table_column]]:
+        if not row[col_map.forms.form]:
+            # Transcription is empty, should not be a form. Skip, but maybe
+            # warn if it was in a cognateset.
+            if cognates_by_form[row[form_table_column]]:
+                logger.warning(
+                    "Form %s was given as empty (i.e. the source noted that the form is unknown), but it was judged to be in cognateset %s. I will ignore that cognate judgement.",
+                    row[col_map.forms.id],
+                    cognates_by_form[row[form_table_column]],
+                )
             continue
+
         language = row[col_map.forms.languageReference]
+        if row[col_map.forms.form] == "-":
+            if cognates_by_form[row[form_table_column]]:
+                logger.warning(
+                    "Form %s was given as '-' (i.e. “concept is not available in language %s”), but it was judged to be in cognateset %s. I will ignore that cognate judgement.",
+                    row[col_map.forms.id],
+                    language,
+                    cognates_by_form[row[form_table_column]],
+                )
+                cognates_by_form[row[form_table_column]] = set()
+            for parameter in all_parameters(row[parameter_column]):
+                if data[language][parameter]:
+                    logger.warning(
+                        "Form %s claims concept %s is not available in language %s, but cognatesets %s are allocated to that concept in that language already.",
+                        row[col_map.forms.id],
+                        parameter,
+                        row[col_map.forms.languageReference],
+                        data[language][parameter],
+                    )
         for parameter in all_parameters(row[parameter_column]):
             data[language][parameter] |= cognates_by_form[row[form_table_column]]
     return data

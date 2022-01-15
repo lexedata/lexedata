@@ -139,6 +139,7 @@ if __name__ == "__main__":
         nargs="?",
         default="cognates.xlsx",
         help="Path to an Excel file containing cogsets and cognatejudgements (default: cognates.xlsx). The data will be imported from the *active sheet* (probably the last one you had open in Excel) of that spreadsheet.",
+        metavar="COGSETS",
     )
     parser.add_argument(
         "--formid-regex",

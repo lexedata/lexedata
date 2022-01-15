@@ -259,7 +259,7 @@ if __name__ == "__main__":
         default=0.7,
         type=float,
         help="Threshold value for the initial pairs used to"
-        "bootstrap the calculation (default: 0.7)",
+        " bootstrap the calculation (default: 0.7)",
     )
     args = parser.parse_args()
     cognate_code_to_file(

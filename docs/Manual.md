@@ -2,9 +2,9 @@
 
 You can access the Lexedata tools through commands in your terminal. Every command has the following general form:
 
-> python -m lexedata.*package*.*command* [--*optional_argument* VALUE] [--*switch*] POSITIONAL ARGUMENTS
+> python -m lexedata.*package*.*command_name* [--*optional-argument* VALUE] [--*switch*] POSITIONAL ARGUMENTS
 
-Elements in italics above need to be replaced depending on the exact command you are using. Elements in capital letters need to be replaced depending on the exact operation you want to perform on your dataset. Optional elements are enclosed in brackets. There could be multiple positional arguments and optional arguments (with only a space as a separator), as well as commands that take only positional or only optional arguments.  Positional arguments are not preceded by a hyphen and need to occur in strict order (if there are more than two of them). Optional arguments and switches are always preceded by two hyphens and they can occur in any order after the command. Optional arguments require a value (often there is a default value), while switches do not. Some optional arguments or switches have a short name of one letter in addition to their regular name and in this case they are preceded by one hyphen (e.g. to access the help of any command you can use the switch `--help` or `-h`). Many positional arguments and most optional arguments have default settings. Commands in Lexedata are organized in four packages: lexedata.importer, lexedata.edit, lexedata.report, and lexedata.exporter. (In case you are wondering why they are not called "import" and "export", these words have special status in Python, so they were not available!). If a command name consists of more than one word, the words are separated with an underscore. Optional arguments and switches consisting of more than one word also include underscores. If you need to replace an element in capital letters with something including a space, enclose it in quotes (""). 
+Elements in italics above need to be replaced depending on the exact command you are using. Elements in capital letters need to be replaced depending on the exact operation you want to perform on your dataset. Optional elements are enclosed in brackets. There could be multiple positional arguments, optional arguments and switches (with only a space as a separator).  Positional arguments are not preceded by a hyphen and need to occur in strict order (if there are more than two of them). Optional arguments and switches are always preceded by two hyphens and they can occur in any order after the command. Optional arguments require a value (often there is a default value), while switches do not. Some optional arguments or switches have a short name of one letter in addition to their regular name and in this case they are preceded by one hyphen (e.g. to access the help of any command you can use the switch `--help` or `-h`). Many positional arguments and most optional arguments have default settings. Commands in Lexedata are organized in four packages: lexedata.importer, lexedata.edit, lexedata.report, and lexedata.exporter. (In case you are wondering why they are not called "import" and "export", these words have special status in Python, so they were not available!). If a command name consists of more than one word, the words are separated by an underscore. However, if optional arguments or switches consist of more than one word, the words are separated by a hyphen. If you need to replace an element in capital letters with a phrase including a space, enclose the whole phrase in quotes (""). 
 
 Probably the most important thing to know before you get started with Lexedata is how to get help. This manual contains all available commands and describes their most common uses but it is not exhaustive as far as optional arguments and switches are concerned. It is highly recommended to first read the help of any new command you are thinking of using. You can access the help of any command by typing `python -m lexedata.*package.command* --help`. The help explains how the command is used, what it does and lists all the positional and optional arguments, along with their default values, if any. If you find the help confusing, or something is missing, do not hesitate to let us know by opening an issue on GitHub.
 
@@ -26,7 +26,7 @@ python -m lexedata.importer.excel_long_format [path to excel file] --metadata [p
 ```
 You can exclude individual sheets from being imported by using the option `--exclude-sheet [sheet name]`.
 
-The long format assumes that each type of information is in a separate column and the content of a cell cannot be separated further in different cells (however, fields including separators are properly recognized provided that you have described them in the json file). Excel comments (or notes) are not supported with this importer script.
+The long format assumes that each type of information is in a separate column and the content of a cell cannot be separated further in different cells (however, fields including separators are properly recognized provided that you have described them in the json file). Excel comments (or notes) are not supported with this importer script and they will be ignored.
 
 #### Importing a lexical dataset using the "matrix" format
 
@@ -46,7 +46,22 @@ The importation script using the long format can be used to add new data to an e
 ## Editing a CLDF dataset (lexedata.edit)
 The "edit" package includes a series of scripts to automate common targeted or batch edits in a lexical dataset. It also included scripts that create links to Concepticon (TODO: add link) and integrate with LingPy (TODO: add link).
 
-### CLDF structure
+### CLDF dataset structure and curation
+
+#### How to add a metadata file (add_metadata)
+If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see section XXX how to read a json file). The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
+
+#### How to add tables to your dataset (add_table)
+Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is `python -m lexedata.edit.add_table TABLE`. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see section 4.1.3).
+
+#### How to add a CognateTable (add_cognate_table)
+The output of LingPy has cognate judgements as a column within the FormTable, rather than in a separate CognateTable as is the standard in CLDF. This is also the format of a FormTable generated when importing an "interleaved" dataset with Lexeata (see section 3.1.3). In these cases, Lexedata can subsequently create an explicit CognateTable using the command `python -m lexedata.edit.add_cognate_table`. Note that you have to indicate if your cognate judgement IDs are unique within the same concept or are valid across the dataset. In other words, if for every concept you have a cognateset with the code 1, then you need to indicate the option `--unique-id concept`, while if you have cross-concept cognate sets you need to indicate the option `--unique-id dataset`.
+
+#### How to normalize unicode (normalize_unicode)
+Linguistic data come with a lot of special characters especially for the forms, but also for language names etc. Many of the input methods used for such datasets result in seemingly identical glyphs, which are not necessarily the same unicode character (and are therefore not considered identical by a computer) . Lexedata can normalize unicode across your dataset with the command `python -m lexedata.edit.normalize_unicode`. You can find more info about what unicode normalization [here] (https://towardsdatascience.com/what-on-earth-is-unicode-normalization-56c005c55ad0).
+
+#### Workflow and tracking aid (add_status_column)
+When developing and editing a comparative dataset for historical linguistics, you may need to keep track of operations, such as manual checks, input by collaborators etc. You may also wish to inspect manually some of the automatic operations of lexedata. To facilitate such tasks, you can add a "status column" in any of the CLDF tables using the command `python -m lexedata.edit.add_status_column`. How you use status columns is largely up to you. You may manually keep track of your workflow in this column using specific codewords of your choice. Lexedata scripts that perform automatic operations that are not trivial (such as alignments, automatic cognate set detection) usually leave a message in the status column (which is customizable).  
 
 #### Valid and transparent IDs (simplify_ids)
 In a CLDF dataset, all IDs need to be unique and be either numeric or restricted alphanumeric (i.e. containing only leters, numbers and underscores). Lexedata command `python -m lexedata.edit.simplify_ids` verifies that all IDs in the dataset are valid and changes them appropriately if necessary. You can also choose to make your IDs transparent (option `--transparent`) so that you can easily tell what they correspond to. With transparent IDs, instead of a numeric ID, a form will have an ID consisting of the languageID and the parameterID: e.g. the word "main" in French would have the ID stan1290_hand.
@@ -56,40 +71,36 @@ Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, 
 
 In case you want to replace an entire ID column of a table, then you need to add the new intended ID column to the table and use the command ```python -m lexedata.edit.replace_id_column TABLE REPLACEMENT```.
 
-#### How to add a metadata file (add_metadata)
-If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see section XXX how to read a json file). The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
 
-#### 4.1.4 How to add tables to your dataset (add_table)
-Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is `python -m lexedata.edit.add_table TABLE`. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see section XXX). 
+### Operations on FormTable
 
-### Data curation
-src/lexedata//edit/normalize_unicode.py
+src/lexedata//edit/merge_homophones.py
 
 #### Segment forms (add_segments)
 In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms included in your dataset. Lexedata can do this automatically using CLTS (TODO: add link). To use this functionality type: ```python -m lexedata.edit.add_segments TRANCRIPTION_COLUMN```, where transcription column refers to the column that contains the forms to be segmented (the #form column by default). A column "Segments" will be added to your FormTable. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review. You may choose to apply these corrections to the form column as well, using the switch `--replace_form`.
 
 
-src/lexedata//edit/add_singleton_cognatesets.py
-src/lexedata//edit/merge_homophones.py
-src/lexedata//edit/add_status_column.py
-
-### LingPy integration
-### Automatic cognate detection (detect_cognates)
-src/lexedata//edit/align.py
-
-#### 4.3.3 Adding an explicit CognateTable (add_cognate_table)
-The output of LingPy has cognate judgements as a column within the FormTable, rather than in a separate CognateTable as is the standard in CLDF. This is also the format of a FormTable generated when importing an "interleaved" dataset with Lexeata (see section XXX). In these cases, Lexedata can subsequently create an explicit CognateTable using the command `python -m lexedata.edit.add_cognate_table`. 
-
-
-### Concepticon integration
+### Operations on ParameterTable (concepts)
 
 #### Linking concepts to Concepticon (add_concepticon)
 Lexedata can automatically link the concepts present in a dataset with concept sets in the Concepticon (https://concepticon.clld.org/). The relevant command is ```python -m lexedata.edit.add_concepticon```.
-Your ParameterTable will now have a new columns: Concepticon ID, with the corresponding ID of a concept set in Concepticon. We recommend that you manually inspect these links for errors. In order to facilitate this task, you can also add columns for the concept set name (`--add_concept_set_name`) and the concepticon definition (`--add_definitions`). Finally, if your ParameterTable contains a Status Column (see section [4.2.5]), any links to the Concepticon will be tagged as automatic, or you can define a custom message using `--status_update "STATUS UPDATE"`. 
+Your ParameterTable will now have a new column: Concepticon ID, with the corresponding ID of a concept set in Concepticon. We recommend that you manually inspect these links for errors. In order to facilitate this task, you can also add columns for the concept set name (`--add_concept_set_name`) and the concepticon definition (`--add_definitions`). Finally, if your ParameterTable contains a Status Column (see section [4.2.5]), any links to the Concepticon will be tagged as automatic, or you can define a custom message using `--status_update "STATUS UPDATE"`.
 
-### Adding central concepts to cognate sets (add_central_concepts)
-```python -m lexedata.enrich.guess_concept_for_cognateset```
-```--overwrite``` to overwrite existing central concepts for all cognatesets.
+### Operations on CognateTable (judgements) and CognatesetTable
+
+#### Automatic cognate detection (detect_cognates)
+
+#### Automatic alignment (align)
+
+#### Adding central concepts to cognate sets (add_central_concepts)
+
+If you are using cross-concept cognate sets, and you want to assign each cognate set to a certain concept (e.g. for the purposes of assigning absences in root presence coding), you can use lexedata to automatically add central concepts to your cognate sets. The central concept of each cognateset will be used as a proxy for assigning absences: If the central concept is attested in a language with a different root, then the root in question will be coded as absent for this language (see the glossary for more explanations for central concepts, coding methods and absence heuristics for root presence coding). 
+
+The central concept of each cognate set is determined by the CLICS graph of all the concepts associated with this cognate set (this requires having your concepts linked to the Concepticon). In the absence of Concepticon links, the central concept is the most common concept. In order to add central concepts to your dataset, type `python -m lexedata.edit.add_central_concepts`. This will add a #ParameterReference column to your CognatesetTable containing the central concept. You can of course manually review and edit the central concepts. If you rely on central concepts for coding and you heavily edit your cognate judgements, consider re-assigning central concepts with the switch `--overwrite`.
+
+#### Adding trivial cognate sets (add_singleton_cognatesets)
+
+Depending on your workflow, you may not have assigned forms to trivial (singleton) cognate sets, where they would be the only members. This could also be true for loanwords that are products of separate borrowing events, even if they have the same source. You can automatically assign any form that is not already in a cognate set to a trivial cognate set of one member (a singleton cognate set) using the command  `python -m lexedata.edit.add_singleton_cognate_sets`. 
 
 
 

@@ -9,16 +9,19 @@ any version of Python or it is a version of Python 2, then you need to download
 and install Python 3. There are different distributions of Python and most of
 them should work. A popular one that we have tested is
 `Anaconda <https://www.anaconda.com/products/individual>`_. Once you have
-downloaded and installed Anaconda close and open the terminal again and type
-``python --version`` again. You should see the current version of Python 3 you
+downloaded and installed Anaconda, close and open the terminal again, and type
+``python --version``. You should see the current version of Python 3 you
 just downloaded.
 
-If you are ever stuck with the python prompt, which starts with ``>>>``, in
-order to exit Python type ``quit()``.
+If you are ever stuck with the python prompt, which starts with ``>>>``, type ``quit()`` in
+order to exit Python.
 
-3. Install the lexedata package.
+2. Install the lexedata package.
+
 In your terminal window type ``pip install lexedata``. 
+This will install lexedata and all its dependencies on your computer. Now you should be ready to use lexedata!
 
-This will install lexedata and all its dependencies on your computer and make it
-automatically updatable every time you pull a new version of the Lexedata
-repository from GitHub. Now you should be ready to use lexedata!
+Updating lexedata and Catalogs
+------------------------------
+
+You can update lexedata when there is a new release by typing ``pip install --upgrade lexedata``. This will also update all the packages that lexedata is dependent on. However, lexedata is also using catalogs, such as Glottolog, CLTS, and Concepticon, which are not automatically updated. It is good to update those once in a while to get the most up-to-date information, by typing ``cldfbench catupdate``.
