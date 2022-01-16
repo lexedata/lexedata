@@ -9,7 +9,12 @@ import pycldf
 
 from lexedata.util import cache_table
 import lexedata.cli as cli
-from lexedata.util.simplify_ids import clean_mapping, update_integer_ids, update_ids, ID_COMPONENTS
+from lexedata.util.simplify_ids import (
+    clean_mapping,
+    update_integer_ids,
+    update_ids,
+    ID_COMPONENTS,
+)
 
 if __name__ == "__main__":
     parser = cli.parser(__doc__)

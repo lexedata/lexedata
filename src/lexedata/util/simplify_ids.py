@@ -177,4 +177,3 @@ def update_ids(
 
         for column in columns:
             ds[other_table, column].datatype = c_id.datatype
-
