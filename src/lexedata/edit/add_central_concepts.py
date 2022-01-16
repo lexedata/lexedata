@@ -236,9 +236,9 @@ if __name__ == "__main__":
         description="""Add central concepts to cognatesets.
 
         Write a #ParameterReference column to #CognatesetTable based on the
-        concepts linked to the cognateset through the cognate judgements. If 
-        links to Concepticon are available, the central concept is calculated 
-        according to CLICS. Otherwise, the most common concept is retained 
+        concepts linked to the cognateset through the cognate judgements. If
+        links to Concepticon are available, the central concept is calculated
+        according to CLICS. Otherwise, the most common concept is retained
         as the central concept."""
     )
     parser.add_argument(
