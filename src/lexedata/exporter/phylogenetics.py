@@ -371,7 +371,7 @@ def apply_heuristics(
     >>> ds.write(CognatesetTable=[
     ...     {"ID": "cognateset1", "Central_Concept": "concept1"}
     ... ])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CentralConcept) == {'cognateset1': {'concept1'}}
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CENTRALCONCEPT) == {'cognateset1': {'concept1'}}
     True
 
     This extends to the case where a cognateset may have more than one central concept.
@@ -387,7 +387,7 @@ def apply_heuristics(
     >>> ds.write(CognatesetTable=[
     ...     {"ID": "cognateset1", "Central_Concepts": ["concept1", "concept2"]}
     ... ])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CentralConcept) == {
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CENTRALCONCEPT) == {
     ...     'cognateset1': {'concept1', 'concept2'}}
     True
 
@@ -401,7 +401,7 @@ def apply_heuristics(
     ...     CognateTable=[
     ...         {"ID": "1", "Form_ID": "f1", "Cognateset_ID": "s1"},
     ...         {"ID": "2", "Form_ID": "f2", "Cognateset_ID": "s1"}])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.HalfPrimaryConcepts) == {
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.HALFPRIMARYCONCEPTS) == {
     ...     's1': {'c1', 'c2'}}
     True
 
@@ -414,9 +414,9 @@ def apply_heuristics(
         heuristic
         if heuristic is not None
         else (
-            AbsenceHeuristic.CentralConcept
+            AbsenceHeuristic.CENTRALCONCEPT
             if ("CognatesetTable", "parameterReference") in dataset
-            else AbsenceHeuristic.HalfPrimaryConcepts
+            else AbsenceHeuristic.HALFPRIMARYCONCEPTS
         )
     )
 
@@ -424,7 +424,7 @@ def apply_heuristics(
         types.Cognateset_ID, t.Set[types.Parameter_ID]
     ] = t.DefaultDict(set)
 
-    if heuristic is AbsenceHeuristic.HalfPrimaryConcepts:
+    if heuristic is AbsenceHeuristic.HALFPRIMARYCONCEPTS:
         c_f = dataset["CognateTable", "formReference"].name
         c_s = dataset["CognateTable", "cognatesetReference"].name
         concepts = util.cache_table(
@@ -437,7 +437,7 @@ def apply_heuristics(
             for concept in util.ensure_list(form["concepts"]):
                 relevant_concepts[j[c_s]].add(concept)
 
-    elif heuristic is AbsenceHeuristic.CentralConcept:
+    elif heuristic is AbsenceHeuristic.CENTRALCONCEPT:
         c_cognateset_concept = dataset["CognatesetTable", "parameterReference"].name
         c_id = dataset["CognatesetTable", "id"].name
         for c in dataset["CognatesetTable"]:

@@ -97,6 +97,7 @@ def treat_brackets(
     {'F': 'da', 'V': [], 'C': '(dialectal)'}
     {'F': 'tum', 'V': ['tu'], 'C': '2p; (informal)'}
 
+
     Skipping works even when it is noticed only late in the process.
 
     >>> for row in treat_brackets([
@@ -104,8 +105,9 @@ def treat_brackets(
     ...   {'F': 'tu(m) (informal', 'V': [], 'C': ''}],
     ...   "F", "V", "C", [("[", "]"), ("(", ")")]):
     ...   print(row)
-    {'F': 'a[m]ba (unbalanced', 'V': [], 'C': ''}
-    {'F': 'tu(m) (informal', 'V': [], 'C': ''}
+    {'F': 'amba', 'V': ['aba'], 'C': ''}
+    {'F': 'da', 'V': [], 'C': '(dialectal)'}
+    {'F': 'tum', 'V': ['tu'], 'C': '2p; (informal)'}
 
     """
     for r, row in enumerate(table):
@@ -123,7 +125,7 @@ def treat_brackets(
                 variants.extend(new_variants)
                 comment.extend(new_comments)
             # TODO: Should we have a message here?
-            yield row | {
+            yield row or {
                 form_column_name: form,
                 variants_column_name: variants,
                 comment_column_name: "; ".join(comment),
