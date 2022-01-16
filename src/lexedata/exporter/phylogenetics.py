@@ -780,17 +780,18 @@ def add_partitions(data_object: ET.Element, partitions):
 
 if __name__ == "__main__":
     import argparse
+
     parser = cli.parser(
         description="Export a CLDF dataset (or similar) to bioinformatics alignments"
     )
-
 
     def create_absence_heuristics():
         class CustomAction(argparse.Action):
             def __call__(self, parser, args, values, option_string=None):
                 values = AbsenceHeuristic.__getitem__(values.upper())
                 setattr(args, self.dest, values)
-        return customAction
+
+        return CustomAction()
 
     parser.add_argument(
         "--format",
