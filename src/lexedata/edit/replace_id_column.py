@@ -59,8 +59,6 @@ if __name__ == "__main__":
         )
         cli.Exit.INVALID_ID()
 
-    ids = dataset
-
     update_ids(
         ds=dataset,
         table=dataset[args.table],
