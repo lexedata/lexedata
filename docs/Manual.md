@@ -74,7 +74,8 @@ In case you want to replace an entire ID column of a table, then you need to add
 
 ### Operations on FormTable
 
-src/lexedata//edit/merge_homophones.py
+#### Homophonous and polysemous forms (merge_homophones)
+In large datasets, there may be identical forms within the same language, corresponding to homophonous or polysemous words. You can use `python -m lexedata.report.homophones` to detect identical forms present in the dataset (see section XXX). Once you decide which forms are in fact polysemous, you can use  `python -m lexedata.edit.merge_homophones MERGE_FILE`  in order to merge them into one form with multiple meanings. The MERGE_FILE contains the forms to be merged, in the same format as the output report from the `lexedata.report.homophones` command. There are multiple merge functions available for the different metadata associated with forms (e.g. for comments the default merge function is concatenate, while for sources it is union). If you need to modify the default behavior of the command you can use the optional argument `--merge COLUMN:MERGER`, where COLUMN is the name of the column in your dataset and MERGER is the merge function you want to use (from a list of functions that can be found in the help).
 
 #### Segment forms (add_segments)
 In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms included in your dataset. Lexedata can do this automatically using CLTS (TODO: add link). To use this functionality type: ```python -m lexedata.edit.add_segments TRANCRIPTION_COLUMN```, where transcription column refers to the column that contains the forms to be segmented (the #form column by default). A column "Segments" will be added to your FormTable. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review. You may choose to apply these corrections to the form column as well, using the switch `--replace_form`.
@@ -106,11 +107,32 @@ Depending on your workflow, you may not have assigned forms to trivial (singleto
 
 ## Reporting and checking data integrity (lexedata.report)
 
-(cldf-format-validation)=
-### CLDF format validation
-### non-concatenative morphology
-### potential synonyms and homophones
-### Phonemic inventories and transcription errors
+The report package contains scripts that check for data integrity and generate reports for your dataset. You can use these reports to identify potential problems in the dataset, to track your progress, or to report statistics in publications (e.g. coverage for each language in a dataset).
+
+### Language coverage
+
+src/lexedata//report/coverage.py
+
+### Segment inventories
+src/lexedata//report/segments_inventories.py
+
+### Cognate judgements
+src/lexedata//report/judgements.py
+
+### CLDF validate
+src/lexedata//report/extended_cldf_validate.py
+
+### Filter dataset
+src/lexedata//report/filter.py
+
+### Detect potential homophonous or polysemous entries
+src/lexedata//report/homophones.py
+
+### Non-concatenative morphology
+src/lexedata//report/nonconcatenative_morphemes.py
+
+
+
 
 ## Exporting data (lexedata.exporter)
 ### Cognate Table export-import loop
