@@ -43,8 +43,18 @@ In order to import a dataset of the "interleaved" format you should use the comm
 ### Adding a new language/new data to an existing lexical dataset
 The importation script using the long format can be used to add new data to an existing dataset, as in the case of adding an new variety or further lexical items for an existing variety (see section [3.1.1] (311-importing-a-lexical-dataset-using-the-long-format)). 
 
+### Importing cognate sets from a Cognate Table
+You can update cognate sets, cognate judgements and associated metadata by exporting a Cognate Table from a cldf dataset and reimporting it after editing it by hand. This workflow can allow specialists to work on the cognacy judgements in a familiar format (such as excel), or allow a team to work collaboratively on Google sheets, while at the same time keeping the dataset in the standard cldf format. 
+
+Once you have exported a Cognate Table from your cldf dataset (using the `lexedata.exporter.cognates` command, see [Cognate Table exportation](#cognate-table-edportation), you can modify it in the spreadsheet editor of your choice and then reimport it by typing:
+```python -m lexedata.importer.cognates FILENAME```, specifying the Cognate Table that you want to import.
+
+
 ## Editing a CLDF dataset (lexedata.edit)
-The "edit" package includes a series of scripts to automate common targeted or batch edits in a lexical dataset. It also included scripts that create links to Concepticon (TODO: add link) and integrate with LingPy (TODO: add link).
+The "edit" package includes a series of scripts to automate common targeted or batch edits in a lexical dataset. It also includes scripts that create links to Concepticon (TODO: add link) and integrate with LingPy (TODO: add link).
+
+If you need to do editing of raw data in your dataset (such as a transcription, translation, form comment etc), you need to do this manually. For `parameters.csv`, `forms.csv`, and `languages.csv`, you need to open the file in question in a spreadsheet editor, edit it, and save it again in the .csv format. For `cognates.csv` and `cognatesets.csv`, we recommend that you use the Cognate Table export (see [Cognate Table exportation](#cognate-table-exportation)). 
+Whenever editing a cldf dataset, it is always a good idea to validate the dataset before and after (see [CLDF validate](#cldf-validate)) to make sure that everything went smoothly.
 
 ### CLDF dataset structure and curation
 
@@ -75,7 +85,7 @@ In case you want to replace an entire ID column of a table, then you need to add
 ### Operations on FormTable
 
 #### Homophonous and polysemous forms (merge_homophones)
-In large datasets, there may be identical forms within the same language, corresponding to homophonous or polysemous words. You can use `python -m lexedata.report.homophones` to detect identical forms present in the dataset (see section XXX). Once you decide which forms are in fact polysemous, you can use  `python -m lexedata.edit.merge_homophones MERGE_FILE`  in order to merge them into one form with multiple meanings. The MERGE_FILE contains the forms to be merged, in the same format as the output report from the `lexedata.report.homophones` command. There are multiple merge functions available for the different metadata associated with forms (e.g. for comments the default merge function is concatenate, while for sources it is union). If you need to modify the default behavior of the command you can use the optional argument `--merge COLUMN:MERGER`, where COLUMN is the name of the column in your dataset and MERGER is the merge function you want to use (from a list of functions that can be found in the help).
+In large datasets, there may be identical forms within the same language, corresponding to homophonous or polysemous words. You can use `python -m lexedata.report.homophones` to detect identical forms present in the dataset (see [detect potential homophonous or polysemous entries](#detect-potential-homophonous-or-polysemous-entries)). Once you decide which forms are in fact polysemous, you can use  `python -m lexedata.edit.merge_homophones MERGE_FILE`  in order to merge them into one form with multiple meanings. The MERGE_FILE contains the forms to be merged, in the same format as the output report from the `lexedata.report.homophones` command. There are multiple merge functions available for the different metadata associated with forms (e.g. for comments the default merge function is concatenate, while for sources it is union). If you need to modify the default behavior of the command you can use the optional argument `--merge COLUMN:MERGER`, where COLUMN is the name of the column in your dataset and MERGER is the merge function you want to use (from a list of functions that can be found in the help).
 
 #### Segment forms (add_segments)
 In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms included in your dataset. Lexedata can do this automatically using CLTS (TODO: add link). To use this functionality type: ```python -m lexedata.edit.add_segments TRANCRIPTION_COLUMN```, where transcription column refers to the column that contains the forms to be segmented (the #form column by default). A column "Segments" will be added to your FormTable. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review. You may choose to apply these corrections to the form column as well, using the switch `--replace_form`.
@@ -89,10 +99,6 @@ Your ParameterTable will now have a new column: Concepticon ID, with the corresp
 
 ### Operations on CognateTable (judgements) and CognatesetTable
 
-#### Automatic cognate detection (detect_cognates)
-
-#### Automatic alignment (align)
-
 #### Adding central concepts to cognate sets (add_central_concepts)
 
 If you are using cross-concept cognate sets, and you want to assign each cognate set to a certain concept (e.g. for the purposes of assigning absences in root presence coding), you can use lexedata to automatically add central concepts to your cognate sets. The central concept of each cognateset will be used as a proxy for assigning absences: If the central concept is attested in a language with a different root, then the root in question will be coded as absent for this language (see the glossary for more explanations for central concepts, coding methods and absence heuristics for root presence coding). 
@@ -102,7 +108,6 @@ The central concept of each cognate set is determined by the CLICS graph of all 
 #### Adding trivial cognate sets (add_singleton_cognatesets)
 
 Depending on your workflow, you may not have assigned forms to trivial (singleton) cognate sets, where they would be the only members. This could also be true for loanwords that are products of separate borrowing events, even if they have the same source. You can automatically assign any form that is not already in a cognate set to a trivial cognate set of one member (a singleton cognate set) using the command  `python -m lexedata.edit.add_singleton_cognate_sets`. 
-
 
 
 ## Reporting and checking data integrity (lexedata.report)
@@ -133,59 +138,30 @@ src/lexedata//report/nonconcatenative_morphemes.py
 
 
 
-
 ## Exporting data (lexedata.exporter)
-### Cognate Table export-import loop
+### Cognate Table exportation
 
-Lexedata offers the possibility to edit and annotate cognate set (or
-root-meaning set) judgements in a spreadsheet format using the spreadsheet
+Lexedata offers the possibility to edit and annotate within- or across-concept cognate sets in a spreadsheet format using the spreadsheet
 editor of your choice (we have successfully used Google sheets and Microsoft
 Excel, but it should work in principle on any spreadsheet editor). In order to
 use this functionality, first you need to export your cognate judgements in a
 Cognate Table (in xlsx format) and then re-import the modified Cognate Table
-back into your lexedata lexical dataset. This process will overwrite previously
+back into your cldf dataset. This process will overwrite previously
 existing cognate sets and cognate judgements, as well as any associated comments
-(cognate comments and cognate judgement comments).
+(CognateTable comments and CognatesetTable comments).
 
 IMPORTANT: you cannot edit the raw data (forms, translation, form comments etc)
-through this process. Instead see XXX how to edit raw data in lexedata.
+through this process. To edit raw data, see XXX.
 
-1. Validate your dataset using the cldf validate command
 It is always a good idea to validate your dataset before and after any edits to make sure that everything is linked as it should in the cldf format.
-To perform this test, navigate to your lexical dataset repository and type
-```
-cldf validate Wordlist-metadata.json
-```
-Assuming that there are not any errors or warnings you need to take care of, you can proceed to the next step.
-
-2. Export the Cognate Table
-Type 
-```
-python -m lexedata.exporter.cognates [filename]
-```
+You can use `cldf validate METADATA_FILE` or `python -m lexedata.report.extended_cldf_validate` for a more thorough check (see also [CLDF validate](#cldf-validate)). 
+In order to export an xlsx Cognate Table, you should type
+```python -m lexedata.exporter.cognates FILENAME```
 The Cognate Table will be written to an excel file with the specified name.
+There are optional arguments to sort the languages and the cognate sets in this table, as well as to assign any forms not currently in a cognate set to automatic singleton cognate sets (see command help for more information). 
 
-3. Open and edit the Cognate Table in a spreadsheet editor
-(You are, of course, able to upload the cognate excel into Google Sheets, and
-download your changes as Excel file, which you then use for the following
-re-import step.)
+You can open and edit the Cognate Table in the spreadsheet editor of your choice. You just need to remember that you need and xlsx format in order to reimport your modified cognate sets into your cldf dataset (using the lexedata.importer.cognates command, see XXX). 
 
-4. Re-import the Cognate Table in lexedata
-Once you have edited and/or annotated the Cognate Table, you can update your dataset by re-importing it. Type
-```
-python -m lexedata.importer.cognates
-```
-
-5. Validate your dataset, to make sure that the import went smoothly
-Run
-```
-cldf validate Wordlist-metadata.json`
-```
-as described in step 1. Hopefully, if you did not see any issues in step 1, you will see none now.
-
-6. Commit and Push (publish) your new version on your dataset repository
-You now have an updated version of the repository. If you want to do more
-editing of cognate steps, start again at step 1.
 
 ### Edictor export-import loop
 ### Comparative Wordlist export
@@ -194,23 +170,6 @@ editing of cognate steps, start again at step 1.
 ### Exporting coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)
 Lexedata is a powerful tool to prepare linguistic data for phylogenetic analyses. It can be used to export a cldf dataset containing cognate judgements as a coded matrix for phylogenetic analyses to be used by standard phylogenetic software (such as BEAST, MrBayes or revBayes). Different formats are supported, such as nexus, csv, a beast-friendly xml format, as well as a raw alignment format (similar to FASTA format used in bioinformatics). Lexedata also supports different coding methods for phylogenetic analyses: root-meaning sets, cross-meaning cognate sets, and multistate coding. Finally, you can use Lexedata to filter and export a portion of your dataset for phylogenetic analyses, e.g. if some languages or concepts are not fully coded yet, or if you want to exclude specific cognate sets that are not reviewed yet.
 
-## How to edit raw data
-This section describes how to edit raw data through GitHub. By raw data we mean any part of the data that are not cognate set judgements, alignments and related annotations. While it is possible to edit cognate set assignments and annotations this way as well, we recommend that you use the cognate table for this purpose (see section XXX). 
-Raw data are contained in three .csv files in the cldf format: `parameters.csv`, `forms.csv`, and `languages.csv`. Note that for small .csv files, instead of following the steps below, you can edit them directly through GitHub's web interface. 
-
-1. pull the dataset repository from GitHub
-While in the dataset repository, type `git pull`. 
-
-2. edit the .csv files in a spreadsheet editor
-Depending on what you want to edit, you can open any of the .csv files (concepts, forms, and languages) in a spreadsheet editor, edit the corresponding cells and save. 
-
-3. validate your cldf database
-Then we recommend to run from the command line, while in the dataset directory:
-```cldf validate Wordlist-metadata.json```
-This command will perform tests to ensure that your cldf database has no errors. 
-
-4. commit and push your dataset to GitHub
-While in the dataset repository, type `git commit` and add a commit message describing your latest changes. Then type  `git push` to publish the latest version to GitHub.
 
 ## Command Reference
 `edit/add_central_concepts.py
