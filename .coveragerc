@@ -1,4 +1,3 @@
 [run]
 branch=True
-data_file=/tmp/lexedata-coverage
-
+data_file=/home/gereon/Develop/lexedata/.coverage

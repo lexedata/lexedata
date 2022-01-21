@@ -785,13 +785,15 @@ if __name__ == "__main__":
         description="Export a CLDF dataset (or similar) to bioinformatics alignments"
     )
 
-    def create_absence_heuristics():
-        class CustomAction(argparse.Action):
-            def __call__(self, parser, args, values, option_string=None):
-                values = AbsenceHeuristic.__getitem__(values.upper())
-                setattr(args, self.dest, values)
+    def enum_from_lower(enum: t.Type[enum.Enum]):
+        class FromLower(argparse.Action):
+            def __call__(self, parser, namespace, values, option_string=None, **kwargs):
+                enum_item = {
+                    name.lower(): object for name, object in enum.__members__.items()
+                }[values.lower()]
+                setattr(namespace, self.dest, enum_item)
 
-        return CustomAction()
+        return FromLower
 
     parser.add_argument(
         "--format",
@@ -853,10 +855,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--absence-heuristic",
-        type=str,
-        action=create_absence_heuristics(),
-        default=None,
-        choices=list(m.split(".")[-1].lower() for m in AbsenceHeuristic.__members__),
+        action=enum_from_lower(AbsenceHeuristic),
         help="""In case of --coding=rootpresence, which heuristic should be used for the
         coding of absences? The default depends on whether the dataset contains
         a #parameterReference column in its CognatesetTable: If there is one,
