@@ -345,7 +345,8 @@ def add_single_languages(
 if __name__ == "__main__":
     parser = cli.parser(description="Import forms and associated metadata from an excel file to a cldf dataset.")
     parser.add_argument(
-        "excel", type=openpyxl.load_workbook, help="The Excel file to parse"
+        "excel", type=openpyxl.load_workbook, help="The Excel file to parse",
+        metavar="EXCEL",
     )
     parser.add_argument(
         "--concept-name",
@@ -354,6 +355,7 @@ if __name__ == "__main__":
         "By default, it is assumed that the #parameterReference column, usually named 'Concept_ID' "
         "or similar, matches the IDs of the concept. Use this "
         "switch if instead of concept IDs you have concept Names in the excel file instead.",
+        metavar="COLUMN"
     )
     parser.add_argument(
         "--sheet",
@@ -368,6 +370,7 @@ if __name__ == "__main__":
         nargs="*",
         default=[],
         help="Columns to match forms by",
+        metavar="COLUMN",
     )
     parser.add_argument(
         "--ignore-superfluous-excel-columns",
@@ -390,6 +393,7 @@ if __name__ == "__main__":
         nargs="*",
         default=[],
         help="Sheets not to parse. Does not affect sheets explicitly added using --sheets.",
+        metavar="SHEET",
     )
     parser.add_argument(
         "--status-update",
