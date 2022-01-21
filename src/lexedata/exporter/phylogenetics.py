@@ -869,7 +869,6 @@ if __name__ == "__main__":
     parser.add_argument("--stats-file", type=Path, help="A file to write statistics to")
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-    breakpoint()
     # Step 1: Load the raw data.
     dataset = pycldf.Dataset.from_metadata(args.metadata)
 
