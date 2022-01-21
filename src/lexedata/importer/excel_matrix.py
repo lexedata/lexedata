@@ -857,7 +857,7 @@ if __name__ == "__main__":
         type=Path,
         default=None,
         help="Path to an optional second Excel file containing cogsets and cognate judgements",
-        metavar="COGSET_EXCEL"
+        metavar="COGSET_EXCEL",
     )
     parser.add_argument(
         "--status-update",
