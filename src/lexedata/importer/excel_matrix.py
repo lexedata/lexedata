@@ -850,12 +850,14 @@ if __name__ == "__main__":
         nargs="?",
         default=None,
         help="Path to an Excel file containing the dataset",
+        metavar="EXCEL",
     )
     parser.add_argument(
         "--cogsets",
         type=Path,
         default=None,
         help="Path to an optional second Excel file containing cogsets and cognate judgements",
+        metavar="COGSET_EXCEL"
     )
     parser.add_argument(
         "--status-update",
