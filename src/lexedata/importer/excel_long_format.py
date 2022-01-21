@@ -360,7 +360,7 @@ if __name__ == "__main__":
         action="append",
         type=str,
         default=[],
-        help="Sheet to parse. Use multiple --sheet=Name arguments for multiple sheets. (default: all)",
+        help="Sheet to parse. For multiple sheets, Use multiple arguments of the shape --sheet Name1 --sheet Name2 (default: all sheets)",
     )
     parser.add_argument(
         "--match-form",
@@ -368,7 +368,7 @@ if __name__ == "__main__":
         action="append",
         type=str,
         default=[],
-        help="Columns to match forms by",
+        help="Forms are considered identical if all columns passed to -f/--match-form are identical",
     )
     parser.add_argument(
         "--ignore-superfluous-columns",
