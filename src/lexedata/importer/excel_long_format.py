@@ -364,8 +364,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--match-form",
+        "-f",
+        action="append",
         type=str,
-        nargs="*",
         default=[],
         help="Columns to match forms by",
     )
