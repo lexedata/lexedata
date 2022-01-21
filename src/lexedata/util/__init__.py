@@ -15,7 +15,7 @@ from lexedata.cli import tq, logger
 from ..types import KeyKeyDict
 from . import fs
 
-__all__ = [fs, KeyKeyDict]
+__all__ = ["fs", "KeyKeyDict"]
 
 ID_FORMAT = re.compile("[a-z0-9_]+")
 

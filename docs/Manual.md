@@ -22,9 +22,9 @@ In order to import a lexical dataset in a "long" excel format you need to provid
 The relevant command is:
 
 ```
-python -m lexedata.importer.excel_long_format [path to excel file] --metadata [path to json file]
+python -m lexedata.importer.excel_long_format PATH/TO/EXCEL_FILE.xlsx --metadata PATH/TO/METADATA.json
 ```
-You can exclude individual sheets from being imported by using the option `--exclude-sheet [sheet name]`.
+You can exclude individual sheets from being imported by using the option `--exclude-sheet SHEET_NAME`.
 
 The long format assumes that each type of information is in a separate column and the content of a cell cannot be separated further in different cells (however, fields including separators are properly recognized provided that you have described them in the json file). Excel comments (or notes) are not supported with this importer script and they will be ignored.
 
@@ -96,7 +96,14 @@ Your ParameterTable will now have a new column: Concepticon ID, with the corresp
 
 If you are using cross-concept cognate sets, and you want to assign each cognate set to a certain concept (e.g. for the purposes of assigning absences in root presence coding), you can use lexedata to automatically add central concepts to your cognate sets. The central concept of each cognateset will be used as a proxy for assigning absences: If the central concept is attested in a language with a different root, then the root in question will be coded as absent for this language (see the glossary for more explanations for central concepts, coding methods and absence heuristics for root presence coding). 
 
-The central concept of each cognate set is determined by the CLICS graph of all the concepts associated with this cognate set (this requires having your concepts linked to the Concepticon). In the absence of Concepticon links, the central concept is the most common concept. In order to add central concepts to your dataset, type `python -m lexedata.edit.add_central_concepts`. This will add a #ParameterReference column to your CognatesetTable containing the central concept. You can of course manually review and edit the central concepts. If you rely on central concepts for coding and you heavily edit your cognate judgements, consider re-assigning central concepts with the switch `--overwrite`.
+The central concept of each cognate set is determined by the CLICS graph of all
+the concepts associated with this cognate set (this requires having your
+concepts linked to the Concepticon). In the absence of Concepticon links, the
+central concept is the most common concept.
+The internal API description contains [a detailed description of how the central concept is determined](lexedata.edit.add_central_concepts.central_concept)
+
+
+In order to add central concepts to your dataset, type `python -m lexedata.edit.add_central_concepts`. This will add a #ParameterReference column to your CognatesetTable containing the central concept. You can of course manually review and edit the central concepts. If you rely on central concepts for coding and you heavily edit your cognate judgements, consider re-assigning central concepts with the switch `--overwrite`.
 
 #### Adding trivial cognate sets (add_singleton_cognatesets)
 
