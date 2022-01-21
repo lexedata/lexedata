@@ -1,7 +1,7 @@
 """Import data in the "interleaved" format from an excel spreadsheet.
 
 Here, every even row contains cells with forms (cells may contain
-multiple forms), while the odd rows contain the associated cognate codes (a one-to-one relationship between forms and codes is expected).
+multiple forms), while every odd row contains the associated cognate codes (a one-to-one relationship between forms and codes is expected).
 Forms and cognate codes are separated by commas (",") and semi-colons (";"). Any other information existing in the cell will be parsed as
 part of the form or the cognate code.
 """
