@@ -8,19 +8,15 @@ from pathlib import Path
 import pycldf
 import pyclts
 import segments
-import cldfbench
-import cldfcatalog
 
 import lingpy
 import lingpy.compare.partial
 
 import lexedata.cli as cli
 import lexedata.types as types
+from lexedata.edit.add_segments import bipa
 
-
-clts_path = cldfcatalog.Config.from_file().get_clone("clts")
-clts = cldfbench.catalogs.CLTS(clts_path)
-bipa = clts.api.bipa
+# TODO maybe the CLTS logic from here and there belongs in util?
 
 tokenizer = segments.Tokenizer()
 
