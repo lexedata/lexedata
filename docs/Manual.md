@@ -49,20 +49,20 @@ The importation script using the long format can be used to add new data to an e
 ### Importing cognate sets from a Cognate Table
 You can update cognate sets, cognate judgements and associated metadata by exporting a Cognate Table from a cldf dataset and reimporting it after editing it by hand. This workflow can allow specialists to work on the cognacy judgements in a familiar format (such as excel), or allow a team to work collaboratively on Google sheets, while at the same time keeping the dataset in the standard cldf format. 
 
-Once you have exported a Cognate Table from your cldf dataset (using the `lexedata.exporter.cognates` command, see [Cognate Table exportation](#cognate-table-exportation), you can modify it in the spreadsheet editor of your choice and then reimport it by typing:
+Once you have exported a Cognate Table from your cldf dataset (using the `lexedata.exporter.cognates` command, see [export a Cognate Table](#export-a-cognate-table), you can modify it in the spreadsheet editor of your choice and then reimport it by typing:
 ```python -m lexedata.importer.cognates FILENAME```, specifying the Cognate Table that you want to import.
 
 
 ## Editing a CLDF dataset (lexedata.edit)
 The "edit" package includes a series of scripts to automate common targeted or batch edits in a lexical dataset. It also includes scripts that create links to Concepticon (TODO: add link) and integrate with LingPy (TODO: add link).
 
-If you need to do editing of raw data in your dataset (such as a transcription, translation, form comment etc), you need to do this manually. For `parameters.csv`, `forms.csv`, and `languages.csv`, you need to open the file in question in a spreadsheet editor, edit it, and save it again in the .csv format. For `cognates.csv` and `cognatesets.csv`, we recommend that you use the Cognate Table export (see [Cognate Table exportation](#cognate-table-exportation)). 
+If you need to do editing of raw data in your dataset (such as a transcription, translation, form comment etc), you need to do this manually. For `parameters.csv`, `forms.csv`, and `languages.csv`, you need to open the file in question in a spreadsheet editor, edit it, and save it again in the .csv format. For `cognates.csv` and `cognatesets.csv`, we recommend that you use the Cognate Table export (see [export a Cognate Table](#export-a-cognate-table)). 
 Whenever editing a cldf dataset, it is always a good idea to validate the dataset before and after (see [CLDF validate](#cldf-validate)) to make sure that everything went smoothly.
 
 ### CLDF dataset structure and curation
 
 #### How to add a metadata file (add_metadata)
-If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see [the metadata file](/docs/cldf.md#the-metadata-file). You can also use this command to obtain a starting metadata file for a new dataset. In this case, you can start from an empty FormTable that contains the columns you would like to include. The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
+If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see [the metadata file](/docs/cldf.md#the-metadata-file)). You can also use this command to obtain a starting metadata file for a new dataset. In this case, you can start from an empty FormTable that contains the columns you would like to include. The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
 
 #### How to add tables to your dataset (add_table)
 Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is `python -m lexedata.edit.add_table TABLE`. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see [how to add a CognateTable](#how-to-add-a-cognatetable-add_cognate_table).
@@ -87,8 +87,8 @@ In case you want to replace an entire ID column of a table, then you need to add
 
 ### Operations on FormTable
 
-#### Homophonous and polysemous forms (merge_homophones)
-In large datasets, there may be identical forms within the same language, corresponding to homophonous or polysemous words. You can use `python -m lexedata.report.homophones` to detect identical forms present in the dataset (see [detect potential homophonous or polysemous entries](#detect-potential-homophonous-or-polysemous-entries)). Once you decide which forms are in fact polysemous, you can use  `python -m lexedata.edit.merge_homophones MERGE_FILE`  in order to merge them into one form with multiple meanings. The MERGE_FILE contains the forms to be merged, in the same format as the output report from the `lexedata.report.homophones` command. There are multiple merge functions available for the different metadata associated with forms (e.g. for comments the default merge function is concatenate, while for sources it is union). If you need to modify the default behavior of the command you can use the optional argument `--merge COLUMN:MERGER`, where COLUMN is the name of the column in your dataset and MERGER is the merge function you want to use (from a list of functions that can be found in the help).
+#### Merge polysemous forms (merge_homophones)
+In large datasets, there may be identical forms within the same language, corresponding to homophonous or polysemous words. You can use `python -m lexedata.report.homophones` to detect identical forms present in the dataset (see [detect potential homophonous or polysemous forms](#detect-potential-homophonous-or-polysemous-forms)). Once you decide which forms are in fact polysemous, you can use  `python -m lexedata.edit.merge_homophones MERGE_FILE`  in order to merge them into one form with multiple meanings. The MERGE_FILE contains the forms to be merged, in the same format as the output report from the `lexedata.report.homophones` command. There are multiple merge functions available for the different metadata associated with forms (e.g. for comments the default merge function is concatenate, while for sources it is union). If you need to modify the default behavior of the command you can use the optional argument `--merge COLUMN:MERGER`, where COLUMN is the name of the column in your dataset and MERGER is the merge function you want to use (from a list of functions that can be found in the help).
 
 #### Segment forms (add_segments)
 In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms included in your dataset. Lexedata can do this automatically using CLTS (TODO: add link). To use this functionality type: ```python -m lexedata.edit.add_segments TRANCRIPTION_COLUMN```, where transcription column refers to the column that contains the forms to be segmented (the #form column by default). A column "Segments" will be added to your FormTable. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review. You may choose to apply these corrections to the form column as well, using the switch `--replace_form`.
@@ -133,8 +133,11 @@ src/lexedata//report/extended_cldf_validate.py
 ### Filter dataset
 src/lexedata//report/filter.py
 
-### Detect potential homophonous or polysemous entries
-src/lexedata//report/homophones.py
+### Detect potential homophonous or polysemous forms
+In large datasets, you may have identical forms associated with different concepts. This could be the case because there are homophonous, unrelated forms, or because there is in fact one polysemous form. Lexedata can help you detect potential homophonous or polysemous forms by using the command
+
+```python -m lexedata.report.homophones```
+The output of this command is a list of all groups of identical forms in the data and their associated concepts, along with the information if the associated concepts are connected in CLICS or not (if your concepts are linked to Concepticon, see [linking concepts to Concepticon](#linking-concepts-to-concepticon-add_concepticon)). You can choose to merge the polysemous forms, so you have one form associated to multiple concepts. In order to perform this operation, edit the output file of `lexedata.report.homophones`, so that only the groups of forms that are to be merged remain and then use `lexedata.edit.merge_homophones` (see [merge polysemous forms](#merge-polysemous-forms-merge_homophones)).
 
 ### Non-concatenative morphology
 src/lexedata//report/nonconcatenative_morphemes.py
@@ -142,7 +145,7 @@ src/lexedata//report/nonconcatenative_morphemes.py
 
 
 ## Exporting data (lexedata.exporter)
-### Cognate Table exportation
+### Export a Cognate Table
 
 Lexedata offers the possibility to edit and annotate within- or across-concept cognate sets in a spreadsheet format using the spreadsheet
 editor of your choice (we have successfully used Google sheets and Microsoft
@@ -166,11 +169,11 @@ There are optional arguments to sort the languages and the cognate sets in this 
 You can open and edit the Cognate Table in the spreadsheet editor of your choice. You just need to remember that you need and xlsx format in order to reimport your modified cognate sets into your cldf dataset (using the lexedata.importer.cognates command, see [importing cognate sets from a Cognate Table](#importing-cognate-sets-from-a-cognate-table). 
 
 
-### Edictor export-import loop
-### Comparative Wordlist export
+### Export to Edictor
+### Export a comparative wordlist
 
 
-### Exporting coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)
+### Export coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)
 Lexedata is a powerful tool to prepare linguistic data for phylogenetic analyses. It can be used to export a cldf dataset containing cognate judgements as a coded matrix for phylogenetic analyses to be used by standard phylogenetic software (such as BEAST, MrBayes or revBayes). Different formats are supported, such as nexus, csv, a beast-friendly xml format, as well as a raw alignment format (similar to FASTA format used in bioinformatics). Lexedata also supports different coding methods for phylogenetic analyses: root-meaning sets, cross-meaning cognate sets, and multistate coding. Finally, you can use Lexedata to filter and export a portion of your dataset for phylogenetic analyses, e.g. if some languages or concepts are not fully coded yet, or if you want to exclude specific cognate sets that are not reviewed yet.
 
 
