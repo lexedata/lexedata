@@ -21,9 +21,9 @@ Glossary
     The method used to derive a character matrix that can be used as input for phylogenetic analyses.
     There are three main coding methods for lexical data that have been used for phylogenetic analyses. We will briefly list them here.
 
-    1. root-meaning coding
-    2. root presence coding
-    3. multistate coding
+    1. :term:`root-meaning coding`
+    2. :term:`root presence coding`
+    3. :term:`multistate coding`
 
   Cross-concept cognate set
     A cognate set that includes all descendants or reflexes of a protoform irrespective of their meaning (i.e. including items that have undergone semantic shift). In traditional historical linguistics words are termed cognate if they share a common protoform and they have been passed down to daughter languages from a common ancestor through vertical transmission (i.e. no borrowing has occured). According to this definition, while it is expected that the meaning of cognate words is related, it doesn't have to be identical. In many phylogenetic studies the term "cognate set" has been used for sets of words that derive from a common protoform and additionally have the same meaning. In this manual we are explicit by distinguishing between cross-concept cognate sets and within-concept cognate sets. Lexedata can work with both, but there are some functionalities that only make sense with a particular kind of cognate sets. Also, keep in mind that once cross-concept cognate sets are constructed, then the derivation of within-concept cognate sets is trivial (and lexedata can do it automatically). (see also within-concept cognate set)
