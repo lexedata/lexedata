@@ -16,9 +16,9 @@ strict about IPA transcriptions, pass a dictionary of your choice as
 
 Then, naïvely segment the form using the IPA tokenizer from the `segments`
 package. Check each returned segment to see whether it is valid according to
-CLTS's BIPA, and if not, try to fix some issues (in particular pre-aspirated
+CLTS's BIPA, and if not, try to fix some issues – in particular pre-aspirated
 or pre-nasalized consonants showing up as post-aspirated resp. post-nasalized
-vowels, which BIPA does not accept).)
+vowels, which BIPA does not accept.
 
 .. _CLTS: https://clts.clld.org/parameters
 """
