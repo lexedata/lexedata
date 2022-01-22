@@ -42,7 +42,7 @@ try:
     clts_path = cldfcatalog.Config.from_file().get_clone("clts")
     clts = cldfbench.catalogs.CLTS(clts_path)
     bipa = clts.api.bipa
-except KeyError:
+except KeyError:  # pragma: no cover
     # Make a temporary clone of CLTS. Mostly useful for ReadTheDocs.
     import os
     from tempfile import mkdtemp
