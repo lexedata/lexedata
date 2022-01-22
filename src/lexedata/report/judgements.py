@@ -148,7 +148,10 @@ def check_cognate_table(
                 continue
             try:
                 included_segments = list(parse_segment_slices(judgement[c_sslice]))
-                if max(included_segments) >= len(form_segments):
+                if (
+                    max(included_segments) >= len(form_segments)
+                    or min(included_segments) < 0
+                ):
                     log_or_raise(
                         "In {}, row {}: Segment slice {} is invalid for segments {}".format(
                             f,

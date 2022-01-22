@@ -1,0 +1,132 @@
+import re
+import logging
+
+from lexedata import util
+import lexedata.report.judgements
+
+
+def test_python_slice_is_wrong(caplog):
+    ds = util.fs.new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "test",
+                "Segments": ["t", "e", "s", "t"],
+            }
+        ],
+        CognateTable=[
+            {
+                "ID": "j1",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f1",
+                "Segment_Slice": ["0:4"],
+            }
+        ],
+    )
+    with caplog.at_level(logging.WARNING):
+        lexedata.report.judgements.check_cognate_table(ds)
+    assert re.search("slice .*0:4.* is invalid", caplog.text)
+
+
+def test_overlong_slice_is_wrong(caplog):
+    ds = util.fs.new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "test",
+                "Segments": ["t", "e", "s", "t"],
+            }
+        ],
+        CognateTable=[
+            {
+                "ID": "j1",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f1",
+                "Segment_Slice": ["1:7"],
+            }
+        ],
+    )
+    with caplog.at_level(logging.WARNING):
+        lexedata.report.judgements.check_cognate_table(ds)
+    assert re.search("slice .*1:7.* is invalid", caplog.text)
+
+
+def test_backward_slice_is_wrong(caplog):
+    ds = util.fs.new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "test",
+                "Segments": ["t", "e", "s", "t"],
+            }
+        ],
+        CognateTable=[
+            {
+                "ID": "j1",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f1",
+                "Segment_Slice": ["4:3"],
+            }
+        ],
+    )
+    with caplog.at_level(logging.WARNING):
+        lexedata.report.judgements.check_cognate_table(ds)
+    assert re.search("slice .*4:3.* is invalid", caplog.text)
+
+
+def test_default_metathesis_is_okay(caplog):
+    ds = util.fs.new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "test",
+                "Segments": ["t", "e", "s", "t"],
+            }
+        ],
+        CognateTable=[
+            {
+                "ID": "j1",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f1",
+                "Segment_Slice": ["1", "3", "2", "1"],
+                "Alignment": ["t", "s", "e", "t"],
+            }
+        ],
+    )
+    with caplog.at_level(logging.WARNING):
+        lexedata.report.judgements.check_cognate_table(ds)
+    assert not caplog.text
+
+
+def test_strict_metathesis_is_wrong(caplog):
+    ds = util.fs.new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "test",
+                "Segments": ["t", "e", "s", "t"],
+            }
+        ],
+        CognateTable=[
+            {
+                "ID": "j1",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f1",
+                "Segment_Slice": ["1", "3", "2", "1"],
+                "Alignment": ["t", "s", "e", "t"],
+            }
+        ],
+    )
+    with caplog.at_level(logging.WARNING):
+        lexedata.report.judgements.check_cognate_table(ds, strict_concatenative=True)
+    assert re.search("non-consecutive", caplog.text)
