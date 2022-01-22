@@ -42,14 +42,24 @@ def tq(iter, task, logger=logger, total: t.Optional[t.Union[int, float]] = None)
         return iter
 
 
+class ChangeLoglevel(argparse.Action):
+    def __init__(self, option_strings, dest, change, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super().__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, getattr(namespace, self.dest) + self.change)
+
+
 def add_log_controls(parser: argparse.ArgumentParser):
     logcontrol = parser.add_argument_group("Logging")
     logcontrol.add_argument("--loglevel", type=int, default=logging.INFO)
     logcontrol.add_argument(
-        "-q", action="store_const", const=logging.WARNING, dest="loglevel"
+        "-q", action=ChangeLoglevel, change=10, const=logging.WARNING, dest="loglevel"
     )
     logcontrol.add_argument(
-        "-v", action="store_const", const=logging.DEBUG, dest="loglevel"
+        "-v", action=ChangeLoglevel, change=-10, const=logging.DEBUG, dest="loglevel"
     )
 
 
