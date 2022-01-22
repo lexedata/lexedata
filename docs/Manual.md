@@ -62,7 +62,7 @@ Whenever editing a cldf dataset, it is always a good idea to validate the datase
 ### CLDF dataset structure and curation
 
 #### How to add a metadata file (add_metadata)
-If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see [how to read a json file](/docs/cldf.md#the-metadata-file). You can also use this command to obtain a starting metadata file for a new dataset. In this case, you can start from an empty FormTable that contains the columns you would like to include. The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
+If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see [the metadata file](/docs/cldf.md#the-metadata-file). You can also use this command to obtain a starting metadata file for a new dataset. In this case, you can start from an empty FormTable that contains the columns you would like to include. The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
 
 #### How to add tables to your dataset (add_table)
 Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is `python -m lexedata.edit.add_table TABLE`. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see [how to add a CognateTable](#how-to-add-a-cognatetable-add_cognate_table).
@@ -98,7 +98,7 @@ In order to align forms to find correspondence sets and for automatic cognate de
 
 #### Linking concepts to Concepticon (add_concepticon)
 Lexedata can automatically link the concepts present in a dataset with concept sets in the Concepticon (https://concepticon.clld.org/). The relevant command is ```python -m lexedata.edit.add_concepticon```.
-Your ParameterTable will now have a new column: Concepticon ID, with the corresponding ID of a concept set in Concepticon. We recommend that you manually inspect these links for errors. In order to facilitate this task, you can also add columns for the concept set name (`--add_concept_set_name`) and the concepticon definition (`--add_definitions`). Finally, if your ParameterTable contains a Status Column (see [workflow and tracking aid](workflow-and-tracking-aid-add_status_column)), any links to the Concepticon will be tagged as automatic, or you can define a custom message using `--status_update "STATUS UPDATE"`.
+Your ParameterTable will now have a new column: Concepticon ID, with the corresponding ID of a concept set in Concepticon. We recommend that you manually inspect these links for errors. In order to facilitate this task, you can also add columns for the concept set name (`--add_concept_set_name`) and the concepticon definition (`--add_definitions`). Finally, if your ParameterTable contains a Status Column (see [workflow and tracking aid](#workflow-and-tracking-aid-add_status_column)), any links to the Concepticon will be tagged as automatic, or you can define a custom message using `--status_update "STATUS UPDATE"`.
 
 ### Operations on CognateTable (judgements) and CognatesetTable
 
@@ -154,7 +154,7 @@ existing cognate sets and cognate judgements, as well as any associated comments
 (CognateTable comments and CognatesetTable comments).
 
 IMPORTANT: you cannot edit the raw data (forms, translation, form comments etc)
-through this process. To edit raw data, see [editing a CLDF dataset](#editing-a-cldf-dataset-lexedata.edit).
+through this process. To edit raw data, see [editing a CLDF dataset](#editing-a-cldf-dataset-lexedataedit).
 
 It is always a good idea to validate your dataset before and after any edits to make sure that everything is linked as it should in the cldf format.
 You can use `cldf validate METADATA_FILE` or `python -m lexedata.report.extended_cldf_validate` for a more thorough check (see also [CLDF validate](#cldf-validate)). 
