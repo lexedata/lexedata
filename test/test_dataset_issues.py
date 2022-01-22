@@ -222,3 +222,67 @@ def test_alignments_must_match_length(caplog):
     with caplog.at_level(logging.WARNING):
         lexedata.report.judgements.check_cognate_table(ds)
     assert re.search("length.*3.*other alignments.*length.*4", caplog.text)
+
+
+def test_missing_forms_not_coded(caplog):
+    ds = util.fs.new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "test",
+                "Value": "test",
+                "Segments": ["t", "e", "s", "t"],
+            },
+            {
+                "ID": "f2",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "-",
+                "Value": "-",
+                "Segments": [],
+            },
+            {
+                "ID": "f3",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": None,
+                "Value": None,
+                "Segments": [],
+            },
+            {
+                "ID": "f3",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "",
+                "Value": "",
+                "Segments": [],
+            },
+        ],
+        CognateTable=[
+            {
+                "ID": "j1",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f1",
+            },
+            {
+                "ID": "j2",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f2",
+            },
+            {
+                "ID": "j3",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f3",
+            },
+            {
+                "ID": "j4",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f4",
+            },
+        ],
+    )
+    with caplog.at_level(logging.WARNING):
+        lexedata.report.judgements.check_cognate_table(ds)
+    assert "murks" in caplog.text
