@@ -1,8 +1,10 @@
 Internal API reference
 ======================
 
-Subpackages
------------
+.. automodule:: lexedata
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 .. toctree::
    :maxdepth: 4
@@ -12,9 +14,6 @@ Subpackages
    lexedata.importer
    lexedata.report
    lexedata.util
-
-Submodules
-----------
 
 lexedata.cli module
 -------------------
@@ -40,10 +39,3 @@ lexedata.types module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: lexedata
-   :members:
-   :undoc-members:
-   :show-inheritance:

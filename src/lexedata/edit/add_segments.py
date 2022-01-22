@@ -16,9 +16,9 @@ strict about IPA transcriptions, pass a dictionary of your choice as
 
 Then, naïvely segment the form using the IPA tokenizer from the `segments`
 package. Check each returned segment to see whether it is valid according to
-CLTS's BIPA, and if not, try to fix some issues (in particular pre-aspirated
+CLTS's BIPA, and if not, try to fix some issues – in particular pre-aspirated
 or pre-nasalized consonants showing up as post-aspirated resp. post-nasalized
-vowels, which BIPA does not accept).)
+vowels, which BIPA does not accept.
 
 .. _CLTS: https://clts.clld.org/parameters
 """
@@ -38,9 +38,21 @@ import attr
 
 import lexedata.cli as cli
 
-clts_path = cldfcatalog.Config.from_file().get_clone("clts")
-clts = cldfbench.catalogs.CLTS(clts_path)
-bipa = clts.api.bipa
+try:
+    clts_path = cldfcatalog.Config.from_file().get_clone("clts")
+    clts = cldfbench.catalogs.CLTS(clts_path)
+    bipa = clts.api.bipa
+except KeyError:  # pragma: no cover
+    # Make a temporary clone of CLTS. Mostly useful for ReadTheDocs.
+    import os
+    from tempfile import mkdtemp
+
+    clts_path = mkdtemp("clts")
+    os.system(
+        f"git clone -b v2.0.0 --depth 1 https://github.com/cldf-clts/clts.git {clts_path}"
+    )
+    clts = cldfbench.catalogs.CLTS(clts_path)
+    bipa = clts.api.bipa
 
 tokenizer = segments.Tokenizer()
 
@@ -83,21 +95,24 @@ def cleanup(form: str) -> str:
 
 
 pre_replace = {
-    "l̴": "ɬ",
+    "l̴": str(bipa["voiceless alveolar lateral fricative consonant"]),
     "˺": "̚",
     "ˑ": ".",
-    "oː́": "oó",
-    "\u2184": "ɔ",  # LATIN SMALL LETTER REVERSED C, instead of LATIN SMALL LETTER OPEN O
-    "Ɂ": "ʔ",
-    # "?": "ʔ",  # But this could also be marking an unknown sound – maybe the recording is messy
-    # "'": "ˈ",  # But this could also be marking ejective consonants, so don't guess
-    "͡ts": "t͡s",
-    "ts͡": "t͡s",
-    "ts͜": "t͡s",
-    "͜ts": "t͡s",
-    "tʃ͡": "t͡ʃ",
-    "͡tʃ": "t͡ʃ",
-    "t͡ç": "c͡ç",
+    "oː́": str(bipa["long rounded close-mid back with-high_tone vowel"]),
+    "\u2184": str(bipa["rounded open-mid back vowel"]),
+    # LATIN SMALL LETTER REVERSED C, instead of LATIN SMALL LETTER OPEN O
+    "Ɂ": str(bipa["voiceless glottal stop consonant"]),
+    # "?": str(bipa["voiceless glottal stop consonant"]),
+    # But this could also be marking an unknown sound – maybe the recording is messy
+    # "'": "ˈ",
+    # But this could also be marking ejective consonants, so don't guess
+    "͡ts": str(bipa["voiceless alveolar sibilant affricate consonant"]),
+    "ts͡": str(bipa["voiceless alveolar sibilant affricate consonant"]),
+    "ts͜": str(bipa["voiceless alveolar sibilant affricate consonant"]),
+    "͜ts": str(bipa["voiceless alveolar sibilant affricate consonant"]),
+    "tʃ͡": str(bipa["voiceless post-alveolar sibilant affricate consonant"]),
+    "͡tʃ": str(bipa["voiceless post-alveolar sibilant affricate consonant"]),
+    "t͡ç": str(bipa["voiceless palatal affricate consonan"]),
 }
 
 

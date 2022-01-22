@@ -75,7 +75,7 @@ def filter(
     )
 
 
-if __name__ == "__main__":
+def parser():
     parser = cli.parser(description=__doc__)
     parser.add_argument("column", help="The column to filter.", metavar="COLUMN")
     parser.add_argument("filter", help="An expression to filter by.", metavar="FILTER")
@@ -97,9 +97,14 @@ if __name__ == "__main__":
         "-c",
         action="append",
         default=[],
-        help="Output only columns OUTPUT_COLUMN,OUTPUT_COLUMN,OUTPUT_COLUMN,… in the same order as given.",
+        help="Output only columns OUTPUT_COLUMN1,OUTPUT_COLUMN2,OUTPUT_COLUMN3,… in the same order as given.",
     )
-    args = parser.parse_args()
+
+    return parser
+
+
+if __name__ == "__main__":
+    args = parser().parse_args()
     logger = cli.setup_logging(args)
 
     if not args.table:

@@ -6,6 +6,9 @@ from lexedata.edit.add_segments import (
     SegmentReport,
     add_segments_to_dataset,
 )
+from lexedata.report.segment_inventories import count_segments
+
+from lexedata import util
 from test_excel_conversion import copy_to_temp
 from lexedata.cli import logger
 
@@ -85,3 +88,40 @@ def test_add_segments_to_dataset():
     #     ("old_paraguayan_guarani", "?", 1, "unknown sound"),
     #
     # ]
+
+
+def test_segment_inventory_report(caplog):
+    ds = util.fs.new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "test",
+                "Segments": ["t", "e", "s", "t"],
+            },
+            {
+                "ID": "f2",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "test",
+                "Segments": ["t", "e", "x", "t"],
+            },
+            {
+                "ID": "f3",
+                "Language_ID": "l2",
+                "Parameter_ID": "c1",
+                "Form": "test",
+                "Segments": ["t", "e", "x", "t"],
+            },
+        ],
+    )
+
+    assert count_segments(ds, {"l1"}) == {
+        "l1": {
+            "t": 4,
+            "e": 2,
+            "s": 1,
+            "x": 1,
+        }
+    }
