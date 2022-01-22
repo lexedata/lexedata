@@ -48,7 +48,9 @@ except KeyError:
     from tempfile import mkdtemp
 
     clts_path = mkdtemp("clts")
-    os.system("git clone -b v2.0.0 --depth 1 https://github.com/cldf-clts/clts.git")
+    os.system(
+        f"git clone -b v2.0.0 --depth 1 https://github.com/cldf-clts/clts.git {clts_path}"
+    )
     clts = cldfbench.catalogs.CLTS(clts_path)
     bipa = clts.api.bipa
 
