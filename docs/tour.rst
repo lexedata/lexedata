@@ -73,7 +73,7 @@ corresponding importer is called ``excel_interleaved`` and it works like this::
                                 [--loglevel LOGLEVEL] [-q] [-v]
                                 EXCEL
 
-    Import data in the "interleaved" format from an xls spreadsheet [...]
+    Import data in the "interleaved" format from an excel spreadsheet [...]
     [...]
 
     positional arguments:
