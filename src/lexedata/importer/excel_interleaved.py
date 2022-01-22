@@ -1,4 +1,4 @@
-"""Import data in the "interleaved" format from an excel spreadsheet.
+"""Import data in the "interleaved" format from an Excel spreadsheet.
 
 Here, every even row contains cells with forms (cells may contain
 multiple forms), while every odd row contains the associated cognate codes (a one-to-one relationship between forms and codes is expected).
