@@ -97,7 +97,7 @@ def parser():
         "-c",
         action="append",
         default=[],
-        help="Output only columns OUTPUT_COLUMN,OUTPUT_COLUMN,OUTPUT_COLUMN,… in the same order as given.",
+        help="Output only columns OUTPUT_COLUMN1,OUTPUT_COLUMN2,OUTPUT_COLUMN3,… in the same order as given.",
     )
 
     return parser
@@ -105,6 +105,7 @@ def parser():
 
 if __name__ == "__main__":
     args = parser().parse_args()
+    print(args)
     logger = cli.setup_logging(args)
 
     if not args.table:
