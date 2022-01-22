@@ -38,9 +38,17 @@ import attr
 
 import lexedata.cli as cli
 
-clts_path = cldfcatalog.Config.from_file().get_clone("clts")
-clts = cldfbench.catalogs.CLTS(clts_path)
-bipa = clts.api.bipa
+try:
+    clts_path = cldfcatalog.Config.from_file().get_clone("clts")
+    clts = cldfbench.catalogs.CLTS(clts_path)
+    bipa = clts.api.bipa
+except KeyError:
+    # Make a temporary clone of CLTS. Mostly useful for ReadTheDocs.
+    from tempfile import mkdtemp
+
+    with cldfcatalog.Catalog(mkdtemp("clts"), "v1.0") as clts_path:
+        clts = cldfbench.catalogs.CLTS(clts_path)
+        bipa = clts.api.bipa
 
 tokenizer = segments.Tokenizer()
 
@@ -83,21 +91,24 @@ def cleanup(form: str) -> str:
 
 
 pre_replace = {
-    "l̴": "ɬ",
+    "l̴": str(bipa["voiceless alveolar lateral fricative consonant"]),
     "˺": "̚",
     "ˑ": ".",
-    "oː́": "oó",
-    "\u2184": "ɔ",  # LATIN SMALL LETTER REVERSED C, instead of LATIN SMALL LETTER OPEN O
-    "Ɂ": "ʔ",
-    # "?": "ʔ",  # But this could also be marking an unknown sound – maybe the recording is messy
-    # "'": "ˈ",  # But this could also be marking ejective consonants, so don't guess
-    "͡ts": "t͡s",
-    "ts͡": "t͡s",
-    "ts͜": "t͡s",
-    "͜ts": "t͡s",
-    "tʃ͡": "t͡ʃ",
-    "͡tʃ": "t͡ʃ",
-    "t͡ç": "c͡ç",
+    "oː́": str(bipa["long rounded close-mid back with-high_tone vowel"]),
+    "\u2184": str(bipa["rounded open-mid back vowel"]),
+    # LATIN SMALL LETTER REVERSED C, instead of LATIN SMALL LETTER OPEN O
+    "Ɂ": str(bipa["voiceless glottal stop consonant"]),
+    # "?": str(bipa["voiceless glottal stop consonant"]),
+    # But this could also be marking an unknown sound – maybe the recording is messy
+    # "'": "ˈ",
+    # But this could also be marking ejective consonants, so don't guess
+    "͡ts": str(bipa["voiceless alveolar sibilant affricate consonant"]),
+    "ts͡": str(bipa["voiceless alveolar sibilant affricate consonant"]),
+    "ts͜": str(bipa["voiceless alveolar sibilant affricate consonant"]),
+    "͜ts": str(bipa["voiceless alveolar sibilant affricate consonant"]),
+    "tʃ͡": str(bipa["voiceless post-alveolar sibilant affricate consonant"]),
+    "͡tʃ": str(bipa["voiceless post-alveolar sibilant affricate consonant"]),
+    "t͡ç": str(bipa["voiceless palatal affricate consonan"]),
 }
 
 
