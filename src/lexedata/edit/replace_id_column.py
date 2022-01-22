@@ -3,7 +3,7 @@ from collections import defaultdict
 import pycldf
 
 import lexedata.cli as cli
-from lexedata.edit.simplify_ids import update_ids, string_to_id
+from lexedata.util.simplify_ids import update_ids, string_to_id
 
 if __name__ == "__main__":
     parser = cli.parser(
@@ -58,8 +58,6 @@ if __name__ == "__main__":
             f"If you want to force conflation of them in tables that reference {args.table}, use --merge."
         )
         cli.Exit.INVALID_ID()
-
-    ids = dataset
 
     update_ids(
         ds=dataset,

@@ -40,6 +40,7 @@ if __name__ == "__main__":
         default=[],
         action="append",
         help="Table names to exclude (takes precedence over table-names)",
+        metavar="TABLE",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)

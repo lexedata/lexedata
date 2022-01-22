@@ -97,6 +97,7 @@ def treat_brackets(
     {'F': 'da', 'V': [], 'C': '(dialectal)'}
     {'F': 'tum', 'V': ['tu'], 'C': '2p; (informal)'}
 
+
     Skipping works even when it is noticed only late in the process.
 
     >>> for row in treat_brackets([
