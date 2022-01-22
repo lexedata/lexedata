@@ -2,6 +2,7 @@ Glossary
 --------
 
 .. glossary::
+   :sorted:
 
   Central concept
     The ‘central’ meaning among all forms that derive from the same etymological root.
