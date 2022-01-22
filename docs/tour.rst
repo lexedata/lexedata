@@ -757,9 +757,6 @@ so pass that information to the script::
     $ python -m lexedata.edit.add_concepticon -q -l Name=en --add-concept-set-names --add-definitions
     OrderedDict([('ID', 'bark'), ('Name', 'bark'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('1204', 3), ('1206', 1)]
     OrderedDict([('ID', 'breast'), ('Name', 'breast'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('1402', 3), ('1592', 1)]
-    OrderedDict([('ID', 'burn'), ('Name', 'burn'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('2102', 3), ('141', 2), ('1428', 2), ('3622', 1)]
-    OrderedDict([('ID', 'cloud'), ('Name', 'cloud'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('1489', 3), ('448', 1)]
-    OrderedDict([('ID', 'cold'), ('Name', 'cold'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('1287', 3), ('102', 1), ('2483', 1), ('2932', 1)]
     [...]
     
 The output shows the concepts in our dataset with some ambiguous mappings to concepticon. Now is the time to check andif necessary fix the mappings. ::

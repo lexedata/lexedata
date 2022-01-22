@@ -338,8 +338,8 @@ def root_meaning_code(
 
 
 class AbsenceHeuristic(enum.Enum):
-    CentralConcept = 0
-    HalfPrimaryConcepts = 1
+    CENTRALCONCEPT = 0
+    HALFPRIMARYCONCEPTS = 1
 
 
 # TODO: Maybe this would make sense tied closer to AbsenceHeuristic?
@@ -371,7 +371,7 @@ def apply_heuristics(
     >>> ds.write(CognatesetTable=[
     ...     {"ID": "cognateset1", "Central_Concept": "concept1"}
     ... ])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CentralConcept) == {'cognateset1': {'concept1'}}
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CENTRALCONCEPT) == {'cognateset1': {'concept1'}}
     True
 
     This extends to the case where a cognateset may have more than one central concept.
@@ -387,7 +387,7 @@ def apply_heuristics(
     >>> ds.write(CognatesetTable=[
     ...     {"ID": "cognateset1", "Central_Concepts": ["concept1", "concept2"]}
     ... ])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CentralConcept) == {
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CENTRALCONCEPT) == {
     ...     'cognateset1': {'concept1', 'concept2'}}
     True
 
@@ -401,7 +401,7 @@ def apply_heuristics(
     ...     CognateTable=[
     ...         {"ID": "1", "Form_ID": "f1", "Cognateset_ID": "s1"},
     ...         {"ID": "2", "Form_ID": "f2", "Cognateset_ID": "s1"}])
-    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.HalfPrimaryConcepts) == {
+    >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.HALFPRIMARYCONCEPTS) == {
     ...     's1': {'c1', 'c2'}}
     True
 
@@ -414,9 +414,9 @@ def apply_heuristics(
         heuristic
         if heuristic is not None
         else (
-            AbsenceHeuristic.CentralConcept
+            AbsenceHeuristic.CENTRALCONCEPT
             if ("CognatesetTable", "parameterReference") in dataset
-            else AbsenceHeuristic.HalfPrimaryConcepts
+            else AbsenceHeuristic.HALFPRIMARYCONCEPTS
         )
     )
 
@@ -424,7 +424,7 @@ def apply_heuristics(
         types.Cognateset_ID, t.Set[types.Parameter_ID]
     ] = t.DefaultDict(set)
 
-    if heuristic is AbsenceHeuristic.HalfPrimaryConcepts:
+    if heuristic is AbsenceHeuristic.HALFPRIMARYCONCEPTS:
         c_f = dataset["CognateTable", "formReference"].name
         c_s = dataset["CognateTable", "cognatesetReference"].name
         concepts = util.cache_table(
@@ -437,7 +437,7 @@ def apply_heuristics(
             for concept in util.ensure_list(form["concepts"]):
                 relevant_concepts[j[c_s]].add(concept)
 
-    elif heuristic is AbsenceHeuristic.CentralConcept:
+    elif heuristic is AbsenceHeuristic.CENTRALCONCEPT:
         c_cognateset_concept = dataset["CognatesetTable", "parameterReference"].name
         c_id = dataset["CognatesetTable", "id"].name
         for c in dataset["CognatesetTable"]:
@@ -779,9 +779,22 @@ def add_partitions(data_object: ET.Element, partitions):
 
 
 if __name__ == "__main__":
+    import argparse
+
     parser = cli.parser(
         description="Export a CLDF dataset (or similar) to bioinformatics alignments"
     )
+
+    def enum_from_lower(enum: t.Type[enum.Enum]):
+        class FromLower(argparse.Action):
+            def __call__(self, parser, namespace, values, option_string=None, **kwargs):
+                enum_item = {
+                    name.lower(): object for name, object in enum.__members__.items()
+                }[values.lower()]
+                setattr(namespace, self.dest, enum_item)
+
+        return FromLower
+
     parser.add_argument(
         "--format",
         choices=("csv", "raw", "beast", "nexus"),
@@ -842,9 +855,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--absence-heuristic",
-        type=AbsenceHeuristic.__getitem__,
-        default=None,
-        choices=list(AbsenceHeuristic.__members__),
+        action=enum_from_lower(AbsenceHeuristic),
         help="""In case of --coding=rootpresence, which heuristic should be used for the
         coding of absences? The default depends on whether the dataset contains
         a #parameterReference column in its CognatesetTable: If there is one,
@@ -858,7 +869,6 @@ if __name__ == "__main__":
     parser.add_argument("--stats-file", type=Path, help="A file to write statistics to")
     args = parser.parse_args()
     logger = cli.setup_logging(args)
-
     # Step 1: Load the raw data.
     dataset = pycldf.Dataset.from_metadata(args.metadata)
 
@@ -904,7 +914,7 @@ if __name__ == "__main__":
     alignment: t.Mapping[Language_ID, str]
     if args.coding == "rootpresence":
         relevant_concepts = apply_heuristics(
-            dataset, args.heuristic, primary_concepts=concepts
+            dataset, args.absence_heuristic, primary_concepts=concepts
         )
         binal, cognateset_indices = root_presence_code(
             ds, relevant_concepts=relevant_concepts, logger=logger

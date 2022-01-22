@@ -360,24 +360,27 @@ if __name__ == "__main__":
         action="append",
         type=str,
         default=[],
-        help="Sheet to parse. Use multiple --sheet=Name arguments for multiple sheets. (default: all)",
+        metavar="SHEET_NAME",
+        help="Sheet to parse. For multiple sheets, use multiple arguments of the shape --sheet Name1 --sheet Name2 (default: all sheets)",
     )
     parser.add_argument(
         "--match-form",
+        "-f",
+        action="append",
         type=str,
-        nargs="*",
         default=[],
-        help="Columns to match forms by",
+        metavar="COLUMN_NAME",
+        help="Forms are considered identical if all columns passed to -f/--match-form are identical",
     )
     parser.add_argument(
-        "--ignore-superfluous-excel-columns",
+        "--ignore-superfluous-columns",
         "-s",
         action="store_true",
         default=False,
         help="Ignore columns in the Excel table which are not in the dataset",
     )
     parser.add_argument(
-        "--ignore-missing-excel-columns",
+        "--ignore-missing-columns",
         "-m",
         action="store_true",
         default=False,
@@ -389,7 +392,8 @@ if __name__ == "__main__":
         type=str,
         nargs="*",
         default=[],
-        help="Sheets not to parse. Does not affect sheets explicitly added using --sheets.",
+        metavar="SHEET_NAME",
+        help="Sheets not to parse. Does not affect sheets explicitly added using --sheet.",
     )
     parser.add_argument(
         "--status-update",

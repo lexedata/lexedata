@@ -188,7 +188,9 @@ def coverage_report_concepts(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description="Summarise coverage data")
+    parser = cli.parser(
+        description="Summarise coverage, i.e. how many concepts are known for each language."
+    )
     # parser.add_argument(
     #     "--min-concepts",
     #     default=0,

@@ -1,7 +1,7 @@
 import pycldf
 
 import lexedata.cli as cli
-from lexedata.edit.simplify_ids import update_ids
+from lexedata.util.simplify_ids import update_ids
 
 
 if __name__ == "__main__":
@@ -49,8 +49,6 @@ if __name__ == "__main__":
                 args.table,
             )
             cli.Exit.INVALID_ID()
-
-    ids = dataset
 
     update_ids(
         ds=dataset,
