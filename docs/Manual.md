@@ -49,7 +49,7 @@ The importation script using the long format can be used to add new data to an e
 ### Importing cognate sets from a Cognate Table
 You can update cognate sets, cognate judgements and associated metadata by exporting a Cognate Table from a cldf dataset and reimporting it after editing it by hand. This workflow can allow specialists to work on the cognacy judgements in a familiar format (such as excel), or allow a team to work collaboratively on Google sheets, while at the same time keeping the dataset in the standard cldf format. 
 
-Once you have exported a Cognate Table from your cldf dataset (using the `lexedata.exporter.cognates` command, see [Cognate Table exportation](#cognate-table-edportation), you can modify it in the spreadsheet editor of your choice and then reimport it by typing:
+Once you have exported a Cognate Table from your cldf dataset (using the `lexedata.exporter.cognates` command, see [Cognate Table exportation](#cognate-table-exportation), you can modify it in the spreadsheet editor of your choice and then reimport it by typing:
 ```python -m lexedata.importer.cognates FILENAME```, specifying the Cognate Table that you want to import.
 
 
