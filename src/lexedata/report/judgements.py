@@ -1,14 +1,7 @@
-"""Check the judgements:
-
-• Check that the segment slice is a valid subset of the actual segments – if
-  not ordered, warn about metathesis; check that no segment is taken double;
-  check that the slice is at most as long as the segments.
-• Check that the segments in the alignment match the corresponding segments in the form
-• Check that all alignments of a cognateset have the same length
+"""Check that the judgements make sense.
 
 """
 import typing as t
-
 import pycldf
 
 from lexedata import cli
@@ -19,7 +12,9 @@ def log_or_raise(message, logger=cli.logger):
     logger.warning(message)
 
 
-def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
+def check_cognate_table(
+    dataset: pycldf.Wordlist, logger=cli.logger, strict_concatenative=False
+) -> bool:
     """Check that the CognateTable makes sense.
 
     The cognate table MUST have an indication of forms, in a #formReference
@@ -30,6 +25,9 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
      - The alignment must match the segment slice applied to the segments of the form
      - The length of the alignment must match the lengths of other alignments of that cognate set
      - Missing forms (Including "-" for “concept not available in language” must not be in cognatesets)
+
+    If checking for strictly concatenative morphology, also check that the
+    segment slice is a contiguous, non-overlapping section of the form.
 
     Having no cognates is a valid choice for a dataset, so this function returns True if no CognateTable was found.
 
@@ -46,16 +44,14 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
     try:
         c_form = dataset["CognateTable", "formReference"].name
     except KeyError:
-        log_or_raise("CognateTable does not have a #formReference column.", log=log)
+        log_or_raise("CognateTable does not have a #formReference column.")
         # All further checks don't make sense, return early.
         return False
 
     try:
         c_cognateset = dataset["CognateTable", "cognatesetReference"].name
     except KeyError:
-        log_or_raise(
-            "CognateTable does not have a #cognatesetReference column.", log=log
-        )
+        log_or_raise("CognateTable does not have a #cognatesetReference column.")
         # All further checks don't make sense, return early.
         return False
 
@@ -76,24 +72,23 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
             ):
                 log_or_raise(
                     "CognateTable #formReference does not reference a FormTable.",
-                    log=log,
                 )
             break
     else:
-        log_or_raise("CognateTable #formReference must be a foreign key.", log=log)
+        log_or_raise("CognateTable #formReference must be a foreign key.")
         # All further checks don't make sense, return early.
         return False
 
     try:
         c_sslice = dataset["CognateTable", "segmentSlice"].name
     except KeyError:
-        log_or_raise("CognateTable does not have a #segmentSlice column.", log=log)
+        log_or_raise("CognateTable does not have a #segmentSlice column.")
         c_sslice = None
 
     try:
         c_alignment = dataset["CognateTable", "alignment"].name
     except KeyError:
-        log_or_raise("CognateTable does not have a #segmentSlice column.", log=log)
+        log_or_raise("CognateTable does not have a #segmentSlice column.")
         c_alignment = None
 
     if c_sslice is None and c_alignment is None:
@@ -110,7 +105,7 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
 
     except KeyError:
         if dataset[referenced_table] == dataset["FormTable"]:
-            log_or_raise("FormTable does not have a #form column.", log=log)
+            log_or_raise("FormTable does not have a #form column.")
 
         def form_given(row):
             return True
@@ -133,9 +128,7 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
     )
     cognateset_alignment_lengths: t.DefaultDict[t.Any, t.Set[int]] = t.DefaultDict(set)
 
-    for f, j, judgement in dataset["CognateTable"].iterdicts(
-        log=log, with_metadata=True
-    ):
+    for f, j, judgement in dataset["CognateTable"].iterdicts(with_metadata=True):
         try:
             form_segments = forms[judgement[c_form]]["segments"]
         except KeyError:
@@ -144,7 +137,6 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
                     "In {}, row {}: NA form was judged to be in cognate set.".format(
                         f, j
                     ),
-                    log=log,
                 )
             # The case of a missing foreign key in general is already handled
             # by the basic CLDF validator.
@@ -152,20 +144,45 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
 
         if c_sslice is not None:
             if not judgement[c_sslice]:
-                log_or_raise("In {}, row {}: Empty segment slice".format(f, j), log=log)
+                log_or_raise("In {}, row {}: Empty segment slice".format(f, j))
                 continue
-            included_segments = list(parse_segment_slices(judgement[c_sslice]))
-            if max(included_segments) >= len(form_segments):
+            try:
+                included_segments = list(parse_segment_slices(judgement[c_sslice]))
+                if max(included_segments) >= len(form_segments):
+                    log_or_raise(
+                        "In {}, row {}: Segment slice {} is invalid for segments {}".format(
+                            f,
+                            j,
+                            judgement[c_sslice],
+                            form_segments,
+                        ),
+                    )
+                    all_judgements_okay = False
+                    continue
+                if strict_concatenative:
+                    s1 = included_segments[0]
+                    for s2 in included_segments[1:]:
+                        if s2 != s1 + 1:
+                            log_or_raise(
+                                "In {}, row {}: Segment slice {} has non-consecutive elements {}, {}".format(
+                                    f,
+                                    j,
+                                    judgement[c_sslice],
+                                    s1,
+                                    s2,
+                                )
+                            )
+                        s1 = s2
+            except ValueError:
                 log_or_raise(
-                    "In {}, row {}: Segment slice {} is invalid for segments {}".format(
+                    "In {}, row {}: Segment slice {} is invalid".format(
                         f,
                         j,
                         judgement[c_sslice],
-                        form_segments,
-                    ),
-                    log=log,
+                    )
                 )
                 all_judgements_okay = False
+                continue
         else:
             included_segments = list(range(len(form_segments)))
 
@@ -178,7 +195,6 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
                     "In {}, row {}: Alignment has length {}, other alignments of cognateset {} have length(s) {}".format(
                         f, j, alignment_length, judgement[c_cognateset], lengths
                     ),
-                    log=log,
                 )
                 all_judgements_okay = False
             elif not lengths:
@@ -196,8 +212,27 @@ def check_cognate_table(dataset: pycldf.Wordlist, log=None) -> bool:
                     "In {}, row {}: Referenced segments in form resolve to {}, while alignment contains segments {}.".format(
                         f, j, actual_segments, without_gaps
                     ),
-                    log=log,
                 )
                 all_judgements_okay = False
 
     return all_judgements_okay
+
+
+if __name__ == "__main__":
+    parser = cli.parser(description=__doc__)
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        default=False,
+        help="Warn where morphology is not strictly concatenative.",
+    )
+    args = parser.parse_args()
+    logger = cli.setup_logging(args)
+
+    dataset = pycldf.Dataset.from_metadata(args.metadata)
+
+    dataset.auto_constraints()
+
+    # Check that the CognateTable makes sense
+    if check_cognate_table(dataset, logger=logger, strict_concatenative=args.strict):
+        logger.info("No judgement issues found.")
