@@ -105,7 +105,6 @@ def parser():
 
 if __name__ == "__main__":
     args = parser().parse_args()
-    print(args)
     logger = cli.setup_logging(args)
 
     if not args.table:

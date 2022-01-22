@@ -513,7 +513,7 @@ There are a few unknown symbols left in the data, but most of it is clean IPA no
 
     $ git commit -am "Clean up forms"
     [...]
-
+   
 Add more tables
 ---------------
 
@@ -924,6 +924,84 @@ help bootstrap this, using again the link to Concepticon and CLICS³. ::
     $ git commit -am "Add central concepts"
     [...]
 
+Informative reports
+-------------------
+
+If we want to check the phoneme inventories implied by the segmentation
+generated initially, we can use one of the reports::
+
+    $ python -m lexedata.report.segment_inventories -q --language Nzebi # doctest: +NORMALIZE_WHITESPACE
+    Nzebi
+    | Sound   |   Occurrences | Comment      |
+    |---------+---------------+--------------|
+    | m       |            37 |              |
+    | l       |            36 |              |
+    | ù       |            31 |              |
+    | à       |            31 |              |
+    | a       |            26 |              |
+    | b       |            25 |              |
+    | n       |            23 |              |
+    | t       |            17 |              |
+    | ə̀      |            17 |              |
+    | k       |            17 |              |
+    | g       |            15 |              |
+    | u       |            15 |              |
+    | i       |            14 |              |
+    | s       |            14 |              |
+    | d       |            14 |              |
+    | á       |            13 |              |
+    | x       |            12 |              |
+    | ì       |            12 |              |
+    | í       |            12 |              |
+    | ŋ       |            11 |              |
+    | y       |            11 |              |
+    | ɛ̀      |            11 |              |
+    | ɛ       |            11 |              |
+    | ɔ̀      |            10 |              |
+    | ɲ       |            10 |              |
+    | ú       |             8 |              |
+    | o       |             7 |              |
+    | â       |             7 |              |
+    | ʃ       |             6 |              |
+    | ɔ́      |             6 |              |
+    | z       |             6 |              |
+    | ɔ       |             5 |              |
+    | e       |             5 |              |
+    | ɛ̂      |             4 |              |
+    | ɛ́      |             4 |              |
+    | v       |             4 |              |
+    | û       |             4 |              |
+    | ò       |             3 |              |
+    | p       |             3 |              |
+    | š       |             3 | Invalid BIPA |
+    | f       |             2 |              |
+    | ô       |             2 |              |
+    | ê       |             2 |              |
+    | é       |             2 |              |
+    | è       |             2 |              |
+    | ǎ       |             2 |              |
+    | ə       |             2 |              |
+    | r       |             1 |              |
+    | _       |             1 | Marker       |
+    | î       |             1 |              |
+
+The reports fulfill different functions. Some, as you have seen, focus on issues
+with the internal correctness of the data set. Others, like the
+``segment_inventories`` report above or :py:mod:`lexedata.report.coverage`, are
+useful for statistical summaries of the dataset. And a third group, such as the
+homophones report, generate output that can be used as input to other
+``lexedata`` scripts. Another example for such a script is
+:py:mod:`lexedata.report.filter`, which filters a table from the dataset. This
+is useful for any of the scripts that can take a list from a file as input, such
+as the concept list for :py:mod:`lexedata.exporter.matrix`. For example,
+the concepts that are 'number's according to their concepticon definition can be found using ::
+
+    $ python -m lexedata.report.filter Concepticon_Definition number ParameterTable -q
+    ID,Name,Description,Status_Column,Concepticon_ID,Concepticon_Gloss,Concepticon_Definition
+    many,many,,Concepticon link checked,1198,MANY,An indefinite large number of.
+    one,one,,Concepticon link checked,1493,ONE,The natural number one (1).
+    two,two,,Concepticon link checked,1498,TWO,The natural number two (2).
+ 
 ****************************************
 Computer-assisted historical linguistics
 ****************************************
