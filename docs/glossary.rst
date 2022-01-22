@@ -68,9 +68,11 @@ Glossary
 
   Segment_Slice column
     Segment_Slice is a column of the CognateTable that can be used to identify a particular section of the form, so that different parts of the form can be assigned to different cognate sets.
+    This is part of the `CLDF standard <https://cldf.clld.org/v1.0/terms.html#segmentSlice>`_.
 
   Status column
     A tracking column present in any of the cldf tables in order to facilitate workflow. Lexedata scripts can also update such columns with customizable messages to facilitate manual checking and tracking of automatic operations.
+    This column is not part of `the current v1.1 of the CLDF standard <https://cldf.clld.org/v1.0/terms.html#segmentSlice>`_, which will treat it just as any other text column.
 
   Within-concept cognate set
     A cognate set that includes descendants or reflexes of a protoform that additionally have the same meaning. While in traditional historical linguistics words are termed cognate if they share a common protoform irrespective of their meaning, in many phylogenetic studies the term "cognate set" has been used for sets of words that not only share an ancestral protoform but all express the same concept. In this manual we are explicit by distinguishing between cross-concept cognate sets and within-concept cognate sets. Lexedata can work with both, but there are some functionalities that only make sense with a particular kind of cognate sets. Also, keep in mind that cross-concept cognate sets cannot be automatically derived from within-concept cognate sets (since this requires linguistic expertise), while the reverse is possible (see also cross-concept cognate set).
