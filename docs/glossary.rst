@@ -4,12 +4,15 @@ Glossary
 .. glossary::
 
   Central concept
-    Central concepts can be assigned manually, or automatically using :py:mod:`lexedata.edit.add_central_concepts`.
-    For the automatic assignment, lexedata uses the colexification patterns present in the `CLICS database <https://clics.clld.org>`_.
+    The ‘central’ meaning among all forms that derive from the same etymological root.
+    This can be a the reconstructed meaning of the root in a proto-language, but it can eg. also be a less rigid shorthand for the central meaning of polysemous forms.
+    Central concepts can be assigned manually, or automatically using :py:mod:`lexedata.edit.add_central_concepts`. For the automatic assignment, lexedata uses the colexification patterns present in the `CLICS database <https://clics.clld.org>`_.
 
   Central concept AH
     An absence heuristic.
-    One of two ways to assign absences in the case of root presence coding, based on assigning each cross-concept cognate set to a concept (the central concept). Then, a 0 would be coded if the central concept of a cross-concept cognate set is expressed by a different root. This is the same as the way absences are assigned with the root-meaning coding method. The results are however different, since in root presence coding items that have undergone semantic shift are included thus forming a less "sparse" matrix. Central concepts are in this operation treated as the most likely concept where a reflex of a form would be found. If they are expressed with a different root, then we conclude that the root in question must be absent. (see also :term:`half primary concepts AH`).
+    One of two ways to assign absences in the case of root presence coding, based on assigning each cross-concept cognate set to a concept (the central concept). Then, a 0 would be coded if the central concept of a cross-concept cognate set is expressed by a different root. This is the same as the way absences are assigned with the root-meaning coding method. The results are however different, since in root presence coding items that have undergone semantic shift are included thus forming a less "sparse" matrix. Central concepts are in this operation treated as the most likely concept where a reflex of a form would be found. If they are expressed with a different root, then we conclude that the root in question must be absent.
+
+    .. seealso:: :term:`half primary concepts AH`
 
   phylogenetic coding method
     The method used to derive a character matrix that can be used as input for phylogenetic analyses.
