@@ -225,15 +225,17 @@ def test_alignments_must_match_length(caplog):
 
 
 def test_missing_forms_not_coded(caplog):
-    ds = util.fs.new_wordlist(
+    ds = util.fs.new_wordlist(FormTable=[], CognateTable=[])
+    ds["FormTable", "Form"].required = False
+    ds.write(
         FormTable=[
             {
                 "ID": "f1",
                 "Language_ID": "l1",
                 "Parameter_ID": "c1",
-                "Form": "test",
-                "Value": "test",
-                "Segments": ["t", "e", "s", "t"],
+                "Form": "te-t",
+                "Value": "te-t",
+                "Segments": ["t", "e", "-", "t"],
             },
             {
                 "ID": "f2",
@@ -252,7 +254,7 @@ def test_missing_forms_not_coded(caplog):
                 "Segments": [],
             },
             {
-                "ID": "f3",
+                "ID": "f4",
                 "Language_ID": "l1",
                 "Parameter_ID": "c1",
                 "Form": "",
@@ -285,4 +287,7 @@ def test_missing_forms_not_coded(caplog):
     )
     with caplog.at_level(logging.WARNING):
         lexedata.report.judgements.check_cognate_table(ds)
-    assert "murks" in caplog.text
+    assert re.search("NA form .*f2.* in cognate set", caplog.text)
+    assert re.search("NA form .*f3.* in cognate set", caplog.text)
+    assert re.search("NA form .*f4.* in cognate set", caplog.text)
+    assert not re.search("NA form .*f1.* in cognate set", caplog.text)

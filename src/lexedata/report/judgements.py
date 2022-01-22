@@ -134,8 +134,8 @@ def check_cognate_table(
         except KeyError:
             if judgement[c_form] in missing_forms:
                 log_or_raise(
-                    "In {}, row {}: NA form was judged to be in cognate set.".format(
-                        f, j
+                    "In {}, row {}: NA form {} was judged to be in cognate set.".format(
+                        f, j, judgement[c_form]
                     ),
                 )
             # The case of a missing foreign key in general is already handled
