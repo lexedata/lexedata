@@ -158,6 +158,32 @@ def test_alignments_must_match_segments(caplog):
     assert re.search("segments in form .*t e s t.*alignment.*t e x t", caplog.text)
 
 
+def test_alignments_must_match_segments_ignore_gaps(caplog):
+    ds = util.fs.new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Language_ID": "l1",
+                "Parameter_ID": "c1",
+                "Form": "test",
+                "Segments": ["t", "e", "s", "t"],
+            }
+        ],
+        CognateTable=[
+            {
+                "ID": "j1",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f1",
+                "Segment_Slice": ["1:4"],
+                "Alignment": ["t", "e", "s", "-", "t", "-"],
+            }
+        ],
+    )
+    with caplog.at_level(logging.WARNING):
+        lexedata.report.judgements.check_cognate_table(ds)
+    assert not caplog.text
+
+
 def test_alignments_must_match_length(caplog):
     ds = util.fs.new_wordlist(
         FormTable=[
