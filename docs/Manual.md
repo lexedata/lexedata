@@ -2,7 +2,7 @@
 
 You can access the Lexedata tools through commands in your terminal. Every command has the following general form:
 
-> python -m lexedata.*package*.*command_name* [--*optional-argument* VALUE] [--*switch*] POSITIONAL ARGUMENTS
+> python -m lexedata.*package*.*command_name* [-\\\-*optional-argument* VALUE] [-\\\-*switch*] POSITIONAL ARGUMENTS
 
 Elements in italics above need to be replaced depending on the exact command you are using. Elements in capital letters need to be replaced depending on the exact operation you want to perform on your dataset. Optional elements are enclosed in brackets. There could be multiple positional arguments, optional arguments and switches (with only a space as a separator).  Positional arguments are not preceded by a hyphen and need to occur in strict order (if there are more than two of them). Optional arguments and switches are always preceded by two hyphens and they can occur in any order after the command. Optional arguments require a value (often there is a default value), while switches do not. Some optional arguments or switches have a short name of one letter in addition to their regular name and in this case they are preceded by one hyphen (e.g. to access the help of any command you can use the switch `--help` or `-h`). Many positional arguments and most optional arguments have default settings.
 
