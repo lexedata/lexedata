@@ -1,35 +1,55 @@
 Glossary
 ~~~~~~~~
 
-**Central concept:**
-Central concepts can be assigned manually or automatically. For the automatic assignment, lexedata uses the colexification patterns present in the CLICS database (see section XXX for more information). 
+Central concept
+---------------
 
-**Central concept (absence heuristic):**
-One of two ways to assign absences in the case of root presence coding, based on assigning each cross-concept cognate set to a concept (the central concept). Then, a 0 would be coded if the central concept of a cross-concept cognate set is expressed by a different root. This is the same as the way absences are assigned with the root-meaning coding method. The results are however different, since in root presence coding items that have undergone semantic shift are included thus forming a less "sparse" matrix. Central concepts are in this operation treated as the most likely concept where a reflex of a form would be found. If they are expressed with a different root, then we conclude that the root in question must be absent. (see also half primary concepts (absence heuristic)).
+Central concepts can be assigned manually or automatically. For the automatic assignment, lexedata uses the colexification patterns present in the `CLICS database <https://clics.clld.org>`_. 
 
-**Coding method (for phylogenetic analyses):**
+Central concept (absence heuristic)
+-----------------------------------
+
+One of two ways to assign absences in the case of root presence coding, based on assigning each cross-concept cognate set to a concept (the central concept). Then, a 0 would be coded if the central concept of a cross-concept cognate set is expressed by a different root. This is the same as the way absences are assigned with the root-meaning coding method. The results are however different, since in root presence coding items that have undergone semantic shift are included thus forming a less "sparse" matrix. Central concepts are in this operation treated as the most likely concept where a reflex of a form would be found. If they are expressed with a different root, then we conclude that the root in question must be absent. (see also :ref:`glossary:half primary concepts (absence heuristic)`).
+
+Coding method (for phylogenetic analyses)
+-----------------------------------------
+
 The method used to derive a character matrix that can be used as input for phylogenetic analyses.
-There are three main coding methods for lexical data that have been used for phylogenetic analyses. We will briefly describe them here, but you can find more information in XXX and XXX. 
+There are three main coding methods for lexical data that have been used for phylogenetic analyses. We will briefly list them here.
+
 1. root-meaning coding
 2. root presence coding
 3. multistate coding
 
-**Cross-concept cognate set:**
+Cross-concept cognate set
+-------------------------
+
 A cognate set that includes all descendants or reflexes of a protoform irrespective of their meaning (i.e. including items that have undergone semantic shift). In traditional historical linguistics words are termed cognate if they share a common protoform and they have been passed down to daughter languages from a common ancestor through vertical transmission (i.e. no borrowing has occured). According to this definition, while it is expected that the meaning of cognate words is related, it doesn't have to be identical. In many phylogenetic studies the term "cognate set" has been used for sets of words that derive from a common protoform and additionally have the same meaning. In this manual we are explicit by distinguishing between cross-concept cognate sets and within-concept cognate sets. Lexedata can work with both, but there are some functionalities that only make sense with a particular kind of cognate sets. Also, keep in mind that once cross-concept cognate sets are constructed, then the derivation of within-concept cognate sets is trivial (and lexedata can do it automatically). (see also within-concept cognate set)
 
-**Export:**
+Export
+------
+
 Lexedata is CLDF-centric, so ‘export’ is always ‘away from CLDF’.
 
-**Half primary concepts (absence heuristic):**
-One of two ways to assign absences for root presence coding, based on all the primary concepts associated with the root in question (for all languages in a dataset), instead of privileging one of them (the central concept). More precisely, a root is deemed absent when at least half of the primary concepts associated with this root are expressed by other roots for a given language. E.g. a cross-concept cognate set may include items that mean (in different languages) head, hair and top of the head. If we assume that 'head' and 'hair' were among the primary concepts, while 'top of the head' was not, then for a given language the root in question would be coded as absent, if 'head' and/or 'hair" are expressed by a different root. If both "head" and "hair" have no corresponding terms in this language because of missing data, then the root in question would be assigned a ?. (see also central concept (absence heuristic)). 
+Half primary concepts (absence heuristic)
+-----------------------------------------
 
-**Import:**
+One of two ways to assign absences for root presence coding, based each :ref:`glossary:primary concept` associated with the root in question (for all languages in a dataset), instead of privileging one of them (the central concept).
+
+More precisely, a root is deemed absent when at least half of the primary concepts associated with this root are expressed by other roots for a given language. For example, a cross-concept cognate set may include items that mean (in different languages) HEAD, HAIR, and TOP OF THE HEAD. Let us assume that HEAD and HAIR were among the primary concepts, while TOP OF THE HEAD was not.
+Then for a given language the root in question would be coded as absent if at least one (half of the two) primary concepts HEAD and HAIR is expressed by a *different* root.
+Only if we don't know terms for both HEAD and HAIR in this language – or generally, if more than half of the primary concepts associated to the root are missing –, then the root in question would be assigned a ``?``. (see also :ref:`glossary:central concept (absence heuristic)`)
+
+Import
+------
 Lexedata is CLDF-centric, so ‘import’ is always ‘towards CLDF’.
 
-**Multistate coding:**
-One of three coding methods implemented in lexedata. In this coding method, each (primary) concept corresponds to a multistate character, with each within-concept cognate set corresponding to a different state. It is available for datasets with either within- or cross-concept cognate sets. (see also coding method)
+Multistate coding
+-----------------
+One of three coding methods implemented in lexedata. In this coding method, each :ref:`glossary:primary concept` corresponds to a multistate character, with each within-concept cognate set corresponding to a different state. It is available for datasets with either within- or cross-concept cognate sets. (see also :ref:`glossary:coding method (for phylogenetic analyses)`)
 
-**Primary Concept:**
+Primary Concept
+---------------
 A concept that has been systematically searched for in the languages of the dataset. When building a lexical dataset, it is typical procedure to start with a comparative wordlist including a number of basic concepts (e.g. a Swadesh list). Within lexedata, we call such concepts primary. Any other concepts present in parameters.csv are secondary. A dataset with within-concept cognate sets, often contains only primary concepts (however, it is possible that one has been keeping track of additional meanings for each word, thus leading to the inclusion of a number of secondary concepts as well.). A dataset with cross-concept cognate sets is very likely to include secondary concepts, especially if one has searched for cognate forms extensively among synonyms or closely related concepts to the primary concepts. (see also secondary concept)
 
 **Root-meaning coding:**

@@ -976,7 +976,7 @@ and all languages::
 This gives us a tab-separated value file, by default named `cognate.tsv`, which
 we can load in Edictor and edit there.
 
-.. image:: example/Edictor.png
+.. image:: _static/Edictor.png
   :width: 70%
   :alt: Cognate class view in Edictor
 
