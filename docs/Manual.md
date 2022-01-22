@@ -44,7 +44,7 @@ In order to import a dataset of the "interleaved" format you should use the comm
 ```python -m lexedata.importer.excel_interleaved ``` followed by the name of the excel file containing the dataset. Only a forms.csv will be created, which contains a Cognateset_ID column with cognate codes. This format is similar to the LingPy format. Note that for any further use of this CLDF dataset with lexedata, you need to create a metadata file (see [how to add a metadata file](#how-to-add-a-metadata-file-add_metadata)).
 
 ### Adding a new language/new data to an existing lexical dataset
-The importation script using the long format can be used to add new data to an existing dataset, as in the case of adding an new variety or further lexical items for an existing variety (see [importing a lexical dataset using the "long" format](importing-a-lexical-dataset-using-the-long-format)). 
+The importation script using the long format can be used to add new data to an existing dataset, as in the case of adding an new variety or further lexical items for an existing variety (see [importing a lexical dataset using the "long" format](#importing-a-lexical-dataset-using-the-long-format)). 
 
 ### Importing cognate sets from a Cognate Table
 You can update cognate sets, cognate judgements and associated metadata by exporting a Cognate Table from a cldf dataset and reimporting it after editing it by hand. This workflow can allow specialists to work on the cognacy judgements in a familiar format (such as excel), or allow a team to work collaboratively on Google sheets, while at the same time keeping the dataset in the standard cldf format. 
