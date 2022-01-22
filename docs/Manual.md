@@ -1,5 +1,7 @@
 # `lexedata` Manual
 
+## lexedata commands
+
 You can access the Lexedata tools through commands in your terminal. Every command has the following general form:
 
 > python -m lexedata.*package*.*command_name* [--*optional-argument* VALUE] [--*switch*] POSITIONAL ARGUMENTS
@@ -42,7 +44,7 @@ In order to import a dataset of the "interleaved" format you should use the comm
 ```python -m lexedata.importer.excel_interleaved ``` followed by the name of the excel file containing the dataset. Only a forms.csv will be created, which contains a Cognateset_ID column with cognate codes. This format is similar to the LingPy format. Note that for any further use of this CLDF dataset with lexedata, you need to create a metadata file (see [how to add a metadata file](#how-to-add-a-metadata-file-add_metadata)).
 
 ### Adding a new language/new data to an existing lexical dataset
-The importation script using the long format can be used to add new data to an existing dataset, as in the case of adding an new variety or further lexical items for an existing variety (see section [3.1.1] (311-importing-a-lexical-dataset-using-the-long-format)). 
+The importation script using the long format can be used to add new data to an existing dataset, as in the case of adding an new variety or further lexical items for an existing variety (see [importing a lexical dataset using the "long" format](importing-a-lexical-dataset-using-the-long-format)). 
 
 ### Importing cognate sets from a Cognate Table
 You can update cognate sets, cognate judgements and associated metadata by exporting a Cognate Table from a cldf dataset and reimporting it after editing it by hand. This workflow can allow specialists to work on the cognacy judgements in a familiar format (such as excel), or allow a team to work collaboratively on Google sheets, while at the same time keeping the dataset in the standard cldf format. 
@@ -60,13 +62,13 @@ Whenever editing a cldf dataset, it is always a good idea to validate the datase
 ### CLDF dataset structure and curation
 
 #### How to add a metadata file (add_metadata)
-If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see section XXX how to read a json file). You can also use this command to obtain a starting metadata file for a new dataset. In this case, you can start from an empty FormTable that contains the columns you would like to include. The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
+If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and adjust manually this json file before you proceed (see [how to read a json file](/docs/cldf.md#the-metadata-file). You can also use this command to obtain a starting metadata file for a new dataset. In this case, you can start from an empty FormTable that contains the columns you would like to include. The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
 
 #### How to add tables to your dataset (add_table)
-Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is `python -m lexedata.edit.add_table TABLE`. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see section 4.1.3).
+Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is `python -m lexedata.edit.add_table TABLE`. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see [how to add a CognateTable](#how-to-add-a-cognatetable-add_cognate_table).
 
 #### How to add a CognateTable (add_cognate_table)
-The output of LingPy has cognate judgements as a column within the FormTable, rather than in a separate CognateTable as is the standard in CLDF. This is also the format of a FormTable generated when importing an "interleaved" dataset with Lexeata (see section 3.1.3). In these cases, Lexedata can subsequently create an explicit CognateTable using the command `python -m lexedata.edit.add_cognate_table`. Note that you have to indicate if your cognate judgement IDs are unique within the same concept or are valid across the dataset. In other words, if for every concept you have a cognateset with the code 1, then you need to indicate the option `--unique-id concept`, while if you have cross-concept cognate sets you need to indicate the option `--unique-id dataset`.
+The output of LingPy has cognate judgements as a column within the FormTable, rather than in a separate CognateTable as is the standard in CLDF. This is also the format of a FormTable generated when importing an "interleaved" dataset with Lexedata (see [importing a lexical dataset using the "interleaved" format](#importing-a-lexical-dataset-using-the-interleaved-format)). In these cases, Lexedata can subsequently create an explicit CognateTable using the command `python -m lexedata.edit.add_cognate_table`. Note that you have to indicate if your cognate judgement IDs are unique within the same concept or are valid across the dataset. In other words, if for every concept you have a cognateset with the code 1, then you need to indicate the option `--unique-id concept`, while if you have cross-concept cognate sets you need to indicate the option `--unique-id dataset`.
 
 #### How to normalize unicode (normalize_unicode)
 Linguistic data come with a lot of special characters especially for the forms, but also for language names etc. Many of the input methods used for such datasets result in seemingly identical glyphs, which are not necessarily the same unicode character (and are therefore not considered identical by a computer) . Lexedata can normalize unicode across your dataset with the command `python -m lexedata.edit.normalize_unicode`. You can find more info about what unicode normalization [here] (https://towardsdatascience.com/what-on-earth-is-unicode-normalization-56c005c55ad0).
@@ -78,7 +80,7 @@ When developing and editing a comparative dataset for historical linguistics, yo
 In a CLDF dataset, all IDs need to be unique and be either numeric or restricted alphanumeric (i.e. containing only leters, numbers and underscores). Lexedata command `python -m lexedata.edit.simplify_ids` verifies that all IDs in the dataset are valid and changes them appropriately if necessary. You can also choose to make your IDs transparent (option `--transparent`) so that you can easily tell what they correspond to. With transparent IDs, instead of a numeric ID, a form will have an ID consisting of the languageID and the parameterID: e.g. the word "main" in French would have the ID stan1290_hand.
 
 #### How to replace or merge IDs (replace_id and replace_id_column)
-Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, etc), e.g. if accidentally you have used the same ID twice. Lexedata can replace the id of an object and propagate this change in all tables where it is used as a foreign key (i.e. to link back to that object). The relevant command is ```python -m lexedata.edit.replace_id TABLE ORIGINAL_ID REPLACEMENT_ID```. If you intend to merge two IDs, e.g. if you decide to conflate two concepts because they are not distinct in the languages under study, or two doculects that you want to consider as one. you need to use the optional argument ```--merge```. Keep in mind that lexedata cannot automatically merge two or more rows in the table in question, so if for example you merged two Language IDs, then you will have two rows in languages.csv with identical IDs. This will cause a warning if you try to validate your dataset (see section [5.1] (#51-cldf-format-validation). If you want to completely merge the rows, you need to do this by opening the corresponding csv in a spreadsheet or text editor (see section [7] (#7-how-to-edit-raw-data). 
+Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, etc), e.g. if accidentally you have used the same ID twice. Lexedata can replace the id of an object and propagate this change in all tables where it is used as a foreign key (i.e. to link back to that object). The relevant command is ```python -m lexedata.edit.replace_id TABLE ORIGINAL_ID REPLACEMENT_ID```. If you intend to merge two IDs, e.g. if you decide to conflate two concepts because they are not distinct in the languages under study, or two doculects that you want to consider as one. you need to use the optional argument ```--merge```. Keep in mind that lexedata cannot automatically merge two or more rows in the table in question, so if for example you merged two Language IDs, then you will have two rows in languages.csv with identical IDs. This will cause a warning if you try to validate your dataset (see [CLDF validate](#cldf-validate)). If you want to completely merge the rows, you need to do this by opening the corresponding csv in a spreadsheet or text editor. 
 
 In case you want to replace an entire ID column of a table, then you need to add the new intended ID column to the table and use the command ```python -m lexedata.edit.replace_id_column TABLE REPLACEMENT```.
 
@@ -96,7 +98,7 @@ In order to align forms to find correspondence sets and for automatic cognate de
 
 #### Linking concepts to Concepticon (add_concepticon)
 Lexedata can automatically link the concepts present in a dataset with concept sets in the Concepticon (https://concepticon.clld.org/). The relevant command is ```python -m lexedata.edit.add_concepticon```.
-Your ParameterTable will now have a new column: Concepticon ID, with the corresponding ID of a concept set in Concepticon. We recommend that you manually inspect these links for errors. In order to facilitate this task, you can also add columns for the concept set name (`--add_concept_set_name`) and the concepticon definition (`--add_definitions`). Finally, if your ParameterTable contains a Status Column (see section [4.2.5]), any links to the Concepticon will be tagged as automatic, or you can define a custom message using `--status_update "STATUS UPDATE"`.
+Your ParameterTable will now have a new column: Concepticon ID, with the corresponding ID of a concept set in Concepticon. We recommend that you manually inspect these links for errors. In order to facilitate this task, you can also add columns for the concept set name (`--add_concept_set_name`) and the concepticon definition (`--add_definitions`). Finally, if your ParameterTable contains a Status Column (see [workflow and tracking aid](workflow-and-tracking-aid-add_status_column)), any links to the Concepticon will be tagged as automatic, or you can define a custom message using `--status_update "STATUS UPDATE"`.
 
 ### Operations on CognateTable (judgements) and CognatesetTable
 
@@ -152,7 +154,7 @@ existing cognate sets and cognate judgements, as well as any associated comments
 (CognateTable comments and CognatesetTable comments).
 
 IMPORTANT: you cannot edit the raw data (forms, translation, form comments etc)
-through this process. To edit raw data, see XXX.
+through this process. To edit raw data, see [editing a CLDF dataset](#editing-a-cldf-dataset-lexedata.edit).
 
 It is always a good idea to validate your dataset before and after any edits to make sure that everything is linked as it should in the cldf format.
 You can use `cldf validate METADATA_FILE` or `python -m lexedata.report.extended_cldf_validate` for a more thorough check (see also [CLDF validate](#cldf-validate)). 
@@ -161,7 +163,7 @@ In order to export an xlsx Cognate Table, you should type
 The Cognate Table will be written to an excel file with the specified name.
 There are optional arguments to sort the languages and the cognate sets in this table, as well as to assign any forms not currently in a cognate set to automatic singleton cognate sets (see command help for more information). 
 
-You can open and edit the Cognate Table in the spreadsheet editor of your choice. You just need to remember that you need and xlsx format in order to reimport your modified cognate sets into your cldf dataset (using the lexedata.importer.cognates command, see XXX). 
+You can open and edit the Cognate Table in the spreadsheet editor of your choice. You just need to remember that you need and xlsx format in order to reimport your modified cognate sets into your cldf dataset (using the lexedata.importer.cognates command, see [importing cognate sets from a Cognate Table](#importing-cognate-sets-from-a-cognate-table). 
 
 
 ### Edictor export-import loop
