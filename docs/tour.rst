@@ -318,7 +318,7 @@ And commit. ::
     $ git commit -am "Add metadata"
     [...]
 
-Adding satelite tables
+Adding satellite tables
 -----------------------
     
 Another useful step is to make languages, concepts, and cognate codes explicit.
@@ -629,7 +629,7 @@ assumption is the one that led to the issue above:
 Because of the potential use in URLs, our table adder adds tables with the ID
 format that we encountered above. This specification uses the word 'SHOULD', not
 'MUST', which `allows to ignore the requirement in certain circumstances
-<https://datatracker.ietf.org/doc/html/rfc2119#section-3>` and thus ``cldf
+<https://datatracker.ietf.org/doc/html/rfc2119#section-3>`_ and thus ``cldf
 validate`` does not enforce it. We do however provide a separate report script
 that points out this and other deviations from sensible assumptions. ::
 
