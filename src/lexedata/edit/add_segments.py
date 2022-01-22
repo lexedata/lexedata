@@ -44,11 +44,13 @@ try:
     bipa = clts.api.bipa
 except KeyError:
     # Make a temporary clone of CLTS. Mostly useful for ReadTheDocs.
+    import os
     from tempfile import mkdtemp
 
-    with cldfcatalog.Catalog(mkdtemp("clts"), "v1.0") as clts_path:
-        clts = cldfbench.catalogs.CLTS(clts_path)
-        bipa = clts.api.bipa
+    clts_path = mkdtemp("clts")
+    os.system("git clone -b v2.0.0 --depth 1 https://github.com/cldf-clts/clts.git")
+    clts = cldfbench.catalogs.CLTS(clts_path)
+    bipa = clts.api.bipa
 
 tokenizer = segments.Tokenizer()
 
