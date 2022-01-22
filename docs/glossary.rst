@@ -17,7 +17,7 @@ Glossary
 
     .. seealso:: :term:`half primary concepts AH`
 
-  phylogenetic coding method
+  Phylogenetic coding method
     The method used to derive a character matrix that can be used as input for phylogenetic analyses.
     There are three main coding methods for lexical data that have been used for phylogenetic analyses. We will briefly list them here.
 
