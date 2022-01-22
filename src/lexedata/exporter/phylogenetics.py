@@ -137,6 +137,7 @@ def read_wordlist(
             form_table_form = col_map.forms.form
             logger.warning(
                 "Your dataset has a cognatesetReference in the FormTable. Consider running lexedata.edit.add_cognate_table to create an explicit cognate table."
+            )
             cognatesets = util.cache_table(
                 dataset,
                 columns={
