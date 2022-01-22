@@ -47,11 +47,11 @@ def comment_on_sound(sound: str) -> str:
     """Return a comment on the sound, if necessary.
 
     >>> comment_on_sound("a")
-    ""
+    ''
     >>> comment_on_sound("_")
-    "Marker"
+    'Marker'
     >>> comment_on_sound("(")
-    "Invalid BIPA"
+    'Invalid BIPA'
 
     """
     if bipa[sound].type in {"vowel", "consonant", "tone"}:
