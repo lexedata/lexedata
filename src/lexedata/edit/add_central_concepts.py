@@ -54,8 +54,8 @@ def central_concept(
 ):
     """Find the most central concept among a weighted set.
 
-    If the concepts are not linked to Concepticon/CLICS, we can only take the
-    simple majority among the given concepts.
+    If the concepts are not linked to `CLICS`_ through `Concepticon`_
+    references, we can only take the simple majority among the given concepts.
 
     >>> concepts = {"woman": 3, "mother": 4, "aunt": 3}
     >>> central_concept(concepts, {}, None)
@@ -78,6 +78,9 @@ def central_concept(
     'palm of hand' – with no attested form meaning 'arm' to link them), only
     centrality within the disjoint subgraphs is considered, so in this example,
     'hand' would be considered the most central concept.
+
+    .. _Concepticon: https://concepticon.clld.org
+    .. _CLICS: https://clics.clld.org
 
     """
     centralities: t.Mapping[ConceptID, float]
