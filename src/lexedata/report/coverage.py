@@ -202,7 +202,7 @@ if __name__ == "__main__":
         "--min-percentage",
         default=0,
         type=float,
-        help="Only include languages with at least M% concepts",
+        help="Only include languages with at least M%% concepts",
         metavar="M",
     )
     parser.add_argument(
