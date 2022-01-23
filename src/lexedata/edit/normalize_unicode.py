@@ -7,6 +7,7 @@ This funtionality is, without error reporting, in the CLI of lexedata.util
 
 from pathlib import Path
 import unicodedata
+from urllib.parse import urljoin
 
 import pycldf
 
@@ -35,9 +36,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = cli.setup_logging(args)
     if not args.file:
-        # TODO: Check CLDF for how to properly get table URLs as path
         args.file = [
-            Path(table.url.string)
+            # TODO: Check whether other places using table.url.string might
+            # benefit from this construction – or whether they use something
+            # better that we should use here. (Link objects, like table.url,
+            # have a .resolve() method, but that method is inferior.)
+            Path(urljoin(str(args.metadata.absolute()), table.url.string))
             for table in pycldf.Wordlist.from_metadata(args.metadata).tables
         ]
     for file in args.file:

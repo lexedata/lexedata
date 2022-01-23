@@ -1,8 +1,14 @@
-"""Validate (and, where possible, fix) a CLDF wordlist.
+"""Validate a CLDF wordlist.
 
-This script runs some more validators specific to (editing-friendly) CLDF
-Wordlist data sets in addition to the validation implemented in the `pycldf`
-core.
+
+This script runs some more validators specific to CLDF Wordlist data sets in
+addition to the validation implemented in the `pycldf` core. Some of those
+tests are not yet mandated by the CLDF standard, but are assumptions which some
+tools (including lexedata) tacitly make, so this validator makes them explicit.
+
+
+TODO: There may be programmatic ways to fix the issues that this script
+reports. Those automatic fixes should be made more obvious.
 
 """
 
@@ -84,7 +90,9 @@ def check_id_format(ds: pycldf.Dataset):
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description=__doc__)
+    parser = cli.parser(
+        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
+    )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 

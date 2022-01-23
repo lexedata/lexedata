@@ -90,9 +90,8 @@ def header_from_cognate_excel(
         separators.append(dataset["CognatesetTable", column_name].separator)
         if column_name == dataset["CognatesetTable", "comment"].name:
             logger.warning(
-                "Your cognates table has a separate ‘{header.value}’ column for comments, but `lexedata.importer.cognates` expects to extract comments from the cell comments of the cognateset metadata columns, not from a separate column."
+                "Your cognates table has a separate ‘{header.value}’ column for comments, but `lexedata.importer.cognates` expects to extract comments from the cell comments of the cognateset metadata columns, not from a separate column. Your ‘{header.value}’ column will be ignored."
             )
-            # TODO: What behaviour will happen? Will comments be merged, or will one of cell comments and comment column be ignored in this case?
     return row_header, separators
 
 

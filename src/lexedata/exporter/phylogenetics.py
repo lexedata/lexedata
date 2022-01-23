@@ -170,10 +170,10 @@ def read_wordlist(
                 )
             else:
                 raise ValueError(
-                    "Dataset {:} has no cognatesetReference column in its "
+                    "Dataset has no cognatesetReference column in its "
                     "primary table or in a separate cognate table. "
                     "Is this a metadata-free wordlist and you forgot to "
-                    "specify code_column explicitly?".format(dataset.tableSchema._fname)
+                    "specify code_column explicitly?"
                 )
 
     # Cognate sets have been loaded. Consolidate.
