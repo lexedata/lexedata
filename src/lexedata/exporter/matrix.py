@@ -38,9 +38,7 @@ class MatrixExcelWriter(BaseExcelWriter):
         all_forms: t.MutableMapping[
             types.Parameter_ID, t.List[types.Form]
         ] = t.DefaultDict(list)
-        for form in util.cache_table(
-            self.dataset
-        ).values():  # TODO check parameterReference foreign key target
+        for form in util.cache_table(self.dataset).values():
             for row in util.ensure_list(form["parameterReference"]):
                 all_forms[row].append(form)
         return all_forms
