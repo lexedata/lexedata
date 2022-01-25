@@ -25,6 +25,7 @@ Lexedata is open access software in development. Please report any problems and 
    :caption: Introductions to the Ecosystem
              
    glossary
+   paper
    cldf
    cli
    git

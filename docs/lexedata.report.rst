@@ -52,7 +52,7 @@ lexedata.report.nonconcatenative\_morphemes module
    :undoc-members:
    :show-inheritance:
 
-lexedata.report.segments\_inventories module
+lexedata.report.segment\_inventories module
 --------------------------------------------
 
 .. automodule:: lexedata.report.segment_inventories
