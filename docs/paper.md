@@ -60,9 +60,10 @@ The export to phylogenetic alignments, derived from BEASTling
 [@maurits2017beastling;@beastling14], has already been used in different language
 phylogenetics projects that are currently under review
 [@kaiping2019subgrouping,@kaiping2021burst]. The
-more extensive lexical dataset editing functionality is used by projects at
-Universität Zürich working on Sal and Cariban languages, at UC Berkeley for
-Arawakan and Maweti-Guaraní and at Universiteit Gent for Bantu [@gunnink2022bantu].
+more extensive lexical dataset editing functionality is used by projects
+at UC Berkeley for Arawakan and Maweti-Guaraní languages
+and
+at Universiteit Gent for Bantu [@gunnink2022bantu].
 Precursor scripts have also
 been used for Timor-Alor-Pantar and Austronesian languages [@lexirumah-paper].
 
