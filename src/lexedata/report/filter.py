@@ -1,5 +1,6 @@
 """Filter some table by some column.
 
+
 Print the partial table to STDOUT or a file, so it can be used as subset-filter
 for some other script, and output statistics (how many included, how many
 excluded, what proportion, maybe sub-statistics for xxxReference columns, i.e.
@@ -76,7 +77,9 @@ def filter(
 
 
 def parser():
-    parser = cli.parser(description=__doc__)
+    parser = cli.parser(
+        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
+    )
     parser.add_argument("column", help="The column to filter.", metavar="COLUMN")
     parser.add_argument("filter", help="An expression to filter by.", metavar="FILTER")
     parser.add_argument(

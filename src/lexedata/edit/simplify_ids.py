@@ -1,4 +1,4 @@
-"""Clean up all ID columns in the datasat.
+"""Clean up all ID columns in the dataset.
 
 Take every ID column and convert it to either an integer-valued or a restricted-string-valued (only containing a-z, 0-9, or _) column, maintaining uniqueness of IDs, and keeping IDs as they are where they fit the format.
 

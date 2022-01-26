@@ -1,24 +1,12 @@
 """Segment the form.
 
+
 Take a form, in a phonemic transcription compatible with IPA, and split it into
 phonemic segments, which are written back to the Segments column of the
 FormTable. Segmentation essentially uses `CLTS`_, including diphthongs and affricates.
 
 
-Details on the segmentation procedure
--------------------------------------
-
-First, apply some pre-processing replacements. Forms supplied contain all
-sorts of noise and lookalike symbols. This function comes with reasonable
-defaults, but if you encounter other problems, or you actually want to be
-strict about IPA transcriptions, pass a dictionary of your choice as
-`pre_replace`.
-
-Then, naïvely segment the form using the IPA tokenizer from the `segments`
-package. Check each returned segment to see whether it is valid according to
-CLTS's BIPA, and if not, try to fix some issues – in particular pre-aspirated
-or pre-nasalized consonants showing up as post-aspirated resp. post-nasalized
-vowels, which BIPA does not accept.
+For details on the segmentation procedure, see the manual.
 
 .. _CLTS: https://clts.clld.org/parameters
 """
