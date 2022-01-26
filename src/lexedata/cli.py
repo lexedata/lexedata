@@ -1,3 +1,4 @@
+import csv
 import sys
 import logging
 import argparse
@@ -6,6 +7,8 @@ from enum import IntEnum
 from pathlib import Path
 
 import tqdm
+
+from lexedata import types
 
 logger = logging.getLogger("lexedata")
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +54,87 @@ class ChangeLoglevel(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, getattr(namespace, self.dest) + self.change)
+
+
+class ListOrFromFile(argparse.Action):
+    def __init__(
+        self,
+        option_strings,
+        dest,
+        nargs="+",
+        default=types.WorldSet(),
+        help=None,
+        autohelp=True,
+        metavar=None,
+        **kwargs,
+    ):
+        if nargs != "+":
+            if (
+                len(option_strings) == 1
+                and nargs == "*"
+                and not option_strings[0].startswith("-")
+            ):
+                # Mandatory argument, can be not given as default.
+                pass
+            else:
+                raise ValueError(
+                    "Optional ListOrFromFile makes sense only with variable argument count ('+)"
+                )
+
+        if metavar is None:
+            metavar = option_strings[0].upper()
+            if option_strings[0].endswith("s"):
+                metavar = metavar[:-1]
+            if option_strings[0].startswith("--"):
+                metavar = metavar[2:]
+
+        if autohelp:
+            help = (
+                (help or "")
+                + f" Instead of a list of individual {metavar}s on the command line, this argument accepts also the path to a single {metavar}S.CSV file (with header row), containing the relevant IDs in the first column."
+            )
+            if type(default) == types.WorldSet:
+                help += f" (default: All {metavar.lower()}s in the dataset)"
+            help = help.strip()
+
+        super().__init__(
+            option_strings,
+            dest,
+            nargs=nargs,
+            default=default,
+            help=help,
+            metavar=metavar,
+            **kwargs,
+        )
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        # This coud be improved if we could defer this until the dataset has
+        # been loaded; but that requires major changes to the action reading
+        # --metadata.
+        if len(values) == 0:
+            # Keep default value
+            return
+        if len(values) == 1:
+            path = Path(values[0])
+            if path.exists():
+                values = []
+                for c, concept in enumerate(csv.reader(path.open())):
+                    first_column = concept[0]
+                    if c == 0:
+                        logger.info(
+                            "Reading concept IDs from column with header %s",
+                            first_column,
+                        )
+                    else:
+                        values.append(first_column)
+                setattr(namespace, self.dest, values)
+                return
+            logger.debug(
+                "File %s not found, assuming you want a single %s",
+                path,
+                str(option_string).lstrip("-").rstrip("s"),
+            )
+        setattr(namespace, self.dest, values)
 
 
 def add_log_controls(parser: argparse.ArgumentParser):

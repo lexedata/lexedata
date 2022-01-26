@@ -69,8 +69,9 @@ This is one of several formats supported by lexedata for import. The
 corresponding importer is called ``excel_interleaved`` and it works like this::
 
     $ python -m lexedata.importer.excel_interleaved --help
-    usage: excel_interleaved.py [-h] [--sheet SHEET] [--directory DIRECTORY]
-                                [--loglevel LOGLEVEL] [-q] [-v]
+    usage: excel_interleaved.py [-h] [--sheets SHEET [SHEET ...]]
+                                [--directory DIRECTORY] [--loglevel LOGLEVEL] [-q]
+                                [-v]
                                 EXCEL
 
     Import data in the "interleaved" format from an Excel spreadsheet. [...]
@@ -81,10 +82,11 @@ corresponding importer is called ``excel_interleaved`` and it works like this::
 
     option[...]:
       -h, --help            show this help message and exit
-      --sheet SHEET         Excel sheet name(s) to import (default: all sheets)
+      --sheets SHEET [SHEET ...]
+                            Excel sheet name(s) to import (default: all sheets)
       --directory DIRECTORY
-                            Path to directory where forms.csv is created (default:
-                            current working directory)
+                            Path to directory where forms.csv is to be created
+                            (default: current working directory)
 
     Logging:
       --loglevel LOGLEVEL
@@ -464,7 +466,7 @@ tell ``clean_forms`` about new separators and re-run::
     $ git checkout .
     Updated 2 paths from the index
     $ sed -i.bak -e '/kikuyu_long_s2/s/(be long/(be long)/' forms.csv
-    $ python -m lexedata.edit.clean_forms -k '~' -k '*' -s ',' -s ';' -s '/'
+    $ python -m lexedata.edit.clean_forms -k '~' '*' -s ',' ';' '/'
     INFO:lexedata:Line 66: Split form 'pɔ́ / ewɔ́' into 2 elements.
     [...]
     INFO:lexedata:Line 588: Split form 'lə̀-náàŋgá * náàŋgá' into 2 elements.

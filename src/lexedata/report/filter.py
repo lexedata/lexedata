@@ -1,5 +1,6 @@
 """Filter some table by some column.
 
+
 Print the partial table to STDOUT or a file, so it can be used as subset-filter
 for some other script, and output statistics (how many included, how many
 excluded, what proportion, maybe sub-statistics for xxxReference columns, i.e.
@@ -76,7 +77,9 @@ def filter(
 
 
 def parser():
-    parser = cli.parser(description=__doc__)
+    parser = cli.parser(
+        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
+    )
     parser.add_argument("column", help="The column to filter.", metavar="COLUMN")
     parser.add_argument("filter", help="An expression to filter by.", metavar="FILTER")
     parser.add_argument(
@@ -93,9 +96,9 @@ def parser():
         help="Output exactly the NON-matching lines",
     )
     parser.add_argument(
-        "--output-column",
+        "--output-columns",
         "-c",
-        action="append",
+        nargs="+",
         default=[],
         help="Output only columns OUTPUT_COLUMN1,OUTPUT_COLUMN2,OUTPUT_COLUMN3,… in the same order as given.",
     )
@@ -109,8 +112,8 @@ if __name__ == "__main__":
 
     if not args.table:
         table = DictReader(sys.stdin)
-        if not args.output_column:
-            args.output_column = table.fieldnames
+        if not args.output_columns:
+            args.output_columns = table.fieldnames
     else:
         table = pycldf.Wordlist.from_metadata(args.metadata)[args.table]
 
@@ -119,13 +122,13 @@ if __name__ == "__main__":
         for r, row in enumerate(
             filter(table, args.column, re.compile(args.filter), args.invert)
         ):
-            if not args.output_column:
-                args.output_column = row.keys()
+            if not args.output_columns:
+                args.output_columns = row.keys()
             if w is None:
-                w = DictWriter(sys.stdout, args.output_column)
+                w = DictWriter(sys.stdout, args.output_columns)
                 w.writeheader()
             row = {
-                key: value for key, value in row.items() if key in args.output_column
+                key: value for key, value in row.items() if key in args.output_columns
             }
             w.writerow(row)
     except KeyError:

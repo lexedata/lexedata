@@ -362,18 +362,17 @@ if __name__ == "__main__":
         metavar="COLUMN",
     )
     parser.add_argument(
-        "--sheet",
-        action="append",
+        "--sheets",
         type=str,
-        default=[],
+        nargs="+",
         metavar="SHEET_NAME",
-        help="Sheet to parse. For multiple sheets, use multiple arguments of the shape --sheet Name1 --sheet Name2 (default: all sheets)",
+        help="Sheets to parse. (default: all sheets)",
     )
     parser.add_argument(
         "--match-form",
         "-f",
-        action="append",
         type=str,
+        nargs="+",
         default=[],
         metavar="COLUMN_NAME",
         help="Forms are considered identical if all columns passed to -f/--match-form are identical",
@@ -418,13 +417,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
-    if not args.sheet:
+    if not args.sheets:
         sheets = [
             sheet for sheet in args.excel if sheet.title not in args.exclude_sheet
         ]
-        logger.info("No sheets specified explicitly. Parsing sheets: %s", args.sheet)
+        logger.info("No sheets specified explicitly. Parsing sheets: %s", args.sheets)
     else:
-        sheets = [args.excel[s] for s in args.sheet]
+        sheets = [args.excel[s] for s in args.sheets]
 
     report = add_single_languages(
         metadata=args.metadata,

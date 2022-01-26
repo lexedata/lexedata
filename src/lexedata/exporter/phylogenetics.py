@@ -819,25 +819,19 @@ if __name__ == "__main__":
             first `data` tag in there.) (default: Write to stdout)""",
     )
     parser.add_argument(
-        "--language-list",
-        default=None,
-        type=Path,
-        metavar="LANGUAGE_FILE",
-        help="File to load a list of languages from",
+        "--languages",
+        action=cli.ListOrFromFile,
+        help="Languages to include in the alignment.",
     )
     parser.add_argument(
-        "--concept-list",
-        default=None,
-        type=Path,
-        metavar="CONCEPT_FILE",
-        help="File to load a list of concepts from",
+        "--concepts",
+        action=cli.ListOrFromFile,
+        help="Concepts to be included or treated as primary concepts.",
     )
     parser.add_argument(
-        "--cognateset-list",
-        default=None,
-        type=Path,
-        metavar="COGNATESETFILE_FILE",
-        help="File to load a list of cognate sets from",
+        "--cognatesets",
+        action=cli.ListOrFromFile,
+        help="Cognate sets to consider for the alignment.",
     )
     parser.add_argument(
         "--coding",
@@ -872,38 +866,11 @@ if __name__ == "__main__":
     # Step 1: Load the raw data.
     dataset = pycldf.Dataset.from_metadata(args.metadata)
 
-    languages: t.Set[str]
-    if args.language_list:
-        languages = {
-            lg.strip()
-            for lg in args.language_list.open(encoding="utf-8").read().split("\n")
-        }
-    else:
-        languages = types.WorldSet()
-
-    concepts: t.Set[str]
-    if args.concept_list:
-        concepts = {
-            c.strip()
-            for c in args.concept_list.open(encoding="utf-8").read().split("\n")
-        }
-    else:
-        concepts = types.WorldSet()
-
-    cognatesets: t.Set[str]
-    if args.cognateset_list:
-        cognatesets = {
-            c.strip()
-            for c in args.cognateset_list.open(encoding="utf-8").read().split("\n")
-        }
-    else:
-        cognatesets = types.WorldSet()
-
     # Step 1: Load the raw data.
     ds: t.Mapping[Language_ID, t.Mapping[Parameter_ID, t.Set[Cognateset_ID]]] = {
-        language: {k: v for k, v in sequence.items() if k in concepts}
+        language: {k: v for k, v in sequence.items() if k in args.concepts}
         for language, sequence in read_cldf_dataset(dataset).items()
-        if language in languages
+        if language in args.languages
     }
 
     logger.info(f"Imported languages {set(ds)}.")
@@ -914,7 +881,7 @@ if __name__ == "__main__":
     alignment: t.Mapping[Language_ID, str]
     if args.coding == "rootpresence":
         relevant_concepts = apply_heuristics(
-            dataset, args.absence_heuristic, primary_concepts=concepts
+            dataset, args.absence_heuristic, primary_concepts=args.concepts
         )
         binal, cognateset_indices = root_presence_code(
             ds, relevant_concepts=relevant_concepts, logger=logger
@@ -922,7 +889,7 @@ if __name__ == "__main__":
         exclude = {
             index
             for cognateset, index in cognateset_indices.items()
-            if cognateset not in cognatesets
+            if cognateset not in args.cognatesets
         }
         n_characters = len(next(iter(binal.values())))
         alignment = {
@@ -937,7 +904,7 @@ if __name__ == "__main__":
             index
             for concept, cognateset_indices in concept_cognateset_indices.items()
             for cognateset, index in cognateset_indices.items()
-            if cognateset not in cognatesets
+            if cognateset not in args.cognatesets
         }
         alignment = {
             key: "".join([v for i, v in enumerate(value) if i not in exclude])
