@@ -32,10 +32,10 @@ comparative and historical linguistics, including their use as raw data for
 language phylogenetics [@gray2009language;@grollemunt2015bantu].
 
 The `lexedata` python package uses the “Cross-Linguistic Data Format” (CLDF,
-[@cldf11;@cldf-paper]) as main data format for a relational database containing
+@cldf11, @cldf-paper) as main data format for a relational database containing
 forms, languages, concepts, and etymological relationships. The CLDF
 specification builds on top of the CSV for the Web (CSVW,
-[@pollock2015metadata]) specs by the W3C, and as such consists of one or more
+@pollock2015metadata) specs by the W3C, and as such consists of one or more
 comma-separated value (CSV) files that get their semantics from a metadata file
 in JSON format.
 
@@ -50,7 +50,7 @@ The individual Python scripts of Lexedata implement various helper functions
 that frequently arise when working with comparative word-lists for multiple
 languages, as shown in \autoref{fig:structure}. Tasks include importing data
 from MS Excel sheets of various common formats into CLDF, Automatic Cognate
-Detection (ACD, [@list2017potential]) using Lexstat [@list2012lexstat], checking
+Detection (ACD, @list2017potential) using Lexstat [@list2012lexstat], checking
 for homophones, or manipulating etymological judgements. Lexedata provides
 import and export functions to formats more familiar to linguists, and checks
 integrity for bulk edit and import functions it provides.
