@@ -29,7 +29,7 @@ lexical data. As a type of language documentation that is comparatively easily
 collected and nonetheless quite rich in data useful for the systematic
 comparison of languages [@list2021lexibank], word-lists are an important resource in
 comparative and historical linguistics, including their use as raw data for
-language phylogenetics [@gray2009language;@grollemunt2015bantu].
+language phylogenetics [@gray2009language;@grollemund2015bantu].
 
 The `lexedata` python package uses the “Cross-Linguistic Data Format” (CLDF,
 @cldf11, @cldf-paper) as main data format for a relational database containing
