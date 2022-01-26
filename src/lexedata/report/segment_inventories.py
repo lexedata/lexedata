@@ -66,10 +66,9 @@ if __name__ == "__main__":
         description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
     )
     parser.add_argument(
-        "--language",
-        action="append",
-        default=[],
-        help="Restrict the report to these lanugage id(s). (default: All languages.)",
+        "--languages",
+        action=cli.ListOrFromFile,
+        help="Restrict the report to these lanugage id(s).",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
