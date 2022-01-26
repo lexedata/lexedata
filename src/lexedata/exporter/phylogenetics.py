@@ -406,8 +406,9 @@ def apply_heuristics(
     True
 
 
-    NOTE: This function cannot guarantee that every concept has at least one relevant
-    concept, there may be cognatesets without!
+    NOTE: This function cannot guarantee that every concept has at least one
+    relevant concept, there may be cognatesets without! A cognateset with 0
+    relevant concepts will always be included, because 0 is at least half of 0.
 
     """
     heuristic = (
@@ -444,7 +445,7 @@ def apply_heuristics(
             for concept in util.ensure_list(c[c_cognateset_concept]):
                 if concept not in primary_concepts:
                     logger.warning(
-                        f"The central concept {concept} of cognateset {c[c_id]} was not part of your list of primary concepts to be included in the coding."
+                        f"The central concept {concept} of cognateset {c[c_id]} was not part of your list of primary concepts to be included in the coding, so the cognateset will be ignored."
                     )
                 else:
                     relevant_concepts[c[c_id]].add(concept)
@@ -782,7 +783,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = cli.parser(
-        description="Export a CLDF dataset (or similar) to a coded character matrix to be used as input for phylogenetic analyses."
+        description="Export a CLDF dataset to a coded character matrix to be used as input for phylogenetic analyses."
     )
 
     def enum_from_lower(enum: t.Type[enum.Enum]):

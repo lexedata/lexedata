@@ -78,7 +78,7 @@ class ListOrFromFile(argparse.Action):
                 pass
             else:
                 raise ValueError(
-                    "Optional ListOrFromFile makes sense only with variable argument count ('+)"
+                    "Optional ListOrFromFile makes sense only with variable argument count ('+')"
                 )
 
         if metavar is None:
