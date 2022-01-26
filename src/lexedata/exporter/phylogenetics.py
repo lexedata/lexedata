@@ -861,7 +861,11 @@ if __name__ == "__main__":
         at least half the the concepts it is connected to are attested with
         other roots in the language.""",
     )
-    parser.add_argument("--stats-file", type=Path, help="A file to write statistics to")
+    parser.add_argument(
+        "--stats-file",
+        type=Path,
+        help="Path to a TeX file that will be filled with LaTeX command definitions for some summary statistics.",
+    )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
     # Step 1: Load the raw data.
