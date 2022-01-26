@@ -75,10 +75,7 @@ if __name__ == "__main__":
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
 
-    if not args.language:
-        args.language = types.WorldSet()
-
-    counts = count_segments(dataset, args.language)
+    counts = count_segments(dataset, args.languages)
 
     if len(counts) == 1:
         # A single language

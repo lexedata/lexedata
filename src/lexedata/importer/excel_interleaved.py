@@ -119,6 +119,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--sheets",
+        metavar="SHEET",
         nargs="+",
         default=[],
         help="Excel sheet name(s) to import (default: all sheets)",
