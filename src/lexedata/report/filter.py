@@ -26,6 +26,7 @@ otherwise vastly reduced implementation of `grep`.
 
 import re
 import sys
+import argparse
 import typing as t
 from csv import DictReader, DictWriter
 
@@ -102,6 +103,13 @@ def parser():
         default=[],
         help="Output only columns OUTPUT_COLUMN1,OUTPUT_COLUMN2,OUTPUT_COLUMN3,… in the same order as given.",
     )
+    parser.add_argument(
+        "--output-file",
+        "-o",
+        type=argparse.FileType("w"),
+        default=sys.stdout,
+        help="Write output to file OUTPUT_FILE, instead of to the console as stdout.",
+    )
 
     return parser
 
@@ -125,7 +133,7 @@ if __name__ == "__main__":
             if not args.output_columns:
                 args.output_columns = row.keys()
             if w is None:
-                w = DictWriter(sys.stdout, args.output_columns)
+                w = DictWriter(args.output_file, args.output_columns)
                 w.writeheader()
             row = {
                 key: value for key, value in row.items() if key in args.output_columns
