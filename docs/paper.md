@@ -63,7 +63,7 @@ phylogenetics projects that are currently under review
 more extensive lexical dataset editing functionality is used by projects at
 Universität Zürich working on Sal and Cariban languages, at UC Berkeley for
 Arawakan and Maweti-Guaraní and at Universiteit Gent for Bantu [@gunnink2022bantu].
-Precursors of the lexical data editing functions have also
+Precursor scripts have also
 been used for Timor-Alor-Pantar and Austronesian languages [@lexirumah-paper].
 
 # Acknowledgement
