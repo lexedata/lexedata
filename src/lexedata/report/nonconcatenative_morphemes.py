@@ -1,4 +1,3 @@
-import itertools
 import typing as t
 
 import pycldf
@@ -16,7 +15,7 @@ def segment_to_cognateset(
         types.Cognate_ID,
         types.Cognateset_ID,
     ],
-    cognatesets: t.Optional[t.Iterable[types.Cognateset_ID]],
+    cognatesets: t.Optional[t.Container[types.Cognateset_ID]],
     logger: cli.logging.Logger = cli.logger,
     forms_by_cogset: t.Mapping[types.Cognateset_ID, t.List[t.Sequence[str]]] = {},
 ) -> t.Set[t.Tuple[types.Cognateset_ID, types.Cognateset_ID]]:
@@ -30,26 +29,25 @@ def segment_to_cognateset(
     mergers: t.Set[t.Tuple[types.Cognateset_ID, types.Cognateset_ID]] = set()
 
     forms = util.cache_table(dataset)
-    cognateset_cache: t.Mapping[t.Optional[types.Cognateset_ID], int]
+    cognateset_cache: t.Container[types.Cognateset_ID]
     if "CognatesetTable" in dataset:
+        c_s_id = dataset["CognatesetTable", "id"].name
         cognateset_cache = {
-            cognateset["ID"]: c
-            for c, cognateset in enumerate(dataset["CognatesetTable"], 1)
+            cognateset[c_s_id]
+            for cognateset in dataset["CognatesetTable"]
             if cognatesets is None or cognateset["ID"] in cognatesets
         }
     else:
         if cognatesets is None:
-            cognateset_cache = t.DefaultDict(itertools.count().__next__)
+            cognateset_cache = types.WorldSet()
         else:
-            cognateset_cache = {c: i for i, c in enumerate(cognatesets, 1)}
-
-    cognateset_cache[None] = 0
+            cognateset_cache = cognatesets
 
     which_segment_belongs_to_which_cognateset: t.Dict[
         types.Form_ID, t.List[t.Set[types.Cognateset_ID]]
     ] = {}
     for j in dataset["CognateTable"]:
-        if j[c_cognate_form] in forms and cognateset_cache.get(j[c_cognate_cognateset]):
+        if j[c_cognate_form] in forms and j[c_cognate_cognateset] in cognateset_cache:
             form = forms[j[c_cognate_form]]
             if j[c_cognate_form] not in which_segment_belongs_to_which_cognateset:
                 which_segment_belongs_to_which_cognateset[j[c_cognate_form]] = [
@@ -113,10 +111,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--cognatesets",
-        type=str,
-        nargs="*",
-        default=None,
-        help="",
+        action=cli.ListOrFromFile,
+        help="Only use these cognate sets as indication of overlapping morphemes.",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
