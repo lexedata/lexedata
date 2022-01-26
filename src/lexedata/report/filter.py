@@ -93,9 +93,9 @@ def parser():
         help="Output exactly the NON-matching lines",
     )
     parser.add_argument(
-        "--output-column",
+        "--output-columns",
         "-c",
-        action="append",
+        nargs="+",
         default=[],
         help="Output only columns OUTPUT_COLUMN1,OUTPUT_COLUMN2,OUTPUT_COLUMN3,… in the same order as given.",
     )

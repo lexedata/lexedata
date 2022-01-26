@@ -118,8 +118,8 @@ if __name__ == "__main__":
         "excel", type=Path, help="The Excel file to parse", metavar="EXCEL"
     )
     parser.add_argument(
-        "--sheet",
-        action="append",
+        "--sheets",
+        nargs="+",
         default=[],
         help="Excel sheet name(s) to import (default: all sheets)",
     )
@@ -142,11 +142,11 @@ if __name__ == "__main__":
         ["ID", "Language_ID", "Parameter_ID", "Form", "Comment", "Cognateset_ID"]
     )
 
-    if not args.sheet:
-        args.sheet = [sheet for sheet in ws.sheetnames]
+    if not args.sheets:
+        args.sheets = [sheet for sheet in ws.sheetnames]
 
     ids: t.Set[str] = set()
-    for sheetname in args.sheet:
+    for sheetname in args.sheets:
         sheet = ws[sheetname]
         for row in import_interleaved(sheet, logger=logger, ids=ids):
             w.writerow(row)

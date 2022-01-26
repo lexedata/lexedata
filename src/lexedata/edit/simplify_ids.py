@@ -31,10 +31,9 @@ if __name__ == "__main__":
         help="Normalize to uppercase letters, instead of the default lowercase.",
     )
     parser.add_argument(
-        "--table",
-        action="append",
-        default=[],
-        help="Only fix the IDs of this table.",
+        "--tables",
+        nargs="+",
+        help="Only fix the IDs of these tables.",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
@@ -45,9 +44,9 @@ if __name__ == "__main__":
 
     ds = pycldf.Wordlist.from_metadata(args.metadata)
 
-    if args.table:
+    if args.tables:
         tables = []
-        for table in args.table:
+        for table in args.tables:
             try:
                 tables.append(ds[table])
             except KeyError:

@@ -213,13 +213,11 @@ if __name__ == "__main__":
         help="Only list matching languages, don't report statistics",
     )
     parser.add_argument(
-        "--with-concept",
+        "--with-concepts",
         "-c",
-        action="append",
-        default=[],
-        type=str,
-        help="Only include languages that have a form for CONCEPT",
+        action=cli.ListOrFromFile,
         metavar="CONCEPT",
+        help="Only include languages that have a form for each CONCEPT.",
     )
     parser.add_argument(
         "--concept-report",

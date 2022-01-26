@@ -37,8 +37,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--exclude",
         type=str,
+        nargs="*",
         default=[],
-        action="append",
         help="Table names to exclude (takes precedence over table-names)",
         metavar="TABLE",
     )

@@ -199,24 +199,25 @@ if __name__ == "__main__":
     parser.add_argument(
         "--brackets",
         "-b",
-        action="append",
+        metavar="LR",
+        nargs="+",
         default=[],
-        help="Remove brackets from forms, generating variants and comments.",
+        help="Remove brackets from forms, generating variants and comments. Every LR must be a two-character string where L is the left bracket and R is the right bracket.",
     )
 
     parser.add_argument(
         "--separator",
         "-s",
-        action="append",
-        default=[],
-        help="Take SEPARATOR as a separator between forms. If no SEPARATORs are given, use tilde '~', comma ',' and semicolon ';'.",
+        nargs="*",
+        default=None,
+        help="Take SEPARATOR as a separator between forms. If --separator is not given, use tilde '~', comma ',' and semicolon ';'.",
     )
     parser.add_argument(
         "--keep",
         "-k",
-        action="append",
-        default=[],
-        help="Take KSEPARATOR as a separator between forms, but include it in front of a variant. If no KSEPARATOR is given, keep '~' and none of the other separators.",
+        nargs="*",
+        default=None,
+        help="Take KSEPARATOR as a separator between forms, but include it in front of a variant. If --keep is not given, keep '~' and none of the other separators.",
         metavar="KSEPARATOR",
     )
 
@@ -227,9 +228,9 @@ if __name__ == "__main__":
 
     if not args.brackets:
         args.brackets = [("(", ")")]
-    if not args.separator:
+    if args.separator is None:
         args.separator = ["~", ",", ";"]
-    if not args.keep:
+    if args.keep is None:
         kseparators = {"~"}.intersection(args.separator)
     else:
         kseparators = set(args.keep)

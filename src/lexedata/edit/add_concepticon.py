@@ -244,12 +244,12 @@ if __name__ == "__main__":
         help="Add/update a column containing Concepticon's concept set definitions, for quick disambiguation",
     )
     parser.add_argument(
-        "--gloss-language",
+        "--gloss-languages",
         "-l",
-        action="append",
-        default=[],
+        nargs="+",
+        default=None,
         type=equal_separated,
-        help="Maps from column names to 2-letter language codes. For example, if your ParameterTable has a column 'GLOSS', which contains English glosses, and a colum 'PORTUGUESE' with Portuguese translations, run this script with the arguments `-l GLOSS=en -l PORTUGUESE=pt`. If no language mappings are given, the assumption is that the #id column contains English glosses.",
+        help="Maps from column names to 2-letter language codes. For example, if your ParameterTable has a column 'GLOSS', which contains English glosses, and a colum 'PORTUGUESE' with Portuguese translations, run this script with the arguments `-l GLOSS=en PORTUGUESE=pt`. If no language mappings are given, the assumption is that the #id column contains English glosses.",
     )
     parser.add_argument(
         "--status-update",
@@ -264,7 +264,7 @@ if __name__ == "__main__":
 
     create_concepticon_for_concepts(
         dataset=pycldf.Wordlist.from_metadata(args.metadata),
-        language=args.gloss_language,
+        language=args.gloss_languages,
         concepticon_glosses=args.add_concept_set_names,
         concepticon_definition=args.add_definitions,
         overwrite=args.overwrite,
