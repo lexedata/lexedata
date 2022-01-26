@@ -419,44 +419,20 @@ if __name__ == "__main__":
     parser = cli.parser(
         description="Export #FormTable to tsv format for import to edictor"
     )
-    # TODO: set these arguments correctly
-    # TODO: allow reading from a file instead of from command line, maybe as only option.
     parser.add_argument(
         "--languages",
-        type=str,
-        nargs="*",
-        default=[],
-        help="Language references for form selection",
-        metavar="LANGUAGE",
-    )
-    parser.add_argument(
-        "--languages-file",
-        type=Path,
-        help="If both LANGUAGES_FILE and LANGUAGE are given, take the union.",
+        action=cli.ListOrFromFile,
+        help="Export only forms from these languages.",
     )
     parser.add_argument(
         "--concepts",
-        type=str,
-        nargs="*",
-        default=[],
-        help="",
-    )
-    parser.add_argument(
-        "--concepts-file",
-        type=Path,
-        help="",
+        action=cli.ListOrFromFile,
+        help="Export only forms connected to these concepts.",
     )
     parser.add_argument(
         "--cognatesets",
-        type=str,
-        nargs="*",
-        default=[],
-        help="",
-    )
-    parser.add_argument(
-        "--cognatesets-file",
-        type=Path,
-        help="",
+        action=cli.ListOrFromFile,
+        help="Export only these cognate sets.",
     )
     parser.add_argument(
         "--output-file",
@@ -469,29 +445,11 @@ if __name__ == "__main__":
     logger = cli.setup_logging(args)
     dataset = pycldf.Dataset.from_metadata(args.metadata)
 
-    if args.languages_file:
-        for r, row in enumerate(csv.reader(args.languages_file.open())):
-            if r == 0 and row[0] == dataset["LanguageTable", "id"].name:
-                continue
-            args.languages.append(row[0])
-
-    if args.concepts_file:
-        for r, row in enumerate(csv.reader(args.concepts_file.open())):
-            if r == 0 and row[0] == dataset["ParameterTable", "id"].name:
-                continue
-            args.concepts.append(row[0])
-
-    if args.cognatesets_file:
-        for r, row in enumerate(csv.reader(args.cognatesets_file.open())):
-            if r == 0 and row[0] == dataset["CognatesetTable", "id"].name:
-                continue
-            args.cognatesets.append(row[0])
-
     forms, judgements_about_form, cognateset_mapping = forms_to_tsv(
         dataset=dataset,
-        languages=set(args.languages) or types.WorldSet(),
-        concepts=set(args.concepts) or types.WorldSet(),
-        cognatesets=set(args.cognatesets) or types.WorldSet(),
+        languages=args.languages,
+        concepts=args.concepts,
+        cognatesets=args.cognatesets,
         logger=logger,
     )
 
