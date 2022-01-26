@@ -253,7 +253,7 @@ if __name__ == "__main__":
     data, header = coverage_report(
         dataset,
         args.min_percentage,
-        args.with_concept,
+        args.with_concepts,
         missing=Missing.__members__[args.missing],
         only_coded=args.coded,
     )
