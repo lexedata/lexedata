@@ -112,8 +112,8 @@ if __name__ == "__main__":
 
     if not args.table:
         table = DictReader(sys.stdin)
-        if not args.output_column:
-            args.output_column = table.fieldnames
+        if not args.output_columns:
+            args.output_columns = table.fieldnames
     else:
         table = pycldf.Wordlist.from_metadata(args.metadata)[args.table]
 
@@ -122,13 +122,13 @@ if __name__ == "__main__":
         for r, row in enumerate(
             filter(table, args.column, re.compile(args.filter), args.invert)
         ):
-            if not args.output_column:
-                args.output_column = row.keys()
+            if not args.output_columns:
+                args.output_columns = row.keys()
             if w is None:
-                w = DictWriter(sys.stdout, args.output_column)
+                w = DictWriter(sys.stdout, args.output_columns)
                 w.writeheader()
             row = {
-                key: value for key, value in row.items() if key in args.output_column
+                key: value for key, value in row.items() if key in args.output_columns
             }
             w.writerow(row)
     except KeyError:
