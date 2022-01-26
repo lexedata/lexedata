@@ -108,6 +108,9 @@ class ListOrFromFile(argparse.Action):
         )
 
     def __call__(self, parser, namespace, values, option_string=None):
+        # This coud be improved if we could defer this until the dataset has
+        # been loaded; but that requires major changes to the action reading
+        # --metadata.
         if len(values) == 0:
             # Keep default value
             return
