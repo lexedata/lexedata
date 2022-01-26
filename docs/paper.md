@@ -57,7 +57,7 @@ integrity for bulk edit and import functions it provides.
 
 # Research use
 The export to phylogenetic alignments, derived from BEASTling
-[@maurits2017beastling,beastling14], has already been used in different language
+[@maurits2017beastling;beastling14], has already been used in different language
 phylogenetics projects that are currently under review
 [@kaiping2019subgrouping,@kaiping2021burst]. The
 more extensive lexical dataset editing functionality is used by projects at
