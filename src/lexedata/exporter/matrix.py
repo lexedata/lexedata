@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-import csv
 import typing as t
 from pathlib import Path
 
@@ -80,9 +79,9 @@ if __name__ == "__main__":
         help="File path for the generated cognate excel file.",
     )
     parser.add_argument(
-        "--concept-list",
-        type=Path,
-        help="Output only the concepts listed in this file. I assume that CONCEPT_LIST is a CSV file, and the first comma-separated column contains the ID.",
+        "--concepts",
+        action=cli.ListOrFromFile,
+        help="Concepts to output.",
     )
     parser.add_argument(
         "--sort-languages-by",
@@ -99,21 +98,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
-    concept_list = None
-    if args.concept_list:
-        if not args.concept_list.exists():
-            logger.critical("Concept list file %s not found.", args.concept_list)
-            cli.Exit.FILE_NOT_FOUND()
-        concept_list = []
-        for c, concept in enumerate(csv.reader(args.concept_list.open())):
-            first_column = concept[0]
-            if c == 0:
-                logger.info(
-                    "Reading concept IDs from column with header %s", first_column
-                )
-            else:
-                concept_list.append(first_column)
-
     E = MatrixExcelWriter(
         pycldf.Wordlist.from_metadata(args.metadata),
         database_url=args.url_template,
@@ -122,7 +106,7 @@ if __name__ == "__main__":
     E.create_excel(
         args.excel,
         language_order=args.sort_languages_by,
-        rows=concept_list,
+        rows=args.concepts,
     )
     E.wb.save(
         filename=args.excel,
