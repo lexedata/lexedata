@@ -8,7 +8,7 @@ def test_filter_parser():
     assert parameters.column == "form"
     assert parameters.filter == "a"
     assert parameters.invert is True
-    assert parameters.output_column == []
+    assert parameters.output_columns == []
 
 
 def test_loglevel_parser():
