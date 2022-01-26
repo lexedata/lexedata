@@ -127,7 +127,7 @@ if __name__ == "__main__":
         "--directory",
         type=Path,
         default=Path(os.getcwd()),
-        help="Path to directory where forms.csv is created (default: current working directory)",
+        help="Path to directory where forms.csv is to be created (default: current working directory)",
     )
     cli.add_log_controls(parser)
     args = parser.parse_args()
