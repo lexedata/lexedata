@@ -44,7 +44,7 @@ Maintaining the integrity as relational database is difficult using general CSV
 editing tools. This holds in particular for the usual dataset size with
 hundreds of languages and concepts, and formats unfamiliar to most linguists.
 
-![Overview over the functionality in Lexedata.\label{fig:structure}](structure.svg)
+![Overview over the functionality in Lexedata.\label{fig:structure}](structure.png)
 
 The individual Python scripts of Lexedata implement various helper functions
 that frequently arise when working with comparative word-lists for multiple
