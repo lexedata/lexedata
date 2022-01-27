@@ -228,7 +228,7 @@ if __name__ == "__main__":
         "--strict",
         action="store_true",
         default=False,
-        help="Warn where morphology is not strictly concatenative.",
+        help="Warn about segments in a form that are not consecutive. (If you want a more detailed report on non-concatenative morhpology, run `lexedata.report.nonconcatenative_morphology`)",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
