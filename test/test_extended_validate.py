@@ -2,7 +2,6 @@ from pathlib import Path
 import re
 
 import pytest
-import unicodedata
 
 
 from helper_functions import copy_to_temp
@@ -16,7 +15,9 @@ def test_check_foreignkeys_correct():
     assert validate.check_foreign_keys(dataset=dataset)
 
 
-@pytest.mark.skip(reason="How to change the foreign key of the given dataset in a simple way?")
+@pytest.mark.skip(
+    reason="How to change the foreign key of the given dataset in a simple way?"
+)
 def test_check_foreignkeys_warning(caplog):
     dataset, target = copy_to_temp(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
@@ -44,7 +45,10 @@ def test_check_unicode_data_warning(caplog):
     dataset.write(FormTable=forms)
 
     validate.check_unicode_data(dataset=dataset)
-    assert re.search("Value À of row ache_one in table forms.csv is not in NFC normalized unicode", caplog.text)
+    assert re.search(
+        "Value À of row ache_one in table forms.csv is not in NFC normalized unicode",
+        caplog.text,
+    )
 
 
 def test_check_empty_forms():
@@ -67,10 +71,7 @@ def test_check_empty_forms_warning(caplog):
     forms[0] = form
     dataset.write(FormTable=forms)
     validate.check_empty_forms(dataset=dataset)
-    assert re.search(
-        r"Non empty forms exist for the empty form paraguayan_guarani_one ",
-        caplog.text
-    )
+    assert re.search(r"Non empty forms exist for the empty form ache_one", caplog.text)
 
 
 def test_check_no_separator_in_ids():
@@ -80,21 +81,15 @@ def test_check_no_separator_in_ids():
     assert validate.check_no_separator_in_ids(dataset=dataset)
 
 
+@pytest.mark.skip(reason="not yet finished")
 def test_check_no_separator_in_ids_warning(caplog):
     dataset, target = copy_to_temp(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
-    c_c_id = dataset["ParameterTable", "id"].name
-    c_f_concept = dataset["FormTable", "parameterReference"].name
-    forms = [f for f in dataset["FormTable"]]
-    form = forms[0]
-    concept_id = form[c_f_concept]
-    if not isinstance(concept, str):
-        concept_id = concept[0]
-    concepts = {c[c_c_id]: c for c in dataset["ParameterTable"]}
-    concept = [c for c in dataset["ParameterTable"] if c[c_c_id] == concept_id][0]
-
-    form[c_f_concept] = form[c_f_concept] + ["two"]
-    forms[0] = form
-    dataset.write(FormTable=forms)
-
+    # c_c_id = dataset["ParameterTable", "id"].name
+    # c_f_concept = dataset["FormTable", "parameterReference"].name
+    # forms = [f for f in dataset["FormTable"]]
+    # form = forms[0]
+    # concept_id = form[c_f_concept][0]
+    # concepts = {c[c_c_id]: c for c in dataset["ParameterTable"]}
+    # concept = [c for c in dataset["ParameterTable"] if c[c_c_id] == concept_id]
