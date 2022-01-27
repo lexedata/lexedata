@@ -28,11 +28,10 @@ def test_no_primary_concepts(caplog, cldf_wordlist):
 
 def test_uncoded_coverage_report(cldf_wordlist):
     dataset = cldf_wordlist
-    data, _ = coverage_report(
+    data = coverage_report(
         dataset=dataset,
         min_percentage=0,
         with_concept=[],
-        missing=False,
         only_coded=False,
     )
     assert data == [
@@ -45,8 +44,10 @@ def test_uncoded_coverage_report(cldf_wordlist):
 
 def test_coverage_report(cldf_wordlist):
     dataset = cldf_wordlist
-    data, _ = coverage_report(
-        dataset=dataset, min_percentage=0, with_concept=[], missing=False
+    data = coverage_report(
+        dataset=dataset,
+        min_percentage=0,
+        with_concept=[],
     )
     assert math.isnan(data[2][4])
     data[2][4] = 0
@@ -60,7 +61,7 @@ def test_coverage_report(cldf_wordlist):
 
 def test_coverage_concept_report(cldf_wordlist):
     dataset = cldf_wordlist
-    data, _ = coverage_report_concepts(dataset=dataset)
+    data = coverage_report_concepts(dataset=dataset)
     assert data == [
         ["one", 3],
         ["one_1", 1],

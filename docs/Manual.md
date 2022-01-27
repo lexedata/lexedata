@@ -128,17 +128,16 @@ Depending on your workflow, you may not have assigned forms to trivial (singleto
 The report package contains scripts that check for data integrity and generate reports for your dataset. You can use these reports to identify potential problems in the dataset, to track your progress, or to report statistics in publications (e.g. coverage for each language in a dataset).
 
 ### Language coverage
-
-src/lexedata//report/coverage.py
+You can obtain various statistics related to coverage (how many concepts have corresponding forms in each language) with the command `python -m lexedata.report.coverage`. 
+Among others, you can find which languages have corresponding forms for specific concepts, which languages have at least a given coverage percentage etc. Not applicable concepts (concepts that do not exist in a particular language) could count or not towards coverage with the optional argument XXX
 
 ### Segment inventories
 src/lexedata//report/segments_inventories.py
 
 ### Cognate judgements
-src/lexedata//report/judgements.py
+The cognate judgement report checks for issues involving cognate judgements, the segment slice column, the referenced segments and the alignment. For example, it checks if the referenced segments match what is present in the alignment and are contiguous (including identically looking but underlyingly different unicode characters), if the segment slice is valid based on the length of the form, and if the length of all alignments in a cognateset match. It also checks that missing ("") and NA ("-") forms are not assigned to any cognate set. In order to obtain the judgements report, you can use the command `python -m lexedata.report.judgements`. If you want additionally to check for instances of non-concatenative morphology, you can use the switch `--strict`. 
 
 ### CLDF validate
-src/lexedata//report/extended_cldf_validate.py
 
 ### Filter dataset
 src/lexedata//report/filter.py

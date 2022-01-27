@@ -15,16 +15,23 @@ class Missing(enum.Enum):
 
 
 def coverage_report(
-    dataset: pycldf.Dataset,
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
     min_percentage: float,
-    with_concept: t.Iterable,
-    missing: Missing,
+    with_concept: t.Iterable[types.Parameter_ID],
+    missing: Missing = Missing.KNOWN,
     only_coded: bool = True,
 ) -> t.Tuple[t.List[str], t.List[str]]:
+    coded: t.Container[types.Form_ID]
     if only_coded:
+        coded = set()
         try:
             c_j_form = dataset["CognateTable", "formReference"].name
-            coded = set()
             form_column_referred_to_by_judgements = ""
             for foreign_key in dataset["CognateTable"].tableSchema.foreignKeys:
                 if foreign_key.columnReference == [c_j_form]:
@@ -34,8 +41,9 @@ def coverage_report(
             for judgement in dataset["CognateTable"]:
                 coded.add(judgement[c_j_form])
         except KeyError:
-            form_column_referred_to_by_judgements = dataset["FormTable", "id"].name
-            coded = {}
+            logger.warning(
+                "You requested that I only count cognate coded forms, but you have no CognateTable containing judgements. Expect an empty report."
+            )
     else:
         form_column_referred_to_by_judgements = dataset["FormTable", "id"].name
         coded = types.WorldSet()
@@ -83,7 +91,6 @@ def coverage_report(
 
     total_number_concepts = len(list(dataset["ParameterTable"]))
 
-    header_languages = ""
     data_languages = []
     for language, metadata in languages.items():
         conceptlist = concepts[language]
@@ -97,7 +104,7 @@ def coverage_report(
         if conceptlist_percentage * 100 < min_percentage:
             continue
 
-        if not [c for c in conceptlist if c in with_concept]:
+        if not all(c in conceptlist for c in with_concept):
             continue
 
         # count primary concepts
@@ -116,15 +123,19 @@ def coverage_report(
                 synonyms,
             ]
         )
-    return data_languages, header_languages
+    return data_languages
 
 
 def coverage_report_concepts(
     dataset: pycldf.Dataset,
 ):
-    # load possible primary concepts
+    # TODO: This assumes the existence of a ParameterTable. The script should
+    # still work if none exists. TODO: In addition, we decided to not formalize
+    # primary concepts, so this should instead depend on a command line
+    # argument, either supplementing or replacing --with-concepts.
     c_c_id = dataset["ParameterTable", "id"].name
     try:
+        # Load primary concepts if possible.
         primary_concepts = [
             c[c_c_id] for c in dataset["ParameterTable"] if c["Primary"]
         ]
@@ -171,9 +182,8 @@ def coverage_report_concepts(
     data_concepts = []
     for k, v in concepts_to_languages.items():
         data_concepts.append([k, len(set(v))])
-    header_concepts = ""
 
-    return data_concepts, header_concepts
+    return data_concepts
 
 
 if __name__ == "__main__":
@@ -240,7 +250,7 @@ if __name__ == "__main__":
         cli.Exit.INVALID_DATASET(
             "You must specify the path to a valid metadata file (--metadata path/to/Filename-metadata.json)."
         )
-    data, header = coverage_report(
+    data = coverage_report(
         dataset,
         args.min_percentage,
         args.with_concepts,
@@ -268,7 +278,7 @@ if __name__ == "__main__":
         )
 
         if args.concept_report:
-            data, header = coverage_report_concepts(dataset=dataset)
+            data = coverage_report_concepts(dataset=dataset)
             print(
                 tabulate(
                     data,
