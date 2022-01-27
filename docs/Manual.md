@@ -135,10 +135,9 @@ Among others, you can find which languages have corresponding forms for specific
 src/lexedata//report/segments_inventories.py
 
 ### Cognate judgements
-The cognate judgement report checks for issues involving cognate judgements, the segment slice column, the referenced segments and the alignment. For example, it checks if the referenced segments match what is present in the alignment, if the segment slice is valid based on the length of the form, and if the length of all alignments in a cognateset match. In order to obtain the judgements report, you can use the command `python -m lexedata.report.judgements`. If you want additionally to check for instances of non-concatenative morphology, you can use the switch `--strict`. 
+The cognate judgement report checks for issues involving cognate judgements, the segment slice column, the referenced segments and the alignment. For example, it checks if the referenced segments match what is present in the alignment and are contiguous, if the segment slice is valid based on the length of the form, and if the length of all alignments in a cognateset match. It also checks that missing ("") and NA ("-") forms are not assigned to any cognate set. In order to obtain the judgements report, you can use the command `python -m lexedata.report.judgements`. If you want additionally to check for instances of non-concatenative morphology, you can use the switch `--strict`. 
 
 ### CLDF validate
-src/lexedata//report/extended_cldf_validate.py
 
 ### Filter dataset
 src/lexedata//report/filter.py
