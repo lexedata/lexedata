@@ -16,6 +16,7 @@ import typing as t
 
 import pycldf
 import unicodedata
+from collections import defaultdict
 
 # from clldutils.misc import log_or_raise
 
@@ -37,7 +38,7 @@ def check_segmentslice_separator(dataset, logger=None) -> bool:
     return True
 
 
-def check_id_format(dataset: pycldf.Dataset, logger: cli.logger = cli.logger):
+def check_id_format(dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger):
     correct = True
     for table in dataset.tables:
         # Every table SHOULD have an ID column
@@ -229,6 +230,51 @@ def check_na_form_has_no_alternative(
                 )
                 valid = False
     return valid
+
+
+def check_empty_forms(dataset: pycldf.Dataset, logger: None):
+    c_f_id = dataset["FormTable", "id"].name
+    c_f_form = dataset["FormTable", "form"].name
+    c_f_concept = dataset["FormTable", "parameterReference"].name
+    c_f_language = dataset["FormTable", "languageReference"].name
+    forms_to_concepts = defaultdict(set)
+    # TODO think about separator of concept
+    separator = (
+        dataset["FormTable"]
+        .get_column(dataset.column_names.froms.parameterReference)
+        .separator
+    )
+    for f in dataset["FormTable"]:
+        if separator:
+            for c in f[c_f_concept]:
+                forms_to_concepts[c].add(f[c_f_id])
+        else:
+            forms_to_concepts[f[c_f_concept]].add(f[c_f_id])
+    forms_to_languages = defaultdict(set)
+    for f in dataset["FormTable"]:
+        forms_to_languages[f[c_f_language]].add(f[c_f_id])
+    empty_forms = {
+        f[c_f_id]: f[c_f_form] for f in dataset["FormTable"] if f[c_f_form] == ""
+    }
+    for form in empty_forms:
+        try:
+            if separator:
+                for c in form[c_f_concept]:
+                    assert forms_to_concepts[c].intersection(
+                        forms_to_languages[form[c_f_language]]
+                    ) == {form[c_f_id]}
+            else:
+                assert forms_to_concepts[form[c_f_concept]].intersection(
+                    forms_to_languages[form[c_f_language]]
+                ) == {form[c_f_id]}
+        except AssertionError:
+            log_or_raise(
+                message=f"For the empty form {form[c_f_id]} exist non empty forms with identical "
+                f"parameter and language reference",
+                log=logger,
+            )
+            return False
+    return True
 
 
 if __name__ == "__main__":
