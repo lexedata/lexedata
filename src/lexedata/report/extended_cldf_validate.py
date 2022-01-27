@@ -23,7 +23,7 @@ from lexedata import cli, util, types
 from lexedata.report.judgements import check_cognate_table
 
 
-def log_or_raise(message, log: cli.logger = cli.logger):
+def log_or_raise(message, log: cli.logging.Logger = cli.logger):
     log.warning(message)
 
 
@@ -249,7 +249,7 @@ if __name__ == "__main__":
     correct &= dataset.validate(log=logger)
 
     # All IDs should be [a-zA-Z0-9_-]+, and should be primary keys
-    correct &= check_id_format(dataset)
+    correct &= check_id_format(dataset, logger=logger)
 
     # Check reference properties/foreign keys
     correct &= check_foreign_keys(dataset, logger=logger)
