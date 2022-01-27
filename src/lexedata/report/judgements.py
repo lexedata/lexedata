@@ -214,8 +214,8 @@ def check_cognate_table(
             actual_segments = " ".join(form_segments[i] for i in included_segments)
             if without_gaps.strip() != actual_segments.strip():
                 if unicodedata.normalize(
-                    "NFCK", without_gaps.strip()
-                ) == unicodedata.normalize("NFCK", actual_segments.strip()):
+                    "NFKC", without_gaps.strip()
+                ) == unicodedata.normalize("NFKC", actual_segments.strip()):
                     comment = " This is down to encoding differences: Their normalized unicode representations are the same. I suggest you run `lexedata.edit.normalize_unicode`."
                 else:
                     comment = ""
