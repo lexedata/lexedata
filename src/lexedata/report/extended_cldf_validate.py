@@ -12,12 +12,14 @@ reports. Those automatic fixes should be made more obvious.
 
 """
 
+import typing as t
+
 import pycldf
 import unicodedata
 
 # from clldutils.misc import log_or_raise
 
-from lexedata import cli
+from lexedata import cli, util
 from lexedata.report.judgements import check_cognate_table
 
 
@@ -89,42 +91,49 @@ def check_id_format(ds: pycldf.Dataset):
 
 
 def check_no_separator_in_ids(dataset: pycldf.Dataset, logger=None) -> bool:
-    # check that reference columns that have a separator don't contain the separator inside a string value
+    valid = True
+    # Check that reference columns that have a separator don't contain the separator inside a string value
+    forbidden_separators: t.MutableMapping[
+        str, t.MutableMapping[str, t.MutableMapping[str, t.List[t.Tuple[str, str]]]]
+    ] = t.DefaultDict(lambda: t.DefaultDict(lambda: t.DefaultDict(list)))
     for table in dataset.tables:
         for foreign_key in table.tableSchema.foreignKeys:
-            original_column_name = foreign_key.reference.columnReference
-            original_column = dataset[foreign_key.reference].get_column(
-                original_column_name
-            )
-            if original_column.separator:
-                separator = original_column.separator
-                if separator in original_column.datatype.format:
-                    continue
-                for row in dataset[foreign_key.reference]:
-                    try:
-                        assert separator not in row[original_column_name]
-                    except AssertionError:
+            try:
+                (referencing_column,) = foreign_key.columnReference
+                (referenced_column,) = foreign_key.reference.columnReference
+            except ValueError:
+                # Multi-column foreign key. We *could* check that there's not a
+                # reference column hidden in there, but we don't.
+                continue
+
+            if table.get_column(referencing_column).separator is None:
+                continue
+
+            forbidden_separators[foreign_key.reference.resource][referenced_column][
+                table.get_column(referencing_column).separator
+            ].append((table.url, referencing_column))
+
+    for table, targets in forbidden_separators.items():
+        for r, row in enumerate(dataset[table]):
+            for target_column, separators_forbidden_here in targets.items():
+                for separator, forbidden_by in separators_forbidden_here.items():
+                    if separator in row[target_column]:
                         log_or_raise(
-                            message=f"Column {original_column_name} of table "
-                            f"{foreign_key.reference.resource.__str__()} "
-                            f"contains the separator {separator} of column {foreign_key.columnReference} from "
-                            f"table {table.url} in value: {row[original_column_name]}",
+                            f"In table {table}, row {r} column {target_column} contains {separator:r}, which is also the separator of {forbidden_by}.",
                             log=logger,
                         )
-                        return False
-    return True
+                        valid = False
+    return valid
 
 
 def check_unicode_data(dataset: pycldf, unicode_form: str = "NFC", logger=None):
-    for table in dataset:
-        id = dataset[table, "id"].name
-        for row in table:
+    for table in dataset.tables:
+        for r, row in enumerate(table):
             for value in row.values():
                 if isinstance(value, str):
                     if not unicodedata.is_normalized(unicode_form, value):
                         log_or_raise(
-                            message=f"Value {value} of row {row[id]} in table {table.url} is not in "
-                            f"{unicode_form} normalized unicode",
+                            message=f"Value {value} of row {r} in table {table.url} is not in {unicode_form} normalized unicode",
                             log=logger,
                         )
                         return False
@@ -132,49 +141,49 @@ def check_unicode_data(dataset: pycldf, unicode_form: str = "NFC", logger=None):
 
 
 def check_foreign_keys(dataset: pycldf.Dataset, logger=None):
-    # get all foreign keys for each table
-    f_keys = {}
+    # Get all foreign keys for each table
+    valid = True
     for table in dataset.tables:
-        f_keys[table.url.string] = [
-            (f.reference, f.columnReference) for f in table.tableSchema.foreignKeys
-        ]
-
-    for table, keys in f_keys.items():
-        for key in keys:
-            reference, column = key
-            # check that foreign key is ID of corresponding table:
+        for key in table.tableSchema.foreignKeys:
+            reference = key.reference
             try:
-                assert reference.columnReference == "ID"
-            except AssertionError:
+                (target_column,) = reference.columnReference
+            except ValueError:
+                # Multi-column foreign key. We *could* check that there's not a
+                # reference column hidden in there, but we don't.
+                continue
+            (column,) = key.columnReference
+            # check that property url of foreign key column points to correct table
+            column_type = util.cldf_property(
+                dataset[table].get_column(column).propertyUrl
+            )
+
+            if column_type and pycldf.TERMS[column_type].references:
+                target_table = pycldf.TERMS[column_type].references
+            else:
+                # Not a CLDF reference property. Nothing to check.
+                continue
+
+            if dataset[target_table] != dataset[reference.resource]:
+                log_or_raise(
+                    message=f"Foreign key {key} is a declared as {column_type}, which should point to {target_table} but instead points to {reference}",
+                    log=logger,
+                )
+                valid = False
+                continue
+
+            # Check that foreign key is ID of corresponding table
+            if reference.columnReference != [
+                dataset[key.reference.resource, "id"].name
+            ]:
                 log_or_raise(
                     message=f"foreign key {key} in table {table.url.string} "
                     f"does not point to the ID column of another table",
                     log=logger,
                 )
-                return False
-            # check that property url of foreign key column points to correct table
-            property_url = (
-                dataset[table]
-                .get_column(column)
-                .propertyUrl.split("#")[1]
-                .rstrip("Reference")
-            )
-            referred_table_name = (
-                dataset[reference]
-                .common_props["dc:conformsTo"]
-                .split("#")[1]
-                .rstrip("Table")
-            )
-            try:
-                assert property_url == referred_table_name.lower()
-            except AssertionError:
-                log_or_raise(
-                    message=f"foreign key {key} is a declared as "
-                    f"{dataset[table].get_column(column).propertyUrl.split('#')[1]} "
-                    f"but does not point to this table, instead points to {referred_table_name}",
-                    log=logger,
-                )
-    return True
+                valid = False
+
+    return valid
 
 
 if __name__ == "__main__":
@@ -203,13 +212,14 @@ if __name__ == "__main__":
     # no ID of a reference that contains separators may contain that separator
     correct &= check_no_separator_in_ids(dataset=dataset, logger=logger)
 
-    # Check segment slice separator is space
-    correct &= check_segmentslice_separator(dataset=dataset, logger=logger)
-
-    # Check that the CognateTable makes sense
-    correct &= check_cognate_table(dataset=dataset, logger=logger)
-
-    #  Empty forms may exist, but only if there is no actual form for the concept and the language, and probably given some other constraints.
-
     #  All files should be in NFC normalized unicode
     correct &= check_unicode_data(dataset, unicode_form="NFC", logger=logger)
+
+    if dataset.module == "Wordlist":
+        # Check segment slice separator is space
+        correct &= check_segmentslice_separator(dataset=dataset, logger=logger)
+
+        # Check that the CognateTable makes sense
+        correct &= check_cognate_table(dataset=dataset, logger=logger)
+
+        #  Empty forms may exist, but only if there is no actual form for the concept and the language, and probably given some other constraints.
