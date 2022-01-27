@@ -21,7 +21,6 @@ from lexedata import cli
 from lexedata.report.judgements import check_cognate_table
 
 
-
 def log_or_raise(message, log: cli.logger):
     log.warning(message)
 
@@ -53,9 +52,9 @@ def check_id_format(ds: pycldf.Dataset):
             if not datatype.format:
                 correct = False
                 log_or_raise(
-                    f"Table {table.url} has an unconstrained ID column {id_column.name}. Consider setting " \
+                    f"Table {table.url} has an unconstrained ID column {id_column.name}. Consider setting "
                     f"its format to [a-zA-Z0-9_-]+ and/or running `lexedata.edit.simplify_ids`.",
-                    logger
+                    logger,
                 )
             else:
                 if datatype.format not in {
@@ -68,7 +67,8 @@ def check_id_format(ds: pycldf.Dataset):
                         f"Table {table.url} has a string ID column {id_column.name} with format {datatype.format}. "
                         f"I am too dumb to check whether that's a subset of [a-zA-Z0-9_-]+ (which is fine) "
                         f"or not (in which case maybe change it).",
-                        logger)
+                        logger,
+                    )
 
         elif datatype.base == "integer":
             logger.info(
@@ -81,19 +81,21 @@ def check_id_format(ds: pycldf.Dataset):
         if table.tableSchema.primaryKey != [id_column.name]:
             log_or_raise(
                 f"Table {table.url} has ID column {id_column.name}, but primary key {table.tableSchema.primaryKey}",
-                logger
+                logger,
             )
             correct = False
 
     return correct
 
 
-def check_no_separator_in_ids(dataset: pycldf.Dataset, logger=None)->bool:
+def check_no_separator_in_ids(dataset: pycldf.Dataset, logger=None) -> bool:
     # check that reference columns that have a separator don't contain the separator inside a string value
     for table in dataset.tables:
         for foreign_key in table.tableSchema.foreignKeys:
             original_column_name = foreign_key.reference.columnReference
-            original_column = dataset[foreign_key.reference].get_column(original_column_name)
+            original_column = dataset[foreign_key.reference].get_column(
+                original_column_name
+            )
             if original_column.separator:
                 separator = original_column.separator
                 if separator in original_column.datatype.format:
@@ -104,10 +106,10 @@ def check_no_separator_in_ids(dataset: pycldf.Dataset, logger=None)->bool:
                     except AssertionError:
                         log_or_raise(
                             message=f"Column {original_column_name} of table "
-                                    f"{foreign_key.reference.resource.__str__()} "
-                                    f"contains the separator {separator} of column {foreign_key.columnReference} from "
-                                    f"table {table.url} in value: {row[original_column_name]}",
-                            log=logger
+                            f"{foreign_key.reference.resource.__str__()} "
+                            f"contains the separator {separator} of column {foreign_key.columnReference} from "
+                            f"table {table.url} in value: {row[original_column_name]}",
+                            log=logger,
                         )
                         return False
     return True
@@ -122,8 +124,8 @@ def check_unicode_data(dataset: pycldf, unicode_form: str = "NFC", logger=None):
                     if not unicodedata.is_normalized(unicode_form, value):
                         log_or_raise(
                             message=f"Value {value} of row {row[id]} in table {table.url} is not in "
-                                    f"{unicode_form} normalized unicode",
-                            log=logger
+                            f"{unicode_form} normalized unicode",
+                            log=logger,
                         )
                         return False
     return True
@@ -133,8 +135,9 @@ def check_foreign_keys(dataset: pycldf.Dataset, logger=None):
     # get all foreign keys for each table
     f_keys = {}
     for table in dataset.tables:
-        f_keys[table.url.string] = \
-            [(f.reference, f.columnReference)for f in table.tableSchema.foreignKeys]
+        f_keys[table.url.string] = [
+            (f.reference, f.columnReference) for f in table.tableSchema.foreignKeys
+        ]
 
     for table, keys in f_keys.items():
         for key in keys:
@@ -145,21 +148,31 @@ def check_foreign_keys(dataset: pycldf.Dataset, logger=None):
             except AssertionError:
                 log_or_raise(
                     message=f"foreign key {key} in table {table.url.string} "
-                            f"does not point to the ID column of another table",
-                    log=logger
+                    f"does not point to the ID column of another table",
+                    log=logger,
                 )
                 return False
             # check that property url of foreign key column points to correct table
-            property_url = dataset[table].get_column(column).propertyUrl.split("#")[1].rstrip("Reference")
-            referred_table_name = dataset[reference].common_props["dc:conformsTo"].split("#")[1].rstrip("Table")
+            property_url = (
+                dataset[table]
+                .get_column(column)
+                .propertyUrl.split("#")[1]
+                .rstrip("Reference")
+            )
+            referred_table_name = (
+                dataset[reference]
+                .common_props["dc:conformsTo"]
+                .split("#")[1]
+                .rstrip("Table")
+            )
             try:
-                assert  property_url == referred_table_name.lower()
+                assert property_url == referred_table_name.lower()
             except AssertionError:
                 log_or_raise(
                     message=f"foreign key {key} is a declared as "
-                            f"{dataset[table].get_column(column).propertyUrl.split('#')[1]} "
-                            f"but does not point to this table, instead points to {referred_table_name}",
-                    log=logger
+                    f"{dataset[table].get_column(column).propertyUrl.split('#')[1]} "
+                    f"but does not point to this table, instead points to {referred_table_name}",
+                    log=logger,
                 )
     return True
 
