@@ -4,6 +4,7 @@
 import typing as t
 import pycldf
 
+import unicodedata
 from lexedata import cli
 from lexedata.util import parse_segment_slices, cache_table
 
@@ -212,9 +213,15 @@ def check_cognate_table(
             without_gaps = " ".join([c for c in judgement[c_alignment] if c != "-"])
             actual_segments = " ".join(form_segments[i] for i in included_segments)
             if without_gaps.strip() != actual_segments.strip():
+                if unicodedata.normalize(
+                    "NFCK", without_gaps.strip()
+                ) == unicodedata.normalize("NFCK", actual_segments.strip()):
+                    comment = " This is down to encoding differences: Their normalized unicode representations are the same. I suggest you run `lexedata.edit.normalize_unicode`."
+                else:
+                    comment = ""
                 log_or_raise(
-                    "In {}, row {}: Referenced segments in form resolve to {}, while alignment contains segments {}.".format(
-                        f, j, actual_segments, without_gaps
+                    "In {}, row {}: Referenced segments in form resolve to {}, while alignment contains segments {}.{}".format(
+                        f, j, actual_segments, without_gaps, comment
                     ),
                 )
                 all_judgements_okay = False
