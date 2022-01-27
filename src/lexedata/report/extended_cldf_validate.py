@@ -195,7 +195,7 @@ if __name__ == "__main__":
     correct &= dataset.validate(log=logger)
 
     # All IDs should be [a-zA-Z0-9_-]+, and should be primary keys
-    correct &= check_id_format(dataset, logger=logger)
+    correct &= check_id_format(dataset)
 
     # Check reference properties/foreign keys
     correct &= check_foreign_keys(dataset, logger=logger)
