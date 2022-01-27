@@ -48,21 +48,10 @@ def coverage_report(
     except KeyError:
         pass
 
-    # get the foreign keys pointing to the required tables
-    foreign_key_parameter = ""
-    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
-        if foreign_key.reference.resource == dataset["ParameterTable"].url:
-            foreign_key_parameter = foreign_key.columnReference[0]
-
-    foreign_key_language = ""
-    for foreign_key in dataset["FormTable"].tableSchema.foreignKeys:
-        if foreign_key.reference.resource == dataset["LanguageTable"].url:
-            foreign_key_language = foreign_key.columnReference[0]
-
     concepts: t.DefaultDict[str, t.Counter[str]] = t.DefaultDict(t.Counter)
     multiple_concepts = bool(dataset["FormTable", "parameterReference"].separator)
-    c_concept = foreign_key_parameter
-    c_language = foreign_key_language
+    c_concept = dataset["FormTable", "parameterReference"].name
+    c_language = dataset["FormTable", "languageReference"].name
     c_form = dataset["FormTable", "form"].name
     for form in dataset["FormTable"]:
         languages.setdefault(form[c_language], {})
@@ -99,16 +88,13 @@ def coverage_report(
             synonyms = sum(conceptlist.values()) / len(conceptlist)
         except ZeroDivisionError:
             synonyms = float("nan")
-        include = True
+
         # percentage of all concepts covered by this language
         conceptlist_percentage = len(conceptlist) / total_number_concepts
         if conceptlist_percentage * 100 < min_percentage:
-            include = False
+            continue
 
-        for c in with_concept:
-            if c not in conceptlist:
-                include = False
-        if not include:
+        if not [c for c in conceptlist if c in with_concept]:
             continue
 
         # count primary concepts
