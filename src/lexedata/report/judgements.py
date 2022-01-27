@@ -24,7 +24,8 @@ def check_cognate_table(
      - The segment slice must be a valid (1-based, inclusive) slice into the segments of the form
      - The alignment must match the segment slice applied to the segments of the form
      - The length of the alignment must match the lengths of other alignments of that cognate set
-     - Missing forms (Including "-" for “concept not available in language” must not be in cognatesets)
+     - NA forms (Including "" for “source reports form as unknown” must not be in cognatesets)
+
 
     If checking for strictly concatenative morphology, also check that the
     segment slice is a contiguous, non-overlapping section of the form.
