@@ -70,7 +70,10 @@ def segment_to_cognateset(
 
             try:
                 forms_by_cogset[j[c_cognate_cognateset]].append(
-                    [form["segments"][s] for s in segments_judged]
+                    [
+                        form["segments"][s] if 0 <= s < len(form["segments"]) else ""
+                        for s in segments_judged
+                    ]
                 )
             except KeyError:
                 # We are not supposed to add new keys. In this manner, a caller
