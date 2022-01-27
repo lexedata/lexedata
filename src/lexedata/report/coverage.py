@@ -9,8 +9,9 @@ import lexedata.types as types
 
 
 class Missing(enum.Enum):
-    IGNORE = 1
+    IGNORE = 0
     COUNT_NORMALLY = 1
+    KNOWN = 2
 
 
 def coverage_report(
@@ -58,6 +59,8 @@ def coverage_report(
         if form[form_column_referred_to_by_judgements] not in coded:
             continue
         if missing == Missing.IGNORE and (not form[c_form] or form[c_form] == "-"):
+            continue
+        if missing == Missing.KNOWN and not form[c_form]:
             continue
         if multiple_concepts:
             for c in form[c_concept]:
@@ -223,9 +226,10 @@ if __name__ == "__main__":
         "--missing",
         choices=list(Missing.__members__),
         default="IGNORE",
-        help="How to report missing forms, i.e. forms with #form '' or '-'. The following options exist:"
-        "IGNORE: ignore all missing forms;"
-        "COUNT_NORMALLY: count all missing forms as if they were normal forms;",
+        help="How to report missing and NA forms, i.e. forms with #form '' or '-'. The following options exist:"
+        "IGNORE: ignore all such forms;"
+        "COUNT_NORMALLY: count all such forms as if they were normal forms;"
+        "KNOWN: count NA forms ('-') as if they were normal forms;",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
