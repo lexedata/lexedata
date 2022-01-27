@@ -24,12 +24,11 @@ from lexedata import cli, util
 from lexedata.report.judgements import check_cognate_table
 
 
-
-def log_or_raise(message, log: cli.logger):
+def log_or_raise(message, log: cli.logger=cli.logger):
     log.warning(message)
 
 
-def check_segmentslice_separator(dataset, logger=None) -> bool:
+def check_segmentslice_separator(dataset, logger=cli.logger) -> bool:
     if dataset["FormTable", "segments"].separator != " ":
         log_or_raise(
             'FormTable segment separator must be " " (space) for downstream lexedata tools to work.',
@@ -39,7 +38,7 @@ def check_segmentslice_separator(dataset, logger=None) -> bool:
     return True
 
 
-def check_id_format(dataset: pycldf.Dataset, logger=None):
+def check_id_format(dataset: pycldf.Dataset, logger: cli.logger=cli.logger):
     correct = True
     for table in dataset.tables:
         # Every table SHOULD have an ID column
@@ -92,32 +91,7 @@ def check_id_format(dataset: pycldf.Dataset, logger=None):
     return correct
 
 
-def check_no_separator_in_ids(dataset: pycldf.Dataset, logger=None)->bool:
-    # check that reference columns that have a separator don't contain the separator inside a string value
-    for table in dataset.tables:
-        for foreign_key in table.tableSchema.foreignKeys:
-            original_column_name = foreign_key.reference.columnReference
-            original_column = dataset[foreign_key.reference].get_column(original_column_name)
-            if original_column.separator:
-                separator = original_column.separator
-                if separator in original_column.datatype.format:
-                    continue
-                for row in dataset[foreign_key.reference]:
-                    try:
-                        assert separator not in row[original_column_name]
-                    except AssertionError:
-                        log_or_raise(
-                            message=f"Column {original_column_name} of table "
-                                    f"{foreign_key.reference.resource.__str__()} "
-                                    f"contains the separator {separator} of column {foreign_key.columnReference} from "
-                                    f"table {table.url} in value: {row[original_column_name]}",
-                            log=logger
-                        )
-                        return False
-    return True
-
-
-def check_no_separator_in_ids(dataset: pycldf.Dataset, logger=None) -> bool:
+def check_no_separator_in_ids(dataset: pycldf.Dataset, logger: cli.logger=cli.logger)->bool:
     valid = True
     # Check that reference columns that have a separator don't contain the separator inside a string value
     forbidden_separators: t.MutableMapping[
@@ -153,10 +127,11 @@ def check_no_separator_in_ids(dataset: pycldf.Dataset, logger=None) -> bool:
     return valid
 
 
-def check_unicode_data(dataset: pycldf, unicode_form: str = "NFC", logger=None):
+def check_unicode_data(dataset: pycldf, unicode_form: str = "NFC", logger: cli.logger=cli.logger)->bool:
+    #TODO: @Gereon: apply to whole dataset, form table or only #form
     for table in dataset.tables:
-        for r, row in enumerate(table):
-
+        id = dataset[table, "id"].name
+        for row in table:
             for value in row.values():
                 if isinstance(value, str):
                     if not unicodedata.is_normalized(unicode_form, value):
@@ -169,7 +144,7 @@ def check_unicode_data(dataset: pycldf, unicode_form: str = "NFC", logger=None):
     return True
 
 
-def check_foreign_keys(dataset: pycldf.Dataset, logger=None):
+def check_foreign_keys(dataset: pycldf.Dataset, logger=cli.logger):
     # Get all foreign keys for each table
     valid = True
     for table in dataset.tables:
@@ -215,15 +190,14 @@ def check_foreign_keys(dataset: pycldf.Dataset, logger=None):
     return valid
 
 
-def check_empty_forms(dataset: pycldf.Dataset, logger: None):
+def check_empty_forms(dataset: pycldf.Dataset, logger: cli.logger=cli.logger):
     c_f_id = dataset["FormTable", "id"].name
     c_f_form = dataset["FormTable", "form"].name
     c_f_concept = dataset["FormTable", "parameterReference"].name
     c_f_language = dataset["FormTable", "languageReference"].name
     forms_to_concepts = defaultdict(set)
-    # TODO think about separator of concept
     separator = dataset["FormTable"].get_column(
-        dataset.column_names.froms.parameterReference
+        dataset.column_names.forms.parameterReference
     ).separator
     for f in dataset["FormTable"]:
         if separator:
@@ -234,7 +208,7 @@ def check_empty_forms(dataset: pycldf.Dataset, logger: None):
     forms_to_languages = defaultdict(set)
     for f in dataset["FormTable"]:
         forms_to_languages[f[c_f_language]].add(f[c_f_id])
-    empty_forms = {f[c_f_id]: f[c_f_form] for f in dataset["FormTable"] if f[c_f_form] == ""}
+    empty_forms = [f for f in dataset["FormTable"] if f[c_f_form] is None]
     for form in empty_forms:
         try:
             if separator:
@@ -246,7 +220,7 @@ def check_empty_forms(dataset: pycldf.Dataset, logger: None):
                        == {form[c_f_id]}
         except AssertionError:
             log_or_raise(
-                message=f"For the empty form {form[c_f_id]} exist non empty forms with identical "
+                message=f"Non empty forms exist for the empty form {form[c_f_id]} with identical "
                         f"parameter and language reference",
                 log=logger
             )
