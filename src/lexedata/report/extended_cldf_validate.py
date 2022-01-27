@@ -19,11 +19,11 @@ import unicodedata
 
 # from clldutils.misc import log_or_raise
 
-from lexedata import cli, util
+from lexedata import cli, util, types
 from lexedata.report.judgements import check_cognate_table
 
 
-def log_or_raise(message, log: cli.logger):
+def log_or_raise(message, log: cli.logger = cli.logger):
     log.warning(message)
 
 
@@ -37,7 +37,7 @@ def check_segmentslice_separator(dataset, logger=None) -> bool:
     return True
 
 
-def check_id_format(ds: pycldf.Dataset):
+def check_id_format(dataset: pycldf.Dataset, logger: cli.logger = cli.logger):
     correct = True
     for table in dataset.tables:
         # Every table SHOULD have an ID column
@@ -90,7 +90,9 @@ def check_id_format(ds: pycldf.Dataset):
     return correct
 
 
-def check_no_separator_in_ids(dataset: pycldf.Dataset, logger=None) -> bool:
+def check_no_separator_in_ids(
+    dataset: pycldf.Dataset, logger: cli.logger = cli.logger
+) -> bool:
     valid = True
     # Check that reference columns that have a separator don't contain the separator inside a string value
     forbidden_separators: t.MutableMapping[
@@ -109,9 +111,11 @@ def check_no_separator_in_ids(dataset: pycldf.Dataset, logger=None) -> bool:
             if table.get_column(referencing_column).separator is None:
                 continue
 
-            forbidden_separators[foreign_key.reference.resource][referenced_column][
-                table.get_column(referencing_column).separator
-            ].append((table.url, referencing_column))
+            forbidden_separators[foreign_key.reference.resource.__str__()][
+                referenced_column
+            ][table.get_column(referencing_column).separator].append(
+                (table.url, referencing_column)
+            )
 
     for table, targets in forbidden_separators.items():
         for r, row in enumerate(dataset[table]):
@@ -126,7 +130,9 @@ def check_no_separator_in_ids(dataset: pycldf.Dataset, logger=None) -> bool:
     return valid
 
 
-def check_unicode_data(dataset: pycldf, unicode_form: str = "NFC", logger=None):
+def check_unicode_data(
+    dataset: pycldf.Dataset, unicode_form: str = "NFC", logger: cli.logger = cli.logger
+) -> bool:
     for table in dataset.tables:
         for r, row in enumerate(table):
             for value in row.values():
@@ -186,6 +192,45 @@ def check_foreign_keys(dataset: pycldf.Dataset, logger=None):
     return valid
 
 
+def check_na_form_has_no_alternative(
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+    logger: cli.logging.Logger = cli.logger,
+):
+    valid = True
+    c_f_id = dataset["FormTable", "id"].name
+    c_f_form = dataset["FormTable", "form"].name
+    c_f_concept = dataset["FormTable", "parameterReference"].name
+    c_f_language = dataset["FormTable", "languageReference"].name
+    forms_by_concepts: t.Dict[types.Parameter_ID, t.Set[types.Form_ID]] = t.DefaultDict(
+        set
+    )
+
+    for f in dataset["FormTable"]:
+        for c in util.ensure_list(f[c_f_concept]):
+            forms_by_concepts[c].add(f[c_f_id])
+    forms_to_languages = t.DefaultDict(set)
+    for f in dataset["FormTable"]:
+        forms_to_languages[f[c_f_language]].add(f[c_f_id])
+    na_forms = [f for f in dataset["FormTable"] if f[c_f_form] == "-"]
+    for form in na_forms:
+        for c in util.ensure_list(form[c_f_concept]):
+            if forms_by_concepts[c].intersection(
+                forms_to_languages[form[c_f_language]]
+            ) != {form[c_f_id]}:
+                log_or_raise(
+                    message=f"Non empty forms exist for the NA form {form[c_f_id]} with identical parameter and language reference",
+                    log=logger,
+                )
+                valid = False
+    return valid
+
+
 if __name__ == "__main__":
     parser = cli.parser(
         description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
@@ -222,4 +267,5 @@ if __name__ == "__main__":
         # Check that the CognateTable makes sense
         correct &= check_cognate_table(dataset=dataset, logger=logger)
 
-        #  Empty forms may exist, but only if there is no actual form for the concept and the language, and probably given some other constraints.
+        #  NA forms may exist, but only if there is no actual form for the concept and the language, and probably given some other constraints.
+        correct &= check_na_form_has_no_alternative(dataset=dataset, logger=logger)
