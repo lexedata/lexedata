@@ -129,7 +129,7 @@ The report package contains scripts that check for data integrity and generate r
 
 ### Language coverage
 You can obtain various statistics related to coverage (how many concepts have corresponding forms in each language) with the command `python -m lexedata.report.coverage`. 
-Among others, you can find which languages have corresponding forms for specific concepts, which languages have at least a given coverage percentage etc. Not applicable concepts (concepts that do not exist in a particular language) could count or not towards coverage with the optional argument XXX
+Among others, you can find which languages have corresponding forms for specific concepts, which languages have at least a given coverage percentage etc. NA forms (that correspond to concepts that do not exist in a particular language) by default count towards coverage, while missing forms don't. You can customize the treatment of missing and NA forms with the optional argument `--missing`.
 
 ### Segment inventories
 src/lexedata//report/segments_inventories.py
