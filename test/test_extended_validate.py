@@ -70,12 +70,12 @@ def test_check_empty_forms_warning(caplog):
     c_f_concept = dataset["FormTable", "parameterReference"].name
     forms = [f for f in dataset["FormTable"]]
     form = forms[0]
-    form[c_f_form] = ""
+    form[c_f_form] = "-"
     form[c_f_concept] = form[c_f_concept] + ["two"]
     forms[0] = form
     dataset.write(FormTable=forms)
     validate.check_na_form_has_no_alternative(dataset=dataset)
-    assert re.search(r"Non empty forms exist for the empty form ache_one", caplog.text)
+    assert re.search(r"exist for the NA form ache_one", caplog.text)
 
 
 def test_check_no_separator_in_ids():
