@@ -267,5 +267,6 @@ if __name__ == "__main__":
         # Check that the CognateTable makes sense
         correct &= check_cognate_table(dataset=dataset, logger=logger)
 
-        #  NA forms may exist, but only if there is no actual form for the concept and the language, and probably given some other constraints.
+        # NA forms may exist, but only if there is no actual form for the
+        # concept and the language, and probably given some other constraints.
         correct &= check_na_form_has_no_alternative(dataset=dataset, logger=logger)
