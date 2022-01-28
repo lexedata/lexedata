@@ -59,7 +59,7 @@ def test_check_na_forms():
     dataset, target = copy_to_temp(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
-    assert validate.check_nal_form_has_no_alternative(dataset=dataset)
+    assert validate.check_na_form_has_no_alternative(dataset=dataset)
 
 
 def test_check_empty_forms_warning(caplog):
@@ -74,7 +74,7 @@ def test_check_empty_forms_warning(caplog):
     form[c_f_concept] = form[c_f_concept] + ["two"]
     forms[0] = form
     dataset.write(FormTable=forms)
-    validate.check_nal_form_has_no_alternative(dataset=dataset)
+    validate.check_na_form_has_no_alternative(dataset=dataset)
     assert re.search(r"Non empty forms exist for the empty form ache_one", caplog.text)
 
 
