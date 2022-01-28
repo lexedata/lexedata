@@ -720,4 +720,4 @@ def test_coverage_report_missing_and_na_ignore():
     )
     ds["FormTable", "Form"].required = False
     data = coverage_report(ds, only_coded=False, missing=Missing.IGNORE)
-    assert data == [["l1", "l1", 2, 1.0 / 3.0, 1.0], ["l2", "l2", 3, 1.0, 1.0]]
+    assert data == [["l1", "l1", 1, 1.0 / 3.0, 1.0], ["l2", "l2", 3, 1.0, 1.0]]
