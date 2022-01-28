@@ -4,6 +4,7 @@
 import typing as t
 import pycldf
 
+import unicodedata
 from lexedata import cli
 from lexedata.util import parse_segment_slices, cache_table
 
@@ -24,7 +25,8 @@ def check_cognate_table(
      - The segment slice must be a valid (1-based, inclusive) slice into the segments of the form
      - The alignment must match the segment slice applied to the segments of the form
      - The length of the alignment must match the lengths of other alignments of that cognate set
-     - Missing forms (Including "-" for “concept not available in language” must not be in cognatesets)
+     - NA forms (Including "" for “source reports form as unknown” must not be in cognatesets)
+
 
     If checking for strictly concatenative morphology, also check that the
     segment slice is a contiguous, non-overlapping section of the form.
@@ -208,12 +210,20 @@ def check_cognate_table(
             # from? TODO: To be more robust when segments are separated into
             # morphemes, not individual segments, compare alignment and
             # segments space-separated.
-            without_gaps = " ".join([c for c in judgement[c_alignment] if c != "-"])
+            without_gaps = " ".join(
+                [c or "" for c in judgement[c_alignment] if c != "-"]
+            )
             actual_segments = " ".join(form_segments[i] for i in included_segments)
             if without_gaps.strip() != actual_segments.strip():
+                if unicodedata.normalize(
+                    "NFKC", without_gaps.strip()
+                ) == unicodedata.normalize("NFKC", actual_segments.strip()):
+                    comment = " This is down to encoding differences: Their normalized unicode representations are the same. I suggest you run `lexedata.edit.normalize_unicode`."
+                else:
+                    comment = ""
                 log_or_raise(
-                    "In {}, row {}: Referenced segments in form resolve to {}, while alignment contains segments {}.".format(
-                        f, j, actual_segments, without_gaps
+                    "In {}, row {}: Referenced segments in form resolve to {}, while alignment contains segments {}.{}".format(
+                        f, j, actual_segments, without_gaps, comment
                     ),
                 )
                 all_judgements_okay = False
@@ -227,7 +237,7 @@ if __name__ == "__main__":
         "--strict",
         action="store_true",
         default=False,
-        help="Warn where morphology is not strictly concatenative.",
+        help="Warn about segments in a form that are not consecutive. (If you want a more detailed report on non-concatenative morhpology, run `lexedata.report.nonconcatenative_morphology`)",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)

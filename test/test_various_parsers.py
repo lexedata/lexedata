@@ -27,12 +27,16 @@ def test_listorfromfile_file():
 
 
 def test_filter_parser():
-    parameters = filter_parser().parse_args(["form", "a", "FormTable", "-V"])
+    _, fname = tempfile.mkstemp(".csv")
+    parameters = filter_parser().parse_args(
+        ["form", "a", "FormTable", "-V", "-o", fname]
+    )
     assert parameters.table == "FormTable"
     assert parameters.column == "form"
     assert parameters.filter == "a"
     assert parameters.invert is True
     assert parameters.output_columns == []
+    assert parameters.output_file.name == fname
 
 
 def test_loglevel_parser():

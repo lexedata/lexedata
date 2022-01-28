@@ -1,7 +1,7 @@
 Lexedata installation instructions
 ==================================
 
-1. In order to install and use Lexedata you need to have Python 3.7 (or newer) installed.
+1. In order to install and use Lexedata you need to have Python 3.8 (or newer) installed.
 
 If you are unsure if this is the case, open a terminal window and type ``python
 --version``. If Python 3.7 (or newer) is installed you will see the version. If you don't have
