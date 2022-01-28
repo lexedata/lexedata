@@ -1,8 +1,8 @@
-"""Make sure every string entry in every table of the dataset uses NFC unicode normalization.
+"""Normalize a dataset or file to NFC unicode normalization.
 
-Maybe this should be one of the extended checks, with automatic fixing option, instead?
 
-This funtionality is, without error reporting, in the CLI of lexedata.util
+Make sure every string entry in every table of the dataset uses NFC unicode
+normalization, or take a list of files that each gets normalized.
 """
 
 from pathlib import Path
@@ -25,7 +25,7 @@ def normalize(file, original_encoding="utf-8"):
 
 
 if __name__ == "__main__":
-    parser = cli.parser(__doc__)
+    parser = cli.parser(__doc__.split("\n\n\n")[1])
     parser.add_argument(
         "file",
         nargs="*",
