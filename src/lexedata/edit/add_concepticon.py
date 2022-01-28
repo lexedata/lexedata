@@ -256,7 +256,7 @@ if __name__ == "__main__":
         nargs="+",
         default=None,
         type=equal_separated,
-        help="Maps from column names to 2-letter language codes. For example, if your ParameterTable has a column 'GLOSS', which contains English glosses, and a colum 'PORTUGUESE' with Portuguese translations, run this script with the arguments `-l GLOSS=en PORTUGUESE=pt`. If no language mappings are given, the assumption is that the #id column contains English glosses.",
+        help="Maps from column names to 2-letter language codes. For example, if your ParameterTable has a column 'GLOSS', which contains English glosses, and a column 'PORTUGUESE' with Portuguese translations, run this script with the arguments `-l GLOSS=en PORTUGUESE=pt`. If no language mappings are given, the assumption is that the #id column contains English glosses.",
     )
     parser.add_argument(
         "--status-update",
