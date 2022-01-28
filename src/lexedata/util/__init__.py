@@ -19,8 +19,10 @@ __all__ = ["fs", "KeyKeyDict"]
 
 ID_FORMAT = re.compile("[a-z0-9_]+")
 
+MI = t.TypeVar("MI")
 
-def ensure_list(maybe_string: t.Union[t.List[str], str, None]) -> t.List[str]:
+
+def ensure_list(maybe_string: t.Union[t.List[MI], MI, None]) -> t.List[MI]:
     if maybe_string is None:
         return []
     elif isinstance(maybe_string, list):

@@ -4,8 +4,7 @@ from tabulate import tabulate
 
 import pycldf
 
-import lexedata.cli as cli
-import lexedata.types as types
+from lexedata import util, cli, types
 
 
 class Missing(enum.Enum):
@@ -22,77 +21,75 @@ def coverage_report(
         types.Cognate_ID,
         types.Cognateset_ID,
     ],
-    min_percentage: float,
-    with_concept: t.Iterable[types.Parameter_ID],
+    min_percentage: float = 0.0,
+    with_concept: t.Iterable[types.Parameter_ID] = set(),
     missing: Missing = Missing.KNOWN,
     only_coded: bool = True,
-) -> t.Tuple[t.List[str], t.List[str]]:
+) -> t.List[t.List[str]]:
     coded: t.Container[types.Form_ID]
     if only_coded:
-        coded = set()
         try:
             c_j_form = dataset["CognateTable", "formReference"].name
-            form_column_referred_to_by_judgements = ""
-            for foreign_key in dataset["CognateTable"].tableSchema.foreignKeys:
-                if foreign_key.columnReference == [c_j_form]:
-                    (
-                        form_column_referred_to_by_judgements,
-                    ) = foreign_key.reference.columnReference
-            for judgement in dataset["CognateTable"]:
-                coded.add(judgement[c_j_form])
         except KeyError:
-            logger.warning(
-                "You requested that I only count cognate coded forms, but you have no CognateTable containing judgements. Expect an empty report."
+            cli.Exit.NO_COGNATETABLE(
+                message="You requested that I only count cognate coded forms, but you have no CognateTable containing judgements."
             )
+        coded = {judgement[c_j_form] for judgement in dataset["CognateTable"]}
     else:
-        form_column_referred_to_by_judgements = dataset["FormTable", "id"].name
         coded = types.WorldSet()
 
-    languages = {}
+    languages: t.Dict[types.Language_ID, str] = {}
     try:
         c_l_id = dataset["LanguageTable", "id"].name
         c_l_name = dataset["LanguageTable", "name"].name
         for language in dataset["LanguageTable"]:
-            languages[language[c_l_id]] = language
+            languages[language[c_l_id]] = language[c_l_name]
     except KeyError:
         pass
 
-    concepts: t.DefaultDict[str, t.Counter[str]] = t.DefaultDict(t.Counter)
-    multiple_concepts = bool(dataset["FormTable", "parameterReference"].separator)
+    concepts: t.DefaultDict[
+        types.Language_ID, t.Counter[types.Parameter_ID]
+    ] = t.DefaultDict(t.Counter)
+    c_f_id = dataset["FormTable", "id"].name
     c_concept = dataset["FormTable", "parameterReference"].name
     c_language = dataset["FormTable", "languageReference"].name
     c_form = dataset["FormTable", "form"].name
     for form in dataset["FormTable"]:
-        languages.setdefault(form[c_language], {})
-        if form[form_column_referred_to_by_judgements] not in coded:
+        languages.setdefault(form[c_language], form[c_language])
+        if form[c_f_id] not in coded:
             continue
         if missing == Missing.IGNORE and (not form[c_form] or form[c_form] == "-"):
             continue
         if missing == Missing.KNOWN and not form[c_form]:
             continue
-        if multiple_concepts:
-            for c in form[c_concept]:
-                concepts[form[c_language]][c] += 1
-        else:
-            concepts[form[c_language]][form[c_concept]] += 1
+        c: types.Parameter_ID
+        for c in util.ensure_list(form[c_concept]):
+            concepts[form[c_language]][c] += 1
 
     # load primary concepts and number of concepts
-    c_c_id = dataset["ParameterTable", "id"].name
+    primary_concepts: t.Container[types.Parameter_ID]
     try:
+        c_c_id = dataset["ParameterTable", "id"].name
         primary_concepts = [
             c[c_c_id] for c in dataset["ParameterTable"] if c["Primary"]
         ]
+        total_number_concepts = len(primary_concepts)
     except KeyError:
         cli.logger.warning(
             "ParameterTable doesn't contain a column 'Primary'. Primary concepts couldn't be loaded. "
             "Loading all concepts."
         )
-        primary_concepts = [c[c_c_id] for c in dataset["ParameterTable"]]
+        primary_concepts = types.WorldSet()
 
-    total_number_concepts = len(list(dataset["ParameterTable"]))
+        try:
+            total_number_concepts = len(list(dataset["ParameterTable"]))
+        except KeyError:
+            total_number_concepts = len(
+                set.union(*(set(cs) for cs in concepts.values()))
+            )
 
     data_languages = []
-    for language, metadata in languages.items():
+    for language, name in languages.items():
         conceptlist = concepts[language]
         try:
             synonyms = sum(conceptlist.values()) / len(conceptlist)
@@ -109,15 +106,15 @@ def coverage_report(
 
         # count primary concepts
         primary_count = 0
-        for c in primary_concepts:
-            if c in conceptlist:
+        for c in conceptlist:
+            if c in primary_concepts:
                 primary_count += 1
         # if args.languages_only:
         #     print(language)
         data_languages.append(
             [
-                metadata[c_l_id],
-                metadata[c_l_name],
+                language,
+                name,
                 primary_count,
                 conceptlist_percentage,
                 synonyms,
