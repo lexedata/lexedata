@@ -1,5 +1,12 @@
 """Guess which Concepticon concepts the entries in the ParameterTable refer to.
 
+
+The full list of available gloss languages uses the ISO 693-1 two-letter codes
+and can be found on
+https://github.com/concepticon/concepticon-data/tree/master/mappings (or in the
+mappings/ folder of your local Concepticon catalog installation).
+
+
 Fill the Concepticon_ID (or generally, #concepticonReference) column of the
 dateset's ParameterTable with best guesses for Concepticon IDs, based on gloss
 columns in potentially different languages.
@@ -223,7 +230,7 @@ def create_concepticon_for_concepts(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description=__doc__.split("\n\n")[0], epilog=__doc__.split("\n\n", 1)[1]
+        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
     )
     parser.add_argument(
         "--overwrite",
