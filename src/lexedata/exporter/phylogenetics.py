@@ -10,10 +10,7 @@ from lexedata import util
 from lexedata import types
 from lexedata import cli
 
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
+from typing import Literal
 
 
 # Some type aliases, which should probably be moved elsewhere or made obsolete.
@@ -650,8 +647,44 @@ def raw_multistate_alignment(alignment, long_sep: str = ","):
 
 
 def format_nexus(
-    languages, sequences, n_symbols, n_characters, datatype, partitions=None
+    languages: t.Iterable[str],
+    sequences: t.Iterable[str],
+    n_symbols: int,
+    n_characters: int,
+    datatype: str,
+    partitions: t.Mapping[str, t.Iterable[int]] = None,
 ):
+    """Format a Nexus output with the sequences.
+
+    This function only formats and performs no further validity checks!
+
+    >>> print(format_nexus(
+    ...   ["l1", "l2"],
+    ...   ["0010", "0111"],
+    ...   2, 3,
+    ...   "binary",
+    ...   {"one": [1], "two": [2,3]}
+    ... )) # doctest: +NORMALIZE_WHITESPACE
+    #NEXUS
+    Begin Taxa;
+      Dimensions ntax=2;
+      TaxLabels l1 l2;
+    End;
+    Begin Characters;
+      Dimensions NChar=3;
+      Format Datatype=Restriction Missing=? Gap=- Symbols="0 1" ;
+      Matrix
+        [The first column is constant zero, for programs with ascertainment correction]
+        l1  0010
+        l2  0111
+      ;
+    End;
+    Begin Sets;
+      CharSet one=1;
+      CharSet two=2 3;
+    End;
+
+    """
     max_length = max([len(str(lang)) for lang in languages])
 
     sequences = [
