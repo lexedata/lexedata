@@ -21,7 +21,6 @@ def segment_to_cognateset(
 ) -> t.Set[t.Tuple[types.Cognateset_ID, types.Cognateset_ID]]:
     # required fields
     c_cognate_cognateset = dataset.column_names.cognates.cognatesetReference
-    c_form_segments = dataset.column_names.forms.segments
     c_cognate_id = dataset.column_names.cognates.id
     c_cognate_form = dataset.column_names.cognates.formReference
     c_cognate_slice = dataset.column_names.cognates.segmentSlice
@@ -91,7 +90,7 @@ def segment_to_cognateset(
                     ][s]
                 except IndexError:
                     logger.warning(
-                        f"In judgement {j[c_cognate_id]}, segment slice {j[c_cognate_slice]} points outside valid range 1:{len(form[c_form_segments])}."
+                        f"In judgement {j[c_cognate_id]}, segment slice {j[c_cognate_slice]} points outside valid range 1:{len(form['segments'])}."
                     )
                     continue
                 for cs in cognatesets:

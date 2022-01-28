@@ -212,8 +212,9 @@ if __name__ == "__main__":
         "--with-concepts",
         "-c",
         action=cli.ListOrFromFile,
+        default=[],
         metavar="CONCEPT",
-        help="Only include languages that have a form for each CONCEPT.",
+        help="Only include languages that have a form for each CONCEPT. (default: No such constraint, include all languages.)",
     )
     parser.add_argument(
         "--concept-report",
@@ -232,11 +233,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--missing",
         choices=list(Missing.__members__),
-        default="IGNORE",
-        help="How to report missing and NA forms, i.e. forms with #form '' or '-'. The following options exist:"
-        "IGNORE: ignore all such forms;"
-        "COUNT_NORMALLY: count all such forms as if they were normal forms;"
-        "KNOWN: count NA forms ('-') as if they were normal forms;",
+        default="KNOWN",
+        help="How to report missing and NA forms, i.e. forms with #form '' or '-'. The following options exist: "
+        "IGNORE: ignore all such forms; "
+        "COUNT_NORMALLY: count all such forms as if they were normal forms; "
+        "KNOWN: count NA forms ('-') as if they were normal forms; "
+        "(default: KNOWN)",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
