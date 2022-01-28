@@ -118,7 +118,7 @@ def check_no_separator_in_ids(
             )
 
     for table, targets in forbidden_separators.items():
-        for r, row in enumerate(dataset[table]):
+        for r, row in enumerate(dataset[table], 1):
             for target_column, separators_forbidden_here in targets.items():
                 for separator, forbidden_by in separators_forbidden_here.items():
                     if separator in row[target_column]:
@@ -134,7 +134,7 @@ def check_unicode_data(
     dataset: pycldf.Dataset, unicode_form: str = "NFC", logger: cli.logger = cli.logger
 ) -> bool:
     for table in dataset.tables:
-        for r, row in enumerate(table):
+        for r, row in enumerate(table, 1):
             for value in row.values():
                 if isinstance(value, str):
                     if not unicodedata.is_normalized(unicode_form, value):

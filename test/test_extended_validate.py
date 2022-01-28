@@ -1,4 +1,5 @@
 from pathlib import Path
+import unicodedata
 import re
 
 import pytest
@@ -46,16 +47,19 @@ def test_check_unicode_data_warning(caplog):
 
     validate.check_unicode_data(dataset=dataset)
     assert re.search(
-        "Value À of row ache_one in table forms.csv is not in NFC normalized unicode",
-        caplog.text,
+        unicodedata.normalize(
+            "NFC",
+            "Value À of row 1 in table forms.csv is not in NFC normalized unicode",
+        ),
+        unicodedata.normalize("NFC", caplog.text),
     )
 
 
-def test_check_empty_forms():
+def test_check_na_forms():
     dataset, target = copy_to_temp(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     )
-    assert validate.check_empty_forms(dataset=dataset)
+    assert validate.check_nal_form_has_no_alternative(dataset=dataset)
 
 
 def test_check_empty_forms_warning(caplog):
@@ -70,7 +74,7 @@ def test_check_empty_forms_warning(caplog):
     form[c_f_concept] = form[c_f_concept] + ["two"]
     forms[0] = form
     dataset.write(FormTable=forms)
-    validate.check_empty_forms(dataset=dataset)
+    validate.check_nal_form_has_no_alternative(dataset=dataset)
     assert re.search(r"Non empty forms exist for the empty form ache_one", caplog.text)
 
 
