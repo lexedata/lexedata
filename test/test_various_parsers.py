@@ -1,8 +1,15 @@
 import logging
 import tempfile
 import argparse
-from lexedata import cli
+from pathlib import Path
+
+from lexedata import cli, types
 from lexedata.report.filter import parser as filter_parser
+from lexedata.exporter.phylogenetics import (
+    CodingProcedure,
+    AbsenceHeuristic,
+    parser as phylo_parser,
+)
 
 
 def test_listorfromfile_list():
@@ -46,3 +53,30 @@ def test_loglevel_parser():
     # Optional positional argument ("FormTable") after optional switch ("-q",
     # but also "-V" which uses a builtin action) does not seem to work.
     assert parameters.loglevel == logging.ERROR
+
+
+def test_phylo_parser():
+    _, fname = tempfile.mkstemp(".csv")
+    with open(fname, "w") as file:
+        file.write("ID,ignored\nl1,yes\nl2\nl3,")
+    _, ofname = tempfile.mkstemp(".csv")
+    parameters = phylo_parser().parse_args(
+        [
+            "-b",
+            "-o",
+            ofname,
+            "--languages",
+            fname,
+            "--coding",
+            "rootpresence",
+            "--absence-heuristic",
+            "centralconcept",
+        ]
+    )
+    assert parameters.format == "beast"
+    assert parameters.output_file.absolute() == Path(ofname).absolute()
+    assert parameters.languages == ["l1", "l2", "l3"]
+    assert type(parameters.concepts) == types.WordSet
+    assert type(parameters.cognatesets) == types.WordSet
+    assert parameters.coding == CodingProcedure.ROOTPRESENCE
+    assert parameters.absence_heuristic == AbsenceHeuristic.CENTRALCONCEPT
