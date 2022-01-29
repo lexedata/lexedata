@@ -818,7 +818,8 @@ def add_partitions(data_object: ET.Element, partitions):
         )
 
 
-if __name__ == "__main__":
+def parser():
+    """Construct the CLI argument parser for this script."""
     parser = cli.parser(
         description="Export a CLDF dataset to a coded character matrix to be used as input for phylogenetic analyses."
     )
@@ -893,7 +894,11 @@ if __name__ == "__main__":
         type=Path,
         help="Path to a TeX file that will be filled with LaTeX command definitions for some summary statistics.",
     )
-    args = parser.parse_args()
+    return parser
+
+
+if __name__ == "__main__":
+    args = parser().parse_args()
     logger = cli.setup_logging(args)
     # Step 1: Load the raw data.
     dataset = pycldf.Dataset.from_metadata(args.metadata)
