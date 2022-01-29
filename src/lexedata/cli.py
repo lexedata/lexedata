@@ -1,5 +1,6 @@
 import csv
 import sys
+import enum
 import logging
 import argparse
 import typing as t
@@ -159,3 +160,14 @@ def parser(description: str, **kwargs) -> argparse.ArgumentParser:
     )
     add_log_controls(parser)
     return parser
+
+
+def enum_from_lower(enum: t.Type[enum.Enum]):
+    class FromLower(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None, **kwargs):
+            enum_item = {
+                name.lower(): object for name, object in enum.__members__.items()
+            }[values.lower()]
+            setattr(namespace, self.dest, enum_item)
+
+    return FromLower

@@ -339,6 +339,12 @@ class AbsenceHeuristic(enum.Enum):
     HALFPRIMARYCONCEPTS = 1
 
 
+class CodingProcedure(enum.Enum):
+    ROOTPRESENCE = 0
+    ROOTMEANING = 1
+    MULTISTATE = 2
+
+
 # TODO: Maybe this would make sense tied closer to AbsenceHeuristic?
 def apply_heuristics(
     dataset: types.Wordlist,
@@ -813,21 +819,9 @@ def add_partitions(data_object: ET.Element, partitions):
 
 
 if __name__ == "__main__":
-    import argparse
-
     parser = cli.parser(
         description="Export a CLDF dataset to a coded character matrix to be used as input for phylogenetic analyses."
     )
-
-    def enum_from_lower(enum: t.Type[enum.Enum]):
-        class FromLower(argparse.Action):
-            def __call__(self, parser, namespace, values, option_string=None, **kwargs):
-                enum_item = {
-                    name.lower(): object for name, object in enum.__members__.items()
-                }[values.lower()]
-                setattr(namespace, self.dest, enum_item)
-
-        return FromLower
 
     parser.add_argument(
         "--format",
@@ -869,21 +863,21 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--coding",
-        choices=("rootmeaning", "rootpresence", "multistate"),
-        default="rootmeaning",
-        help="""Binarization method: In the `rootmeaning` coding method, every character
+        action=cli.enum_from_lower(CodingProcedure),
+        default="RootMeaning",
+        help="""Binarization method: In the `RootMeaning` coding method, every character
         describes the presence or absence of a particular root morpheme or
         cognate class in the word(s) for a given meaning; In the
-        `rootpresence`, every character describes (up to the limitations of the
+        `RootPresence`, every character describes (up to the limitations of the
         data, which might not contain marginal forms) the presence or absence
         of a root (morpheme) in the language, independet of which meaning that
-        root is attested in; And in the `multistate` coding, each character
+        root is attested in; And in the `Multistate` coding, each character
         describes, possibly including uniform ambiguities, the cognate class of
         a meaning.""",
     )
     parser.add_argument(
         "--absence-heuristic",
-        action=enum_from_lower(AbsenceHeuristic),
+        action=cli.enum_from_lower(AbsenceHeuristic),
         help="""In case of --coding=rootpresence, which heuristic should be used for the
         coding of absences? The default depends on whether the dataset contains
         a #parameterReference column in its CognatesetTable: If there is one,
@@ -917,7 +911,7 @@ if __name__ == "__main__":
     n_symbols, datatype = 2, "binary"
     partitions = None
     alignment: t.Mapping[Language_ID, str]
-    if args.coding == "rootpresence":
+    if args.coding == CodingProcedure.ROOTPRESENCE:
         relevant_concepts = apply_heuristics(
             dataset, args.absence_heuristic, primary_concepts=args.concepts
         )
@@ -935,7 +929,7 @@ if __name__ == "__main__":
             for key, value in binal.items()
         }
         sequences = raw_binary_alignment(alignment)
-    elif args.coding == "rootmeaning":
+    elif args.coding == CodingProcedure.ROOTMEANING:
         binal, concept_cognateset_indices = root_meaning_code(ds)
         n_characters = len(next(iter(binal.values())))
         exclude = {
@@ -953,7 +947,7 @@ if __name__ == "__main__":
             concept: cognatesets.values()
             for concept, cognatesets in concept_cognateset_indices.items()
         }
-    elif args.coding == "multistate":
+    elif args.coding == CodingProcedure.MULTISTATE:
         multial, concept_indices = multistate_code(ds)
         n_characters = len(next(iter(multial.values())))
         sequences, n_symbols = raw_multistate_alignment(multial, long_sep=",")
