@@ -7,7 +7,7 @@ import pytest
 from lexedata import util
 from helper_functions import empty_copy_of_cldf_wordlist, copy_to_temp
 from lexedata.util.fs import get_dataset
-from lexedata.exporter.cognates import ExcelWriter
+from lexedata.exporter.cognates import ExcelWriter, create_singletons
 
 try:
     from pycldf.dataset import SchemaError
@@ -22,10 +22,15 @@ def test_adding_singleton_cognatesets(caplog):
     )
     with caplog.at_level(logging.WARNING):
         excel_writer = ExcelWriter(
-            dataset=dataset, singleton_cognate=True, singleton_status="should fail"
+            dataset=dataset,
         )
-        excel_writer.create_excel()
-    assert re.search("no Status_Column to write", caplog.text)
+        cogsets, judgements = create_singletons(
+            dataset,
+            status="NEW",
+            by_segment=False,
+        )
+        excel_writer.create_excel(rows=cogsets, judgements=judgements)
+    assert re.search("No Status_Column", caplog.text)
 
     # load central concepts from output
     cogset_index = 0
@@ -61,10 +66,13 @@ def test_adding_singleton_cognatesets_with_status(caplog):
     )
     dataset.add_columns("CognatesetTable", "Status_Column")
     with caplog.at_level(logging.WARNING):
-        excel_writer = ExcelWriter(
-            dataset=dataset, singleton_cognate=True, singleton_status="NEW"
+        excel_writer = ExcelWriter(dataset=dataset)
+        cogsets, judgements = create_singletons(
+            dataset,
+            status="NEW",
+            by_segment=True,
         )
-        excel_writer.create_excel()
+        excel_writer.create_excel(judgements=judgements)
     assert re.search("no Status_Column to write", caplog.text) is None
 
     cogset_index = 0
@@ -141,9 +149,7 @@ def test_missing_required_column():
     dataset.remove_columns("FormTable", "ID")
     # TODO: switch to pycldf.dataset.SchemaError
     with pytest.raises(KeyError):
-        excel_writer = ExcelWriter(
-            dataset=dataset, singleton_cognate=True, singleton_status="NEW"
-        )
+        excel_writer = ExcelWriter(dataset=dataset)
         excel_writer.create_excel()
 
 

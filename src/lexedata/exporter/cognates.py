@@ -10,6 +10,7 @@ import openpyxl as op
 
 from lexedata import types, cli, util
 from lexedata.util import parse_segment_slices
+from lexedata.edit.add_singleton_cognatesets import create_singletons
 
 
 WARNING = "\u26A0"
@@ -136,8 +137,6 @@ class BaseExcelWriter:
                 self.write_row_header(row, r)
 
             row_index = new_row_index
-
-        self.after_filling(row_index)
 
     def create_formcells(
         self,
@@ -283,45 +282,6 @@ class ExcelWriter(BaseExcelWriter):
                     re.sub(f"-?{__package__}", "", cogset["comment"]).strip(),
                     "lexedata.exporter",
                 )
-
-    def after_filling(self, row_index):
-        if not self.singleton:
-            return
-        # write remaining forms to singleton congatesets if switch is activated
-
-        all_forms = util.cache_table(self.dataset)
-
-        # remove all forms that appear in judgements
-        for k in cli.tq(
-            self.collect_forms_by_row().values(),
-            task="Writing singleton cognatesets to excel",
-            total=row_index,
-        ):
-            for form in k:
-                all_forms.pop(form["id"], None)
-        # create for remaining forms singleton cognatesets and write to file
-        for i, form_id in enumerate(all_forms):
-            # write form to file
-            form = all_forms[form_id]
-            self.create_formcell(
-                form,
-                self.lan_dict[form["languageReference"]],
-                row_index,
-            )
-            # write singleton cognateset to excel
-            for col, (db_name, header) in enumerate(self.header, 1):
-                if db_name == "id":
-                    value = f"X{i+1}_{form['languageReference']}"
-                elif db_name == "name":
-                    value = form_id
-                elif db_name == "parameterReference":
-                    value = all_forms[form_id]["parameterReference"]
-                elif header == "Status_Column" and self.singleton_status is not None:
-                    value = self.singleton_status
-                else:
-                    value = ""
-                self.ws.cell(row=row_index, column=col, value=value)
-            row_index += 1
 
     def set_header(self):
         c_id = self.dataset["CognatesetTable", "id"].name
@@ -524,6 +484,13 @@ if __name__ == "__main__":
         help="Short for `--add-singletons-with-status='automatic singleton'`",
         dest="add_singletons_with_status",
     )
+    parser.add_argument(
+        "--by-segment",
+        default=False,
+        action="store_true",
+        help="If adding singletons: Instead of creating singleton cognate sets only for forms that are not cognate coded at all, make sure every contiguous set of segments in every form is in a cognate set.",
+    )
+
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
@@ -538,8 +505,6 @@ if __name__ == "__main__":
     E = ExcelWriter(
         dataset,
         database_url=args.url_template,
-        singleton_cognate=args.add_singletons_with_status is None,
-        singleton_status=args.add_singletons_with_status,
         logger=logger,
     )
 
@@ -550,7 +515,17 @@ if __name__ == "__main__":
             f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
         )
 
-    cogsets = list(dataset["CognatesetTable"])
+    if args.add_singletons_with_status is not None:
+        cogsets, judgements = create_singletons(
+            dataset,
+            status=args.add_singletons_with_status,
+            by_segment=args.by_segment,
+            logger=logger,
+        )
+    else:
+        cogsets = list(dataset["CognatesetTable"])
+        judgements = list(dataset["CognateTable"])
+
     # Sort first by size, then by the specified column, so that if both
     # happen, the cognatesets are globally sorted by the specified column
     # and within one group by size.

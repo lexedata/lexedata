@@ -45,7 +45,7 @@ from lexedata.exporter.edictor import forms_to_tsv
 from lexedata.edit.add_segments import add_segments_to_dataset
 from lexedata.edit.add_concepticon import create_concepticon_for_concepts
 from lexedata.edit.detect_cognates import cognate_code_to_file
-from lexedata.edit.add_singleton_cognatesets import create_singeltons
+from lexedata.edit.add_singleton_cognatesets import create_singletons
 
 from lexedata.report.homophones import list_homophones
 from lexedata.report.coverage import coverage_report, Missing
@@ -591,7 +591,7 @@ def test_add_singlestons():
         CognateTable=cognates,
         CognatesetTable=cogsets,
     )
-    all_cogsets, judgements = create_singeltons(dataset=dataset)
+    all_cogsets, judgements = create_singletons(dataset=dataset)
     assert all_cogsets == [
         OrderedDict([("ID", "1"), ("Name", "1"), ("Comment", None)]),
         {"ID": "X2_L1", "Name": "C2"},
