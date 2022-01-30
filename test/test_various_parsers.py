@@ -84,5 +84,5 @@ def test_phylo_parser():
 
 
 def test_cex_parser():
-    parameters = cex_parser().parse_args("--add-singletons")
+    parameters = cex_parser().parse_args(["--add-singletons"])
     assert parameters.add_singletons_with_status == "automatic singleton"
