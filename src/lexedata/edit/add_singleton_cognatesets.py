@@ -135,15 +135,18 @@ def create_singletons(
             c_s_id: singleton_id,
             "Status_Column": status,
         }
-        for column in dataset["CognatesetTable"].tableSchema.columns:
-            all_cognatesets[singleton_id][column.name] = properties.get(column.name)
+        try:
+            for column in dataset["CognatesetTable"].tableSchema.columns:
+                all_cognatesets[singleton_id][column.name] = properties.get(column.name)
+        except KeyError:
+            pass
         judgement = types.Judgement({})
         properties = {
             c_j_id: singleton_id,
             c_j_cogset: singleton_id,
             c_j_form: form,
             c_j_segmentslice: indices_to_segment_slice(slice),
-            c_j_alignment: forms[form]["segments"],
+            c_j_alignment: [forms[form]["segments"][i] for i in slice],
             "Status_Column": status,
         }
         for column in dataset["CognateTable"].tableSchema.columns:

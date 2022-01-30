@@ -80,7 +80,7 @@ def test_segment_to_cognateset_no_slices(caplog):
     }
 
 
-def test_segment_to_cognateset(caplog):
+def test_create_singletons_no_slices(caplog):
     ds = new_wordlist(
         FormTable=[
             {
@@ -112,6 +112,64 @@ def test_segment_to_cognateset(caplog):
                 "Segments": ["f", "i"],
             },
         ],
+        CognateTable=[],
+    )
+    ds.remove_columns("CognateTable", "Segment_Slice", "Alignment")
+    ds.write(
+        CognateTable=[
+            {"ID": "j1", "Form_ID": "f1", "Cognateset_ID": "s1"},
+            {"ID": "j2", "Form_ID": "f3", "Cognateset_ID": "s1"},
+            {
+                "ID": "j3",
+                "Form_ID": "f4",
+                "Cognateset_ID": "s1",
+            },
+            {"ID": "j4", "Form_ID": "f4", "Cognateset_ID": "s2"},
+        ],
+    )
+    with caplog.at_level(logging.WARNING):
+        cogsets, judgements = create_singletons(ds)
+    assert judgements == [
+        {"ID": "j1", "Form_ID": "f1", "Cognateset_ID": "s1", "Source": []},
+        {"ID": "j2", "Form_ID": "f3", "Cognateset_ID": "s1", "Source": []},
+        {"ID": "j3", "Form_ID": "f4", "Cognateset_ID": "s1", "Source": []},
+        {"ID": "j4", "Form_ID": "f4", "Cognateset_ID": "s2", "Source": []},
+        {"ID": "X_f2_1", "Form_ID": "f2", "Cognateset_ID": "X_f2_1", "Source": None},
+    ]
+
+
+def test_segment_to_cognateset(caplog):
+    ds = new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f"],
+            },
+            {
+                "ID": "f2",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f"],
+            },
+            {
+                "ID": "f3",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f", "i"],
+            },
+            {
+                "ID": "f4",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["t", "e", "s", "t"],
+            },
+        ],
         CognateTable=[
             {"ID": "j1", "Form_ID": "f1", "Cognateset_ID": "s1", "Segment_Slice": "1"},
             {"ID": "j2", "Form_ID": "f3", "Cognateset_ID": "s1", "Segment_Slice": "2"},
@@ -119,7 +177,7 @@ def test_segment_to_cognateset(caplog):
                 "ID": "j3",
                 "Form_ID": "f4",
                 "Cognateset_ID": "s1",
-                "Segment_Slice": ["1:2"],
+                "Segment_Slice": ["2:3"],
             },
             {"ID": "j4", "Form_ID": "f4", "Cognateset_ID": "s2", "Segment_Slice": "2"},
         ],
@@ -130,8 +188,227 @@ def test_segment_to_cognateset(caplog):
         "f1": [{"s1"}],
         "f2": [set()],
         "f3": [set(), {"s1"}],
-        "f4": [{"s1"}, {"s1", "s2"}],
+        "f4": [set(), {"s1", "s2"}, {"s1"}, set()],
     }
+
+
+def test_create_singletons_affix(caplog):
+    ds = new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f"],
+            },
+            {
+                "ID": "f2",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f"],
+            },
+            {
+                "ID": "f3",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f", "i"],
+            },
+            {
+                "ID": "f4",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["t", "e", "s", "t"],
+            },
+        ],
+        CognateTable=[
+            {"ID": "j1", "Form_ID": "f1", "Cognateset_ID": "s1", "Segment_Slice": "1"},
+            {"ID": "j2", "Form_ID": "f3", "Cognateset_ID": "s1", "Segment_Slice": "2"},
+            {
+                "ID": "j3",
+                "Form_ID": "f4",
+                "Cognateset_ID": "s1",
+                "Segment_Slice": ["2:3"],
+            },
+            {"ID": "j4", "Form_ID": "f4", "Cognateset_ID": "s2", "Segment_Slice": "2"},
+        ],
+        CognatesetTable=[{"ID": "s1"}, {"ID": "s2"}],
+    )
+    with caplog.at_level(logging.WARNING):
+        cognatesets, judgements = create_singletons(ds)
+    assert list(cognatesets) == [
+        {"ID": "s1", "Description": None, "Source": []},
+        {"ID": "s2", "Description": None, "Source": []},
+        {"ID": "X_f2_1", "Description": None, "Source": None},
+    ]
+    assert judgements == [
+        {
+            "ID": "j1",
+            "Form_ID": "f1",
+            "Cognateset_ID": "s1",
+            "Segment_Slice": ["1"],
+            "Alignment": [],
+            "Source": [],
+        },
+        {
+            "ID": "j2",
+            "Form_ID": "f3",
+            "Cognateset_ID": "s1",
+            "Segment_Slice": ["2"],
+            "Alignment": [],
+            "Source": [],
+        },
+        {
+            "ID": "j3",
+            "Form_ID": "f4",
+            "Cognateset_ID": "s1",
+            "Segment_Slice": ["2:3"],
+            "Alignment": [],
+            "Source": [],
+        },
+        {
+            "ID": "j4",
+            "Form_ID": "f4",
+            "Cognateset_ID": "s2",
+            "Segment_Slice": ["2"],
+            "Alignment": [],
+            "Source": [],
+        },
+        {
+            "ID": "X_f2_1",
+            "Form_ID": "f2",
+            "Cognateset_ID": "X_f2_1",
+            "Segment_Slice": ["1:1"],
+            "Alignment": ["f"],
+            "Source": None,
+        },
+    ]
+
+
+def test_create_singletons_affix_by_segment(caplog):
+    ds = new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f"],
+            },
+            {
+                "ID": "f2",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f"],
+            },
+            {
+                "ID": "f3",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f", "i"],
+            },
+            {
+                "ID": "f4",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["t", "e", "s", "t"],
+            },
+        ],
+        CognateTable=[
+            {"ID": "j1", "Form_ID": "f1", "Cognateset_ID": "s1", "Segment_Slice": "1"},
+            {"ID": "j2", "Form_ID": "f3", "Cognateset_ID": "s1", "Segment_Slice": "2"},
+            {
+                "ID": "j3",
+                "Form_ID": "f4",
+                "Cognateset_ID": "s1",
+                "Segment_Slice": ["2:3"],
+            },
+            {"ID": "j4", "Form_ID": "f4", "Cognateset_ID": "s2", "Segment_Slice": "2"},
+        ],
+        CognatesetTable=[{"ID": "s1"}, {"ID": "s2"}],
+    )
+    with caplog.at_level(logging.WARNING):
+        cognatesets, judgements = create_singletons(ds, by_segment=True)
+    assert list(cognatesets) == [
+        {"ID": "s1", "Description": None, "Source": []},
+        {"ID": "s2", "Description": None, "Source": []},
+        {"ID": "X_f2_1", "Description": None, "Source": None},
+        {"ID": "X_f3_1", "Description": None, "Source": None},
+        {"ID": "X_f4_1", "Description": None, "Source": None},
+        {"ID": "X_f4_2", "Description": None, "Source": None},
+    ]
+    assert judgements == [
+        {
+            "ID": "j1",
+            "Form_ID": "f1",
+            "Cognateset_ID": "s1",
+            "Segment_Slice": ["1"],
+            "Alignment": [],
+            "Source": [],
+        },
+        {
+            "ID": "j2",
+            "Form_ID": "f3",
+            "Cognateset_ID": "s1",
+            "Segment_Slice": ["2"],
+            "Alignment": [],
+            "Source": [],
+        },
+        {
+            "ID": "j3",
+            "Form_ID": "f4",
+            "Cognateset_ID": "s1",
+            "Segment_Slice": ["2:3"],
+            "Alignment": [],
+            "Source": [],
+        },
+        {
+            "ID": "j4",
+            "Form_ID": "f4",
+            "Cognateset_ID": "s2",
+            "Segment_Slice": ["2"],
+            "Alignment": [],
+            "Source": [],
+        },
+        {
+            "ID": "X_f2_1",
+            "Form_ID": "f2",
+            "Cognateset_ID": "X_f2_1",
+            "Segment_Slice": ["1:1"],
+            "Alignment": ["f"],
+            "Source": None,
+        },
+        {
+            "ID": "X_f3_1",
+            "Form_ID": "f3",
+            "Cognateset_ID": "X_f3_1",
+            "Segment_Slice": ["1:1"],
+            "Alignment": ["f"],
+            "Source": None,
+        },
+        {
+            "ID": "X_f4_1",
+            "Form_ID": "f4",
+            "Cognateset_ID": "X_f4_1",
+            "Segment_Slice": ["1:1"],
+            "Alignment": ["t"],
+            "Source": None,
+        },
+        {
+            "ID": "X_f4_2",
+            "Form_ID": "f4",
+            "Cognateset_ID": "X_f4_2",
+            "Segment_Slice": ["4:4"],
+            "Alignment": ["t"],
+            "Source": None,
+        },
+    ]
 
 
 def test_uncoded_segments():
