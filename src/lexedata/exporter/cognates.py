@@ -508,7 +508,7 @@ def cogsets_and_judgements(
     return cogsets, judgements
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     args = parser().parse_args()
     logger = cli.setup_logging(args)
 
