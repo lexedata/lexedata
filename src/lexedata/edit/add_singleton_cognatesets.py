@@ -47,14 +47,19 @@ def uncoded_forms(
     """Find the uncoded forms, and represent them as segment slices.
 
     >>> list(uncoded_forms([
-    ...   {"id": "f1", "segments": list("ex")},
-    ...   {"id": "f2", "segments": list("test")},
+    ...   {"id": "f1", "form": "ex", "segments": list("ex")},
+    ...   {"id": "f2", "form": "test", "segments": list("test")},
     ... ], {"f1"}))
     [('f2', range(0, 4))]
 
     """
     for form in forms:
-        if form["id"] not in judged:
+        if (
+            form["id"] not in judged
+            and form["form"]
+            and form["form"].strip()
+            and form["form"].strip() != "-"
+        ):
             yield (form["id"], range(len(form["segments"])))
 
 

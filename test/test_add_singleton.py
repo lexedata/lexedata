@@ -7,6 +7,9 @@ from lexedata.edit.add_singleton_cognatesets import (
     uncoded_segments,
     uncoded_forms,
 )
+from lexedata import types
+from lexedata.util.fs import new_wordlist
+from lexedata.report.nonconcatenative_morphemes import segment_to_cognateset
 from lexedata.edit.add_status_column import add_status_column_to_table
 from helper_functions import copy_to_temp_no_bib
 
@@ -18,6 +21,60 @@ def test_no_status_column(caplog):
     caplog.set_level(logging.INFO)
     create_singletons(dataset=dataset)
     assert re.search(r".*No Status_Column.*", caplog.text)
+
+
+def test_segment_to_cognateset(caplog):
+    ds = new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f"],
+            },
+            {
+                "ID": "f2",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f"],
+            },
+            {
+                "ID": "f3",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f", "i"],
+            },
+            {
+                "ID": "f4",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f", "i"],
+            },
+        ],
+        CognateTable=[
+            {"ID": "j1", "Form_ID": "f1", "Cognateset_ID": "s1", "Segment_Slice": "1"},
+            {"ID": "j2", "Form_ID": "f3", "Cognateset_ID": "s1", "Segment_Slice": "2"},
+            {
+                "ID": "j3",
+                "Form_ID": "f4",
+                "Cognateset_ID": "s1",
+                "Segment_Slice": ["1:2"],
+            },
+            {"ID": "j4", "Form_ID": "f4", "Cognateset_ID": "s2", "Segment_Slice": "2"},
+        ],
+    )
+    with caplog.at_level(logging.WARNING):
+        segments = segment_to_cognateset(ds, types.WorldSet())
+    assert segments == {
+        "f1": [{"s1"}],
+        "f2": [set()],
+        "f3": [set(), {"s1"}],
+        "f4": [{"s1"}, {"s1", "s2"}],
+    }
 
 
 def test_uncoded_segments():
@@ -43,9 +100,15 @@ def test_uncoded_forms():
     segments = list(
         uncoded_forms(
             [
-                {"id": "f1", "segments": ["e", "x"]},
-                {"id": "f2", "segments": ["t", "e", "s", "t"]},
-                {"id": "f3", "segments": ["l", "o", "n", "g", "e", "r"]},
+                {"id": "na", "form": "-", "segments": []},
+                {"id": "missing", "form": "", "segments": []},
+                {"id": "f1", "form": "ex", "segments": ["e", "x"]},
+                {"id": "f2", "form": "test", "segments": ["t", "e", "s", "t"]},
+                {
+                    "id": "f3",
+                    "form": "longer",
+                    "segments": ["l", "o", "n", "g", "e", "r"],
+                },
             ],
             {"f2"},
         )

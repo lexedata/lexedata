@@ -556,6 +556,7 @@ def test_add_singlestons():
             "Concept_ID": "C1",
             "Form": "L2C1",
             "Value": "L2C1",
+            "Segments": ["f"],
         },
         {
             "ID": "L1C1",
@@ -563,6 +564,7 @@ def test_add_singlestons():
             "Concept_ID": "C1",
             "Form": "",
             "Value": "?",
+            "Segments": [],
         },
         {
             "ID": "L1C2",
@@ -570,6 +572,7 @@ def test_add_singlestons():
             "Concept_ID": "C2",
             "Form": "L1C2",
             "Value": "L1C2",
+            "Segments": ["f"],
         },
         {
             "ID": "L2C2",
@@ -577,6 +580,7 @@ def test_add_singlestons():
             "Concept_ID": "C2",
             "Form": "-",
             "Value": "-",
+            "Segments": [],
         },
     ]
     cognates = [{"ID": "1", "Form_ID": "L2C1", "Cognateset": "1"}]
@@ -592,23 +596,27 @@ def test_add_singlestons():
         CognatesetTable=cogsets,
     )
     all_cogsets, judgements = create_singletons(dataset=dataset)
-    assert all_cogsets == [
-        OrderedDict([("ID", "1"), ("Name", "1"), ("Comment", None)]),
-        {"ID": "X2_L1", "Name": "C2"},
-        {"ID": "X3_L2", "Name": "C2"},
-    ] and judgements == [
-        OrderedDict(
-            [
-                ("ID", "1"),
-                ("Form_ID", "L2C1"),
-                ("Cognateset", "1"),
-                ("Segment_Slice", None),
-                ("Alignment", None),
-                ("Comment", None),
-            ]
-        ),
-        {"ID": "X2_L1", "Form_ID": "L1C2", "Cognateset": "X2_L1"},
-        {"ID": "X3_L2", "Form_ID": "L2C2", "Cognateset": "X3_L2"},
+    assert [dict(x) for x in all_cogsets] == [
+        {"ID": "1", "Name": "1", "Comment": None},
+        {"ID": "X_L1C2_1", "Name": "C2", "Status_Column": None},
+    ]
+    assert [dict(j) for j in judgements] == [
+        {
+            "ID": "1",
+            "Form_ID": "L2C1",
+            "Cognateset": "1",
+            "Segment_Slice": None,
+            "Alignment": None,
+            "Comment": None,
+        },
+        {
+            "ID": "X_L1C2_1",
+            "Cognateset": "X_L1C2_1",
+            "Form_ID": "L1C2",
+            "Segment_Slice": ["1:1"],
+            "Alignment": ["f"],
+            "Status_Column": None,
+        },
     ]
 
 
