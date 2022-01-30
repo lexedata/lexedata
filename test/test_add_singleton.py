@@ -23,6 +23,63 @@ def test_no_status_column(caplog):
     assert re.search(r".*No Status_Column.*", caplog.text)
 
 
+def test_segment_to_cognateset_no_slices(caplog):
+    ds = new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f"],
+            },
+            {
+                "ID": "f2",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f"],
+            },
+            {
+                "ID": "f3",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f", "i"],
+            },
+            {
+                "ID": "f4",
+                "Parameter_ID": "c1",
+                "Language_ID": "l1",
+                "Form": "f",
+                "Segments": ["f", "i"],
+            },
+        ],
+        CognateTable=[],
+    )
+    ds.remove_columns("CognateTable", "segmentSlice", "alignment")
+    ds.write(
+        CognateTable=[
+            {"ID": "j1", "Form_ID": "f1", "Cognateset_ID": "s1"},
+            {"ID": "j2", "Form_ID": "f3", "Cognateset_ID": "s1"},
+            {
+                "ID": "j3",
+                "Form_ID": "f4",
+                "Cognateset_ID": "s1",
+            },
+            {"ID": "j4", "Form_ID": "f4", "Cognateset_ID": "s2"},
+        ],
+    )
+    with caplog.at_level(logging.WARNING):
+        segments = segment_to_cognateset(ds, types.WorldSet())
+    assert segments == {
+        "f1": [{"s1"}],
+        "f2": [set()],
+        "f3": [{"s1"}, {"s1"}],
+        "f4": [{"s1", "s2"}, {"s1", "s2"}],
+    }
+
+
 def test_segment_to_cognateset(caplog):
     ds = new_wordlist(
         FormTable=[
