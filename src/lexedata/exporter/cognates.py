@@ -413,6 +413,25 @@ def properties_as_key(data, columns):
             s[property] = s.pop(name, None)
 
 
+def sort_cognatesets(
+    cogsets: t.List[types.CogSet],
+    sort_column: t.Optional[str] = None,
+    size: bool = True,
+) -> None:
+    """Sort cognatesets by a given column, and optionally by size."""
+    # Sort first by size, then by the specified column, so that if both
+    # happen, the cognatesets are globally sorted by the specified column
+    # and within one group by size.
+    if size:
+        cogsets.sort(
+            key=lambda x: len([j for j in judgements if j["cognatesetReference"] == x]),
+            reverse=True,
+        )
+
+    if sort_column:
+        cogsets.sort(key=lambda c: c[sort_column])
+
+
 if __name__ == "__main__":
     parser = cli.parser(description="Create an Excel cognate view from a CLDF dataset")
     parser.add_argument(
@@ -433,7 +452,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sort-cognatesets-by",
         help="The name of a column in the CognatesetTable to sort cognates by in the output",
-        default="id",
     )
     parser.add_argument(
         "--url-template",
@@ -480,13 +498,6 @@ if __name__ == "__main__":
         logger=logger,
     )
 
-    try:
-        cogset_order = E.dataset["CognatesetTable", args.sort_cognatesets_by].name
-    except (KeyError):
-        cli.Exit.INVALID_COLUMN_NAME(
-            f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
-        )
-
     if args.add_singletons_with_status is not None:
         cogsets, judgements = create_singletons(
             dataset,
@@ -500,17 +511,18 @@ if __name__ == "__main__":
         cogsets = util.cache_table(dataset, "CognatesetTable").values()
         judgements = util.cache_table(dataset, "CognateTable").values()
 
-    # Sort first by size, then by the specified column, so that if both
-    # happen, the cognatesets are globally sorted by the specified column
-    # and within one group by size.
-    if args.size_sort:
-        raise NotImplementedError
-        cogsets.sort(
-            key=lambda x: ...,
-            reverse=True,
+    try:
+        cogset_order = (
+            util.cldf_property(
+                dataset["CognatesetTable", args.sort_cognatesets_by].propertyUrl
+            )
+            or dataset["CognatesetTable", args.sort_cognatesets_by].name
         )
-
-    cogsets.sort(key=lambda c: c[cogset_order])
+    except (KeyError):
+        cli.Exit.INVALID_COLUMN_NAME(
+            f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
+        )
+    sort_cognatesets(cogsets, cogset_order, size=args.size_sort)
 
     # TODO: wrap the following two blocks into a
     # get_sorted_languages() -> t.OrderedDict[languageReference, Column Header/Titel/Name]
