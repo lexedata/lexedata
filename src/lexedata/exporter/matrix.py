@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import urllib
 import typing as t
 from pathlib import Path
 
@@ -23,52 +24,54 @@ class MatrixExcelWriter(BaseExcelWriter):
     ):
         super().__init__(dataset=dataset, database_url=database_url, logger=logger)
 
-    def set_header(self):
+    def set_header(self, dataset):
         self.header = [("id", "ID")]
         self.header.append(("name", "Name"))
 
         try:
-            self.dataset["ParameterTable", "concepticonReference"].name
+            dataset["ParameterTable", "concepticonReference"].name
             self.header.append(("concepticonReference", "Concepticon"))
         except KeyError:
             pass
-
-    def collect_forms_by_row(self) -> t.Mapping[types.Parameter_ID, t.List[types.Form]]:
-        all_forms: t.MutableMapping[
-            types.Parameter_ID, t.List[types.Form]
-        ] = t.DefaultDict(list)
-        for form in util.cache_table(self.dataset).values():
-            for row in util.ensure_list(form["parameterReference"]):
-                all_forms[row].append(form)
-        return all_forms
 
     def form_to_cell_value(self, form: types.Form) -> str:
         # TODO: Placeholder, use proper structure here.
         return form["form"]
 
-    def after_filling(self, row_index: int):
-        pass
-
     def write_row_header(self, cogset, row):
-        try:
-            c_comment = self.dataset["ParameterTable", "comment"].name
-        except (KeyError):
-            c_comment = None
         for col, (db_name, header) in enumerate(self.header, 1):
             if db_name == "":
                 continue
-            column = self.dataset[self.row_table, db_name]
-            if column.separator is None:
-                value = cogset[db_name]
-            else:
-                value = column.separator.join([str(v) for v in cogset[db_name]])
+            try:
+                value = self.separators[db_name].join([str(v) for v in cogset[db_name]])
+            except KeyError:
+                # No separator
+                value = cogset.get(db_name, "")
             cell = self.ws.cell(row=row, column=col, value=value)
             # Transfer the cognateset comment to the first Excel cell.
-            if c_comment and col == 1 and cogset.get(c_comment):
+            if col == 1 and cogset.get("comment"):
                 cell.comment = op.comments.Comment(
-                    re.sub(f"-?{__package__}", "", cogset[c_comment] or "").strip(),
+                    re.sub(f"-?{__package__}", "", cogset["comment"] or "").strip(),
                     "lexedata.exporter",
                 )
+
+    def create_formcell(self, form: types.Form, column: int, row: int) -> None:
+        """Fill the given cell with the form's data.
+
+        In the cell described by ws, column, row, dump the data for the form:
+        Write into the the form data, and supply a comment from the judgement
+        if there is one.
+
+        """
+        form, metadata = form
+        cell_value = self.form_to_cell_value(form)
+        form_cell = self.ws.cell(row=row, column=column, value=cell_value)
+        comment = form.pop("comment", None)
+        if comment:
+            form_cell.comment = op.comments.Comment(comment, __package__)
+        if self.URL_BASE:
+            link = self.URL_BASE.format(urllib.parse.quote(form["id"]))
+            form_cell.hyperlink = link
 
 
 if __name__ == "__main__":
@@ -98,15 +101,24 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
+    dataset = (pycldf.Wordlist.from_metadata(args.metadata),)
     E = MatrixExcelWriter(
-        pycldf.Wordlist.from_metadata(args.metadata),
+        dataset,
         database_url=args.url_template,
         logger=logger,
     )
+    forms = util.cache_table(dataset)
+    languages = sorted(
+        util.cache_table(dataset, "LanguageTable").values(), key=lambda x: x["name"]
+    )
+    judgements = [
+        {"formReference": f["id"], "cognatesetReference": parameter}
+        for f in forms.values()
+        for parameter in util.ensure_list(f["parameterReference"])
+    ]
+    parameters = util.cache_table(dataset, "ParameterTable").values()
     E.create_excel(
-        args.excel,
-        language_order=args.sort_languages_by,
-        rows=args.concepts,
+        rows=parameters, judgements=judgements, forms=forms, languages=languages
     )
     E.wb.save(
         filename=args.excel,

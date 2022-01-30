@@ -880,27 +880,32 @@ boundaries have been eroded or when a language has non-concatenative morphemes,
 which is the case that gives the name to our script reporting these. ::
 
     $ python -m lexedata.report.nonconcatenative_morphemes > overlapping_cogsets
-    INFO:lexedata:Caching table FormTable
-    100%|██████████| 1587/1587 [00:00<00:00, [...]it/s]
-    WARNING:lexedata:In judgement ntomba_skin, segments 1:6 are associated with cognate set skin_27, but were already in bark_22.
-    WARNING:lexedata:In judgement ngombe_many, segments 1:4 are associated with cognate set many_12, but were already in big_1.
-    WARNING:lexedata:In judgement bushoong_walk, segments 1:4 are associated with cognate set walk_1, but were already in go_to_1.
-    WARNING:lexedata:In judgement lega_walk, segments 1:4 are associated with cognate set walk_1, but were already in go_to_2.
-    WARNING:lexedata:In judgement kikuyu_white, segments 1:3 are associated with cognate set white_2, but were already in new_3.
-    $ cat overlapping_cogsets
+    [...]
+    WARNING:lexedata:In form ntomba_skin, segments are associated with multiple cognate sets.
+    INFO:lexedata:In form ntomba_skin, segments 1:6 (l o p o h o) are in both cognate sets bark_22 and skin_27.
+    WARNING:lexedata:In form ngombe_big, segments are associated with multiple cognate sets.
+    INFO:lexedata:In form ngombe_big, segments 1:4 (n ɛ́ n ɛ) are in both cognate sets big_1 and many_12.
+    WARNING:lexedata:In form bushoong_go_to, segments are associated with multiple cognate sets.
+    INFO:lexedata:In form bushoong_go_to, segments 1:4 (y ɛ ɛ n) are in both cognate sets go_to_1 and walk_1.
+    WARNING:lexedata:In form lega_go_to, segments are associated with multiple cognate sets.
+    INFO:lexedata:In form lega_go_to, segments 1:4 (ɛ n d a) are in both cognate sets go_to_2 and walk_1.
+    WARNING:lexedata:In form kikuyu_new, segments are associated with multiple cognate sets.
+    INFO:lexedata:In form kikuyu_new, segments 1:3 (e r ũ) are in both cognate sets new_3 and white_2.
+    $ cat overlapping_cogsets # doctest: +NORMALIZE_WHITESPACE
     Cluster of overlapping cognate sets:
-    	 bark_22 (['lopoho', 'émpósù', 'yooʃ', 'ləpwi'])
-    	 skin_27 (['lopoho', 'liposo', 'ləpwí'])
+    	bark_22
+    	skin_27
     Cluster of overlapping cognate sets:
-    	 big_1 (['éndɛ̃nɛ̀', 'nɛ́nɛ́', 'nɛ́nɛ', 'nɛ́n', 'neni', 'bùnɛ̂nɛ̀', 'nɛnɛ', 'nene', 'nene', 'nini', 'nene'])
-    	 many_12 (['nɛ́nɛ'])
+    	big_1
+    	many_12
     Cluster of overlapping cognate sets:
-    	 go_to_1 (['ha', 'yɛɛn', 'ɛɛndə', 'ja', 'ya'])
-    	 go_to_2 (['kɛ', 'yenda', 'okɛ', 'ɛnda', 'enda', 'genda', 'genda'])
-    	 walk_1 (['kɛndɛ', 'yɛɛn', 'kweenda', 'yɛ̀ndɛ̀', 'okyán', 'ɛnda', 'yenda'])
+    	go_to_1
+    	go_to_2
+    	walk_1
     Cluster of overlapping cognate sets:
-    	 new_3 (['erũ'])
-    	 white_2 (['ɛ́lɔ', 'erũ', 'eru', 'era'])
+    	new_3
+    	white_2
+
 
 There are other ways to merge cognate sets, which we will see in a moment, but
 this kind of structured report is suitable for automatic merging, in the same

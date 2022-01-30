@@ -10,6 +10,7 @@ from lexedata.exporter.phylogenetics import (
     AbsenceHeuristic,
     parser as phylo_parser,
 )
+from lexedata.exporter.cognates import parser as cex_parser
 
 
 def test_listorfromfile_list():
@@ -80,3 +81,9 @@ def test_phylo_parser():
     assert type(parameters.cognatesets) == types.WorldSet
     assert parameters.coding == CodingProcedure.ROOTPRESENCE
     assert parameters.absence_heuristic == AbsenceHeuristic.CENTRALCONCEPT
+
+
+def test_cex_parser():
+    _, fname = tempfile.mkstemp(".xlsx")
+    parameters = cex_parser().parse_args([fname, "--add-singletons"])
+    assert parameters.add_singletons_with_status == "automatic singleton"

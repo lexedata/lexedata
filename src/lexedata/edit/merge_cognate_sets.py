@@ -226,7 +226,7 @@ The following merge functions are predefined, each takes the given entries for o
     )
     if cogset_groups == defaultdict(list):
         cli.Exit.INVALID_INPUT(
-            f"The provided report {args.report} is empty or does not have the correct format."
+            f"The provided report {args.merge_file} is empty or does not have the correct format."
         )
 
     dataset.write(
