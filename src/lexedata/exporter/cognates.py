@@ -486,6 +486,28 @@ def parser():
     return parser
 
 
+def cogsets_and_judgements(
+    dataset,
+    status: t.Optional[str],
+    by_segment=True,
+    logger: cli.logging.Logger = cli.logger,
+):
+    if status is not None:
+        cogsets, judgements = create_singletons(
+            dataset,
+            status=status,
+            by_segment=by_segment,
+            logger=logger,
+        )
+        properties_as_key(cogsets, dataset["CognatesetTable"].tableSchema.columns)
+        properties_as_key(judgements, dataset["CognateTable"].tableSchema.columns)
+    else:
+        cogsets = util.cache_table(dataset, "CognatesetTable").values()
+        judgements = util.cache_table(dataset, "CognateTable").values()
+
+    return cogsets, judgements
+
+
 if __name__ == "__main__":
     args = parser().parse_args()
     logger = cli.setup_logging(args)
@@ -504,18 +526,9 @@ if __name__ == "__main__":
         logger=logger,
     )
 
-    if args.add_singletons_with_status is not None:
-        cogsets, judgements = create_singletons(
-            dataset,
-            status=args.add_singletons_with_status,
-            by_segment=args.by_segment,
-            logger=logger,
-        )
-        properties_as_key(cogsets, dataset["CognatesetTable"].tableSchema.columns)
-        properties_as_key(judgements, dataset["CognateTable"].tableSchema.columns)
-    else:
-        cogsets = util.cache_table(dataset, "CognatesetTable").values()
-        judgements = util.cache_table(dataset, "CognateTable").values()
+    cogsets, judgements = cogsets_and_judgements(
+        dataset, args.add_singletons_with_status, args.by_segment, logger
+    )
 
     try:
         cogset_order = (

@@ -12,6 +12,7 @@ from lexedata.exporter.cognates import (
     create_singletons,
     properties_as_key,
     sort_cognatesets,
+    cogsets_and_judgements,
 )
 
 try:
@@ -69,6 +70,80 @@ def test_sort_cognatesets_4(tiny_dataset):
     # Order by group and size has priority on the group
     sort_cognatesets(cognatesets, judgements, "description", size=True)
     assert [s["id"] for s in cognatesets] == ["s3", "s2", "s1", "s5", "s4"]
+
+
+def test_cogsets_and_judgements():
+    dataset = get_dataset(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    cogsets, judgements = cogsets_and_judgements(dataset, None, by_segment=True)
+    assert list(cogsets)[0] == {
+        "id": "one1",
+        "Set": None,
+        "comment": None,
+        "name": "ONE1",
+    }
+    assert list(cogsets)[-1] == {
+        "id": "five5",
+        "Set": None,
+        "comment": None,
+        "name": "FIVE5",
+    }
+    assert len(cogsets) == 10
+    assert list(judgements)[0] == {
+        "id": "paraguayan_guarani_one-one1",
+        "formReference": "paraguayan_guarani_one",
+        "comment": None,
+        "segmentSlice": None,
+        "alignment": None,
+        "cognatesetReference": "one1",
+    }
+    assert list(judgements)[-1] == {
+        "id": "kaiwa_five-five5",
+        "formReference": "kaiwa_five",
+        "comment": None,
+        "segmentSlice": None,
+        "alignment": None,
+        "cognatesetReference": "five5",
+    }
+    assert len(judgements) == 17
+
+
+def test_cogsets_and_judgements_with_singletons():
+    dataset = get_dataset(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    cogsets, judgements = cogsets_and_judgements(dataset, "NEW", by_segment=True)
+    assert list(cogsets)[0] == {
+        "id": "one1",
+        "Set": None,
+        "comment": None,
+        "name": "ONE1",
+    }
+    assert list(cogsets)[-1] == {
+        "Set": None,
+        "id": "X_paraguayan_guarani_five_1",
+        "comment": None,
+        "name": "five",
+    }
+    assert len(cogsets) == 12
+    assert list(judgements)[0] == {
+        "id": "paraguayan_guarani_one-one1",
+        "formReference": "paraguayan_guarani_one",
+        "comment": None,
+        "segmentSlice": None,
+        "alignment": None,
+        "cognatesetReference": "one1",
+    }
+    assert list(judgements)[-1] == {
+        "id": "X_paraguayan_guarani_five_1",
+        "formReference": "paraguayan_guarani_five",
+        "comment": None,
+        "segmentSlice": ["1:2"],
+        "alignment": ["p", "o"],
+        "cognatesetReference": "X_paraguayan_guarani_five_1",
+    }
+    assert len(judgements) == 19
 
 
 def test_adding_singleton_cognatesets(caplog):
