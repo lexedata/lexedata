@@ -126,24 +126,25 @@ def create_singletons(
         while singleton_id in all_cognatesets:
             i += 1
             singleton_id = f"X_{form}_{i:d}"
-        all_cognatesets[singleton_id] = types.CogSet(
-            {
-                c_s_id: singleton_id,
-                c_s_name: util.ensure_list(forms[form]["parameterReference"])[0],
-                "Status_Column": status,
-            }
-        )
-        judgement = types.Judgement(
-            {
-                c_j_id: singleton_id,
-                c_j_cogset: singleton_id,
-                c_j_form: form,
-                c_j_segmentslice: indices_to_segment_slice(slice),
-                c_j_alignment: forms[form]["segments"],
-                "Status_Column": status,
-            }
-        )
-        judgement.pop(None, None)
+        all_cognatesets[singleton_id] = types.CogSet()
+        properties = {
+            c_s_id: singleton_id,
+            c_s_name: util.ensure_list(forms[form]["parameterReference"])[0],
+            "Status_Column": status,
+        }
+        for column in dataset["CognatesetTable"].tableSchema.columns:
+            all_cognatesets[singleton_id][column.name] = properties.get(column.name)
+        judgement = types.Judgement()
+        properties = {
+            c_j_id: singleton_id,
+            c_j_cogset: singleton_id,
+            c_j_form: form,
+            c_j_segmentslice: indices_to_segment_slice(slice),
+            c_j_alignment: forms[form]["segments"],
+            "Status_Column": status,
+        }
+        for column in dataset["CognateTable"].tableSchema.columns:
+            judgement[column.name] = properties.get(column.name)
         all_judgements.append(judgement)
     return all_cognatesets.values(), all_judgements
 

@@ -36,8 +36,12 @@ class BaseExcelWriter:
         database_url: t.Optional[str] = None,
         logger: cli.logging.Logger = cli.logger,
     ):
-        self.dataset = dataset
-        self.set_header()
+        self.set_header(dataset)
+        self.separators = {
+            util.cldf_property(c.propertyUrl) or c.name: c.separator
+            for c in dataset[self.row_table].tableSchema.columns
+            if c.separator
+        }
 
         self.URL_BASE = database_url
 
@@ -48,9 +52,11 @@ class BaseExcelWriter:
 
     def create_excel(
         self,
+        rows: t.Iterable[types.RowObject],
+        languages,
+        judgements: t.Iterable[types.Judgement],
+        forms,
         size_sort: bool = False,
-        rows: t.Optional[t.Iterable[types.Row_ID]] = None,
-        language_order="name",
     ) -> None:
         """Convert the initial CLDF into an Excel cognate view
 
@@ -61,31 +67,10 @@ class BaseExcelWriter:
         the same cognateset, these appear in different cells, one below the
         other.
 
-        Parameters
-        ==========
-        size_sort: If true, cognatesets are ordered by the number of cognates
-            corresponding to the cognateset
-
-        language_order: column name, languages appear ordered by given column name from
-            LanguageTable
-
         """
         # Define the columns, i.e. languages and write to excel
         self.lan_dict: t.Dict[str, int] = {}
         excel_header = [name for cldf, name in self.header]
-
-        # TODO: wrap the following two blocks into a
-        # get_sorted_languages() -> t.OrderedDict[languageReference, Column Header/Titel/Name]
-        # function
-        languages = list(util.cache_table(self.dataset, "LanguageTable").values())
-        if language_order:
-            c_sort = (
-                util.cldf_property(
-                    self.dataset["LanguageTable", language_order].propertyUrl
-                )
-                or self.dataset["LanguageTable", language_order].name
-            )
-            languages.sort(key=lambda x: x[c_sort], reverse=False)
 
         for col, lan in cli.tq(
             enumerate(languages, len(excel_header) + 1),
@@ -101,24 +86,13 @@ class BaseExcelWriter:
         # Again, row_index 2 is indeed row 2, row 1 is header
         row_index = 1 + 1
 
-        row_objects = self.collect_rows()
-        if rows is not None:
-            row_objects = [
-                row_object for row_object in row_objects if row_object["id"] in rows
-            ]
-            if set(rows) - {row_object["id"] for row_object in row_objects}:
-                self.logger.warning(
-                    "You asked me to include the entries %s in the export, but I did not find those IDs.",
-                    set(rows) - {row_object["id"] for row_object in row_objects},
-                )
-
-        forms_by_row = self.collect_forms_by_row()
+        forms_by_row = self.collect_forms_by_row(judgements, rows)
 
         # iterate over all rows
         for row in cli.tq(
-            row_objects,
+            rows,
             task="Writing rows to Excel",
-            total=len(row_objects),
+            total=len(rows),
             logger=self.logger,
         ):
             # possibly a row can appear without any forms. Unlikely, but just
@@ -127,7 +101,11 @@ class BaseExcelWriter:
                 continue
             # write all forms of this cognateset to excel
             new_row_index = self.create_formcells(
-                forms_by_row[row["id"]],
+                [
+                    (forms[f], m)
+                    for f, metadata in forms_by_row[row["id"]].items()
+                    for m in metadata
+                ],
                 row_index,
             )
             # write rows for cognatesets, now that we know how many rows there
@@ -155,8 +133,8 @@ class BaseExcelWriter:
         """
         # Read the forms from the database and group them by language
         forms = t.DefaultDict[int, t.List[types.Form]](list)
-        for form in row_forms:
-            forms[self.lan_dict[form["languageReference"]]].append(form)
+        for form, metadata in row_forms:
+            forms[self.lan_dict[form["languageReference"]]].append((form, metadata))
 
         if not forms:
             return row_index + 1
@@ -179,29 +157,36 @@ class BaseExcelWriter:
         if there is one.
 
         """
+        form, metadata = form
         cell_value = self.form_to_cell_value(form)
         form_cell = self.ws.cell(row=row, column=column, value=cell_value)
-        comment = form.get("comment")
+        comment = metadata.get("comment")
         if comment:
             form_cell.comment = op.comments.Comment(comment, __package__)
         if self.URL_BASE:
             link = self.URL_BASE.format(urllib.parse.quote(form["id"]))
             form_cell.hyperlink = link
 
-    def collect_rows(self):
-        return util.cache_table(self.dataset, self.row_table).values()
-
     @abc.abstractmethod
     def form_to_cell_value(self, form: types.Form):
         "Format a form into text for an Excel cell value"
 
-    @abc.abstractmethod
-    def collect_forms_by_row(self):
+    def collect_forms_by_row(
+        self,
+        judgements: t.Iterable[types.Judgement],
+        rows: t.Iterable[types.Row_ID],
+    ) -> t.Mapping[
+        types.Cognateset_ID, t.Mapping[types.Form_ID, t.Sequence[types.Judgement]]
+    ]:
         "Collect forms by row object (ie. concept or cognate set)"
-
-    @abc.abstractmethod
-    def after_filling(self, row_index):
-        "What should happen after the last regular row has been written?"
+        all_forms: t.MutableMapping[
+            types.Cognateset_ID, t.Mapping[types.Form_ID, t.List[types.Judgement]]
+        ] = t.DefaultDict(lambda: t.DefaultDict(list))
+        for judgement in judgements:
+            all_forms[judgement["cognatesetReference"]][
+                judgement["formReference"]
+            ].append(judgement)
+        return all_forms
 
     @abc.abstractmethod
     def write_row_header(self, row_object: types.RowObject, row_index: int):
@@ -214,7 +199,16 @@ class BaseExcelWriter:
         """
 
     @abc.abstractmethod
-    def set_header(self):
+    def set_header(
+        self,
+        dataset: types.Wordlist[
+            types.Language_ID,
+            types.Form_ID,
+            types.Parameter_ID,
+            types.Cognate_ID,
+            types.Cognateset_ID,
+        ],
+    ):
         "Define the header for the first few columns"
 
 
@@ -256,10 +250,6 @@ class ExcelWriter(BaseExcelWriter):
                 )
 
     def write_row_header(self, cogset, row_number: int):
-        try:
-            c_comment = self.dataset["CognatesetTable", "comment"].name
-        except KeyError:
-            c_comment = None
         for col, (db_name, header) in enumerate(self.header, 1):
             # db_name is '' when add_central_concepts is activated
             # and there is no concept column in cognateset table
@@ -269,28 +259,36 @@ class ExcelWriter(BaseExcelWriter):
                 raise NotImplementedError(
                     "You expect central conceps in your cognate set table, but you don't have any central concepts stored with your cognate sets"
                 )
-            else:
-                column = self.dataset[self.row_table, db_name]
-                if column.separator is None:
-                    value = cogset[db_name]
-                else:
-                    value = column.separator.join([str(v) for v in cogset[db_name]])
+            try:
+                value = self.separators[db_name].join([str(v) for v in cogset[db_name]])
+            except KeyError:
+                # No separator
+                value = cogset.get(db_name, "")
             cell = self.ws.cell(row=row_number, column=col, value=value)
             # Transfer the cognateset comment to the first Excel cell.
-            if c_comment and col == 1 and cogset.get("comment"):
+            if col == 1 and cogset.get("comment"):
                 cell.comment = op.comments.Comment(
                     re.sub(f"-?{__package__}", "", cogset["comment"]).strip(),
                     "lexedata.exporter",
                 )
 
-    def set_header(self):
-        c_id = self.dataset["CognatesetTable", "id"].name
+    def set_header(
+        self,
+        dataset: types.Wordlist[
+            types.Language_ID,
+            types.Form_ID,
+            types.Parameter_ID,
+            types.Cognate_ID,
+            types.Cognateset_ID,
+        ],
+    ):
+        c_id = dataset["CognatesetTable", "id"].name
         try:
-            c_comment = self.dataset["CognatesetTable", "comment"].name
+            c_comment = dataset["CognatesetTable", "comment"].name
         except (KeyError):
             c_comment = None
         self.header = []
-        for column in self.dataset["CognatesetTable"].tableSchema.columns:
+        for column in dataset["CognatesetTable"].tableSchema.columns:
             if column.name == c_id:
                 self.header.insert(0, ("id", "CogSet"))
             elif column.name == c_comment:
@@ -403,42 +401,16 @@ class ExcelWriter(BaseExcelWriter):
             translations.append(form["parameterReference"])
         return "{:} ‘{:}’{:}".format(transcription, ", ".join(translations), suffix)
 
-    def collect_forms_by_row(
-        self,
-    ) -> t.Mapping[types.Cognateset_ID, t.List[types.Form]]:
-        forms: t.Mapping[types.Form_ID, types.Form] = util.cache_table(
-            self.dataset
-        )  # TODO: index_column = reference target of CognateTable's formReference
-        all_forms: t.MutableMapping[
-            types.Cognateset_ID, t.List[types.Form]
-        ] = t.DefaultDict(list)
-        c_j_cognateset = self.dataset["CognateTable", "cognatesetReference"].name
-        c_j_id = self.dataset["CognateTable", "id"].name
-        try:
-            c_j_slice = self.dataset["CognateTable", "segmentSlice"].name
-        except KeyError:
-            c_j_slice = None
-        try:
-            c_j_comment = self.dataset["CognateTable", "comment"].name
-        except KeyError:
-            c_j_comment = None
-        c_j_form = self.dataset["CognateTable", "formReference"].name
-        for judgement in self.dataset["CognateTable"]:
-            form_with_judgement_metadata: types.Form = types.Form(
-                forms[judgement[c_j_form]]
-            )
-            form_with_judgement_metadata["cognateReference"] = judgement[c_j_id]
-            form_with_judgement_metadata["cognatesetReference"] = judgement[
-                c_j_cognateset
-            ]
-            form_with_judgement_metadata["segmentSlice"] = judgement.get(c_j_slice)
-            form_with_judgement_metadata["formComment"] = form_with_judgement_metadata[
-                "comment"
-            ]
-            form_with_judgement_metadata["comment"] = judgement.get(c_j_comment)
-            # TODO: Add other printable judgement properties
-            all_forms[judgement[c_j_cognateset]].append(form_with_judgement_metadata)
-        return all_forms
+
+def properties_as_key(data, columns):
+    mapping = {
+        column.name: util.cldf_property(column.propertyUrl)
+        for column in columns
+        if util.cldf_property(column.propertyUrl)
+    }
+    for s in data:
+        for name, property in mapping.items():
+            s[property] = s.pop(name, None)
 
 
 if __name__ == "__main__":
@@ -522,9 +494,11 @@ if __name__ == "__main__":
             by_segment=args.by_segment,
             logger=logger,
         )
+        properties_as_key(cogsets, dataset["CognatesetTable"].tableSchema.columns)
+        properties_as_key(judgements, dataset["CognateTable"].tableSchema.columns)
     else:
-        cogsets = list(dataset["CognatesetTable"])
-        judgements = list(dataset["CognateTable"])
+        cogsets = util.cache_table(dataset, "CognatesetTable").values()
+        judgements = util.cache_table(dataset, "CognateTable").values()
 
     # Sort first by size, then by the specified column, so that if both
     # happen, the cognatesets are globally sorted by the specified column
@@ -538,10 +512,27 @@ if __name__ == "__main__":
 
     cogsets.sort(key=lambda c: c[cogset_order])
 
+    # TODO: wrap the following two blocks into a
+    # get_sorted_languages() -> t.OrderedDict[languageReference, Column Header/Titel/Name]
+    # function
+    languages = list(util.cache_table(dataset, "LanguageTable").values())
+    if args.sort_languages_by:
+        c_sort = (
+            util.cldf_property(
+                dataset["LanguageTable", args.sort_languages_by].propertyUrl
+            )
+            or dataset["LanguageTable", args.sort_languages_by].name
+        )
+        languages.sort(key=lambda x: x[c_sort], reverse=False)
+
+    forms = util.cache_table(dataset)
+
     E.create_excel(
         size_sort=args.size_sort,
+        languages=languages,
         rows=cogsets,
-        language_order=args.sort_languages_by,
+        judgements=judgements,
+        forms=forms,
     )
     E.wb.save(
         filename=args.excel,

@@ -7,7 +7,7 @@ import pytest
 from lexedata import util
 from helper_functions import empty_copy_of_cldf_wordlist, copy_to_temp
 from lexedata.util.fs import get_dataset
-from lexedata.exporter.cognates import ExcelWriter, create_singletons
+from lexedata.exporter.cognates import ExcelWriter, create_singletons, properties_as_key
 
 try:
     from pycldf.dataset import SchemaError
@@ -29,7 +29,13 @@ def test_adding_singleton_cognatesets(caplog):
             status="NEW",
             by_segment=False,
         )
-        excel_writer.create_excel(rows=cogsets, judgements=judgements)
+        properties_as_key(cogsets, dataset["CognatesetTable"].tableSchema.columns)
+        properties_as_key(judgements, dataset["CognateTable"].tableSchema.columns)
+        forms = util.cache_table(dataset)
+        languages = util.cache_table(dataset, "LanguageTable").values()
+        excel_writer.create_excel(
+            rows=cogsets, judgements=judgements, forms=forms, languages=languages
+        )
     assert re.search("No Status_Column", caplog.text)
 
     # load central concepts from output
@@ -54,9 +60,8 @@ def test_adding_singleton_cognatesets(caplog):
         "four1",
         "four8",
         "five5",
-        "X1_old_paraguayan_guarani",
-        "X2_paraguayan_guarani",
-        "X3_ache",
+        "X_old_paraguayan_guarani_two_1",
+        "X_paraguayan_guarani_five_1",
     ]
 
 
@@ -72,7 +77,13 @@ def test_adding_singleton_cognatesets_with_status(caplog):
             status="NEW",
             by_segment=True,
         )
-        excel_writer.create_excel(judgements=judgements)
+        properties_as_key(cogsets, dataset["CognatesetTable"].tableSchema.columns)
+        properties_as_key(judgements, dataset["CognateTable"].tableSchema.columns)
+        forms = util.cache_table(dataset)
+        languages = util.cache_table(dataset, "LanguageTable").values()
+        excel_writer.create_excel(
+            rows=cogsets, judgements=judgements, forms=forms, languages=languages
+        )
     assert re.search("no Status_Column to write", caplog.text) is None
 
     cogset_index = 0
@@ -94,7 +105,6 @@ def test_adding_singleton_cognatesets_with_status(caplog):
         None,
         None,
         None,
-        "NEW",
         "NEW",
         "NEW",
     ]
@@ -150,7 +160,13 @@ def test_missing_required_column():
     # TODO: switch to pycldf.dataset.SchemaError
     with pytest.raises(KeyError):
         excel_writer = ExcelWriter(dataset=dataset)
-        excel_writer.create_excel()
+        forms = util.cache_table(dataset)
+        languages = util.cache_table(dataset, "LanguageTable").values()
+        judgements = util.cache_table(dataset, "CognateTable")
+        cogsets = util.cache_table(dataset, "CognatesetTable")
+        excel_writer.create_excel(
+            rows=cogsets, judgements=judgements, forms=forms, languages=languages
+        )
 
 
 def test_included_segments(caplog):

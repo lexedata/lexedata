@@ -598,7 +598,7 @@ def test_add_singlestons():
     all_cogsets, judgements = create_singletons(dataset=dataset)
     assert [dict(x) for x in all_cogsets] == [
         {"ID": "1", "Name": "1", "Comment": None},
-        {"ID": "X_L1C2_1", "Name": "C2", "Status_Column": None},
+        {"ID": "X_L1C2_1", "Name": "C2", "Comment": None},
     ]
     assert [dict(j) for j in judgements] == [
         {
@@ -615,7 +615,7 @@ def test_add_singlestons():
             "Form_ID": "L1C2",
             "Segment_Slice": ["1:1"],
             "Alignment": ["f"],
-            "Status_Column": None,
+            "Comment": None,
         },
     ]
 
