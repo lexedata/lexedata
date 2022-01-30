@@ -102,7 +102,6 @@ def create_singletons(
 
     try:
         c_s_id = dataset["CognatesetTable", "id"].name
-        c_s_name = dataset["CognatesetTable", "name"].name
         all_cognatesets = {s[c_s_id]: s for s in dataset["CognatesetTable"]}
     except KeyError:
         c_s_id = "id"
@@ -111,6 +110,10 @@ def create_singletons(
             id: types.Judgement({"id": id, "name": id})
             for id in {j[c_j_cogset] for j in dataset["CognateTable"]}
         }
+    try:
+        c_s_name = dataset["CognatesetTable", "name"].name
+    except KeyError:
+        c_s_name = c_s_id
 
     all_judgements = list(dataset["CognateTable"])
     if by_segment:
@@ -126,15 +129,15 @@ def create_singletons(
         while singleton_id in all_cognatesets:
             i += 1
             singleton_id = f"X_{form}_{i:d}"
-        all_cognatesets[singleton_id] = types.CogSet()
+        all_cognatesets[singleton_id] = types.CogSet({})
         properties = {
-            c_s_id: singleton_id,
             c_s_name: util.ensure_list(forms[form]["parameterReference"])[0],
+            c_s_id: singleton_id,
             "Status_Column": status,
         }
         for column in dataset["CognatesetTable"].tableSchema.columns:
             all_cognatesets[singleton_id][column.name] = properties.get(column.name)
-        judgement = types.Judgement()
+        judgement = types.Judgement({})
         properties = {
             c_j_id: singleton_id,
             c_j_cogset: singleton_id,
