@@ -57,7 +57,7 @@ def test_segment_to_cognateset_no_slices(caplog):
         ],
         CognateTable=[],
     )
-    ds.remove_columns("CognateTable", "segmentSlice", "alignment")
+    ds.remove_columns("CognateTable", "Segment_Slice", "Alignment")
     ds.write(
         CognateTable=[
             {"ID": "j1", "Form_ID": "f1", "Cognateset_ID": "s1"},
