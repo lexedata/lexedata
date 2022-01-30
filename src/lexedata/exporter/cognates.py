@@ -415,6 +415,7 @@ def properties_as_key(data, columns):
 
 def sort_cognatesets(
     cogsets: t.List[types.CogSet],
+    judgements: t.Sequence[types.Judgement] = [],
     sort_column: t.Optional[str] = None,
     size: bool = True,
 ) -> None:
@@ -424,7 +425,9 @@ def sort_cognatesets(
     # and within one group by size.
     if size:
         cogsets.sort(
-            key=lambda x: len([j for j in judgements if j["cognatesetReference"] == x]),
+            key=lambda x: len(
+                [j for j in judgements if j["cognatesetReference"] == x["id"]]
+            ),
             reverse=True,
         )
 
@@ -522,7 +525,7 @@ if __name__ == "__main__":
         cli.Exit.INVALID_COLUMN_NAME(
             f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
         )
-    sort_cognatesets(cogsets, cogset_order, size=args.size_sort)
+    sort_cognatesets(cogsets, judgements, cogset_order, size=args.size_sort)
 
     # TODO: wrap the following two blocks into a
     # get_sorted_languages() -> t.OrderedDict[languageReference, Column Header/Titel/Name]

@@ -7,13 +7,68 @@ import pytest
 from lexedata import util
 from helper_functions import empty_copy_of_cldf_wordlist, copy_to_temp
 from lexedata.util.fs import get_dataset
-from lexedata.exporter.cognates import ExcelWriter, create_singletons, properties_as_key
+from lexedata.exporter.cognates import (
+    ExcelWriter,
+    create_singletons,
+    properties_as_key,
+    sort_cognatesets,
+)
 
 try:
     from pycldf.dataset import SchemaError
 except ImportError:
     # SchemaError was introduced in pycldf 1.24.0
     SchemaError = KeyError
+
+
+@pytest.fixture
+def tiny_dataset():
+    ds = util.fs.new_wordlist(
+        FormTable=[{"ID": "f1"}],
+        CognatesetTable=[
+            {"ID": "s1", "Source": "3", "Description": "A"},
+            {"ID": "s2", "Source": "3", "Description": "A"},
+            {"ID": "s3", "Source": "3", "Description": "A"},
+            {"ID": "s4", "Source": "1", "Description": "C"},
+            {"ID": "s5", "Source": "1", "Description": "C"},
+        ],
+        CognateTable=[
+            {"ID": f"{i}{n}", "Cognateset_ID": f"s{i}", "Form_ID": "f1"}
+            for i in range(1, 6)
+            for n in range(i)
+        ],
+    )
+    cognatesets = list(util.cache_table(ds, "CognatesetTable").values())
+    judgements = util.cache_table(ds, "CognateTable").values()
+    return cognatesets, judgements
+
+
+def test_sort_cognatesets_1(tiny_dataset):
+    cognatesets, judgements = tiny_dataset
+    # Without sort-order arguments, sort_cognatesets changes nothing.
+    sort_cognatesets(cognatesets, judgements, size=False)
+    assert [s["id"] for s in cognatesets] == ["s1", "s2", "s3", "s4", "s5"]
+
+
+def test_sort_cognatesets_2(tiny_dataset):
+    cognatesets, judgements = tiny_dataset
+    # Order by group keeps the order within the group the same.
+    sort_cognatesets(cognatesets, judgements, "source", size=False)
+    assert [s["id"] for s in cognatesets] == ["s4", "s5", "s1", "s2", "s3"]
+
+
+def test_sort_cognatesets_3(tiny_dataset):
+    cognatesets, judgements = tiny_dataset
+    # Order by size does just that (biggest first)
+    sort_cognatesets(cognatesets, judgements, size=True)
+    assert [s["id"] for s in cognatesets] == ["s5", "s4", "s3", "s2", "s1"]
+
+
+def test_sort_cognatesets_4(tiny_dataset):
+    cognatesets, judgements = tiny_dataset
+    # Order by group and size has priority on the group
+    sort_cognatesets(cognatesets, judgements, "description", size=True)
+    assert [s["id"] for s in cognatesets] == ["s3", "s2", "s1", "s5", "s4"]
 
 
 def test_adding_singleton_cognatesets(caplog):
