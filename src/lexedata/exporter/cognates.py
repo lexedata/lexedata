@@ -435,7 +435,7 @@ def sort_cognatesets(
         cogsets.sort(key=lambda c: c[sort_column])
 
 
-if __name__ == "__main__":
+def parser():
     parser = cli.parser(description="Create an Excel cognate view from a CLDF dataset")
     parser.add_argument(
         "excel",
@@ -483,8 +483,11 @@ if __name__ == "__main__":
         action="store_true",
         help="If adding singletons: Instead of creating singleton cognate sets only for forms that are not cognate coded at all, make sure every contiguous set of segments in every form is in a cognate set.",
     )
+    return parser
 
-    args = parser.parse_args()
+
+if __name__ == "__main__":
+    args = parser().parse_args()
     logger = cli.setup_logging(args)
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
