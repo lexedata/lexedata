@@ -136,7 +136,10 @@ This will add a #parameterReference column to your CognatesetTable containing th
 
 #### Adding trivial cognate sets (add_singleton_cognatesets)
 
-Depending on your workflow, you may not have assigned forms to trivial (singleton) cognate sets, where they would be the only members. This could also be true for loanwords that are products of separate borrowing events, even if they have the same source. You can automatically assign any form that is not already in a cognate set to a trivial cognate set of one member (a singleton cognate set) using the command  `python -m lexedata.edit.add_singleton_cognate_sets`. 
+Depending on your workflow, you may not have assigned forms to trivial (singleton) cognate sets, where they would be the only members. This could also be true for loanwords that are products of separate borrowing events, even if they have the same source. You can automatically assign any form that is not already in a cognate set to a trivial cognate set of one member (a singleton cognate set) using the command 
+```
+python -m lexedata.edit.add_singleton_cognate_sets
+```
 
 
 ## Reporting and checking data integrity (lexedata.report)
@@ -202,7 +205,7 @@ In order to export an xlsx cognate matrix, you should type
 python -m lexedata.exporter.cognates FILENAME.xlsx
 ```
 The cognate matrix will be written to an excel file with the specified name.
-There are optional arguments to sort the languages and the cognate sets in this table, as well as to assign any forms not currently in a cognate set to automatic singleton cognate sets (see command help for more information; see also: [lexedata.edit.add_singleton_cognatesets](#adding-trivial-cognate-sets-add_singleton_cognatesets)). 
+There are optional arguments to sort the languages and the cognate sets in this table, as well as to assign any forms not currently in a cognate set to automatic singleton cognate sets (see command help for more information; see also: [lexedata.edit.add_singleton_cognatesets](#adding-trivial-cognate-sets-add-singleton-cognatesets)). 
 
 You can open and edit the cognate matrix in the spreadsheet editor of your
 choice. You can update cognate sets, cognate judgements and associated metadata
