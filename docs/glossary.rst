@@ -57,12 +57,12 @@ Glossary
 
   Missing form
     A missing form is a special type of null (non-existent) form representing explicit missing data in the dataset and it has an empty form field (``""``).
-    There are three types of null forms in a dataset:
+    There are in total three types of null forms that can be represented a dataset:
 
-    * not-entered forms: These forms do not have any representation in the dataset and correspond to data not yet retrieved or searched for in sources. If no form corresponds to a concept, then it leads to a missing data coding (`?`) in matrices for phylogenetic analyses. 
-    * Missing forms: These forms have been searched for and are unknown. They also lead to a missing data coding (`?`) in matrices for phylogenetic analyses.
+    * missing forms: These forms have been searched for and are unknown according to a sources. They are represented as form row with an empty #form column in the data set.
+    * not-entered forms: These forms do not have any representation in the dataset and correspond to data not yet retrieved or searched for in sources.
     * :term:`NA form`-s, with form ``-``
-
+      
   Multistate coding
     One of three :term:`phylogenetic coding method`'s implemented in lexedata. In this coding method, each :term:`primary concept` corresponds to a multistate character, with each within-concept cognate set corresponding to a different state. It is available for datasets with either within- or cross-concept cognate sets.
 
