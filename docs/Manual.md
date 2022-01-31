@@ -45,12 +45,18 @@ The matrix format importer is highly customizable, since many different types of
 For an example of the special key in the metadata file, see the [smallmawetiguarani dataset](/test/data/cldf/smallmawetiguarani). You can customize the two cell parsers (CellParser and CognateCellParser), as well as the conditions for a matching form between the two spreadsheets (check_for_match). 
 
 In order to import only a comparative wordlist file (without cognatesets), type
-```python -m lexedata.importer.excel_matrix EXCEL```. If you want to import cognate sets from a separate spreadsheet, you can use the optional argument `--cogsets COGSET_EXCEL`. 
+```
+python -m lexedata.importer.excel_matrix EXCEL
+```
+If you want to import cognate sets from a separate spreadsheet, you can use the optional argument `--cogsets COGSET_EXCEL`. 
 
 #### Importing a lexical dataset using the "interleaved" format
 In the interleaved format, even rows contain forms, while odd rows contain the associated cognate codes. The cognate codes are assumed to be in the same order as the forms and a cognate code is expected for every form (even if this results in a cognate code being present in a cell multiple times). In case your excel file contains question marks to indicate missing data, the importing script will ignore them. The interleaved importer is the only importing script in lexedata that does not require a metadata (.json) file. However, it also cannot perform any automatic treatment of information within the cells, apart from basic separation (using commas and semi-colons as separators). For example, if forms in the xlsx file are separated by ; and then some of the forms are followed by parentheses containing translations, each cell is going to be parsed according to the ; and everything in between will be parsed as the form (including the parentheses). You can edit further this dataset to separate the additional kinds of information by editing the forms.csv file that will be created. Note that any excel comments present in your file will be ignored. The resulting forms.csv file contains an empty comment field by default.
 In order to import a dataset of the "interleaved" format you should use the command
-```python -m lexedata.importer.excel_interleaved ``` followed by the name of the excel file containing the dataset. Only a forms.csv will be created, which contains a Cognateset_ID column with cognate codes. This format is similar to the LingPy format. Note that for any further use of this CLDF dataset with lexedata, you need to create a metadata file (see [how to add a metadata file](#how-to-add-a-metadata-file-add_metadata)).
+```
+python -m lexedata.importer.excel_interleaved FILENAME.xlxs
+```
+where `FILENAME.xlsx` should be replaced with the name of the excel file containing the dataset. Only a `forms.csv` will be created, which contains a `Cognateset_ID` column with the cognate codes. This format is similar to the LingPy format. Note that for any further use of this CLDF dataset with lexedata, you need to [add a metadata file](#how-to-add-a-metadata-file-add_metadata).
 
 ### Adding a new language/new data to an existing lexical dataset
 The importation script using the long format can be used to add new data to an existing dataset, as in the case of adding an new variety or further lexical items for an existing variety (see [importing a lexical dataset using the "long" format](#importing-a-lexical-dataset-using-the-long-format)). 
@@ -83,9 +89,16 @@ When developing and editing a comparative dataset for historical linguistics, yo
 In a CLDF dataset, all IDs need to be unique and be either numeric or restricted alphanumeric (i.e. containing only leters, numbers and underscores). Lexedata command `python -m lexedata.edit.simplify_ids` verifies that all IDs in the dataset are valid and changes them appropriately if necessary. You can also choose to make your IDs transparent (option `--transparent`) so that you can easily tell what they correspond to. With transparent IDs, instead of a numeric ID, a form will have an ID consisting of the languageID and the parameterID: e.g. the word "main" in French would have the ID stan1290_hand.
 
 #### How to replace or merge IDs (replace_id and replace_id_column)
-Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, etc), e.g. if accidentally you have used the same ID twice. Lexedata can replace the id of an object and propagate this change in all tables where it is used as a foreign key (i.e. to link back to that object). The relevant command is ```python -m lexedata.edit.replace_id TABLE ORIGINAL_ID REPLACEMENT_ID```. If you intend to merge two IDs, e.g. if you decide to conflate two concepts because they are not distinct in the languages under study, or two doculects that you want to consider as one. you need to use the optional argument `--merge`. Keep in mind that lexedata cannot automatically merge two or more rows in the table in question, so if for example you merged two Language IDs, then you will have two rows in languages.csv with identical IDs. This will cause a warning if you try to validate your dataset (see [CLDF validate](#cldf-validate)). If you want to completely merge the rows, you need to do this by opening the corresponding csv in a spreadsheet or text editor. 
+Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, etc), e.g. if accidentally you have used the same ID twice. Lexedata can replace the id of an object and propagate this change in all tables where it is used as a foreign key (i.e. to link back to that object). The relevant command is
+```
+python -m lexedata.edit.replace_id TABLE ORIGINAL_ID REPLACEMENT_ID
+```
+If you intend to merge two IDs, e.g. if you decide to conflate two concepts because they are not distinct in the languages under study, or two doculects that you want to consider as one. you need to use the optional argument `--merge`. Keep in mind that lexedata cannot automatically merge two or more rows in the table in question, so if for example you merged two Language IDs, then you will have two rows in languages.csv with identical IDs. This will cause a warning if you try to validate your dataset (see [CLDF validate](#cldf-validate)). If you want to completely merge the rows, you need to do this by opening the corresponding csv in a spreadsheet or text editor. 
 
-In case you want to replace an entire ID column of a table, then you need to add the new intended ID column to the table and use the command ```python -m lexedata.edit.replace_id_column TABLE REPLACEMENT```.
+In case you want to replace an entire ID column of a table, then you need to add the new intended ID column to the table and use the command
+```
+python -m lexedata.edit.replace_id_column TABLE REPLACEMENT
+```
 
 
 ### Operations on FormTable
@@ -94,13 +107,20 @@ In case you want to replace an entire ID column of a table, then you need to add
 In large datasets, there may be identical forms within the same language, corresponding to homophonous or polysemous words. You can use `python -m lexedata.report.homophones` to detect identical forms present in the dataset (see [detect potential homophonous or polysemous forms](#detect-potential-homophonous-or-polysemous-forms)). Once you decide which forms are in fact polysemous, you can use  `python -m lexedata.edit.merge_homophones MERGE_FILE`  in order to merge them into one form with multiple meanings. The MERGE_FILE contains the forms to be merged, in the same format as the output report from the `lexedata.report.homophones` command. There are multiple merge functions available for the different metadata associated with forms (e.g. for comments the default merge function is concatenate, while for sources it is union). If you need to modify the default behavior of the command you can use the optional argument `--merge COLUMN:MERGER`, where COLUMN is the name of the column in your dataset and MERGER is the merge function you want to use (from a list of functions that can be found in the help).
 
 #### Segment forms (add_segments)
-In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms included in your dataset. Lexedata can do this automatically using [CLTS](http://clts.clld.org). To use this functionality type: ```python -m lexedata.edit.add_segments TRANCRIPTION_COLUMN```, where transcription column refers to the column that contains the forms to be segmented (the #form column by default). A column "Segments" will be added to your FormTable. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review. You may choose to apply these corrections to the form column as well, using the switch `--replace_form`.
+In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms included in your dataset. Lexedata can do this automatically using [CLTS](http://clts.clld.org). To use this functionality type
+```
+python -m lexedata.edit.add_segments TRANCRIPTION_COLUMN
+```
+where transcription column refers to the column that contains the forms to be segmented (the #form column by default). A column "Segments" will be added to your FormTable. The segmenter makes some educated guesses and automatic corrections regarding segments (e.g. obviously wrong placed tiebars for affricates, non-IPA stress symbols, etc). All these corrections are listed in the segmenter's report for you to review. You may choose to apply these corrections to the form column as well, using the switch `--replace_form`.
 
 
 ### Operations on ParameterTable (concepts)
 
 #### Linking concepts to Concepticon (add_concepticon)
-Lexedata can automatically link the concepts present in a dataset with concept sets in the [Concepticon](https://concepticon.clld.org/). The relevant command is ```python -m lexedata.edit.add_concepticon```.
+Lexedata can automatically link the concepts present in a dataset with concept sets in the [Concepticon](https://concepticon.clld.org/). The relevant command is
+```
+python -m lexedata.edit.add_concepticon
+```
 Your ParameterTable will now have a new column: Concepticon ID, with the corresponding ID of a concept set in Concepticon. We recommend that you manually inspect these links for errors. In order to facilitate this task, you can also add columns for the concept set name (`--add_concept_set_name`) and the concepticon definition (`--add_definitions`). Finally, if your ParameterTable contains a Status Column (see [workflow and tracking aid](#workflow-and-tracking-aid-add_status_column)), any links to the Concepticon will be tagged as automatic, or you can define a custom message using `--status_update "STATUS UPDATE"`.
 
 ### Operations on CognateTable (judgements) and CognatesetTable
@@ -142,7 +162,9 @@ The `filter` command gives you the possibility to filter any table of your datas
 ### Detect potential homophonous or polysemous forms
 In large datasets, you may have identical forms associated with different concepts. This could be the case because there are homophonous, unrelated forms, or because there is in fact one polysemous form. Lexedata can help you detect potential homophonous or polysemous forms by using the command
 
-```python -m lexedata.report.homophones```
+```
+python -m lexedata.report.homophones
+```
 The output of this command is a list of all groups of identical forms in the data and their associated concepts, along with the information if the associated concepts are connected in CLICS or not (if your concepts are linked to Concepticon, see [linking concepts to Concepticon](#linking-concepts-to-concepticon-add_concepticon)). You can choose to merge the polysemous forms, so you have one form associated to multiple concepts. In order to perform this operation, edit the output file of `lexedata.report.homophones`, so that only the groups of forms that are to be merged remain and then use `lexedata.edit.merge_homophones` (see [merge polysemous forms](#merge-polysemous-forms-merge_homophones)).
 
 ### Non-concatenative morphology
