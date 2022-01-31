@@ -511,7 +511,7 @@ def test_form_exists(single_import_parameters, caplog):
             concept_column=concept_name,
         )
     assert re.search(
-        r"two.*e\.ta\.'kɾã.*was already in data set",
+        r"two.*e\.ta\.'kɾã.*was already in dataset",
         caplog.text,
     )
 

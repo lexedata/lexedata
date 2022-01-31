@@ -808,7 +808,7 @@ def load_dataset(
         EP.parse_cells(lexicon_wb, status_update=status_update)
         EP.db.write_dataset_from_cache()
 
-    # load cognate data set if provided by metadata
+    # load cognate dataset if provided by metadata
     if cognate_lexicon:
         if dialect:
             try:

@@ -1,4 +1,3 @@
-import re
 import logging
 from pathlib import Path
 
@@ -10,6 +9,7 @@ from helper_functions import (
     copy_to_temp_no_bib,
     copy_to_temp_bad_bib,
 )
+from lexedata import util
 from lexedata.exporter.matrix import MatrixExcelWriter
 
 
@@ -42,14 +42,26 @@ except ImportError:
 
 
 def test_toexcel_runs(cldf_wordlist, working_and_nonworking_bibfile):
-    filled_cldf_wordlist = working_and_nonworking_bibfile(cldf_wordlist)
-    writer = MatrixExcelWriter(
-        dataset=filled_cldf_wordlist[0],
-        database_url=str(filled_cldf_wordlist[1]),
+    dataset, filename = working_and_nonworking_bibfile(cldf_wordlist)
+    E = MatrixExcelWriter(
+        dataset=dataset,
+        database_url=str(filename),
     )
-    writer.create_excel()
+    forms = util.cache_table(dataset)
+    languages = sorted(
+        util.cache_table(dataset, "LanguageTable").values(), key=lambda x: x["name"]
+    )
+    judgements = [
+        {"formReference": f["id"], "cognatesetReference": parameter}
+        for f in forms.values()
+        for parameter in util.ensure_list(f["parameterReference"])
+    ]
+    parameters = util.cache_table(dataset, "ParameterTable").values()
+    E.create_excel(
+        rows=parameters, judgements=judgements, forms=forms, languages=languages
+    )
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
-    writer.wb.save(filename=out_filename)
+    E.wb.save(filename=out_filename)
 
 
 def test_cell_comments_export():
@@ -59,8 +71,19 @@ def test_cell_comments_export():
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
 
     E = MatrixExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
-    E.set_header()
-    E.create_excel(size_sort=False, language_order="Name")
+    forms = util.cache_table(dataset)
+    languages = sorted(
+        util.cache_table(dataset, "LanguageTable").values(), key=lambda x: x["name"]
+    )
+    judgements = [
+        {"formReference": f["id"], "cognatesetReference": parameter}
+        for f in forms.values()
+        for parameter in util.ensure_list(f["parameterReference"])
+    ]
+    parameters = util.cache_table(dataset, "ParameterTable").values()
+    E.create_excel(
+        rows=parameters, judgements=judgements, forms=forms, languages=languages
+    )
 
     for col in E.ws.iter_cols():
         pass
@@ -73,13 +96,28 @@ def test_cell_comments_export():
 
 
 def test_toexcel_filtered(cldf_wordlist, working_and_nonworking_bibfile, caplog):
-    filled_cldf_wordlist = working_and_nonworking_bibfile(cldf_wordlist)
+    dataset, url = working_and_nonworking_bibfile(cldf_wordlist)
     writer = MatrixExcelWriter(
-        dataset=filled_cldf_wordlist[0],
-        database_url=str(filled_cldf_wordlist[1]),
+        dataset=dataset,
+        database_url=str(url),
     )
+    E = MatrixExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
+    forms = util.cache_table(dataset)
+    languages = sorted(
+        util.cache_table(dataset, "LanguageTable").values(), key=lambda x: x["name"]
+    )
+    judgements = [
+        {"formReference": f["id"], "cognatesetReference": parameter}
+        for f in forms.values()
+        for parameter in util.ensure_list(f["parameterReference"])
+    ]
+    parameters = [
+        c
+        for n, c in util.cache_table(dataset, "ParameterTable").items()
+        if n == "Woman"
+    ]
     with caplog.at_level(logging.WARNING):
-        writer.create_excel(rows=["Woman"])
-    assert (len(list(writer.ws.iter_rows())) == 2) or (
-        re.search("entries {'Woman'}", caplog.text)
-    )
+        E.create_excel(
+            rows=parameters, judgements=judgements, forms=forms, languages=languages
+        )
+    assert len(list(writer.ws.iter_rows())) in {0, 2}

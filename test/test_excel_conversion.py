@@ -105,7 +105,13 @@ def test_toexcel_runs(cldf_wordlist, working_and_nonworking_bibfile):
         dataset=filled_cldf_wordlist[0],
         database_url=str(filled_cldf_wordlist[1]),
     )
-    writer.create_excel()
+    forms = util.cache_table(filled_cldf_wordlist[0])
+    languages = util.cache_table(filled_cldf_wordlist[0], "LanguageTable").values()
+    judgements = util.cache_table(filled_cldf_wordlist[0], "CognateTable").values()
+    cogsets = util.cache_table(filled_cldf_wordlist[0], "CognatesetTable").values()
+    writer.create_excel(
+        rows=cogsets, judgements=judgements, forms=forms, languages=languages
+    )
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
     writer.wb.save(filename=out_filename)
 
@@ -120,7 +126,13 @@ def test_roundtrip(cldf_wordlist, working_and_nonworking_bibfile):
         for row in dataset["CognateTable"].iterdicts()
     }
     writer = ExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
-    writer.create_excel()
+    forms = util.cache_table(filled_cldf_wordlist[0])
+    languages = util.cache_table(filled_cldf_wordlist[0], "LanguageTable").values()
+    judgements = util.cache_table(filled_cldf_wordlist[0], "CognateTable").values()
+    cogsets = util.cache_table(filled_cldf_wordlist[0], "CognatesetTable").values()
+    writer.create_excel(
+        rows=cogsets, judgements=judgements, forms=forms, languages=languages
+    )
 
     # Reset the existing cognatesets and cognate judgements, to avoid
     # interference with the the data in the Excel file
@@ -158,7 +170,13 @@ def test_roundtrip_separator_column(cldf_wordlist, working_and_nonworking_bibfil
 
     writer = ExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
-    writer.create_excel()
+    forms = util.cache_table(dataset)
+    languages = util.cache_table(dataset, "LanguageTable").values()
+    judgements = util.cache_table(dataset, "CognateTable").values()
+    cogsets = util.cache_table(dataset, "CognatesetTable").values()
+    writer.create_excel(
+        rows=cogsets, judgements=judgements, forms=forms, languages=languages
+    )
 
     import_cognates_from_excel(writer.ws, dataset)
 
@@ -242,11 +260,18 @@ def test_cell_comments_export():
     )
     _, out_filename = tempfile.mkstemp(".xlsx", "cognates")
 
-    E = ExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
-    E.set_header()
-    E.create_excel(size_sort=False, language_order="Name")
+    writer = ExcelWriter(dataset, database_url="https://example.org/lexicon/{:}")
+    forms = util.cache_table(dataset)
+    languages = sorted(
+        util.cache_table(dataset, "LanguageTable").values(), key=lambda x: x["name"]
+    )
+    judgements = util.cache_table(dataset, "CognateTable").values()
+    cogsets = util.cache_table(dataset, "CognatesetTable").values()
+    writer.create_excel(
+        rows=cogsets, judgements=judgements, forms=forms, languages=languages
+    )
 
-    for col in E.ws.iter_cols():
+    for col in writer.ws.iter_cols():
         pass
     assert (
         col[-1].comment and col[-1].comment.content

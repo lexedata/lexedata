@@ -546,7 +546,7 @@ def parse_homophones_report(
     )
     target_id: t.Optional[types.Form_ID] = None
     for line in report:
-        match = re.match(r"\s+?(\w+?) .*", line)
+        match = re.match(r"\s+?(\w+?)( \(.*\))?$", line)
         if match:
             id = match.group(1)
             if target_id is None:

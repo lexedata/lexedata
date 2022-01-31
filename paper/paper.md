@@ -1,5 +1,5 @@
 ---
-title: 'Lexedata: A Python toolbox to edit CLDF lexical data sets'
+title: 'Lexedata: A Python toolbox to edit CLDF lexical datasets'
 tags:
   - Python
   - linguistics
@@ -38,7 +38,7 @@ in JSON format.
 
 # Statement of Need
 Maintaining the integrity as relational database is difficult using general CSV
-editing tools. This holds in particular for the usual data set size with
+editing tools. This holds in particular for the usual dataset size with
 hundreds of languages and concepts, and formats unfamiliar to most linguists.
 
 ![Overview over the functionality in Lexedata.\label{fig:structure}](structure.svg)

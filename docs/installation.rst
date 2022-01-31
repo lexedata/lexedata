@@ -1,5 +1,5 @@
-Lexedata installation instructions
-==================================
+Installation
+============
 
 1. In order to install and use Lexedata you need to have Python 3.8 (or newer) installed.
 
@@ -21,7 +21,16 @@ order to exit Python.
 In your terminal window type ``pip install lexedata``. 
 This will install lexedata and all its dependencies on your computer. Now you should be ready to use lexedata!
 
+3. Install CLDF catalogs
+
+Lexedata uses CLDF catalogs, `Glottolog <http://glottolog.org>`_ for languages,
+`CLTS <http://clts.clld.org>`_ for phonetic transcription symbols, and
+`Concepticon <http://concepticon.clld.org>`_ for concepts, in some of its
+scripts. You can install them using ``cldfbench catconfig``, it will prompt you
+– with sensible defaults – about the installation process and download and
+install those catalogs.
+
 Updating lexedata and Catalogs
 ------------------------------
 
-You can update lexedata when there is a new release by typing ``pip install --upgrade lexedata``. This will also update all the packages that lexedata is dependent on. However, lexedata is also using catalogs, such as Glottolog, CLTS, and Concepticon, which are not automatically updated. It is good to update those once in a while to get the most up-to-date information, by typing ``cldfbench catupdate``.
+You can update lexedata when there is a new release by typing ``pip install --upgrade lexedata``. This will also update all the packages that lexedata is dependent on. However, the CLDF catalogs, (Glottolog, CLTS, and Concepticon) are not automatically updated. It is good to update those once in a while to get the most up-to-date information, by typing ``cldfbench catupdate``.

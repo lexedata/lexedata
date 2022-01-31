@@ -68,7 +68,7 @@ def import_data_from_sheet(
 ) -> t.Iterable[Form]:
     row_iter = sheet.iter_rows()
 
-    # TODO?: compare header of this sheet to format of given data set process
+    # TODO?: compare header of this sheet to format of given dataset process
     # row. Maybe unnecessary. In any case, do not complain about the unused
     # variable.
     header = next(row_iter)  # noqa: F841
@@ -228,7 +228,7 @@ def read_single_excel_sheet(
         if form_candidates:
             new_concept_added = False
             for form_id in form_candidates:
-                logger.info(f"Form {form[c_f_value]} was already in data set.")
+                logger.info(f"Form {form[c_f_value]} was already in dataset.")
 
                 if db.dataset["FormTable", c_f_concept].separator:
                     for new_concept in form[c_f_concept]:
@@ -289,7 +289,7 @@ def add_single_languages(
 ) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
-    # initiate data set from meta data or csv depending on command line arguments
+    # initiate dataset from meta data or csv depending on command line arguments
     if metadata:
         if metadata.name == "forms.csv":
             dataset = pycldf.Dataset.from_data(metadata)

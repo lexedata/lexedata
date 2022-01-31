@@ -10,10 +10,7 @@ from lexedata import util
 from lexedata import types
 from lexedata import cli
 
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
+from typing import Literal
 
 
 # Some type aliases, which should probably be moved elsewhere or made obsolete.
@@ -342,6 +339,12 @@ class AbsenceHeuristic(enum.Enum):
     HALFPRIMARYCONCEPTS = 1
 
 
+class CodingProcedure(enum.Enum):
+    ROOTPRESENCE = 0
+    ROOTMEANING = 1
+    MULTISTATE = 2
+
+
 # TODO: Maybe this would make sense tied closer to AbsenceHeuristic?
 def apply_heuristics(
     dataset: types.Wordlist,
@@ -650,8 +653,44 @@ def raw_multistate_alignment(alignment, long_sep: str = ","):
 
 
 def format_nexus(
-    languages, sequences, n_symbols, n_characters, datatype, partitions=None
+    languages: t.Iterable[str],
+    sequences: t.Iterable[str],
+    n_symbols: int,
+    n_characters: int,
+    datatype: str,
+    partitions: t.Mapping[str, t.Iterable[int]] = None,
 ):
+    """Format a Nexus output with the sequences.
+
+    This function only formats and performs no further validity checks!
+
+    >>> print(format_nexus(
+    ...   ["l1", "l2"],
+    ...   ["0010", "0111"],
+    ...   2, 3,
+    ...   "binary",
+    ...   {"one": [1], "two": [2,3]}
+    ... )) # doctest: +NORMALIZE_WHITESPACE
+    #NEXUS
+    Begin Taxa;
+      Dimensions ntax=2;
+      TaxLabels l1 l2;
+    End;
+    Begin Characters;
+      Dimensions NChar=3;
+      Format Datatype=Restriction Missing=? Gap=- Symbols="0 1" ;
+      Matrix
+        [The first column is constant zero, for programs with ascertainment correction]
+        l1  0010
+        l2  0111
+      ;
+    End;
+    Begin Sets;
+      CharSet one=1;
+      CharSet two=2 3;
+    End;
+
+    """
     max_length = max([len(str(lang)) for lang in languages])
 
     sequences = [
@@ -779,22 +818,11 @@ def add_partitions(data_object: ET.Element, partitions):
         )
 
 
-if __name__ == "__main__":
-    import argparse
-
+def parser():
+    """Construct the CLI argument parser for this script."""
     parser = cli.parser(
         description="Export a CLDF dataset to a coded character matrix to be used as input for phylogenetic analyses."
     )
-
-    def enum_from_lower(enum: t.Type[enum.Enum]):
-        class FromLower(argparse.Action):
-            def __call__(self, parser, namespace, values, option_string=None, **kwargs):
-                enum_item = {
-                    name.lower(): object for name, object in enum.__members__.items()
-                }[values.lower()]
-                setattr(namespace, self.dest, enum_item)
-
-        return FromLower
 
     parser.add_argument(
         "--format",
@@ -803,7 +831,7 @@ if __name__ == "__main__":
         help="""Output format: `raw` for one language name per row, followed by spaces and
             the character state vector; `nexus` for a complete Nexus file; `beast`
             for the <data> tag to copy to a BEAST file; `csv` for a CSV
-            with languages in rows and characters in columns.""",
+            with languages in rows and characters in columns. (default: raw)""",
     )
     parser.add_argument(
         "-b",
@@ -836,21 +864,21 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--coding",
-        choices=("rootmeaning", "rootpresence", "multistate"),
-        default="rootmeaning",
-        help="""Binarization method: In the `rootmeaning` coding method, every character
+        action=cli.enum_from_lower(CodingProcedure),
+        default="RootMeaning",
+        help="""Coding method: In the `RootMeaning` coding method, every character
         describes the presence or absence of a particular root morpheme or
         cognate class in the word(s) for a given meaning; In the
-        `rootpresence`, every character describes (up to the limitations of the
+        `RootPresence`, every character describes (up to the limitations of the
         data, which might not contain marginal forms) the presence or absence
         of a root (morpheme) in the language, independet of which meaning that
-        root is attested in; And in the `multistate` coding, each character
+        root is attested in; And in the `Multistate` coding, each character
         describes, possibly including uniform ambiguities, the cognate class of
-        a meaning.""",
+        a meaning. (default: RootMeaning)""",
     )
     parser.add_argument(
         "--absence-heuristic",
-        action=enum_from_lower(AbsenceHeuristic),
+        action=cli.enum_from_lower(AbsenceHeuristic),
         help="""In case of --coding=rootpresence, which heuristic should be used for the
         coding of absences? The default depends on whether the dataset contains
         a #parameterReference column in its CognatesetTable: If there is one,
@@ -864,9 +892,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--stats-file",
         type=Path,
-        help="Path to a TeX file that will be filled with LaTeX command definitions for some summary statistics.",
+        help="Path to a TeX file that will be filled with LaTeX command definitions for some summary statistics. (default: Don't write a stats file)",
     )
-    args = parser.parse_args()
+    return parser
+
+
+if __name__ == "__main__":
+    args = parser().parse_args()
     logger = cli.setup_logging(args)
     # Step 1: Load the raw data.
     dataset = pycldf.Dataset.from_metadata(args.metadata)
@@ -884,7 +916,7 @@ if __name__ == "__main__":
     n_symbols, datatype = 2, "binary"
     partitions = None
     alignment: t.Mapping[Language_ID, str]
-    if args.coding == "rootpresence":
+    if args.coding == CodingProcedure.ROOTPRESENCE:
         relevant_concepts = apply_heuristics(
             dataset, args.absence_heuristic, primary_concepts=args.concepts
         )
@@ -902,7 +934,7 @@ if __name__ == "__main__":
             for key, value in binal.items()
         }
         sequences = raw_binary_alignment(alignment)
-    elif args.coding == "rootmeaning":
+    elif args.coding == CodingProcedure.ROOTMEANING:
         binal, concept_cognateset_indices = root_meaning_code(ds)
         n_characters = len(next(iter(binal.values())))
         exclude = {
@@ -920,7 +952,7 @@ if __name__ == "__main__":
             concept: cognatesets.values()
             for concept, cognatesets in concept_cognateset_indices.items()
         }
-    elif args.coding == "multistate":
+    elif args.coding == CodingProcedure.MULTISTATE:
         multial, concept_indices = multistate_code(ds)
         n_characters = len(next(iter(multial.values())))
         sequences, n_symbols = raw_multistate_alignment(multial, long_sep=",")

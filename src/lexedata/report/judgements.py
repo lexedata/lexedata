@@ -210,7 +210,9 @@ def check_cognate_table(
             # from? TODO: To be more robust when segments are separated into
             # morphemes, not individual segments, compare alignment and
             # segments space-separated.
-            without_gaps = " ".join([c for c in judgement[c_alignment] if c != "-"])
+            without_gaps = " ".join(
+                [c or "" for c in judgement[c_alignment] if c != "-"]
+            )
             actual_segments = " ".join(form_segments[i] for i in included_segments)
             if without_gaps.strip() != actual_segments.strip():
                 if unicodedata.normalize(

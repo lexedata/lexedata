@@ -6,8 +6,8 @@ This tutorial will take you on a tour through the command line functionality of
 the lexedata package. We will start with a small lexical dataset in an
 interleaved tabular format, where each column corresponds to a language and each
 pair of rows to a concept, with preliminary cognate codes. We will take you
-through turning the data set into CLDF, editing cognate judgements, and
-exporting the data set as phylogenetic alignment.
+through turning the dataset into CLDF, editing cognate judgements, and
+exporting the dataset as phylogenetic alignment.
 
 (To prevent this tutorial from becoming obsolete, our continuous integration
 testing system ‘follows’ this tutorial when we update the software. So if it
@@ -40,7 +40,7 @@ start terminal and execute ::
     $ cd bantu
 
 For this tutorial, we will be using lexical data from the Bantu family,
-collected by Hilde Gunnink. The data set is a subset of an earlier version 
+collected by Hilde Gunnink. The dataset is a subset of an earlier version 
 (deliberately, so this tour can show some steps in the cleaning process) of her lexical dataset.
 The data is stored in an Excel file which you can download from
 the lexedata repository ::
@@ -178,7 +178,7 @@ origin of the data in a well-structured way) and for phonemic segmentation,
 which is useful in particular when working with sound correspondences on a
 segment-by-segment level. We will add segments in :ref:`a future section <segments>`.
 
-With the new metadata file and the new columns, the data set now looks like this::
+With the new metadata file and the new columns, the dataset now looks like this::
 
     $ ls
     Wordlist-metadata.json
@@ -209,7 +209,7 @@ With the new metadata file and the new columns, the data set now looks like this
     duala_black,Duala,black,wínda,,21,,
 
 The ``cldf validate`` script only outputs problems, so if it prints out nothing,
-it means that the data set conforms to the CLDF standard! That's a good starting
+it means that the dataset conforms to the CLDF standard! That's a good starting
 point to create a new commit. ::
 
     $ git add Wordlist-metadata.json
@@ -529,7 +529,7 @@ and proceed to add the cognateset table. ::
     $ git commit -am "Add cognate and cognateset tables"
     [...]
 
-Create a consistent data set
+Create a consistent dataset
 ----------------------------
 Now all the external properties of a form can be annotated with explicit
 metadata in their own table files, for example for the languages:
@@ -696,7 +696,7 @@ nothing to complain about: Our dataset is not only valid CLDF, but also
 compatible with the general assumptions of lexedata.
 
 ********************
-Editing the data set
+Editing the dataset
 ********************
 
 We are about to start editing. In the process, we may introduce new issues into
@@ -867,7 +867,7 @@ polysemous forms connected to multiple concepts. ::
 Improve Cognatesets
 ===================
 
-Now the data set is in a very good shape. We can now start with the historical
+Now the dataset is in a very good shape. We can now start with the historical
 linguistics, editing cognatesets and alignments.
 
 Merge cognatesets
@@ -880,27 +880,32 @@ boundaries have been eroded or when a language has non-concatenative morphemes,
 which is the case that gives the name to our script reporting these. ::
 
     $ python -m lexedata.report.nonconcatenative_morphemes > overlapping_cogsets
-    INFO:lexedata:Caching table FormTable
-    100%|██████████| 1587/1587 [00:00<00:00, [...]it/s]
-    WARNING:lexedata:In judgement ntomba_skin, segments 1:6 are associated with cognate set skin_27, but were already in bark_22.
-    WARNING:lexedata:In judgement ngombe_many, segments 1:4 are associated with cognate set many_12, but were already in big_1.
-    WARNING:lexedata:In judgement bushoong_walk, segments 1:4 are associated with cognate set walk_1, but were already in go_to_1.
-    WARNING:lexedata:In judgement lega_walk, segments 1:4 are associated with cognate set walk_1, but were already in go_to_2.
-    WARNING:lexedata:In judgement kikuyu_white, segments 1:3 are associated with cognate set white_2, but were already in new_3.
-    $ cat overlapping_cogsets
+    [...]
+    WARNING:lexedata:In form ntomba_skin, segments are associated with multiple cognate sets.
+    INFO:lexedata:In form ntomba_skin, segments 1:6 (l o p o h o) are in both cognate sets bark_22 and skin_27.
+    WARNING:lexedata:In form ngombe_big, segments are associated with multiple cognate sets.
+    INFO:lexedata:In form ngombe_big, segments 1:4 (n ɛ́ n ɛ) are in both cognate sets big_1 and many_12.
+    WARNING:lexedata:In form bushoong_go_to, segments are associated with multiple cognate sets.
+    INFO:lexedata:In form bushoong_go_to, segments 1:4 (y ɛ ɛ n) are in both cognate sets go_to_1 and walk_1.
+    WARNING:lexedata:In form lega_go_to, segments are associated with multiple cognate sets.
+    INFO:lexedata:In form lega_go_to, segments 1:4 (ɛ n d a) are in both cognate sets go_to_2 and walk_1.
+    WARNING:lexedata:In form kikuyu_new, segments are associated with multiple cognate sets.
+    INFO:lexedata:In form kikuyu_new, segments 1:3 (e r ũ) are in both cognate sets new_3 and white_2.
+    $ cat overlapping_cogsets # doctest: +NORMALIZE_WHITESPACE
     Cluster of overlapping cognate sets:
-    	 bark_22 (['lopoho', 'émpósù', 'yooʃ', 'ləpwi'])
-    	 skin_27 (['lopoho', 'liposo', 'ləpwí'])
+    	bark_22
+    	skin_27
     Cluster of overlapping cognate sets:
-    	 big_1 (['éndɛ̃nɛ̀', 'nɛ́nɛ́', 'nɛ́nɛ', 'nɛ́n', 'neni', 'bùnɛ̂nɛ̀', 'nɛnɛ', 'nene', 'nene', 'nini', 'nene'])
-    	 many_12 (['nɛ́nɛ'])
+    	big_1
+    	many_12
     Cluster of overlapping cognate sets:
-    	 go_to_1 (['ha', 'yɛɛn', 'ɛɛndə', 'ja', 'ya'])
-    	 go_to_2 (['kɛ', 'yenda', 'okɛ', 'ɛnda', 'enda', 'genda', 'genda'])
-    	 walk_1 (['kɛndɛ', 'yɛɛn', 'kweenda', 'yɛ̀ndɛ̀', 'okyán', 'ɛnda', 'yenda'])
+    	go_to_1
+    	go_to_2
+    	walk_1
     Cluster of overlapping cognate sets:
-    	 new_3 (['erũ'])
-    	 white_2 (['ɛ́lɔ', 'erũ', 'eru', 'era'])
+    	new_3
+    	white_2
+
 
 There are other ways to merge cognate sets, which we will see in a moment, but
 this kind of structured report is suitable for automatic merging, in the same
@@ -988,7 +993,7 @@ generated initially, we can use one of the reports::
     | î       |             1 |              |
 
 The reports fulfill different functions. Some, as you have seen, focus on issues
-with the internal correctness of the data set. Others, like the
+with the internal correctness of the dataset. Others, like the
 ``segment_inventories`` report above or :py:mod:`lexedata.report.coverage`, are
 useful for statistical summaries of the dataset. And a third group, such as the
 homophones report, generate output that can be used as input to other
@@ -1009,7 +1014,7 @@ Computer-assisted historical linguistics
 ****************************************
 
 We can now modify the cognate judgements. Lexedata currently supports two ways
-to do this, both work by exporting the lexical data set to an external format
+to do this, both work by exporting the lexical dataset to an external format
 more handy for editing, and then importing it back in.
 
 Cognate Excel
@@ -1029,7 +1034,7 @@ Edictor
 
 The second export-import loop lexedata implements exports to the TSV format used
 by `edictor <https://edictor.digling.org>`_, a JavaScript-based in-browser
-editor for lexical data sets. (Edictor runs purely inside your browser on your
+editor for lexical datasets. (Edictor runs purely inside your browser on your
 computer, there is no data transmission involved.)
 
 For this example, we will look more closely at the concepts of locomotion. We

@@ -1,5 +1,12 @@
 """Guess which Concepticon concepts the entries in the ParameterTable refer to.
 
+
+The full list of available gloss languages uses the ISO 693-1 two-letter codes
+and can be found on
+https://github.com/concepticon/concepticon-data/tree/master/mappings (or in the
+mappings/ folder of your local Concepticon catalog installation).
+
+
 Fill the Concepticon_ID (or generally, #concepticonReference) column of the
 dateset's ParameterTable with best guesses for Concepticon IDs, based on gloss
 columns in potentially different languages.
@@ -223,7 +230,7 @@ def create_concepticon_for_concepts(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description=__doc__.split("\n\n")[0], epilog=__doc__.split("\n\n", 1)[1]
+        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
     )
     parser.add_argument(
         "--overwrite",
@@ -249,7 +256,7 @@ if __name__ == "__main__":
         nargs="+",
         default=None,
         type=equal_separated,
-        help="Maps from column names to 2-letter language codes. For example, if your ParameterTable has a column 'GLOSS', which contains English glosses, and a colum 'PORTUGUESE' with Portuguese translations, run this script with the arguments `-l GLOSS=en PORTUGUESE=pt`. If no language mappings are given, the assumption is that the #id column contains English glosses.",
+        help="Maps from column names to 2-letter language codes. For example, if your ParameterTable has a column 'GLOSS', which contains English glosses, and a column 'PORTUGUESE' with Portuguese translations, run this script with the arguments `-l GLOSS=en PORTUGUESE=pt`. If no language mappings are given, the assumption is that the #id column contains English glosses.",
     )
     parser.add_argument(
         "--status-update",

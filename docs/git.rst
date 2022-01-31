@@ -17,8 +17,8 @@ the command line to interact with lexedata.
 Setting up git
 ~~~~~~~~~~~~~~
 
-If you start with your own blank slate for a data set, a ``git init`` in your
-data set folder will set it up as a git repository. If you have a template or a
+If you start with your own blank slate for a dataset, a ``git init`` in your
+dataset folder will set it up as a git repository. If you have a template or a
 dataset already on Github, ``git clone https://github.com/USERNAME/REPOSITORY``
 will create a local copy for you. (You can manually move that local copy on your
 computer in case it ended up in the wrong place.)

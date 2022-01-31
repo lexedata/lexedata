@@ -27,9 +27,10 @@ import attr
 import lexedata.cli as cli
 
 try:
-    clts_path = cldfcatalog.Config.from_file().get_clone("clts")
-    clts = cldfbench.catalogs.CLTS(clts_path)
-    bipa = clts.api.bipa
+    with cldfcatalog.Catalog.from_config("clts", tag="v2.0.0"):
+        clts_path = cldfcatalog.Config.from_file().get_clone("clts")
+        clts = cldfbench.catalogs.CLTS(clts_path)
+        bipa = clts.api.bipa
 except KeyError:  # pragma: no cover
     # Make a temporary clone of CLTS. Mostly useful for ReadTheDocs.
     import os
@@ -39,6 +40,7 @@ except KeyError:  # pragma: no cover
     os.system(
         f"git clone -b v2.0.0 --depth 1 https://github.com/cldf-clts/clts.git {clts_path}"
     )
+    clts_path.__enter__()
     clts = cldfbench.catalogs.CLTS(clts_path)
     bipa = clts.api.bipa
 

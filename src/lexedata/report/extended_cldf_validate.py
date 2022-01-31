@@ -1,7 +1,7 @@
 """Validate a CLDF wordlist.
 
 
-This script runs some more validators specific to CLDF Wordlist data sets in
+This script runs some more validators specific to CLDF Wordlist datasets in
 addition to the validation implemented in the `pycldf` core. Some of those
 tests are not yet mandated by the CLDF standard, but are assumptions which some
 tools (including lexedata) tacitly make, so this validator makes them explicit.
@@ -20,7 +20,7 @@ from collections import defaultdict
 
 # from clldutils.misc import log_or_raise
 
-from lexedata import cli, util
+from lexedata import cli, util, types
 from lexedata.report.judgements import check_cognate_table
 
 
@@ -119,7 +119,7 @@ def check_no_separator_in_ids(
             )
 
     for table, targets in forbidden_separators.items():
-        for r, row in enumerate(dataset[table]):
+        for r, row in enumerate(dataset[table], 1):
             for target_column, separators_forbidden_here in targets.items():
                 for separator, forbidden_by in separators_forbidden_here.items():
                     if separator in row[target_column]:
@@ -132,12 +132,10 @@ def check_no_separator_in_ids(
 
 
 def check_unicode_data(
-    dataset: pycldf, unicode_form: str = "NFC", logger: cli.logger = cli.logger
+    dataset: pycldf.Dataset, unicode_form: str = "NFC", logger: cli.logger = cli.logger
 ) -> bool:
-    # TODO: @Gereon: apply to whole dataset, form table or only #form
     for table in dataset.tables:
-        id = dataset[table, "id"].name
-        for row in table:
+        for r, row in enumerate(table, 1):
             for value in row.values():
                 if isinstance(value, str):
                     if not unicodedata.is_normalized(unicode_form, value):
@@ -196,46 +194,43 @@ def check_foreign_keys(dataset: pycldf.Dataset, logger=cli.logger):
     return valid
 
 
-def check_empty_forms(dataset: pycldf.Dataset, logger: cli.logger = cli.logger):
+def check_na_form_has_no_alternative(
+    dataset: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+    logger: cli.logging.Logger = cli.logger,
+):
+    valid = True
     c_f_id = dataset["FormTable", "id"].name
     c_f_form = dataset["FormTable", "form"].name
     c_f_concept = dataset["FormTable", "parameterReference"].name
     c_f_language = dataset["FormTable", "languageReference"].name
-    forms_to_concepts = defaultdict(set)
-    separator = (
-        dataset["FormTable"]
-        .get_column(dataset.column_names.forms.parameterReference)
-        .separator
+    forms_by_concepts: t.Dict[types.Parameter_ID, t.Set[types.Form_ID]] = t.DefaultDict(
+        set
     )
+
     for f in dataset["FormTable"]:
-        if separator:
-            for c in f[c_f_concept]:
-                forms_to_concepts[c].add(f[c_f_id])
-        else:
-            forms_to_concepts[f[c_f_concept]].add(f[c_f_id])
-    forms_to_languages = defaultdict(set)
+        for c in util.ensure_list(f[c_f_concept]):
+            forms_by_concepts[c].add(f[c_f_id])
+    forms_to_languages = t.DefaultDict(set)
     for f in dataset["FormTable"]:
         forms_to_languages[f[c_f_language]].add(f[c_f_id])
-    empty_forms = [f for f in dataset["FormTable"] if f[c_f_form] is None]
-    for form in empty_forms:
-        try:
-            if separator:
-                for c in form[c_f_concept]:
-                    assert forms_to_concepts[c].intersection(
-                        forms_to_languages[form[c_f_language]]
-                    ) == {form[c_f_id]}
-            else:
-                assert forms_to_concepts[form[c_f_concept]].intersection(
-                    forms_to_languages[form[c_f_language]]
-                ) == {form[c_f_id]}
-        except AssertionError:
-            log_or_raise(
-                message=f"Non empty forms exist for the empty form {form[c_f_id]} with identical "
-                f"parameter and language reference",
-                log=logger,
-            )
-            return False
-    return True
+    na_forms = [f for f in dataset["FormTable"] if f[c_f_form] == "-"]
+    for form in na_forms:
+        for c in util.ensure_list(form[c_f_concept]):
+            if forms_by_concepts[c].intersection(
+                forms_to_languages[form[c_f_language]]
+            ) != {form[c_f_id]}:
+                log_or_raise(
+                    message=f"Non empty forms exist for the NA form {form[c_f_id]} with identical parameter and language reference",
+                    log=logger,
+                )
+                valid = False
+    return valid
 
 
 if __name__ == "__main__":
@@ -274,4 +269,6 @@ if __name__ == "__main__":
         # Check that the CognateTable makes sense
         correct &= check_cognate_table(dataset=dataset, logger=logger)
 
-        #  Empty forms may exist, but only if there is no actual form for the concept and the language, and probably given some other constraints.
+        # NA forms may exist, but only if there is no actual form for the
+        # concept and the language, and probably given some other constraints.
+        correct &= check_na_form_has_no_alternative(dataset=dataset, logger=logger)
