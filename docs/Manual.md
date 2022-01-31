@@ -71,22 +71,46 @@ Whenever editing a cldf dataset, it is always a good idea to validate the datase
 ### CLDF dataset structure and curation
 
 #### How to add a metadata file (add_metadata)
-If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command `python -m lexedata.edit.add_metadata`. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and manually adjust this json file before you proceed (see [the metadata file](/docs/cldf.md#the-metadata-file)). You can also use this command to obtain a starting metadata file for a new dataset. In this case, you can start from an empty FormTable that contains the columns you would like to include. The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
+If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF dataset), you can automatically add a metadata (json) file using the command 
+```
+python -m lexedata.edit.add_metadata
+```
+. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and manually adjust this json file before you proceed (see [the metadata file](/docs/cldf.md#the-metadata-file)). You can also use this command to obtain a starting metadata file for a new dataset. In this case, you can start from an empty FormTable that contains the columns you would like to include. The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
 
 #### How to add tables to your dataset (add_table)
-Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is `python -m lexedata.edit.add_table TABLE`. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see [how to add a CognateTable](#how-to-add-a-cognatetable-add_cognate_table).
+Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is 
+```
+python -m lexedata.edit.add_table TABLE
+```
+. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see [how to add a CognateTable](#how-to-add-a-cognatetable-add_cognate_table).
 
 #### How to add a CognateTable (add_cognate_table)
-The output of LingPy has cognate judgements as a column within the FormTable, rather than in a separate CognateTable as is the standard in CLDF. This is also the format of a FormTable generated when importing an "interleaved" dataset with Lexedata (see [importing a lexical dataset using the "interleaved" format](#importing-a-lexical-dataset-using-the-interleaved-format)). In these cases, Lexedata can subsequently create an explicit CognateTable using the command `python -m lexedata.edit.add_cognate_table`. Note that you have to indicate if your cognate judgement IDs are unique within the same concept or are valid across the dataset. In other words, if for every concept you have a cognateset with the code 1, then you need to indicate the option `--unique-id concept`, while if you have cross-concept cognate sets you need to indicate the option `--unique-id dataset`.
+The output of LingPy has cognate judgements as a column within the FormTable, rather than in a separate CognateTable as is the standard in CLDF. This is also the format of a FormTable generated when importing an "interleaved" dataset with Lexedata (see [importing a lexical dataset using the "interleaved" format](#importing-a-lexical-dataset-using-the-interleaved-format)). In these cases, Lexedata can subsequently create an explicit CognateTable using the command 
+```
+python -m lexedata.edit.add_cognate_table
+```
+. Note that you have to indicate if your cognate judgement IDs are unique within the same concept or are valid across the dataset. In other words, if for every concept you have a cognateset with the code 1, then you need to indicate the option `--unique-id concept`, while if you have cross-concept cognate sets you need to indicate the option `--unique-id dataset`.
 
 #### How to normalize unicode (normalize_unicode)
-Linguistic data come with a lot of special characters especially for the forms, but also for language names etc. Many of the input methods used for such datasets result in seemingly identical glyphs, which are not necessarily the same unicode character (and are therefore not considered identical by a computer) . Lexedata can normalize unicode across your dataset with the command `python -m lexedata.edit.normalize_unicode`. You can find more info about what unicode normalization [here](https://towardsdatascience.com/what-on-earth-is-unicode-normalization-56c005c55ad0).
+Linguistic data come with a lot of special characters especially for the forms, but also for language names etc. Many of the input methods used for such datasets result in seemingly identical glyphs, which are not necessarily the same unicode character (and are therefore not considered identical by a computer) . Lexedata can normalize unicode across your dataset with the command 
+```
+python -m lexedata.edit.normalize_unicode
+```
+. You can find more info about what unicode normalization [here](https://towardsdatascience.com/what-on-earth-is-unicode-normalization-56c005c55ad0).
 
 #### Workflow and tracking aid (add_status_column)
-When developing and editing a comparative dataset for historical linguistics, you may need to keep track of operations, such as manual checks, input by collaborators etc. You may also wish to inspect manually some of the automatic operations of lexedata. To facilitate such tasks, you can add a "status column" in any of the CLDF tables using the command `python -m lexedata.edit.add_status_column`. How you use status columns is largely up to you. You may manually keep track of your workflow in this column using specific codewords of your choice. Lexedata scripts that perform automatic operations that are not trivial (such as alignments, automatic cognate set detection) usually leave a message in the status column (which is customizable).  
+When developing and editing a comparative dataset for historical linguistics, you may need to keep track of operations, such as manual checks, input by collaborators etc. You may also wish to inspect manually some of the automatic operations of lexedata. To facilitate such tasks, you can add a "status column" in any of the CLDF tables using the command 
+```
+python -m lexedata.edit.add_status_column
+```
+. How you use status columns is largely up to you. You may manually keep track of your workflow in this column using specific codewords of your choice. Lexedata scripts that perform automatic operations that are not trivial (such as alignments, automatic cognate set detection) usually leave a message in the status column (which is customizable).  
 
 #### Valid and transparent IDs (simplify_ids)
-In a CLDF dataset, all IDs need to be unique and be either numeric or restricted alphanumeric (i.e. containing only leters, numbers and underscores). Lexedata command `python -m lexedata.edit.simplify_ids` verifies that all IDs in the dataset are valid and changes them appropriately if necessary. You can also choose to make your IDs transparent (option `--transparent`) so that you can easily tell what they correspond to. With transparent IDs, instead of a numeric ID, a form will have an ID consisting of the languageID and the parameterID: e.g. the word "main" in French would have the ID stan1290_hand.
+In a CLDF dataset, all IDs need to be unique and be either numeric or restricted alphanumeric (i.e. containing only leters, numbers and underscores). Lexedata command 
+```
+python -m lexedata.edit.simplify_ids
+```
+ verifies that all IDs in the dataset are valid and changes them appropriately if necessary. You can also choose to make your IDs transparent (option `--transparent`) so that you can easily tell what they correspond to. With transparent IDs, instead of a numeric ID, a form will have an ID consisting of the languageID and the parameterID: e.g. the word "main" in French would have the ID stan1290_hand.
 
 #### How to replace or merge IDs (replace_id and replace_id_column)
 Sometimes you may need to replace an object's ID (e.g. language ID, concept ID, etc), e.g. if accidentally you have used the same ID twice. Lexedata can replace the id of an object and propagate this change in all tables where it is used as a foreign key (i.e. to link back to that object). The relevant command is
@@ -104,7 +128,15 @@ python -m lexedata.edit.replace_id_column TABLE REPLACEMENT
 ### Operations on FormTable
 
 #### Merge polysemous forms (merge_homophones)
-In large datasets, there may be identical forms within the same language, corresponding to homophonous or polysemous words. You can use `python -m lexedata.report.homophones` to detect identical forms present in the dataset (see [detect potential homophonous or polysemous forms](#detect-potential-homophonous-or-polysemous-forms)). Once you decide which forms are in fact polysemous, you can use  `python -m lexedata.edit.merge_homophones MERGE_FILE`  in order to merge them into one form with multiple meanings. The MERGE_FILE contains the forms to be merged, in the same format as the output report from the `lexedata.report.homophones` command. There are multiple merge functions available for the different metadata associated with forms (e.g. for comments the default merge function is concatenate, while for sources it is union). If you need to modify the default behavior of the command you can use the optional argument `--merge COLUMN:MERGER`, where COLUMN is the name of the column in your dataset and MERGER is the merge function you want to use (from a list of functions that can be found in the help).
+In large datasets, there may be identical forms within the same language, corresponding to homophonous or polysemous words. You can use 
+```
+python -m lexedata.report.homophones
+```
+ to detect identical forms present in the dataset (see [detect potential homophonous or polysemous forms](#detect-potential-homophonous-or-polysemous-forms)). Once you decide which forms are in fact polysemous, you can use  
+```
+python -m lexedata.edit.merge_homophones MERGE_FILE
+```
+  in order to merge them into one form with multiple meanings. The MERGE_FILE contains the forms to be merged, in the same format as the output report from the `lexedata.report.homophones` command. There are multiple merge functions available for the different metadata associated with forms (e.g. for comments the default merge function is concatenate, while for sources it is union). If you need to modify the default behavior of the command you can use the optional argument `--merge COLUMN:MERGER`, where COLUMN is the name of the column in your dataset and MERGER is the merge function you want to use (from a list of functions that can be found in the help).
 
 #### Segment forms (add_segments)
 In order to align forms to find correspondence sets and for automatic cognate detection, you need to segment the forms included in your dataset. Lexedata can do this automatically using [CLTS](http://clts.clld.org). To use this functionality type
@@ -130,7 +162,11 @@ Your ParameterTable will now have a new column: Concepticon ID, with the corresp
 If you are using cross-concept cognate sets, and you want to assign each cognate set to a certain concept (e.g. for the purposes of assigning absences in root presence coding), you can use lexedata to automatically add central concepts to your cognate sets. The central concept of each cognateset will be used as a proxy for assigning absences: If the central concept is attested in a language with a different root, then the root in question will be coded as absent for this language (see the glossary for more explanations for central concepts, coding methods and absence heuristics for root presence coding). 
 
 The central concept of each cognate set is determined by the [CLICS](http://clics.clld.org) graph of all the concepts associated with this cognate set (this requires having your concepts linked to the Concepticon). The concept with the highest centrality in the CLICS graph will be retained as the central concept. In the absence of Concepticon links, the central concept is the most common concept. In order to add central concepts to your dataset, type
-`python -m lexedata.edit.add_central_concepts`.
+
+```
+python -m lexedata.edit.add_central_concepts
+```
+.
 This will add a #parameterReference column to your CognatesetTable containing the central concept. You can of course manually review and edit the central concepts. If you rely on central concepts for coding and you heavily edit your cognate judgements, consider re-assigning central concepts with the switch `--overwrite`.
 
 
@@ -147,20 +183,40 @@ python -m lexedata.edit.add_singleton_cognate_sets
 The report package contains scripts that check for data integrity and generate reports for your dataset. You can use these reports to identify potential problems in the dataset, to track your progress, or to report statistics in publications (e.g. coverage for each language in a dataset).
 
 ### Language coverage
-You can obtain various statistics related to coverage (how many concepts have corresponding forms in each language) with the command `python -m lexedata.report.coverage`. 
+You can obtain various statistics related to coverage (how many concepts have corresponding forms in each language) with the command 
+```
+python -m lexedata.report.coverage
+```
+. 
 Among others, you can find which languages have corresponding forms for specific concepts, which languages have at least a given coverage percentage etc. NA forms (that correspond to concepts that do not exist in a particular language) by default count towards coverage, while missing forms don't. You can customize the treatment of missing and NA forms with the optional argument `--missing`.
 
 ### Segment inventories
-You can get a report on all segments used for each language and their frequency in the dataset by typing `python -m lexedata.report.segment_inventories`. This can be useful to locate rare or even erroneous transcriptions, non-standard IPA symbols etc. 
+You can get a report on all segments used for each language and their frequency in the dataset by typing 
+```
+python -m lexedata.report.segment_inventories
+```
+. This can be useful to locate rare or even erroneous transcriptions, non-standard IPA symbols etc. 
 
 ### Cognate judgements
-The cognate judgement report checks for issues involving cognate judgements, the segment slice column, the referenced segments and the alignment. For example, it checks if the referenced segments match what is present in the alignment and are contiguous (including identically looking but underlyingly different unicode characters), if the segment slice is valid based on the length of the form, and if the length of all alignments in a cognateset match. It also checks that missing ("") and NA ("-") forms are not assigned to any cognate set. In order to obtain the judgements report, you can use the command `python -m lexedata.report.judgements`. If you want additionally to check for instances of non-concatenative morphology, you can use the switch `--strict`. 
+The cognate judgement report checks for issues involving cognate judgements, the segment slice column, the referenced segments and the alignment. For example, it checks if the referenced segments match what is present in the alignment and are contiguous (including identically looking but underlyingly different unicode characters), if the segment slice is valid based on the length of the form, and if the length of all alignments in a cognateset match. It also checks that missing ("") and NA ("-") forms are not assigned to any cognate set. In order to obtain the judgements report, you can use the command 
+```
+python -m lexedata.report.judgements
+```
+. If you want additionally to check for instances of non-concatenative morphology, you can use the switch `--strict`. 
 
 ### CLDF validate
-Before and after a variety of operations with lexedata, and especially after manual editing of raw data, it is highly recommended to validate your dataset so you can catch and fix any inconsistencies. You can do a basic validation using the relevant command in the `pycldf` package, or an extended one with lexedata. For the basic validation, type: `cldf validate METADATA`, where `METADATA` stands for the metadata (json) file of your dataset. For the extended cldf validation, type `python -m lexedata.report.extended_cldf_validate`. The extended validation includes all operations of the basic pycldf command, but also checks further potential issues related to cognate judgements, unicode normalization, alignments etc.
+Before and after a variety of operations with lexedata, and especially after manual editing of raw data, it is highly recommended to validate your dataset so you can catch and fix any inconsistencies. You can do a basic validation using the relevant command in the `pycldf` package, or an extended one with lexedata. For the basic validation, type: `cldf validate METADATA`, where `METADATA` stands for the metadata (json) file of your dataset. For the extended cldf validation, type 
+```
+python -m lexedata.report.extended_cldf_validate
+```
+. The extended validation includes all operations of the basic pycldf command, but also checks further potential issues related to cognate judgements, unicode normalization, alignments etc.
 
 ### Filter dataset
-The `filter` command gives you the possibility to filter any table of your dataset according to a particular column using regular expressions. You can use this command to output a subset of the dataset to a file and use it as input for further commands in lexedata or other downstream analyses. The command is `python -m lexedata.report.filter COLUMN FILTER [TABLE]`, where `COLUMN` is the column to be filtered, the `FILTER` the expression to filter by and `TABLE` the table of the dataset that you want to filter. For more details, refer to the command's help.
+The `filter` command gives you the possibility to filter any table of your dataset according to a particular column using regular expressions. You can use this command to output a subset of the dataset to a file and use it as input for further commands in lexedata or other downstream analyses. The command is 
+```
+python -m lexedata.report.filter COLUMN FILTER [TABLE]
+```
+, where `COLUMN` is the column to be filtered, the `FILTER` the expression to filter by and `TABLE` the table of the dataset that you want to filter. For more details, refer to the command's help.
 
 ### Detect potential homophonous or polysemous forms
 In large datasets, you may have identical forms associated with different concepts. This could be the case because there are homophonous, unrelated forms, or because there is in fact one polysemous form. Lexedata can help you detect potential homophonous or polysemous forms by using the command
@@ -171,7 +227,11 @@ python -m lexedata.report.homophones
 The output of this command is a list of all groups of identical forms in the data and their associated concepts, along with the information if the associated concepts are connected in CLICS or not (if your concepts are linked to Concepticon, see [linking concepts to Concepticon](#linking-concepts-to-concepticon-add_concepticon)). You can choose to merge the polysemous forms, so you have one form associated to multiple concepts. In order to perform this operation, edit the output file of `lexedata.report.homophones`, so that only the groups of forms that are to be merged remain and then use `lexedata.edit.merge_homophones` (see [merge polysemous forms](#merge-polysemous-forms-merge_homophones)).
 
 ### Non-concatenative morphology
-You can get a detailed report on potentially non-concatenative morphemes (segments that belong to more than one cognate sets) by running `python -m lexedata.report.nonconcatenative_morphemes`. For a more general report on cognate judgements, see [cognate judgements](#cognate-judgements).
+You can get a detailed report on potentially non-concatenative morphemes (segments that belong to more than one cognate sets) by running 
+```
+python -m lexedata.report.nonconcatenative_morphemes
+```
+. For a more general report on cognate judgements, see [cognate judgements](#cognate-judgements).
 
 
 ## Exporting data (lexedata.exporter)
@@ -198,7 +258,11 @@ through this process. To edit raw data, see [editing a CLDF dataset](#editing-a-
 ```
 
 It is always a good idea to validate your dataset before and after any edits to make sure that everything is linked as it should in the cldf format.
-You can use `cldf validate METADATA_FILE` or `python -m lexedata.report.extended_cldf_validate` for a more thorough check (see also [CLDF validate](#cldf-validate)). The latter is particularly useful, because it checks a lot of additional assumptions about cognate judgements.
+You can use `cldf validate METADATA_FILE` or 
+```
+python -m lexedata.report.extended_cldf_validate
+```
+ for a more thorough check (see also [CLDF validate](#cldf-validate)). The latter is particularly useful, because it checks a lot of additional assumptions about cognate judgements.
 
 In order to export an xlsx cognate matrix, you should type
 ```
