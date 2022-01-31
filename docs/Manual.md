@@ -134,15 +134,16 @@ You can obtain various statistics related to coverage (how many concepts have co
 Among others, you can find which languages have corresponding forms for specific concepts, which languages have at least a given coverage percentage etc. NA forms (that correspond to concepts that do not exist in a particular language) by default count towards coverage, while missing forms don't. You can customize the treatment of missing and NA forms with the optional argument `--missing`.
 
 ### Segment inventories
-src/lexedata//report/segments_inventories.py
+You can get a report on all segments used for each language and their frequency in the dataset by typing `python -m lexedata.report.segment_inventories`. This can be useful to locate rare or even erroneous transcriptions, non-standard IPA symbols etc. 
 
 ### Cognate judgements
 The cognate judgement report checks for issues involving cognate judgements, the segment slice column, the referenced segments and the alignment. For example, it checks if the referenced segments match what is present in the alignment and are contiguous (including identically looking but underlyingly different unicode characters), if the segment slice is valid based on the length of the form, and if the length of all alignments in a cognateset match. It also checks that missing ("") and NA ("-") forms are not assigned to any cognate set. In order to obtain the judgements report, you can use the command `python -m lexedata.report.judgements`. If you want additionally to check for instances of non-concatenative morphology, you can use the switch `--strict`. 
 
 ### CLDF validate
+Before and after a variety of operations with lexedata, and especially after manual editing of raw data, it is highly recommended to validate your dataset so you can catch and fix any inconsistencies. You can do a basic validation using the relevant command in the `pycldf` package, or an extended one with lexedata. For the basic validation, type: `cldf validate METADATA`, where `METADATA` stands for the metadata (json) file of your dataset. For the extended cldf validation, type `python -m lexedata.report.extended_cldf_validate`. The extended validation includes all operations of the basic pycldf command, but also checks further potential issues related to cognate judgements, unicode normalization, alignments etc.
 
 ### Filter dataset
-src/lexedata//report/filter.py
+The `filter` command gives you the possibility to filter any table of your dataset according to a particular column using regular expressions. You can use this command to output a subset of the dataset to a file and use it as input for further commands in lexedata or other downstream analyses. The command is `python -m lexedata.report.filter COLUMN FILTER [TABLE]`, where `COLUMN` is the column to be filtered, the `FILTER` the expression to filter by and `TABLE` the table of the dataset that you want to filter. For more details, refer to the command's help.
 
 ### Detect potential homophonous or polysemous forms
 In large datasets, you may have identical forms associated with different concepts. This could be the case because there are homophonous, unrelated forms, or because there is in fact one polysemous form. Lexedata can help you detect potential homophonous or polysemous forms by using the command
@@ -151,8 +152,7 @@ In large datasets, you may have identical forms associated with different concep
 The output of this command is a list of all groups of identical forms in the data and their associated concepts, along with the information if the associated concepts are connected in CLICS or not (if your concepts are linked to Concepticon, see [linking concepts to Concepticon](#linking-concepts-to-concepticon-add_concepticon)). You can choose to merge the polysemous forms, so you have one form associated to multiple concepts. In order to perform this operation, edit the output file of `lexedata.report.homophones`, so that only the groups of forms that are to be merged remain and then use `lexedata.edit.merge_homophones` (see [merge polysemous forms](#merge-polysemous-forms-merge_homophones)).
 
 ### Non-concatenative morphology
-src/lexedata//report/nonconcatenative_morphemes.py
-
+You can get a detailed report on potentially non-concatenative morphemes (segments that belong to more than one cognate sets) by running `python -m lexedata.report.nonconcatenative_morphemes`. For a more general report on cognate judgements, see [cognate judgements](#cognate-judgements).
 
 
 ## Exporting data (lexedata.exporter)
