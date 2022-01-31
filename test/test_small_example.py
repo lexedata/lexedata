@@ -514,7 +514,8 @@ def test_interleaved(interleaved_excel_example):
 
 def interleaved_excel_example_header_off(caplog):
     data = [
-        ["Concept", "", "", "", ""]["", "Duala", "Ntomba", "Ngombe", "Bushoong"],
+        ["Concept", "", "", "", ""],
+        ["", "Duala", "Ntomba", "Ngombe", "Bushoong"],
         ["all", "ɓɛ́sɛ̃", "(nk)umá", "ńsò", "kim"],
         ["", "1", "9", "10", "11"],
         ["arm", "dia", "lobɔ́kɔ", "lò-bókò (PL: màbókò)", "lɔ̀ɔ́"],
