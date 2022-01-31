@@ -275,7 +275,7 @@ helps preparing such a layout. It generates an Excel sheet which contains one co
 Lexedata is a powerful tool to prepare linguistic data for phylogenetic
 analyses. It can be used to export a cldf dataset containing cognate judgements
 as a coded matrix for phylogenetic analyses to be used by standard phylogenetic
-software (such as BEAST, MrBayes or revBayes). Different formats are supported,
+software (such as [BEAST2](http://www.beast2.org/), [MrBayes](http://nbisweden.github.io/MrBayes/) or [revBayes](https://revbayes.github.io/)). Different formats are supported,
 such as nexus, csv, a beast-friendly xml format, as well as a raw alignment
 format (similar to the FASTA format used in bioinformatics). Lexedata also
 supports different coding methods for phylogenetic analyses: {term}`root-meaning coding`,
