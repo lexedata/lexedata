@@ -831,7 +831,7 @@ def parser():
         help="""Output format: `raw` for one language name per row, followed by spaces and
             the character state vector; `nexus` for a complete Nexus file; `beast`
             for the <data> tag to copy to a BEAST file; `csv` for a CSV
-            with languages in rows and characters in columns.""",
+            with languages in rows and characters in columns. (default: raw)""",
     )
     parser.add_argument(
         "-b",
@@ -866,7 +866,7 @@ def parser():
         "--coding",
         action=cli.enum_from_lower(CodingProcedure),
         default="RootMeaning",
-        help="""Binarization method: In the `RootMeaning` coding method, every character
+        help="""Coding method: In the `RootMeaning` coding method, every character
         describes the presence or absence of a particular root morpheme or
         cognate class in the word(s) for a given meaning; In the
         `RootPresence`, every character describes (up to the limitations of the
@@ -874,7 +874,7 @@ def parser():
         of a root (morpheme) in the language, independet of which meaning that
         root is attested in; And in the `Multistate` coding, each character
         describes, possibly including uniform ambiguities, the cognate class of
-        a meaning.""",
+        a meaning. (default: RootMeaning)""",
     )
     parser.add_argument(
         "--absence-heuristic",
@@ -892,7 +892,7 @@ def parser():
     parser.add_argument(
         "--stats-file",
         type=Path,
-        help="Path to a TeX file that will be filled with LaTeX command definitions for some summary statistics.",
+        help="Path to a TeX file that will be filled with LaTeX command definitions for some summary statistics. (default: Don't write a stats file)",
     )
     return parser
 

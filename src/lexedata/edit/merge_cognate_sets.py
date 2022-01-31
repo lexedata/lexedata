@@ -174,7 +174,7 @@ def merge_cogsets(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Script for cognate sets.",
+        description="Merge script for cognate sets.",
         epilog="""The default merging functions are:
 {:}
 

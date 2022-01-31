@@ -60,6 +60,16 @@ def import_interleaved(
             i = 0
             f = clean_cell_value(entry)
             forms = []
+
+            try:
+                len(f)
+            except TypeError:
+                cli.Exit.INVALID_INPUT(
+                    "I expected one or more forms (so, text) in cell {}, but found {}. Do you have more than one header row?".format(
+                        entry.coordinate, f
+                    )
+                )
+
             while i < len(f):
                 match = comma_or_semicolon.match(f[i:])
                 if f[i] == "(":

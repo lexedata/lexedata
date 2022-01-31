@@ -1,7 +1,7 @@
 """Validate a CLDF wordlist.
 
 
-This script runs some more validators specific to CLDF Wordlist data sets in
+This script runs some more validators specific to CLDF Wordlist datasets in
 addition to the validation implemented in the `pycldf` core. Some of those
 tests are not yet mandated by the CLDF standard, but are assumptions which some
 tools (including lexedata) tacitly make, so this validator makes them explicit.
