@@ -159,10 +159,10 @@ You can get a detailed report on potentially non-concatenative morphemes (segmen
 ### Export a Cognate Table
 
 Lexedata offers the possibility to edit and annotate within- or across-concept cognate sets in a spreadsheet format using the spreadsheet
-editor of your choice (we have successfully used Google sheets and Microsoft
+editor of your choice (we have successfully used Google sheets, LibreOffice Calc and Microsoft
 Excel, but it should work in principle on any spreadsheet editor). In order to
-use this functionality, first you need to export your cognate judgements in a
-Cognate Table (in xlsx format) and then re-import the modified Cognate Table
+use this functionality, you export your cognate judgements to a
+cognate matrix (in xlsx format) which you can edit, and then re-import this modified cognate matrix
 back into your cldf dataset. This process will overwrite previously
 existing cognate sets and cognate judgements, as well as any associated comments
 (CognateTable comments and CognatesetTable comments).
