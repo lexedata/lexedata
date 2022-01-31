@@ -239,7 +239,7 @@ python -m lexedata.report.nonconcatenative_morphemes
 The `exporter` package contains two types of scripts.
 
 1. Scripts which export the data to make it available for editing, through an [xlsx cognate matrix](#the-xlsx-cognate-matrix-loop) or through [Edictor and LingPy](#the-edictor-editing-loop). These export scripts come with a corresponding importer script in `lexedata.importer`, so that data can be exported, edited externally, and re-imported.
-2. Scripts which export the data for other use. The [matrix exporter](#export-as-wordlist-matrix) generates a matrix of comparative word lists that can be edited for inclusion in a publication, while the [phylogenetics exporter](#export-coded-data-for-phylogenetic-analyses-lexedata-exporter-phylogenetics) generates character sequences that can be used in phylogenetics software.
+2. Scripts which export the data for other use. The [matrix exporter](#export-as-wordlist-matrix) generates a matrix of comparative word lists that can be edited for inclusion in a publication, while the [phylogenetics exporter](#export-coded-data-for-phylogenetic-analyses) generates character sequences that can be used in phylogenetics software.
 
 ### The xlsx cognate matrix loop
 
@@ -334,7 +334,7 @@ python -m lexedata.exporter.matrix FILENAME.xlsx
 
 helps preparing such a layout. It generates an Excel sheet which contains one column per language and one row per concept. Optionally, forms can be hyperlinked to their corresponding page or anchor in a web-browsable database version of the dataset, concepts can be output with their Concepticon links. Also, you can specify a subset of languages and concepts to include, eg. only the {term}`primary concept`s.
 
-### Export coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)
+### Export coded data for phylogenetic analyses
 
 Lexedata is a powerful tool to prepare linguistic data for phylogenetic
 analyses. It can be used to export a cldf dataset containing cognate judgements
