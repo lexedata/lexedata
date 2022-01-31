@@ -398,12 +398,14 @@
                     {
                         "datatype": "string",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#segmentSlice",
-                        "name": "Segment_Slice"
+                        "name": "Segment_Slice",
+                        "separator": ","
                     },
                     {
                         "datatype": "string",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#alignment",
-                        "name": "Alignment"
+                        "name": "Alignment",
+                        "separator": " "
                     },
                     {
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",

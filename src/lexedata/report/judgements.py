@@ -84,13 +84,13 @@ def check_cognate_table(
     try:
         c_sslice = dataset["CognateTable", "segmentSlice"].name
     except KeyError:
-        log_or_raise("CognateTable does not have a #segmentSlice column.")
+        logger.info("CognateTable does not have a #segmentSlice column.")
         c_sslice = None
 
     try:
         c_alignment = dataset["CognateTable", "alignment"].name
     except KeyError:
-        log_or_raise("CognateTable does not have a #segmentSlice column.")
+        logger.info("CognateTable does not have an #alignment column.")
         c_alignment = None
 
     if c_sslice is None and c_alignment is None:
