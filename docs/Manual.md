@@ -268,7 +268,7 @@ or [figshare](https://figshare.com/)). The command
 python -m lexedata.exporter.matrix FILENAME.xlsx
 ```
 
-helps preparing such a layout. It generates an Excel sheet which contains one column per language and one row per concept. Optionally, forms can be hyperlinked to their corresponding page or anchor in a web-browsable database version of the dataset, concepts can be output with their Concepticon links. Also, you can specify a subset of languages and concepts to include, eg. only the `{term} primary concept`s.
+helps preparing such a layout. It generates an Excel sheet which contains one column per language and one row per concept. Optionally, forms can be hyperlinked to their corresponding page or anchor in a web-browsable database version of the dataset, concepts can be output with their Concepticon links. Also, you can specify a subset of languages and concepts to include, eg. only the {term}` primary concept`s.
 
 ### Export coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)
 
@@ -278,8 +278,8 @@ as a coded matrix for phylogenetic analyses to be used by standard phylogenetic
 software (such as BEAST, MrBayes or revBayes). Different formats are supported,
 such as nexus, csv, a beast-friendly xml format, as well as a raw alignment
 format (similar to the FASTA format used in bioinformatics). Lexedata also
-supports different coding methods for phylogenetic analyses: `{term} root-meaning coding`,
-cross-meaning cognate sets AKA `term {root presence coding}`, and `{term} multistate coding`.
+supports different coding methods for phylogenetic analyses: {term}` root-meaning coding`,
+cross-meaning cognate sets AKA `term {root presence coding}`, and {term}` multistate coding`.
 
 Finally, you can use Lexedata
 to filter and export a portion of your dataset for phylogenetic analyses, e.g.
