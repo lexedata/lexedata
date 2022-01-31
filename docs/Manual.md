@@ -55,12 +55,6 @@ In order to import a dataset of the "interleaved" format you should use the comm
 ### Adding a new language/new data to an existing lexical dataset
 The importation script using the long format can be used to add new data to an existing dataset, as in the case of adding an new variety or further lexical items for an existing variety (see [importing a lexical dataset using the "long" format](#importing-a-lexical-dataset-using-the-long-format)). 
 
-### Importing cognate sets from a Cognate Table
-You can update cognate sets, cognate judgements and associated metadata by exporting a Cognate Table from a cldf dataset and reimporting it after editing it by hand. This workflow can allow specialists to work on the cognacy judgements in a familiar format (such as excel), or allow a team to work collaboratively on Google sheets, while at the same time keeping the dataset in the standard cldf format. 
-
-Once you have exported a Cognate Table from your cldf dataset (using the `lexedata.exporter.cognates` command, see [export a Cognate Table](#export-a-cognate-table), you can modify it in the spreadsheet editor of your choice and then reimport it by typing:
-```python -m lexedata.importer.cognates FILENAME```, specifying the Cognate Table that you want to import.
-
 
 ## Editing a CLDF dataset (lexedata.edit)
 The "edit" package includes a series of scripts to automate common targeted or batch edits in a lexical dataset. It also includes scripts that create links to [Concepticon(http://concepticon.clld.org) and integrate with [LingPy](http://lingpy.org).
@@ -180,8 +174,25 @@ In order to export an xlsx cognate matrix, you should type
 The cognate matrix will be written to an excel file with the specified name.
 There are optional arguments to sort the languages and the cognate sets in this table, as well as to assign any forms not currently in a cognate set to automatic singleton cognate sets (see command help for more information; see also: [lexedata.edit.add_singleton_cognatesets](#adding-trivial-cognate-sets-add_singleton_cognatesets)). 
 
-You can open and edit the Cognate Table in the spreadsheet editor of your choice. You just need to remember that you need and xlsx format in order to reimport your modified cognate sets into your cldf dataset (using the lexedata.importer.cognates command, see [importing cognate sets from a Cognate Table](#importing-cognate-sets-from-a-cognate-table). 
+You can open and edit the cognate matrix in the spreadsheet editor of your
+choice. You can update cognate sets, cognate judgements and associated metadata
+(in particular segment slices and alignments). This workflow can allow
+specialists to work on the cognacy judgements in a familiar format (such as
+excel), or allow a team to work collaboratively on Google sheets, while at the
+same time keeping the dataset in the standard cldf format. You just need to
+remember that you need to preserve the general format in order to reimport your
+modified cognate sets into your cldf dataset.
 
+#### Re-importing cognate sets from a cognate matrix
+
+You can reimport the cognate matrix xlsx spreadsheet by typing:
+
+```
+python -m lexedata.importer.cognates FILENAME.xlsx
+```
+
+This will re-generate the CognateTable with the cognate judgements, as well as
+the CognatesetTable, in your CLDF dataset according to the cognate matrix.
 
 ### Export to Edictor
 ### Export a comparative wordlist
