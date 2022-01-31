@@ -256,7 +256,16 @@ Be careful with the Edictor loop. Re-import often, commit often to be able to un
 
 ### Export a comparative wordlist
 
-For 
+In particular for the supplementary material of a publication, it is often
+useful to provide a comparative word list in a human-readable layout in addition
+to a deposited archive of the CLDF dataset (eg. on [Zenodo](https://zenodo.org)
+or [figshare](https://figshare.com/)). The command
+
+```
+python -m lexedata.exporter.matrix FILENAME.xlsx
+```
+
+helps preparing such a layout. It generates an Excel sheet which contains one column per language and one row per concept. Optionally, forms can be hyperlinked to their corresponding page or anchor in a web-browsable database version of the dataset, concepts can be output with their Concepticon links. Also, you can specify a subset of languages and concepts to include, eg. only the `{term} primary concept`s.
 
 ### Export coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)
 
