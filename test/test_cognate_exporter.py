@@ -102,8 +102,8 @@ def test_cogsets_and_judgements():
         "id": "kaiwa_five-five5",
         "formReference": "kaiwa_five",
         "comment": None,
-        "segmentSlice": None,
-        "alignment": None,
+        "segmentSlice": ["1:7"],
+        "alignment": ["t", "e", "ʔ", "i", "o", "w", "aa"],
         "cognatesetReference": "five5",
     }
     assert len(judgements) == 17
@@ -131,8 +131,8 @@ def test_cogsets_and_judgements_with_singletons():
         "id": "paraguayan_guarani_one-one1",
         "formReference": "paraguayan_guarani_one",
         "comment": None,
-        "segmentSlice": None,
-        "alignment": None,
+        "segmentSlice": ["1:5"],
+        "alignment": ["p", "e", "t", "e", "ĩ", "-", "-"],
         "cognatesetReference": "one1",
     }
     assert list(judgements)[-1] == {
@@ -143,7 +143,7 @@ def test_cogsets_and_judgements_with_singletons():
         "alignment": ["p", "o"],
         "cognatesetReference": "X_paraguayan_guarani_five_1",
     }
-    assert len(judgements) == 19
+    assert len(judgements) == 21
 
 
 def test_adding_singleton_cognatesets(caplog):
