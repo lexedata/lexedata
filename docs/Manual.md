@@ -154,7 +154,7 @@ You can get a detailed report on potentially non-concatenative morphemes (segmen
 The `exporter` package contains two types of scripts.
 
 1. Scripts which export the data to make it available for editing, through an [xlsx cognate matrix](#the-xlsx-cognate-matrix-loop) or through [Edictor and LingPy](#the-edictor-editing-loop). These export scripts come with a corresponding importer script in `lexedata.importer`, so that data can be exported, edited externally, and re-imported.
-2. Scripts which export the data for other use. The [matrix exporter](#export-as-wordlist-matrix) generates a matrix of comparative word lists that can be edited for inclusion in a publication, while the [phylogenetics exporter](#export-phylogenetic-sequences) generates character sequences that can be used in phylogenetics software.
+2. Scripts which export the data for other use. The [matrix exporter](#export-as-wordlist-matrix) generates a matrix of comparative word lists that can be edited for inclusion in a publication, while the [phylogenetics exporter](#export-coded-data-for-phylogenetic-analyses-lexedata-exporter-phylogenetics) generates character sequences that can be used in phylogenetics software.
 
 ### The xlsx cognate matrix loop
 
@@ -234,47 +234,21 @@ Be careful with the Edictor loop. Re-import often, commit often to be able to un
 
 ### Export a comparative wordlist
 
+For 
 
 ### Export coded data for phylogenetic analyses (lexedata.exporter.phylogenetics)
-Lexedata is a powerful tool to prepare linguistic data for phylogenetic analyses. It can be used to export a cldf dataset containing cognate judgements as a coded matrix for phylogenetic analyses to be used by standard phylogenetic software (such as BEAST, MrBayes or revBayes). Different formats are supported, such as nexus, csv, a beast-friendly xml format, as well as a raw alignment format (similar to the FASTA format used in bioinformatics). Lexedata also supports different coding methods for phylogenetic analyses: root-meaning sets, cross-meaning cognate sets, and multistate coding. Finally, you can use Lexedata to filter and export a portion of your dataset for phylogenetic analyses, e.g. if some languages or concepts are not fully coded yet, or if you want to exclude specific cognate sets that are not reviewed yet.
 
+Lexedata is a powerful tool to prepare linguistic data for phylogenetic
+analyses. It can be used to export a cldf dataset containing cognate judgements
+as a coded matrix for phylogenetic analyses to be used by standard phylogenetic
+software (such as BEAST, MrBayes or revBayes). Different formats are supported,
+such as nexus, csv, a beast-friendly xml format, as well as a raw alignment
+format (similar to the FASTA format used in bioinformatics). Lexedata also
+supports different coding methods for phylogenetic analyses: `{term} root-meaning coding`,
+cross-meaning cognate sets AKA `term {root presence coding}`, and `{term} multistate coding`.
 
-## Command Reference
-`edit/add_central_concepts.py
-edit/simplify_ids.py
-edit/detect_cognates.py
-edit/add_judgement_table.py
-edit/add_concepticon.py
-edit/__init__.py
-edit/change_id_column.py
-edit/align.py
-edit/add_metadata.py
-edit/_cognate_code_language.py
-edit/add_segments.py
-edit/add_singleton_cognatesets.py
-edit/unicode_normalize.py
-edit/add_status_column.py
-edit/_rename_language.py
-edit/add_table.py
-exporter/__init__.py
-exporter/cognates.py
-exporter/phylogenetics.py
-exporter/edictor.py
-importer/__init__.py
-importer/cognates.py
-importer/excel_interleaved.py
-importer/excel_long_format.py
-importer/excel_matrix.py
-importer/edictor.py
-report/homophones.py
-report/extended_cldf_validate.py
-report/coverage.py
-report/__init__.py
-report/judgements.py
-report/nonconcatenative_morphemes.py
-report/filter.py
-report/segments_inventories.py
-util/__init__.py
-util/add_metadata.py
-util/fs.py
-util/excel.py`
+Finally, you can use Lexedata
+to filter and export a portion of your dataset for phylogenetic analyses, e.g.
+if some languages or concepts are not fully coded yet, or if you want to exclude
+specific cognate sets that are not reviewed yet.
+
