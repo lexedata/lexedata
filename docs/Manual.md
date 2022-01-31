@@ -182,6 +182,14 @@ python -m lexedata.edit.add_singleton_cognate_sets --by-segment
 ```
 This will create a separate cognate set for every contiguous slice of segments that are not in any cognate set yet, eg. one for the prefix and a separate one for the suffix of a word with a stem that is already coded.
 
+#### Merging cognate sets
+
+You can write a file listing cognate sets to be merged into one and feed it to 
+```
+python -m lexedata.edit.merge_cognate_sets MERGEFILE
+```
+which bulk-merges these cognatesets. The main use of this command is to merge cognatesets found to be strongly overlapping by the [nonconcatenative morphemes](#nonconcatenative-morphology) report.
+
 ## Reporting and checking data integrity (lexedata.report)
 
 The report package contains scripts that check for data integrity and generate reports for your dataset. You can use these reports to identify potential problems in the dataset, to track your progress, or to report statistics in publications (e.g. coverage for each language in a dataset).
@@ -202,29 +210,8 @@ python -m lexedata.report.segment_inventories
 This can be useful to locate rare or even erroneous transcriptions, non-standard IPA symbols etc.
 You can subset the report to one or a smaller number of languages for clarity using `--languages`.
 
-### Cognate judgements
-The cognate judgement report checks for issues involving cognate judgements, the segment slice column, the referenced segments and the alignment. For example, it checks if the referenced segments match what is present in the alignment and are contiguous (including identically looking but underlyingly different unicode characters), if the segment slice is valid based on the length of the form, and if the length of all alignments in a cognateset match. It also checks that missing ("") and NA ("-") forms are not assigned to any cognate set. In order to obtain the judgements report, you can use the command 
-```
-python -m lexedata.report.judgements
-```
-If you want additionally to check for instances of non-concatenative morphology, you can use the switch `--strict`. 
-
-### CLDF validate
-Before and after a variety of operations with lexedata, and especially after manual editing of raw data, it is highly recommended to validate your dataset so you can catch and fix any inconsistencies. You can do a basic validation using the relevant command in the `pycldf` package, or an extended one with lexedata. For the basic validation, type: `cldf validate METADATA`, where `METADATA` stands for the metadata (json) file of your dataset. For the extended cldf validation, type 
-```
-python -m lexedata.report.extended_cldf_validate
-```
-The extended validation includes all operations of the basic pycldf command, but also checks further potential issues related to cognate judgements, unicode normalization, alignments etc.
-
-### Filter dataset
-The `filter` command gives you the possibility to filter any table of your dataset according to a particular column using regular expressions. You can use this command to output a subset of the dataset to a file and use it as input for further commands in lexedata or other downstream analyses. The command is 
-```
-python -m lexedata.report.filter COLUMN FILTER [TABLE]
-```
-, where `COLUMN` is the column to be filtered, the `FILTER` the expression to filter by and `TABLE` the table of the dataset that you want to filter. For more details, refer to the command's help.
-
 ### Detect potential homophonous or polysemous forms
-In large datasets, you may have identical forms associated with different concepts. This could be the case because there are homophonous, unrelated forms, or because there is in fact one polysemous form. Lexedata can help you detect potential homophonous or polysemous forms by using the command
+In large datasets, you may have identical forms associated with different concepts. This could be the case because there are homophonous, unrelated forms, or because there is in fact one underlying polysemous form. Lexedata can help you detect potential homophones or polysemies by using the command
 
 ```
 python -m lexedata.report.homophones
@@ -236,7 +223,38 @@ You can get a detailed report on potentially non-concatenative morphemes (segmen
 ```
 python -m lexedata.report.nonconcatenative_morphemes
 ```
-For a more general report on cognate judgements, see [cognate judgements](#cognate-judgements).
+For a report on cognate judgements more focused on structural integrity, see [cognate judgements](#cognate-judgements).
+
+The `nonconcatenative_morphemes` command outputs a report of clusters of cognate sets that have an overlap of 50% in at least one form. As such, it indicates that these cognate sets may be candidates that could be merged. Like the [segment inventories](#segment-inventories) report, you can output this report to a file and edit it before feeding it into the [cognateset merger command](merging-cognate-sets). This command has a very similar interface to the homophones merger, and in fact a main use case is
+
+1. [Detecting homophones](#detect-potential-homophonous-or-polysemous-forms)
+2. [Merging homophones into polysemous forms](#merge-polysemous-forms-merge-homophones))
+3. Detecting the pairs of cognate sets that now both point to the same newly-merged polysemous form, using this script
+4. [Merging those cognatesets](#merging-cognate-sets)
+
+
+### Cognate judgements
+The cognate judgement report checks for issues involving cognate judgements, the segment slice column, the referenced segments and the alignment. For example, it checks if the referenced segments match what is present in the alignment and are contiguous (including identically looking but underlyingly different unicode characters), if the segment slice is valid based on the length of the form, and if the length of all alignments in a cognateset match. It also checks that missing ("") and NA ("-") forms are not assigned to any cognate set. In order to obtain the judgements report, you can use the command 
+```
+python -m lexedata.report.judgements
+```
+This report is part of the checks that the extended [CLDF validate](#cldf-validate) executes, because it focuses on potential issues in the data model (eg. ‘alignments’ of different length, which makes them invalid as alignments).
+If you want additionally to check for cognatesets that contain non-contiguous segments (eg. because they skip an infix), you can use the switch `--strict`; this switch is not available through `extended_cldf_validate`. A more extensive report about the structure of segments inside cognate sets can be obtained for the [non-concatenative morphology report](#nonconcatenative-morphology).
+
+### CLDF validate
+Before and after a variety of operations with lexedata, and especially after manual editing of raw data, it is highly recommended to validate your dataset so you can catch and fix any inconsistencies. You can do a basic validation using the relevant command in the `pycldf` package, or an extended one with lexedata. For the basic validation, type: `cldf validate METADATA`, where `METADATA` stands for the metadata (json) file of your dataset.
+For the extended cldf validation, type 
+```
+python -m lexedata.report.extended_cldf_validate
+```
+The extended validation includes all operations of the basic pycldf command, but also checks further potential issues related to cognate judgements, unicode normalization, internal references, etc.
+
+### Filter dataset
+The `filter` command gives you the possibility to filter any table of your dataset according to a particular column using regular expressions. You can use this command to output a subset of the dataset to a file and use it as input for further commands in lexedata (in particular for the subsetting operations supported by various commands) or other downstream analyses. The command is 
+```
+python -m lexedata.report.filter COLUMN FILTER [TABLE]
+```
+, where `COLUMN` is the column to be filtered, the `FILTER` the expression to filter by and `TABLE` the table of the dataset that you want to filter. For more details, refer to the command's help.
 
 
 ## Exporting data (lexedata.exporter)

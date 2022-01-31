@@ -1,3 +1,5 @@
+import sys
+from pathlib import Path
 import typing as t
 import itertools
 
@@ -127,6 +129,13 @@ if __name__ == "__main__":
         action=cli.ListOrFromFile,
         help="Only use these cognate sets as indication of overlapping morphemes.",
     )
+    parser.add_argument(
+        "--output-file",
+        "-o",
+        help="Path to output file (default: output to stdout)",
+        type=Path,
+    )
+
     args = parser.parse_args()
     logger = cli.setup_logging(args)
     dataset = pycldf.Dataset.from_metadata(args.metadata)
@@ -142,14 +151,16 @@ if __name__ == "__main__":
     graph = networkx.Graph()
     graph.add_edges_from(overlapping_cognatesets)
     if graph.nodes():
+        out = args.output_file.open("w") if args.output_file else sys.stdout
+
         # Sort to keep order persistent
         for community in sorted(
             networkx.algorithms.community.greedy_modularity_communities(graph),
             key=lambda x: sorted(x),
         ):
-            print("Cluster of overlapping cognate sets:")
+            print("Cluster of overlapping cognate sets:", file=out)
             for cognateset in sorted(community):
-                print(f"\t {cognateset}")
+                print(f"\t {cognateset}", file=out)
                 # TODO: Generate form segments, if considered informative
                 # forms = ["".join(segments) for segments in forms_by_cogset[cognateset]]
                 # print(f"\t {cognateset} ({forms})")
