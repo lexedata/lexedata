@@ -541,9 +541,7 @@ def test_interleaved_excel_example_header_wrong(caplog):
         ws.append(row)
     with caplog.at_level(logging.ERROR):
         with pytest.raises(SystemExit):
-            for row in excel_interleaved.import_interleaved(
-                ws, logger=logging.Logger, ids=set()
-            ):
+            for row in excel_interleaved.import_interleaved(ws, ids=set()):
                 pass
     assert "expected one or more forms" in caplog.text
 
@@ -556,9 +554,7 @@ def test_create_metadata_valid(interleaved_excel_example):
                 row,
             )
         )
-        for row in excel_interleaved.import_interleaved(
-            interleaved_excel_example, logger=logging.Logger
-        )
+        for row in excel_interleaved.import_interleaved(interleaved_excel_example)
     ]
 
     path = Path(tempfile.mkdtemp())
