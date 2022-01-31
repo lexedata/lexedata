@@ -16,7 +16,6 @@ import typing as t
 
 import pycldf
 import unicodedata
-from collections import defaultdict
 
 # from clldutils.misc import log_or_raise
 
@@ -115,7 +114,7 @@ def check_no_separator_in_ids(
             forbidden_separators[foreign_key.reference.resource.__str__()][
                 referenced_column
             ][table.get_column(referencing_column).separator].append(
-                (table.url, referencing_column)
+                (table.url.string, referencing_column)
             )
 
     for table, targets in forbidden_separators.items():
@@ -124,7 +123,7 @@ def check_no_separator_in_ids(
                 for separator, forbidden_by in separators_forbidden_here.items():
                     if separator in row[target_column]:
                         log_or_raise(
-                            f"In table {table}, row {r} column {target_column} contains {separator:r}, which is also the separator of {forbidden_by}.",
+                            f"In table {table}, row {r} column {target_column} contains {separator}, which is also the separator of {forbidden_by}.",
                             log=logger,
                         )
                         valid = False
@@ -140,7 +139,7 @@ def check_unicode_data(
                 if isinstance(value, str):
                     if not unicodedata.is_normalized(unicode_form, value):
                         log_or_raise(
-                            message=f"Value {value} of row {row[id]} in table {table.url} is not in "
+                            message=f"Value {value} of row {r} in table {table.url} is not in "
                             f"{unicode_form} normalized unicode",
                             log=logger,
                         )
@@ -174,7 +173,7 @@ def check_foreign_keys(dataset: pycldf.Dataset, logger=cli.logger):
 
             if dataset[target_table] != dataset[reference.resource]:
                 log_or_raise(
-                    message=f"Foreign key {key} is a declared as {column_type}, which should point to {target_table} but instead points to {reference}",
+                    message=f"Foreign key {key} is a declared as {column_type}, which should point to {target_table.url} but instead points to {reference}",
                     log=logger,
                 )
                 valid = False
@@ -185,7 +184,7 @@ def check_foreign_keys(dataset: pycldf.Dataset, logger=cli.logger):
                 dataset[key.reference.resource, "id"].name
             ]:
                 log_or_raise(
-                    message=f"foreign key {key} in table {table.url.string} "
+                    message=f"Foreign key {key} in table {table.url.string} "
                     f"does not point to the ID column of another table",
                     log=logger,
                 )
