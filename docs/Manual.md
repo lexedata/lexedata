@@ -176,7 +176,11 @@ Depending on your workflow, you may not have assigned forms to trivial (singleto
 ```
 python -m lexedata.edit.add_singleton_cognate_sets
 ```
-
+If you want to be careful about morphology, you can tell this script to create singletons for every uncoded set of segments by using
+```
+python -m lexedata.edit.add_singleton_cognate_sets --by-segment
+```
+This will create a separate cognate set for every contiguous slice of segments that are not in any cognate set yet, eg. one for the prefix and a separate one for the suffix of a word with a stem that is already coded.
 
 ## Reporting and checking data integrity (lexedata.report)
 
