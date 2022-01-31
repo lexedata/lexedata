@@ -512,6 +512,41 @@ def test_interleaved(interleaved_excel_example):
     }
 
 
+def interleaved_excel_example_header_off(caplog):
+    data = [
+        ["Concept", "", "", "", ""]["", "Duala", "Ntomba", "Ngombe", "Bushoong"],
+        ["all", "ɓɛ́sɛ̃", "(nk)umá", "ńsò", "kim"],
+        ["", "1", "9", "10", "11"],
+        ["arm", "dia", "lobɔ́kɔ", "lò-bókò (PL: màbókò)", "lɔ̀ɔ́"],
+        ["", "7", "1", "1", "1"],
+        ["ashes", "mabúdú", "metókó", "búdùlù ~ pùdùlù", "bu-tók"],
+        ["", "17", "16", "17", "16"],
+        ["bark", "bwelé", "lopoho ~ mpoho ~ lòpòhó", "émpósù ~ ímpósù", "yooʃ"],
+        ["", "23", "22", "22", "22"],
+        ["belly", "dibum", "ikundú", "lì-bùmù", "ì-kù:n"],
+        ["", "1", "18", "1", "18"],
+        ["big", "éndɛ̃nɛ̀", "nɛ́nɛ́", "nɛ́nɛ ~ nɛ́nɛ́nɛ", "nɛ́n"],
+        ["", "1", "1", "1", "1"],
+        ["bird", "inɔ̌n", "mpulú", "é-mbùlù ~ í-mbùlù", "pul"],
+        ["", "1", "7", "7", "7"],
+        ["bite", "kukwa", "lamata", "kokala", "a-ʃum"],
+        ["", "6", "2", "7", "1"],
+        ["black", "wínda", "", "hínda; épííndu", "a-picy; ndwɛɛm"],
+        ["", "21", "", "21, 21", "22, 23"],
+    ]
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    for row in data:
+        ws.append(row)
+    with caplog:
+        with pytest.raises(SystemExit):
+            for row in excel_interleaved.import_interleaved(
+                wb, logger=logging.Logger, ids=set()
+            ):
+                pass
+    assert "expected one or more forms" in caplog.text
+
+
 def test_create_metadata_valid(interleaved_excel_example):
     forms = [
         dict(
