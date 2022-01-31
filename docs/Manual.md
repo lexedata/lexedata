@@ -154,7 +154,7 @@ You can get a detailed report on potentially non-concatenative morphemes (segmen
 The `exporter` package contains two types of scripts.
 
 1. Scripts which export the data to make it available for editing, through an [xlsx cognate matrix](#the-xlsx-cognate-matrix-loop) or through [Edictor and LingPy](#the-edictor-editing-loop). These export scripts come with a corresponding importer script in `lexedata.importer`, so that data can be exported, edited externally, and re-imported.
-2. Scripts which export the data for other use. The [matrix exporter](#export-as-wordlist-matrix) generates a matrix of parallel word lists that can be edited for inclusion in a publication, while the [phylogenetics exporter](#export-phylogenetic-sequences) generates character sequences that can be used in phylogenetics software.
+2. Scripts which export the data for other use. The [matrix exporter](#export-as-wordlist-matrix) generates a matrix of comparative word lists that can be edited for inclusion in a publication, while the [phylogenetics exporter](#export-phylogenetic-sequences) generates character sequences that can be used in phylogenetics software.
 
 ### The xlsx cognate matrix loop
 
@@ -176,7 +176,9 @@ It is always a good idea to validate your dataset before and after any edits to 
 You can use `cldf validate METADATA_FILE` or `python -m lexedata.report.extended_cldf_validate` for a more thorough check (see also [CLDF validate](#cldf-validate)). The latter is particularly useful, because it checks a lot of additional assumptions about cognate judgements.
 
 In order to export an xlsx cognate matrix, you should type
-```python -m lexedata.exporter.cognates FILENAME.xlsx```
+```
+python -m lexedata.exporter.cognates FILENAME.xlsx
+```
 The cognate matrix will be written to an excel file with the specified name.
 There are optional arguments to sort the languages and the cognate sets in this table, as well as to assign any forms not currently in a cognate set to automatic singleton cognate sets (see command help for more information; see also: [lexedata.edit.add_singleton_cognatesets](#adding-trivial-cognate-sets-add_singleton_cognatesets)). 
 
@@ -200,7 +202,36 @@ python -m lexedata.importer.cognates FILENAME.xlsx
 This will re-generate the CognateTable with the cognate judgements, as well as
 the CognatesetTable, in your CLDF dataset according to the cognate matrix.
 
-### Export to Edictor
+### The Edictor editing loop
+
+The ‘etymological dictionary editor’ [EDICTOR](https://edictor.digling.org)
+provides access to another way of modifying cognate sets and alignments, with
+interfaces for partial cognate annotation, a graphical alignment editor and
+summaries of sound correspondences. Like the [LingPy](http://lingpy.org/) Python
+library for historical linguistics, Edictor uses a format that is similar to
+CLDF's form table. The format includes cognate judgements and alignments in the
+table. In addition, it differs in several format choices that look minor to the
+human eye, but matter greatly for automatic processing by a computer.
+
+To work with CLDF data in Edictor or LingPy, Lexedata provides a pair of an exporter and importer script
+
+```
+python -m lexedata.exporter.edictor FILENAME.tsv
+python -m lexedata.importer.edictor FILENAME.tsv
+```
+
+which allow the export of a CLDF dataset to Edictor's TSV format and importing the data back after editing.
+
+```{Important}
+This loop is brittle.
+
+* Edictor can sometimes halt processing without warning, in particular on large datasets or datasets with special assumptions, such as non-concatenative morphemes, polysemous forms, or multi-line comments.
+* Such datasets also quickly become unwieldy in Edictor.
+* In order support edits using Edictor better, the exporter allows the restriction of the data set to a subset of lanugages and concepts. The importer does its best to try integrating the changes made in Edictor back to the dataset. However, there are a lot of special cases which are insufficiently tested.
+
+Be careful with the Edictor loop. Re-import often, commit often to be able to undo changes, and don't hesitate to [raise an issue](https://github.com/Anaphory/lexedata/issues/new) concerning undesired behaviour.
+```
+
 ### Export a comparative wordlist
 
 
