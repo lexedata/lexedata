@@ -94,8 +94,8 @@ def test_cogsets_and_judgements():
         "id": "paraguayan_guarani_one-one1",
         "formReference": "paraguayan_guarani_one",
         "comment": None,
-        "segmentSlice": None,
-        "alignment": None,
+        "segmentSlice": ["1:5"],
+        "alignment": ["p", "e", "t", "e", "ĩ", "-", "-"],
         "cognatesetReference": "one1",
     }
     assert list(judgements)[-1] == {
@@ -126,7 +126,7 @@ def test_cogsets_and_judgements_with_singletons():
         "comment": None,
         "name": "five",
     }
-    assert len(cogsets) == 12
+    assert len(cogsets) == 14
     assert list(judgements)[0] == {
         "id": "paraguayan_guarani_one-one1",
         "formReference": "paraguayan_guarani_one",
@@ -235,6 +235,8 @@ def test_adding_singleton_cognatesets_with_status(caplog):
         None,
         None,
         None,
+        "NEW",
+        "NEW",
         "NEW",
         "NEW",
     ]
