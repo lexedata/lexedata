@@ -278,7 +278,7 @@ def test_merge_group_assertion_error(copy_dataset, caplog):
 def test_merge_1(copy_dataset):
     """Test merger on different data formats.
 
-    For each of our standard data sets: Create tmp dataset with two identical
+    For each of our standard datasets: Create tmp dataset with two identical
     forms (apart from ID) and no other form. Run merging function, with these
     two IDs. Check that the result has exactly one form, with the first ID
 

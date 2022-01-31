@@ -140,7 +140,7 @@ def reshape_dataset(
 def connected_concepts(
     dataset: pycldf.Wordlist,
 ) -> t.Mapping[CognatesetID, t.Counter[ConceptID]]:
-    """For each cognate set it the data set, check which concepts it is connected to.
+    """For each cognate set it the dataset, check which concepts it is connected to.
 
     >>>
     """
