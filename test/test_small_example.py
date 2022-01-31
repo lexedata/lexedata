@@ -539,7 +539,7 @@ def test_interleaved_excel_example_header_wrong(caplog):
     ws = wb.active
     for row in data:
         ws.append(row)
-    with caplog:
+    with caplog.at_level(logging.ERROR):
         with pytest.raises(SystemExit):
             for row in excel_interleaved.import_interleaved(
                 wb, logger=logging.Logger, ids=set()
