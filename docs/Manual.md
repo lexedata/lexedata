@@ -75,35 +75,35 @@ If your CLDF dataset contains only a FormTable (the bare minimum for a CLDF data
 ```
 python -m lexedata.edit.add_metadata
 ```
-. Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and manually adjust this json file before you proceed (see [the metadata file](/docs/cldf.md#the-metadata-file)). You can also use this command to obtain a starting metadata file for a new dataset. In this case, you can start from an empty FormTable that contains the columns you would like to include. The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
+Lexedata will try to automatically detect CLDF roles for your columns (such as #form, #languageReference, #parameterReference, #comment, etc) and create a corresponding json file. We recommend that you inspect and manually adjust this json file before you proceed (see [the metadata file](/docs/cldf.md#the-metadata-file)). You can also use this command to obtain a starting metadata file for a new dataset. In this case, you can start from an empty FormTable that contains the columns you would like to include. The add_metadata command can be used also for LingPy output files, in order to obtain a CLDF dataset with metadata.
 
 #### How to add tables to your dataset (add_table)
 Once you have a metadata file, you can add tables to your dataset (such as LanguageTable, ParameterTable) automatically. Such tables are required for most lexedata commands. The relevant command is 
 ```
 python -m lexedata.edit.add_table TABLE
 ```
-. The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see [how to add a CognateTable](#how-to-add-a-cognatetable-add_cognate_table).
+The only table that cannot be added with this script is the CognateTable, which of course requires cognate judgements (see [how to add a CognateTable](#how-to-add-a-cognatetable-add_cognate_table).
 
 #### How to add a CognateTable (add_cognate_table)
 The output of LingPy has cognate judgements as a column within the FormTable, rather than in a separate CognateTable as is the standard in CLDF. This is also the format of a FormTable generated when importing an "interleaved" dataset with Lexedata (see [importing a lexical dataset using the "interleaved" format](#importing-a-lexical-dataset-using-the-interleaved-format)). In these cases, Lexedata can subsequently create an explicit CognateTable using the command 
 ```
 python -m lexedata.edit.add_cognate_table
 ```
-. Note that you have to indicate if your cognate judgement IDs are unique within the same concept or are valid across the dataset. In other words, if for every concept you have a cognateset with the code 1, then you need to indicate the option `--unique-id concept`, while if you have cross-concept cognate sets you need to indicate the option `--unique-id dataset`.
+Note that you have to indicate if your cognate judgement IDs are unique within the same concept or are valid across the dataset. In other words, if for every concept you have a cognateset with the code 1, then you need to indicate the option `--unique-id concept`, while if you have cross-concept cognate sets you need to indicate the option `--unique-id dataset`.
 
 #### How to normalize unicode (normalize_unicode)
 Linguistic data come with a lot of special characters especially for the forms, but also for language names etc. Many of the input methods used for such datasets result in seemingly identical glyphs, which are not necessarily the same unicode character (and are therefore not considered identical by a computer) . Lexedata can normalize unicode across your dataset with the command 
 ```
 python -m lexedata.edit.normalize_unicode
 ```
-. You can find more info about what unicode normalization [here](https://towardsdatascience.com/what-on-earth-is-unicode-normalization-56c005c55ad0).
+You can find more info about what unicode normalization [here](https://towardsdatascience.com/what-on-earth-is-unicode-normalization-56c005c55ad0).
 
 #### Workflow and tracking aid (add_status_column)
 When developing and editing a comparative dataset for historical linguistics, you may need to keep track of operations, such as manual checks, input by collaborators etc. You may also wish to inspect manually some of the automatic operations of lexedata. To facilitate such tasks, you can add a "status column" in any of the CLDF tables using the command 
 ```
 python -m lexedata.edit.add_status_column
 ```
-. How you use status columns is largely up to you. You may manually keep track of your workflow in this column using specific codewords of your choice. Lexedata scripts that perform automatic operations that are not trivial (such as alignments, automatic cognate set detection) usually leave a message in the status column (which is customizable).  
+How you use status columns is largely up to you. You may manually keep track of your workflow in this column using specific codewords of your choice. Lexedata scripts that perform automatic operations that are not trivial (such as alignments, automatic cognate set detection) usually leave a message in the status column (which is customizable).  
 
 #### Valid and transparent IDs (simplify_ids)
 In a CLDF dataset, all IDs need to be unique and be either numeric or restricted alphanumeric (i.e. containing only leters, numbers and underscores). Lexedata command 
@@ -191,7 +191,7 @@ You can obtain various statistics related to coverage (how many concepts have co
 ```
 python -m lexedata.report.coverage
 ```
-. 
+
 Among others, you can find which languages have corresponding forms for specific concepts, which languages have at least a given coverage percentage etc. NA forms (that correspond to concepts that do not exist in a particular language) by default count towards coverage, while missing forms don't. You can customize the treatment of missing and NA forms with the optional argument `--missing`.
 
 ### Segment inventories
@@ -199,21 +199,21 @@ You can get a report on all segments used for each language and their frequency 
 ```
 python -m lexedata.report.segment_inventories
 ```
-. This can be useful to locate rare or even erroneous transcriptions, non-standard IPA symbols etc. 
+This can be useful to locate rare or even erroneous transcriptions, non-standard IPA symbols etc. 
 
 ### Cognate judgements
 The cognate judgement report checks for issues involving cognate judgements, the segment slice column, the referenced segments and the alignment. For example, it checks if the referenced segments match what is present in the alignment and are contiguous (including identically looking but underlyingly different unicode characters), if the segment slice is valid based on the length of the form, and if the length of all alignments in a cognateset match. It also checks that missing ("") and NA ("-") forms are not assigned to any cognate set. In order to obtain the judgements report, you can use the command 
 ```
 python -m lexedata.report.judgements
 ```
-. If you want additionally to check for instances of non-concatenative morphology, you can use the switch `--strict`. 
+If you want additionally to check for instances of non-concatenative morphology, you can use the switch `--strict`. 
 
 ### CLDF validate
 Before and after a variety of operations with lexedata, and especially after manual editing of raw data, it is highly recommended to validate your dataset so you can catch and fix any inconsistencies. You can do a basic validation using the relevant command in the `pycldf` package, or an extended one with lexedata. For the basic validation, type: `cldf validate METADATA`, where `METADATA` stands for the metadata (json) file of your dataset. For the extended cldf validation, type 
 ```
 python -m lexedata.report.extended_cldf_validate
 ```
-. The extended validation includes all operations of the basic pycldf command, but also checks further potential issues related to cognate judgements, unicode normalization, alignments etc.
+The extended validation includes all operations of the basic pycldf command, but also checks further potential issues related to cognate judgements, unicode normalization, alignments etc.
 
 ### Filter dataset
 The `filter` command gives you the possibility to filter any table of your dataset according to a particular column using regular expressions. You can use this command to output a subset of the dataset to a file and use it as input for further commands in lexedata or other downstream analyses. The command is 
@@ -231,11 +231,11 @@ python -m lexedata.report.homophones
 The output of this command is a list of all groups of identical forms in the data and their associated concepts, along with the information if the associated concepts are connected in CLICS or not (if your concepts are linked to Concepticon, see [linking concepts to Concepticon](#linking-concepts-to-concepticon-add_concepticon)). You can choose to merge the polysemous forms, so you have one form associated to multiple concepts. In order to perform this operation, edit the output file of `lexedata.report.homophones`, so that only the groups of forms that are to be merged remain and then use `lexedata.edit.merge_homophones` (see [merge polysemous forms](#merge-polysemous-forms-merge_homophones)).
 
 ### Non-concatenative morphology
-You can get a detailed report on potentially non-concatenative morphemes (segments that belong to more than one cognate sets) by running 
+You can get a detailed report on potentially non-concatenative morphemes (segments that belong to more than one cognate sets, or cognate sets that refer to segments in a form which don't simply follow each other, due to infixes/circumfixes or metathesis) by running 
 ```
 python -m lexedata.report.nonconcatenative_morphemes
 ```
-. For a more general report on cognate judgements, see [cognate judgements](#cognate-judgements).
+For a more general report on cognate judgements, see [cognate judgements](#cognate-judgements).
 
 
 ## Exporting data (lexedata.exporter)
