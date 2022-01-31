@@ -2,7 +2,7 @@ Glossary
 --------
 
 .. glossary::
-   :sorted:
+  :sorted:
 
   Central concept
     The ‘central’ meaning among all forms that derive from the same etymological root.
@@ -37,6 +37,8 @@ Glossary
   Primary Concept
     A concept that has been systematically searched for in the languages of the dataset. When building a lexical dataset, it is typical procedure to start with a comparative wordlist including a number of basic concepts (e.g. a Swadesh list). Within lexedata, we call such concepts primary. Any other concepts present in parameters.csv are secondary. A dataset with within-concept cognate sets, often contains only primary concepts (however, it is possible that one has been keeping track of additional meanings for each word, thus leading to the inclusion of a number of secondary concepts as well.). A dataset with cross-concept cognate sets is very likely to include secondary concepts, especially if one has searched for cognate forms extensively among synonyms or closely related concepts to the primary concepts (see also secondary concept). Primary concepts matter for specific operations in lexedata. You can either provide a list of primary concepts or generate it through lexedata.report.filter if you have primary concepts annotated in your ParameterTable.
 
+     .. seealso:: :term:`secondary concept`
+
   Export
     Lexedata is CLDF-centric, so ‘export’ is always ‘away from CLDF’.
 
@@ -54,19 +56,14 @@ Glossary
     Lexedata is CLDF-centric, so ‘import’ is always ‘towards CLDF’.
     
   Missing form
-  A missing form is a special type of null (non-existent) form representing explicit missing data in the dataset and it has an empty form field (`""`).
-There are three types of null forms in a dataset:
-not-entered forms: These forms do not have any representation in the dataset and correspond to data not yet retrieved or searched for in sources. If no form corresponds to a concept, then it leads to a missing data coding (`?`) in matrices for phylogenetic analyses. 
-Missing forms: These forms have been searched for and are unknown. They also lead to a missing data coding (`?`) in matrices for phylogenetic analyses.
-NA forms:  .. seealso:: :term:`NA form`
+    A missing form is a special type of null (non-existent) form representing explicit missing data in the dataset and it has an empty form field (`""`).
+    There are three types of null forms in a dataset:
+    * not-entered forms: These forms do not have any representation in the dataset and correspond to data not yet retrieved or searched for in sources. If no form corresponds to a concept, then it leads to a missing data coding (`?`) in matrices for phylogenetic analyses. 
+    * Missing forms: These forms have been searched for and are unknown. They also lead to a missing data coding (`?`) in matrices for phylogenetic analyses.
+    * :term:`NA form`-s
 
   Multistate coding
     One of three :term:`phylogenetic coding method`'s implemented in lexedata. In this coding method, each :term:`primary concept` corresponds to a multistate character, with each within-concept cognate set corresponding to a different state. It is available for datasets with either within- or cross-concept cognate sets.
-
-  Primary Concept
-    A concept that has been systematically searched for in the languages of the dataset. When building a lexical dataset, it is typical procedure to start with a comparative wordlist including a number of basic concepts (e.g. a Swadesh list). Within lexedata, we call such concepts primary. Any other concepts present in parameters.csv are secondary. A dataset with within-concept cognate sets, often contains only primary concepts (however, it is possible that one has been keeping track of additional meanings for each word, thus leading to the inclusion of a number of secondary concepts as well.). A dataset with cross-concept cognate sets is very likely to include secondary concepts, especially if one has searched for cognate forms extensively among synonyms or closely related concepts to the primary concepts.
-    
-     .. seealso:: :term:`secondary concept`
 
   Root-meaning coding
     One of three coding methods implemented in lexedata. This coding method converts every within-concept cognate set in the dataset into a binary character (with 1 representing presence of this root-meaning association in a particular language and 0 absence). When a root-meaning association is not attested in a language, the character is coded as 0 if the meaning in question is expressed with a different root, and as ? if the meaning is not attested at all. The root-meaning coding method can be used for datasets with either cross-concept or within-concept cognate sets.

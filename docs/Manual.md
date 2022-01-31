@@ -167,15 +167,18 @@ back into your cldf dataset. This process will overwrite previously
 existing cognate sets and cognate judgements, as well as any associated comments
 (CognateTable comments and CognatesetTable comments).
 
-IMPORTANT: you cannot edit the raw data (forms, translation, form comments etc)
+```{important}
+You cannot edit the raw data (forms, translation, form comments, etc.)
 through this process. To edit raw data, see [editing a CLDF dataset](#editing-a-cldf-dataset-lexedataedit).
+```
 
 It is always a good idea to validate your dataset before and after any edits to make sure that everything is linked as it should in the cldf format.
-You can use `cldf validate METADATA_FILE` or `python -m lexedata.report.extended_cldf_validate` for a more thorough check (see also [CLDF validate](#cldf-validate)). 
-In order to export an xlsx Cognate Table, you should type
-```python -m lexedata.exporter.cognates FILENAME```
-The Cognate Table will be written to an excel file with the specified name.
-There are optional arguments to sort the languages and the cognate sets in this table, as well as to assign any forms not currently in a cognate set to automatic singleton cognate sets (see command help for more information). 
+You can use `cldf validate METADATA_FILE` or `python -m lexedata.report.extended_cldf_validate` for a more thorough check (see also [CLDF validate](#cldf-validate)). The latter is particularly useful, because it checks a lot of additional assumptions about cognate judgements.
+
+In order to export an xlsx cognate matrix, you should type
+```python -m lexedata.exporter.cognates FILENAME.xlsx```
+The cognate matrix will be written to an excel file with the specified name.
+There are optional arguments to sort the languages and the cognate sets in this table, as well as to assign any forms not currently in a cognate set to automatic singleton cognate sets (see command help for more information; see also: [lexedata.edit.add_singleton_cognatesets](#adding-trivial-cognate-sets-add_singleton_cognatesets)). 
 
 You can open and edit the Cognate Table in the spreadsheet editor of your choice. You just need to remember that you need and xlsx format in order to reimport your modified cognate sets into your cldf dataset (using the lexedata.importer.cognates command, see [importing cognate sets from a Cognate Table](#importing-cognate-sets-from-a-cognate-table). 
 
