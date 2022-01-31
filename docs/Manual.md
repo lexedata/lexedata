@@ -199,7 +199,8 @@ You can get a report on all segments used for each language and their frequency 
 ```
 python -m lexedata.report.segment_inventories
 ```
-This can be useful to locate rare or even erroneous transcriptions, non-standard IPA symbols etc. 
+This can be useful to locate rare or even erroneous transcriptions, non-standard IPA symbols etc.
+You can subset the report to one or a smaller number of languages for clarity using `--languages`.
 
 ### Cognate judgements
 The cognate judgement report checks for issues involving cognate judgements, the segment slice column, the referenced segments and the alignment. For example, it checks if the referenced segments match what is present in the alignment and are contiguous (including identically looking but underlyingly different unicode characters), if the segment slice is valid based on the length of the form, and if the length of all alignments in a cognateset match. It also checks that missing ("") and NA ("-") forms are not assigned to any cognate set. In order to obtain the judgements report, you can use the command 
