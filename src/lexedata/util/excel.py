@@ -60,7 +60,7 @@ def get_cell_comment(cell: op.cell.Cell) -> str:
 
 
 def normalize_header(row: t.Iterable[op.cell.Cell]) -> t.Iterable[str]:
-    header = [unicodedata.normalize("NFKC", (n.value or "").strip()) for n in row]
+    header = [unicodedata.normalize("NFC", (n.value or "").strip()) for n in row]
     header = [h.replace(" ", "_") for h in header]
     header = [h.replace("(", "") for h in header]
     header = [h.replace(")", "") for h in header]
