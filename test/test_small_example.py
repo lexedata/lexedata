@@ -512,7 +512,7 @@ def test_interleaved(interleaved_excel_example):
     }
 
 
-def interleaved_excel_example_header_off(caplog):
+def test_interleaved_excel_example_header_wrong(caplog):
     data = [
         ["Concept", "", "", "", ""],
         ["", "Duala", "Ntomba", "Ngombe", "Bushoong"],
