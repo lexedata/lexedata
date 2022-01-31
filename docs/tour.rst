@@ -6,8 +6,8 @@ This tutorial will take you on a tour through the command line functionality of
 the lexedata package. We will start with a small lexical dataset in an
 interleaved tabular format, where each column corresponds to a language and each
 pair of rows to a concept, with preliminary cognate codes. We will take you
-through turning the data set into CLDF, editing cognate judgements, and
-exporting the data set as phylogenetic alignment.
+through turning the dataset into CLDF, editing cognate judgements, and
+exporting the dataset as phylogenetic alignment.
 
 (To prevent this tutorial from becoming obsolete, our continuous integration
 testing system ‘follows’ this tutorial when we update the software. So if it
@@ -40,7 +40,7 @@ start terminal and execute ::
     $ cd bantu
 
 For this tutorial, we will be using lexical data from the Bantu family,
-collected by Hilde Gunnink. The data set is a subset of an earlier version 
+collected by Hilde Gunnink. The dataset is a subset of an earlier version 
 (deliberately, so this tour can show some steps in the cleaning process) of her lexical dataset.
 The data is stored in an Excel file which you can download from
 the lexedata repository ::
@@ -178,7 +178,7 @@ origin of the data in a well-structured way) and for phonemic segmentation,
 which is useful in particular when working with sound correspondences on a
 segment-by-segment level. We will add segments in :ref:`a future section <segments>`.
 
-With the new metadata file and the new columns, the data set now looks like this::
+With the new metadata file and the new columns, the dataset now looks like this::
 
     $ ls
     Wordlist-metadata.json
@@ -209,7 +209,7 @@ With the new metadata file and the new columns, the data set now looks like this
     duala_black,Duala,black,wínda,,21,,
 
 The ``cldf validate`` script only outputs problems, so if it prints out nothing,
-it means that the data set conforms to the CLDF standard! That's a good starting
+it means that the dataset conforms to the CLDF standard! That's a good starting
 point to create a new commit. ::
 
     $ git add Wordlist-metadata.json
@@ -529,7 +529,7 @@ and proceed to add the cognateset table. ::
     $ git commit -am "Add cognate and cognateset tables"
     [...]
 
-Create a consistent data set
+Create a consistent dataset
 ----------------------------
 Now all the external properties of a form can be annotated with explicit
 metadata in their own table files, for example for the languages:
@@ -696,7 +696,7 @@ nothing to complain about: Our dataset is not only valid CLDF, but also
 compatible with the general assumptions of lexedata.
 
 ********************
-Editing the data set
+Editing the dataset
 ********************
 
 We are about to start editing. In the process, we may introduce new issues into
@@ -867,7 +867,7 @@ polysemous forms connected to multiple concepts. ::
 Improve Cognatesets
 ===================
 
-Now the data set is in a very good shape. We can now start with the historical
+Now the dataset is in a very good shape. We can now start with the historical
 linguistics, editing cognatesets and alignments.
 
 Merge cognatesets
@@ -993,7 +993,7 @@ generated initially, we can use one of the reports::
     | î       |             1 |              |
 
 The reports fulfill different functions. Some, as you have seen, focus on issues
-with the internal correctness of the data set. Others, like the
+with the internal correctness of the dataset. Others, like the
 ``segment_inventories`` report above or :py:mod:`lexedata.report.coverage`, are
 useful for statistical summaries of the dataset. And a third group, such as the
 homophones report, generate output that can be used as input to other
@@ -1014,7 +1014,7 @@ Computer-assisted historical linguistics
 ****************************************
 
 We can now modify the cognate judgements. Lexedata currently supports two ways
-to do this, both work by exporting the lexical data set to an external format
+to do this, both work by exporting the lexical dataset to an external format
 more handy for editing, and then importing it back in.
 
 Cognate Excel
@@ -1034,7 +1034,7 @@ Edictor
 
 The second export-import loop lexedata implements exports to the TSV format used
 by `edictor <https://edictor.digling.org>`_, a JavaScript-based in-browser
-editor for lexical data sets. (Edictor runs purely inside your browser on your
+editor for lexical datasets. (Edictor runs purely inside your browser on your
 computer, there is no data transmission involved.)
 
 For this example, we will look more closely at the concepts of locomotion. We

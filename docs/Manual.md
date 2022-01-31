@@ -338,7 +338,7 @@ This loop is brittle.
 
 * Edictor can sometimes halt processing without warning, in particular on large datasets or datasets with special assumptions, such as non-concatenative morphemes, polysemous forms, or multi-line comments.
 * Such datasets also quickly become unwieldy in Edictor.
-* In order to support edits using Edictor better, the exporter allows the restriction of the data set to a subset of languages and concepts. The importer does its best to try integrating the changes made in Edictor back to the dataset. However, there are a lot of special cases which are insufficiently tested.
+* In order to support edits using Edictor better, the exporter allows the restriction of the dataset to a subset of languages and concepts. The importer does its best to try integrating the changes made in Edictor back to the dataset. However, there are a lot of special cases which are insufficiently tested.
 
 Be careful with the Edictor loop. Re-import often, commit often to be able to undo changes, and don't hesitate to [raise an issue](https://github.com/Anaphory/lexedata/issues/new) concerning undesired behavior.
 ```

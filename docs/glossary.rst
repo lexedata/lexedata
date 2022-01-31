@@ -59,7 +59,7 @@ Glossary
     A missing form is a special type of null (non-existent) form representing explicit missing data in the dataset and it has an empty form field (``""``).
     There are in total three types of null forms that can be represented a dataset:
 
-    * missing forms: These forms have been searched for and are unknown according to a sources. They are represented as form row with an empty #form column in the data set.
+    * missing forms: These forms have been searched for and are unknown according to a sources. They are represented as form row with an empty #form column in the dataset.
     * not-entered forms: These forms do not have any representation in the dataset and correspond to data not yet retrieved or searched for in sources.
     * :term:`NA form`-s, with form ``-``
       
