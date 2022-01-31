@@ -173,7 +173,7 @@ def check_foreign_keys(dataset: pycldf.Dataset, logger=cli.logger):
 
             if dataset[target_table] != dataset[reference.resource]:
                 log_or_raise(
-                    message=f"Foreign key {key} is a declared as {column_type}, which should point to {target_table.url} but instead points to {reference}",
+                    message=f"Foreign key {key} is a declared as {column_type}, which should point to {target_table} but instead points to {reference}",
                     log=logger,
                 )
                 valid = False
