@@ -866,7 +866,7 @@ def parser():
         "--coding",
         action=cli.enum_from_lower(CodingProcedure),
         default="RootMeaning",
-        help="""Binarization method: In the `RootMeaning` coding method, every character
+        help="""Coding method: In the `RootMeaning` coding method, every character
         describes the presence or absence of a particular root morpheme or
         cognate class in the word(s) for a given meaning; In the
         `RootPresence`, every character describes (up to the limitations of the
