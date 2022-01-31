@@ -148,7 +148,9 @@ def check_unicode_data(
     return True
 
 
-def check_foreign_keys(dataset: pycldf.Dataset, logger=None):
+def check_foreign_keys(
+    dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger
+):
     # Get all foreign keys for each table
     valid = True
     for table in dataset.tables:
@@ -174,7 +176,7 @@ def check_foreign_keys(dataset: pycldf.Dataset, logger=None):
 
             if dataset[target_table] != dataset[reference.resource]:
                 log_or_raise(
-                    message=f"Foreign key {key} is a declared as {column_type}, which should point to {target_table.url} but instead points to {reference}",
+                    message=f"Foreign key {key} is a declared as {column_type}, which should point to {target_table} but instead points to {reference}",
                     log=logger,
                 )
                 valid = False
