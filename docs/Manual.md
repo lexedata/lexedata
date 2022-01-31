@@ -150,7 +150,13 @@ You can get a detailed report on potentially non-concatenative morphemes (segmen
 
 
 ## Exporting data (lexedata.exporter)
-### Export a Cognate Table
+
+The `exporter` package contains two types of scripts.
+
+1. Scripts which export the data to make it available for editing, through an [xlsx cognate matrix](#the-xlsx-cognate-matrix-loop) or through [Edictor and LingPy](#the-edictor-editing-loop). These export scripts come with a corresponding importer script in `lexedata.importer`, so that data can be exported, edited externally, and re-imported.
+2. Scripts which export the data for other use. The [matrix exporter](#export-as-wordlist-matrix) generates a matrix of parallel word lists that can be edited for inclusion in a publication, while the [phylogenetics exporter](#export-phylogenetic-sequences) generates character sequences that can be used in phylogenetics software.
+
+### The xlsx cognate matrix loop
 
 Lexedata offers the possibility to edit and annotate within- or across-concept cognate sets in a spreadsheet format using the spreadsheet
 editor of your choice (we have successfully used Google sheets, LibreOffice Calc and Microsoft
