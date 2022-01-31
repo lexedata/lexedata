@@ -262,7 +262,7 @@ python -m lexedata.report.filter COLUMN FILTER [TABLE]
 The `exporter` package contains two types of scripts.
 
 1. Scripts which export the data to make it available for editing, through an [xlsx cognate matrix](#the-xlsx-cognate-matrix-loop) or through [Edictor and LingPy](#the-edictor-editing-loop). These export scripts come with a corresponding importer script in `lexedata.importer`, so that data can be exported, edited externally, and re-imported.
-2. Scripts which export the data for other use. The [matrix exporter](#export-as-wordlist-matrix) generates a matrix of comparative word lists that can be edited for inclusion in a publication, while the [phylogenetics exporter](#export-coded-data-for-phylogenetic-analyses) generates character sequences that can be used in phylogenetics software.
+2. Scripts which export the data for other use. The [matrix exporter](#export-as-wordlist-matrix) generates a comparative word list that can be edited for inclusion in a publication, while the [phylogenetics exporter](#export-coded-data-for-phylogenetic-analyses) generates character sequences that can be used in phylogenetics software.
 
 ### The xlsx cognate matrix loop
 
@@ -296,7 +296,7 @@ There are optional arguments to sort the languages and the cognate sets in this 
 
 You can open and edit the cognate matrix in the spreadsheet editor of your
 choice. You can update cognate sets, cognate judgements and associated metadata
-(in particular segment slices and alignments). This workflow can allow
+(in particular segment slices, alignments, CognateTable comments, and CognatesetTable comments). This workflow can allow
 specialists to work on the cognacy judgements in a familiar format (such as
 excel), or allow a team to work collaboratively on Google sheets, while at the
 same time keeping the dataset in the standard cldf format. You just need to
@@ -321,8 +321,7 @@ provides access to another way of modifying cognate sets and alignments, with
 interfaces for partial cognate annotation, a graphical alignment editor and
 summaries of sound correspondences. Like the [LingPy](http://lingpy.org/) Python
 library for historical linguistics, Edictor uses a format that is similar to
-CLDF's form table. The format includes cognate judgements and alignments in the
-table. In addition, it differs in several format choices that look minor to the
+CLDF's form table, but it also includes cognate judgements and alignments. In addition, it differs in several format choices that look minor to the
 human eye, but matter greatly for automatic processing by a computer.
 
 To work with CLDF data in Edictor or LingPy, Lexedata provides a pair of an exporter and importer script
@@ -332,16 +331,16 @@ python -m lexedata.exporter.edictor FILENAME.tsv
 python -m lexedata.importer.edictor FILENAME.tsv
 ```
 
-which allow the export of a CLDF dataset to Edictor's TSV format and importing the data back after editing.
+which allow the exporting of a CLDF dataset to Edictor's TSV format and importing the data back after editing.
 
 ```{Important}
 This loop is brittle.
 
 * Edictor can sometimes halt processing without warning, in particular on large datasets or datasets with special assumptions, such as non-concatenative morphemes, polysemous forms, or multi-line comments.
 * Such datasets also quickly become unwieldy in Edictor.
-* In order support edits using Edictor better, the exporter allows the restriction of the data set to a subset of lanugages and concepts. The importer does its best to try integrating the changes made in Edictor back to the dataset. However, there are a lot of special cases which are insufficiently tested.
+* In order to support edits using Edictor better, the exporter allows the restriction of the data set to a subset of languages and concepts. The importer does its best to try integrating the changes made in Edictor back to the dataset. However, there are a lot of special cases which are insufficiently tested.
 
-Be careful with the Edictor loop. Re-import often, commit often to be able to undo changes, and don't hesitate to [raise an issue](https://github.com/Anaphory/lexedata/issues/new) concerning undesired behaviour.
+Be careful with the Edictor loop. Re-import often, commit often to be able to undo changes, and don't hesitate to [raise an issue](https://github.com/Anaphory/lexedata/issues/new) concerning undesired behavior.
 ```
 
 ### Export a comparative wordlist
@@ -355,18 +354,18 @@ or [figshare](https://figshare.com/)). The command
 python -m lexedata.exporter.matrix FILENAME.xlsx
 ```
 
-helps preparing such a layout. It generates an Excel sheet which contains one column per language and one row per concept. Optionally, forms can be hyperlinked to their corresponding page or anchor in a web-browsable database version of the dataset, concepts can be output with their Concepticon links. Also, you can specify a subset of languages and concepts to include, eg. only the {term}`primary concept`s.
+helps preparing such a layout. It generates an Excel sheet which contains one column per language and one row per concept. Optionally, forms can be hyperlinked to their corresponding page or anchor in a web-browsable database version of the dataset, while concepts can be output with their Concepticon links. Also, you can specify a subset of languages and concepts to include, eg. only the {term}`primary concept`s.
 
 ### Export coded data for phylogenetic analyses
 
 Lexedata is a powerful tool to prepare linguistic data for phylogenetic
-analyses. It can be used to export a cldf dataset containing cognate judgements
+analyses. The command `python -m lexedata.exporter.phylogenetics` can be used to export a cldf dataset containing cognate judgements
 as a coded matrix for phylogenetic analyses to be used by standard phylogenetic
-software (such as [BEAST2](http://www.beast2.org/), [MrBayes](http://nbisweden.github.io/MrBayes/) or [revBayes](https://revbayes.github.io/)). Different formats are supported,
+software, (such as [BEAST2](http://www.beast2.org/), [MrBayes](http://nbisweden.github.io/MrBayes/) or [revBayes](https://revbayes.github.io/)). Different formats are supported,
 such as nexus, csv, a beast-friendly xml format, as well as a raw alignment
 format (similar to the FASTA format used in bioinformatics). Lexedata also
 supports different coding methods for phylogenetic analyses: {term}`root-meaning coding`,
-cross-meaning cognate sets AKA {term}`root presence coding`, and {term}`multistate coding`.
+cross-concept cognate sets AKA {term}`root presence coding`, and {term}`multistate coding`.
 
 Finally, you can use Lexedata
 to filter and export a portion of your dataset for phylogenetic analyses, e.g.
