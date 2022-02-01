@@ -22,7 +22,7 @@ affiliations:
    index: 2
  - name: Center for the Interdisciplinary Study of Language Evolution, Universität Zürich, CH
    index: 3
-date: 29 September 2021
+date: 01 February 2022
 bibliography: bibliography.bib
 ---
 # Summary
