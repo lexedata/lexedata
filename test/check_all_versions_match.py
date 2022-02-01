@@ -28,11 +28,22 @@ if __name__ == "__main__":
     cff = root / "CITATION.cff"
     # Maybe use cffconvert to parse? Or at least YAML?
     _, cff_version = [r for r in cff.open() if r.startswith("version:")][0].split(" ")
-    print(cff, cff_version)
+    print(cff, cff_version.strip())
 
     # There is also CodeMeta (https://codemeta.github.io/), which is the
     # solution suggested by JOSS. https://elib.dlr.de/133084/1/1905.08674.pdf
     # suggests converting CFF automatically to CodeMeta.
 
-    if not (py_version.strip() == zenodo_version.strip() == cff_version.strip()):
+    docs = root / "docs"
+    sys.path.append(str(docs))
+    from conf import release
+
+    print(docs / "conf.py", release)
+
+    if not (
+        py_version.strip()
+        == zenodo_version.strip()
+        == cff_version.strip()
+        == release.strip()
+    ):
         sys.exit(1)

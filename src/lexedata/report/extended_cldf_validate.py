@@ -23,7 +23,7 @@ from lexedata import cli, util, types
 from lexedata.report.judgements import check_cognate_table
 
 
-def log_or_raise(message, log: cli.logger = cli.logger):
+def log_or_raise(message, log: cli.logging.Logger = cli.logger):
     log.warning(message)
 
 
@@ -37,7 +37,7 @@ def check_segmentslice_separator(dataset, logger=None) -> bool:
     return True
 
 
-def check_id_format(dataset: pycldf.Dataset, logger: cli.logger = cli.logger):
+def check_id_format(dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger):
     correct = True
     for table in dataset.tables:
         # Every table SHOULD have an ID column
@@ -114,7 +114,7 @@ def check_no_separator_in_ids(
             forbidden_separators[foreign_key.reference.resource.__str__()][
                 referenced_column
             ][table.get_column(referencing_column).separator].append(
-                (table.url, referencing_column)
+                (table.url.string, referencing_column)
             )
 
     for table, targets in forbidden_separators.items():
@@ -123,7 +123,7 @@ def check_no_separator_in_ids(
                 for separator, forbidden_by in separators_forbidden_here.items():
                     if separator in row[target_column]:
                         log_or_raise(
-                            f"In table {table}, row {r} column {target_column} contains {separator:r}, which is also the separator of {forbidden_by}.",
+                            f"In table {table}, row {r} column {target_column} contains {separator}, which is also the separator of {forbidden_by}.",
                             log=logger,
                         )
                         valid = False
@@ -131,7 +131,9 @@ def check_no_separator_in_ids(
 
 
 def check_unicode_data(
-    dataset: pycldf.Dataset, unicode_form: str = "NFC", logger: cli.logger = cli.logger
+    dataset: pycldf.Dataset,
+    unicode_form: str = "NFC",
+    logger: cli.logging.Logger = cli.logger,
 ) -> bool:
     for table in dataset.tables:
         for r, row in enumerate(table, 1):
@@ -146,7 +148,9 @@ def check_unicode_data(
     return True
 
 
-def check_foreign_keys(dataset: pycldf.Dataset, logger=None):
+def check_foreign_keys(
+    dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.logger
+):
     # Get all foreign keys for each table
     valid = True
     for table in dataset.tables:
@@ -183,7 +187,7 @@ def check_foreign_keys(dataset: pycldf.Dataset, logger=None):
                 dataset[key.reference.resource, "id"].name
             ]:
                 log_or_raise(
-                    message=f"foreign key {key} in table {table.url.string} "
+                    message=f"Foreign key {key} in table {table.url.string} "
                     f"does not point to the ID column of another table",
                     log=logger,
                 )
@@ -249,7 +253,7 @@ if __name__ == "__main__":
     correct &= dataset.validate(log=logger)
 
     # All IDs should be [a-zA-Z0-9_-]+, and should be primary keys
-    correct &= check_id_format(dataset)
+    correct &= check_id_format(dataset, logger=logger)
 
     # Check reference properties/foreign keys
     correct &= check_foreign_keys(dataset, logger=logger)
