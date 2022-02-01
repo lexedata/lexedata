@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 import unicodedata
 import re
@@ -117,3 +118,21 @@ def test_check_no_separator_in_ids_warning(caplog):
         r"In table concepts.csv, row 8 column ID contains _, which is also the separator of \[\('forms.csv', 'Parameter_ID'\)]",
         caplog.text.split("\n")[-2],
     )
+
+
+def test_check_judgements():
+    dataset, target = copy_to_temp(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    assert validate.check_cognate_table(dataset=dataset)
+
+
+def test_check_judgements_no_segslice_no_alignment(caplog):
+    dataset, target = copy_to_temp(
+        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    )
+    dataset.remove_columns("CognateTable", "Segment_Slice", "Alignment")
+    with caplog.at_level(logging.INFO):
+        assert validate.check_cognate_table(dataset=dataset)
+    assert re.search("CognateTable.*no.*segmentSlice", caplog.text)
+    assert re.search("CognateTable.*no.*alignment", caplog.text)
