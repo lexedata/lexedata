@@ -36,8 +36,10 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
+    "sphinxcontrib.bibtex",
 ]
 autosectionlabel_prefix_document = True
+bibtex_bibfiles = ["bibliography.bib"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
