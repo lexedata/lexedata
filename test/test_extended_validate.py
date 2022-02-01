@@ -25,7 +25,6 @@ def test_check_foreignkeys_warning_table(caplog):
             key.reference.resource = dataset["CognateTable"]
 
     validate.check_foreign_keys(dataset=dataset)
-    breakpoint()
     assert re.search(
         r"Foreign key ForeignKey.+is a declared as parameterReference, which should point to ParameterTable but instead points to.+",
         caplog.text,
