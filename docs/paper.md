@@ -14,7 +14,7 @@ authors:
     affiliation: 2
   - name: Natalia Chousou-Polydouri
     orcid: 0000-0002-5693-975X
-    affiliation: 2,3
+    affiliation: "2,3"
 affiliations:
  - name: Department of Geography, Universität Zürich, CH
    index: 1
