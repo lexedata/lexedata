@@ -58,7 +58,7 @@ Excel), you will see that ::
 
     $ python -c 'from openpyxl import load_workbook
     > for row in load_workbook("bantu.xlsx").active.iter_rows():
-    >   row_text = [c.value.strip() or "" for c in row]
+    >   row_text = [(c.value or "").strip() for c in row]
     >   if any(row_text):
     >     print(*row_text, sep="\t")' # doctest: +NORMALIZE_WHITESPACE
             Duala      Ntomba      Ngombe                       Bushoong                   [...]
