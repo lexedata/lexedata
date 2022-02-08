@@ -270,6 +270,7 @@ def test_no_cognate_table(caplog):
     assert "lexedata.edit.add_cognate_table" in caplog.text
 
 
+@pytest.mark.filterwarnings("ignore:Unspecified column")
 def test_no_comment_column():
     dataset, _ = copy_to_temp(
         Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"

@@ -8,4 +8,10 @@ elif platform.system() == "Darwin":
 else:
     readline = "readline"
 
-setup(extras_require={"formatguesser": [readline]})
+setup(
+    extras_require={
+        "formatguesser": [readline],
+        "test": ["tox"],
+        "dev": ["pre-commit"],
+    }
+)
