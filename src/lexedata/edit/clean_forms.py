@@ -124,7 +124,7 @@ def treat_brackets(
                 variants.extend(new_variants)
                 comment.extend(new_comments)
             # We avoid dict.update() here, so that in a recursive call where an
-            # earier bracket has already succeeded, still the whole form cell
+            # earlier bracket has already succeeded, still the whole form cell
             # is skipped. Or at least I thought that was the logic, except
             # there are no recursive calls to treat_brackets.
             yield {
