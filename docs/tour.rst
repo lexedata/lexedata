@@ -141,7 +141,7 @@ us a FormTable in the file ``forms.csv``::
     duala_bite,Duala,bite,kukwa,,6
     duala_black,Duala,black,wínda,,21
 
-A well-structured ``forms.cvs`` is a valid, `“metadata-free”
+A well-structured ``forms.csv`` is a valid, `“metadata-free”
 <https://github.com/cldf/cldf#metadata-free-conformance>`_ CLDF wordlist. In
 this case, the data contains a column that CLDF does not know out-of-the-box,
 but otherwise the dataset is fine. ::
