@@ -15,8 +15,8 @@ Lexedata is open access software in development. Please report any problems and 
    :caption: Lexedata Documentation
 
    installation
-   Manual
    tour
+   Manual
    cli_reference
    internal_api
 

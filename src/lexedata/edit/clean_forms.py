@@ -123,13 +123,18 @@ def treat_brackets(
                 )
                 variants.extend(new_variants)
                 comment.extend(new_comments)
-            # TODO: Should we have a message here?
-            yield row | {
+            # We avoid dict.update() here, so that in a recursive call where an
+            # earlier bracket has already succeeded, still the whole form cell
+            # is skipped. Or at least I thought that was the logic, except
+            # there are no recursive calls to treat_brackets.
+            yield {
+                **row,
                 form_column_name: form,
                 variants_column_name: variants,
                 comment_column_name: "; ".join(comment),
             }
         except Skip as e:
+            # TODO: Should we have a message here?
             logger.error(
                 "Line %d: Form '%s' has %s. I did not modify the row.",
                 r,

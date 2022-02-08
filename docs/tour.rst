@@ -53,11 +53,21 @@ under Linux and Windows. You can, of course, download the file
 yourself using whatever method you are most comfortable with, and save
 it as ``Bantu.xlsx`` in this folder.)
 
-If you look at this data, you will see that ::
+If you look at this data (I will do it in Python, but feel free to open it in
+Excel), you will see that ::
 
     $ python -c 'from openpyxl import load_workbook
     > for row in load_workbook("bantu.xlsx").active.iter_rows():
-    >   print(*[c.value or "" for c in row], sep="\t")'
+    >   row_text = [(c.value or "").strip() for c in row]
+    >   if any(row_text):
+    >     print(*row_text, sep="\t")' # doctest: +NORMALIZE_WHITESPACE
+            Duala      Ntomba      Ngombe                       Bushoong                   [...]
+    all     ɓɛ́sɛ̃       (nk)umá     ńsò (Bastin et al 1999)      kim (Bastin et al 1999)    [...]
+            1          9           10                           11                         [...]
+    arm     dia        lobɔ́kɔ      lò-bókò (PL: màbókò) [...]   lɔ̀ɔ́ (Bastin et al 1999)    [...]
+            7          1           1                            1                          [...]
+    ashes   mabúdú     metókó      búdùlù ~ pùdùlù ([...])      bu-tók (Bastin et al 1999) [...]
+            17         16          17                           16                         [...]
     [...]
 
 it is table with one column for each language, and every pair of rows contains
