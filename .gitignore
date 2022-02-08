@@ -7,6 +7,7 @@ venv
 .mypy*
 .tox
 .idea*
+.coverage
 
 # Sphinx generated files
 docs-build/
