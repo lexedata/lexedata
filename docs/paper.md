@@ -42,9 +42,9 @@ comma-separated value (CSV) files that get their semantics from a metadata file
 in JSON format.
 
 # Statement of Need
-Maintaining the integrity as relational database is difficult using general CSV
-editing tools. This holds in particular for the usual dataset size of
-hundreds of languages and concepts, and formats unfamiliar to most linguists.
+Maintaining the integrity of CLDF as relational database is difficult using
+general CSV editing tools. This holds in particular for the usual dataset size
+of hundreds of languages and concepts, and formats unfamiliar to most linguists.
 
 ![Overview over the functionality in Lexedata.\label{fig:structure}](structure.png)
 
