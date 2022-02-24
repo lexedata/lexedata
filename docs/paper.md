@@ -33,14 +33,13 @@ comparison of languages [@list2021lexibank]. They are an important resource in
 comparative and historical linguistics, including their use as raw data for
 language phylogenetics [@gray2009language;@grollemund2015bantu].
 
-The `lexedata` toolbox package uses the “Cross-Linguistic Data Format” (CLDF,
+The `lexedata` package uses the “Cross-Linguistic Data Format” (CLDF,
 @cldf11, @cldf-paper) as main data format for a relational database containing
 forms, languages, concepts, and etymological relationships. The CLDF
 specification builds on top of the CSV for the Web (CSVW,
 @pollock2015metadata) specs by the W3C, and as such consists of one or more
 comma-separated value (CSV) files that get their semantics from a metadata file
 in JSON format.
-
 
 Implemented in Python as a set of command line tools, Lexedata provides various
 helper functions that frequently arise when working with comparative wordlists
@@ -58,16 +57,16 @@ judgements, or exporting datasets for use in phylogenetic software.
 Maintaining the integrity of CLDF as relational database is difficult using
 general CSV editing tools. This holds in particular for the usual dataset size
 of hundreds of languages and concepts, and formats unfamiliar to most linguists.
-Dedicated relational database software simplifies the maintenance of the data
-structures, but sets an even bigger hurdle even to researchers who are
-reasonably computer-savy.
+Dedicated relational database software, which simplifies the maintenance of the
+data constraints, would set an even bigger hurdle to researchers, even to those
+who are reasonably computer-savy.
 
 The major existing tool for curating lexical datasets in other formats and
 providing them as CLDF for interoperability is cldfbench [@cldfbench]. However,
-it assumes that the data curator is not in a position to edit the dataset. As
-such, it must provide a very flexible interface to transform and curate CLDF
-datasets, at the cost of making this accessible through an API which requires
-the writing of Python code.
+cldfbench assumes that the data curator is not necessarily qin a position to
+edit the dataset. As such, it must provide a very flexible interface to
+transform and curate CLDF datasets, at the cost of making this accessible
+through an API which requires the writing of Python code.
 
 Given that a majority of comparative linguists are unfamiliar with programming,
 Lexedata is designed to not need any programming skills. In contrast with
@@ -76,21 +75,22 @@ collecting and editing the dataset. It therefore imposes additional constraints
 on the dataset which are very useful in editing tasks, but not strictly required
 by CLDF in general.
 
-Lexedata provides export and import functionality for the format used by LingPy
+There are two major existing tools for editing lexical datasets, LingPy
 [@lingpy] and Edictor [@edictor]. Edictor is a browser-based graphical user
 interface tool to edit cognate annotations, while LingPy is a Python library
 focused on automating manipulations of lexical datasets, such as automatic
 cognate detection. Both of these pre-date the CLDF format, and while their
-common data format inspired some features of CLDF, it has some differences. In
-addition to converting this TSV-based format to and from CLDF, Lexedata exposes
-a major LingPy functionality, the Automatic Cognate Detection (ACD,
-@list2017potential) using Lexstat [@list2012lexstat], to work directly on CLDF
-datasets. This avoids both having to convert to and from LingPy and memory
-issues arising from LingPy's approach to load the entire dataset into memory.
+common data format inspired some features of CLDF, it has some differences.
+Lexedata provides export and import functionality for this TSV-based format to
+and from CLDF. In addition, Lexedata exposes a major LingPy functionality, the
+Automatic Cognate Detection (ACD, @list2017potential) using Lexstat
+[@list2012lexstat], to work directly on CLDF datasets. This avoids both memory
+issues arising from LingPy's approach to load the entire dataset into memory and
+the need to convert between CLDF and LingPy.
 
-In summary, Lexedata makes it possible to curate and edit a lexical dataset in
-CLDF format without the need to be able to program, which is still a rare skill
-among comparative linguists. It allows this without sacrificing the power and
+In summary, Lexedata addresses the need to curate and edit a lexical dataset in
+CLDF format without the ability to program, which is still a rare skill among
+comparative linguists. It allows this without sacrificing the power and
 familiarity of existing software such as GUI spreadsheed apps or Edictor, by
 making format conversions and bulk editing functionality accessible from simple
 terminal commands.
