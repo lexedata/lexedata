@@ -42,7 +42,7 @@ comma-separated value (CSV) files that get their semantics from a metadata file
 in JSON format.
 
 Implemented in Python as a set of command line tools, Lexedata provides various
-helper functions that frequently arise when working with comparative wordlists
+helper functions to address issues that frequently arise when working with comparative wordlists
 for multiple languages, as shown in \autoref{fig:structure}. These include
 import and export functions to formats more familiar to linguists, and integrity
 checks for bulk edit and import functionality it provides. For example, there
@@ -63,8 +63,8 @@ who are reasonably computer-savy.
 
 The major existing tool for curating lexical datasets in other formats and
 providing them as CLDF for interoperability is cldfbench [@cldfbench]. However,
-cldfbench assumes that the data curator is not necessarily qin a position to
-edit the dataset. As such, it must provide a very flexible interface to
+cldfbench assumes that the data curator is not necessarily in a position to
+edit the dataset. As such, it provides a very flexible interface to
 transform and curate CLDF datasets, at the cost of making this accessible
 through an API which requires the writing of Python code.
 
