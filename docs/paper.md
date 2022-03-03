@@ -48,32 +48,32 @@ import and export functions to formats more familiar to linguists, and integrity
 checks for bulk edit and import functionality it provides. For example, there
 are scripts for importing data from MS Excel sheets of various common formats
 into CLDF, checking for homophones, manipulating etymological
-judgements, or exporting datasets for use in phylogenetic software.
+judgements, or exporting coded datasets for use in phylogenetic software.
 
 ![Overview over the functionality in Lexedata.\label{fig:structure}](structure.png)
 
 # Statement of Need
 
-Maintaining the integrity of CLDF as relational database is difficult using
+Maintaining the integrity of CLDF as a relational database is difficult using
 general CSV editing tools. This holds in particular for the usual dataset size
 of hundreds of languages and concepts, and formats unfamiliar to most linguists.
 Dedicated relational database software, which simplifies the maintenance of the
 data constraints, would set an even bigger hurdle to researchers, even to those
-who are reasonably computer-savy.
+who are reasonably computer-savvy.
 
 The major existing tool for curating lexical datasets in other formats and
 providing them as CLDF for interoperability is cldfbench [@cldfbench]. However,
 cldfbench assumes that the data curator is not necessarily in a position to
 edit the dataset. As such, it provides a very flexible interface to
 transform and curate CLDF datasets, at the cost of making this accessible
-through an API which requires the writing of Python code.
+through an API which requires writing Python code.
 
-Given that a majority of comparative linguists are unfamiliar with programming,
+Given that the majority of comparative linguists are unfamiliar with programming,
 Lexedata is designed to not need any programming skills. In contrast with
 cldfbench, Lexedata is written for the purpose of not only curating, but also
 collecting and editing the dataset. It therefore imposes additional constraints
 on the dataset which are very useful in editing tasks, but not strictly required
-by CLDF in general.
+by CLDF.
 
 There are two major existing tools for editing lexical datasets, LingPy
 [@lingpy] and Edictor [@edictor]. Edictor is a browser-based graphical user
