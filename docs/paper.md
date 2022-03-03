@@ -105,15 +105,14 @@ providing user-friendly access to format conversions and bulk editing functional
 from simple terminal commands.
 
 # Research use
-The export to phylogenetic alignments, derived from BEASTling
-[@maurits2017beastling;@beastling14], has already been used in different language
-phylogenetics projects that are currently under review
-[@kaiping2019subgrouping;@kaiping2021burst;@gunnink2022bantu]. The
-more extensive lexical dataset editing functionality is used by projects
+The extensive lexical dataset editing functionality is currently used by projects
 at UC Berkeley and Universität Zürich for Arawakan and Mawetí-Guaraní languages
 and at Universiteit Gent for Bantu.
-Precursor scripts have also
-been used for Timor-Alor-Pantar and Austronesian languages [@lexirumah-paper].
+The export to phylogenetic alignments, derived from BEASTling
+[@maurits2017beastling;@beastling14], has been used in different language
+phylogenetics projects that are currently under review
+[@kaiping2019subgrouping;@kaiping2021burst;@gunnink2022bantu]. 
+Precursor scripts have also been used for Timor-Alor-Pantar and Austronesian languages [@lexirumah-paper].
 
 # Acknowledgement
 Development of Lexedata was funded by the Swiss National Science Foundation
