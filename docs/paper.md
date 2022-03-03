@@ -88,12 +88,21 @@ Automatic Cognate Detection (ACD, @list2017potential) using Lexstat
 issues arising from LingPy's approach to load the entire dataset into memory and
 the need to convert between CLDF and LingPy.
 
+Lexedata is designed to facilitate adding comments to cognate sets and cognate
+judgements, through the annotation tools in the Excel format (which naturally
+extend to comment threads in Google Sheets for collaborative editing), as well as
+tracking the editing workflow through status columns with customizable messages.
+Last but not least, to ensure that the user retains a good sense of control and overview,
+Lexedata includes helpful warning messages that suggest potential solutions and next
+steps to the user, while it keeps the user informed about batch operations with
+intermediate info messages and summary reports.
+
 In summary, Lexedata addresses the need to curate and edit a lexical dataset in
 CLDF format without the ability to program, which is still a rare skill among
 comparative linguists. It allows this without sacrificing the power and
 familiarity of existing software such as GUI spreadsheed apps or Edictor, by
-making format conversions and bulk editing functionality accessible from simple
-terminal commands.
+providing user-friendly access to format conversions and bulk editing functionality 
+from simple terminal commands.
 
 # Research use
 The export to phylogenetic alignments, derived from BEASTling
