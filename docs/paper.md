@@ -95,7 +95,7 @@ tracking the editing workflow through status columns with customizable messages.
 Last but not least, to ensure that the user retains a good sense of control and overview,
 Lexedata includes helpful warning messages that suggest potential solutions and next
 steps to the user, while it keeps the user informed about batch operations with
-intermediate info messages and summary reports.
+intermediate info messages and final reports.
 
 In summary, Lexedata addresses the need to curate and edit a lexical dataset in
 CLDF format without the ability to program, which is still a rare skill among
@@ -108,11 +108,10 @@ from simple terminal commands.
 The export to phylogenetic alignments, derived from BEASTling
 [@maurits2017beastling;@beastling14], has already been used in different language
 phylogenetics projects that are currently under review
-[@kaiping2019subgrouping;@kaiping2021burst]. The
+[@kaiping2019subgrouping;@kaiping2021burst;@gunnink2022bantu]. The
 more extensive lexical dataset editing functionality is used by projects
 at UC Berkeley and Universität Zürich for Arawakan and Mawetí-Guaraní languages
-and
-at Universiteit Gent for Bantu [@gunnink2022bantu].
+and at Universiteit Gent for Bantu.
 Precursor scripts have also
 been used for Timor-Alor-Pantar and Austronesian languages [@lexirumah-paper].
 
