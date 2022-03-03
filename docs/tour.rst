@@ -24,8 +24,7 @@ Lexedata is a collection of command line tools. If you have never worked on the
 command line before, check out :doc:`our quick primer on the command line <cli>`. This
 tutorial further assumes you have a working :doc:`installation` of lexedata and
 :doc:`git`. The tutorial will manipulate the Git repository using Git's command line
-interface, but you can use a Git GUI instead. (Not using version control for
-your data is dangerous, because lexedata does not include an ‘undo’ function.)
+interface, but you can use a Git GUI instead. While it is possible to use lexedata without Git, we do not recommend this, as lexedata does not have an 'undo' function. Git is a version control system and allows you to access and restore previous versions, while it also makes collaboration with others easier.
 
 *****************************
 Importing a dataset into CLDF
