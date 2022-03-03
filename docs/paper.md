@@ -1,5 +1,5 @@
 ---
-title: 'Lexedata: A Python toolbox to edit CLDF lexical datasets'
+title: 'Lexedata: A toolbox to edit CLDF lexical datasets'
 tags:
   - Python
   - linguistics
@@ -33,7 +33,7 @@ comparison of languages [@list2021lexibank]. They are an important resource in
 comparative and historical linguistics, including their use as raw data for
 language phylogenetics [@gray2009language;@grollemund2015bantu].
 
-The `lexedata` python package uses the “Cross-Linguistic Data Format” (CLDF,
+The `lexedata` package uses the “Cross-Linguistic Data Format” (CLDF,
 @cldf11, @cldf-paper) as main data format for a relational database containing
 forms, languages, concepts, and etymological relationships. The CLDF
 specification builds on top of the CSV for the Web (CSVW,
@@ -41,33 +41,78 @@ specification builds on top of the CSV for the Web (CSVW,
 comma-separated value (CSV) files that get their semantics from a metadata file
 in JSON format.
 
-# Statement of Need
-Maintaining the integrity as relational database is difficult using general CSV
-editing tools. This holds in particular for the usual dataset size of
-hundreds of languages and concepts, and formats unfamiliar to most linguists.
+Implemented in Python as a set of command line tools, Lexedata provides various
+helper functions to address issues that frequently arise when working with comparative wordlists
+for multiple languages, as shown in \autoref{fig:structure}. These include
+import and export functions to formats more familiar to linguists, and integrity
+checks for bulk edit and import functionality it provides. For example, there
+are scripts for importing data from MS Excel sheets of various common formats
+into CLDF, checking for homophones, manipulating etymological
+judgements, or exporting coded datasets for use in phylogenetic software.
 
 ![Overview over the functionality in Lexedata.\label{fig:structure}](structure.png)
 
-The individual Python scripts of Lexedata implement various helper functions
-that frequently arise when working with comparative wordlists for multiple
-languages, as shown in \autoref{fig:structure}. Tasks include importing data
-from MS Excel sheets of various common formats into CLDF, Automatic Cognate
-Detection (ACD, @list2017potential) using Lexstat [@list2012lexstat], checking
-for homophones, or manipulating etymological judgements. Lexedata provides
-import and export functions to formats more familiar to linguists, and checks
-integrity for bulk edit and import functions it provides.
+# Statement of Need
+
+Maintaining the integrity of CLDF as a relational database is difficult using
+general CSV editing tools. This holds in particular for the usual dataset size
+of hundreds of languages and concepts, and formats unfamiliar to most linguists.
+Dedicated relational database software, which simplifies the maintenance of the
+data constraints, would set an even bigger hurdle to researchers, even to those
+who are reasonably computer-savvy.
+
+The major existing tool for curating lexical datasets in other formats and
+providing them as CLDF for interoperability is cldfbench [@cldfbench]. However,
+cldfbench assumes that the data curator is not necessarily in a position to
+edit the dataset. As such, it provides a very flexible interface to
+transform and curate CLDF datasets, at the cost of making this accessible
+through an API which requires writing Python code.
+
+Given that the majority of comparative linguists are unfamiliar with programming,
+Lexedata is designed to not need any programming skills. In contrast with
+cldfbench, Lexedata is written for the purpose of not only curating, but also
+collecting and editing the dataset. It therefore imposes additional constraints
+on the dataset which are very useful in editing tasks, but not strictly required
+by CLDF.
+
+There are two major existing tools for editing lexical datasets, LingPy
+[@lingpy] and Edictor [@edictor]. Edictor is a browser-based graphical user
+interface tool to edit cognate annotations, while LingPy is a Python library
+focused on automating manipulations of lexical datasets, such as automatic
+cognate detection. Both of these pre-date the CLDF format, and while their
+common data format inspired some features of CLDF, it has some differences.
+Lexedata provides export and import functionality for this TSV-based format to
+and from CLDF. In addition, Lexedata exposes a major LingPy functionality, the
+Automatic Cognate Detection (ACD, @list2017potential) using Lexstat
+[@list2012lexstat], to work directly on CLDF datasets. This avoids both memory
+issues arising from LingPy's approach to load the entire dataset into memory and
+the need to convert between CLDF and LingPy.
+
+Lexedata is designed to facilitate adding comments to cognate sets and cognate
+judgements, through the annotation tools in the Excel format (which naturally
+extend to comment threads in Google Sheets for collaborative editing), as well as
+tracking the editing workflow through status columns with customizable messages.
+Last but not least, to ensure that the user retains a good sense of control and overview,
+Lexedata includes helpful warning messages that suggest potential solutions and next
+steps to the user, while it keeps the user informed about batch operations with
+intermediate info messages and final reports.
+
+In summary, Lexedata addresses the need to curate and edit a lexical dataset in
+CLDF format without the ability to program, which is still a rare skill among
+comparative linguists. It allows this without sacrificing the power and
+familiarity of existing software such as GUI spreadsheed apps or Edictor, by
+providing user-friendly access to format conversions and bulk editing functionality 
+from simple terminal commands.
 
 # Research use
-The export to phylogenetic alignments, derived from BEASTling
-[@maurits2017beastling;@beastling14], has already been used in different language
-phylogenetics projects that are currently under review
-[@kaiping2019subgrouping;@kaiping2021burst]. The
-more extensive lexical dataset editing functionality is used by projects
+The extensive lexical dataset editing functionality is currently used by projects
 at UC Berkeley and Universität Zürich for Arawakan and Mawetí-Guaraní languages
-and
-at Universiteit Gent for Bantu [@gunnink2022bantu].
-Precursor scripts have also
-been used for Timor-Alor-Pantar and Austronesian languages [@lexirumah-paper].
+and at Universiteit Gent for Bantu.
+Precursor scripts have also been used for Timor-Alor-Pantar and Austronesian languages [@lexirumah-paper].
+The export to phylogenetic alignments, derived from BEASTling
+[@maurits2017beastling;@beastling14], has been used in different language
+phylogenetics projects that are already under review
+[@kaiping2019subgrouping;@kaiping2021burst;@gunnink2022bantu].
 
 # Acknowledgement
 Development of Lexedata was funded by the Swiss National Science Foundation
