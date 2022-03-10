@@ -117,8 +117,7 @@ def read_single_excel_sheet(
             dataset["FormTable", "parameterReference"].name,
             concept_column,
         )
-    if language_column is None:
-        if
+
     db = DB(dataset)
     db.cache_dataset()
     # required cldf fields of a form
@@ -182,26 +181,38 @@ def read_single_excel_sheet(
                 f"--ignore-superfluous-excel-columns to import the data anyway and ignore these columns."
             )
     try:
-       # Assume we have a language table
-       c_l_name = db.dataset["LanguageTable", "name"].name
-       c_l_id = db.dataset["LanguageTable", "id"].name
-       language_name_to_language_id = {
-           row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()
-       }
+        # Assume we have a language table
+        c_l_name = db.dataset["LanguageTable", "name"].name
+        c_l_id = db.dataset["LanguageTable", "id"].name
+        language_name_to_language_id = {
+            row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()
+        }
     except KeyError:
         # Actually, there is no language table.
         language_name_to_language_id = KeyKeyDict()
+        logger.warning(
+            f"Did not find {dataset['LanguageTable'].url.string}. "
+            f"Importing all forms independent of the language table"
+        )
     # infer language from sheet data
-    if language_name_column: # TODO: Add CLI argument similar to --concept-name, and pass it through to here
+    if (
+        language_name_column
+    ):  # TODO: Add CLI argument similar to --concept-name, and pass it through to here
+
         def language_name_from_row(row):
             return language_name_to_language_id[row[language_name_column]]
+
     elif db.dataset["FormTable", "languageReference"].name in sheet_header:
         c_f_language = db.dataset["FormTable", "languageReference"].name
+
         def language_name_from_row(row):
             return row[c_f_language]
+
     else:
+
         def language_name_from_row(row):
             return normalize_string(sheet.title)
+
     for row in sheet.iter_rows(min_row=1):
         language_name = language_name_from_row(row)
         break
@@ -310,13 +321,15 @@ def add_single_languages(
 ) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
-    # initiate dataset from meta data or csv depending on command line arguments
-    if metadata:
-        if metadata.name == "forms.csv":
-            dataset = pycldf.Dataset.from_data(metadata)
-        else:
-            dataset = pycldf.Dataset.from_metadata(metadata)
-
+    # initiate dataset from meta
+    try:
+        dataset = pycldf.Dataset.from_metadata(metadata)
+    except FileNotFoundError:
+        cli.Exit.FILE_NOT_FOUND(
+            "No cldf metadata found, if you have no metadata, "
+            "export to csv from your excel file and run lexedata.edit.add_metadata"
+        )
+    # create concept mapping
     concepts: t.Mapping[str, str]
     try:
         cid = dataset["ParameterTable", "id"].name
@@ -388,10 +401,10 @@ if __name__ == "__main__":
         "--language-name",
         type=str,
         help="Column to interpret as language names "
-             "By default, it is assumed that the #languageReference column, usually named 'Language_ID' "
-             "or similar, matches the IDs of the language. If no Language_ID appears in the sheet header,"
-             "the language name will be inferred by the sheet title. Use this "
-             "switch if instead of language IDs you have language Names in the excel file instead.",
+        "By default, it is assumed that the #languageReference column, usually named 'Language_ID' "
+        "or similar, matches the IDs of the language. If no Language_ID appears in the sheet header,"
+        "the language name will be inferred by the sheet title. Use this "
+        "switch if instead of language IDs you have language Names in the excel file instead.",
         metavar="LANGUAGE-COLUMN",
     )
     parser.add_argument(
