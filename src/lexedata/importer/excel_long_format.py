@@ -178,13 +178,27 @@ def read_single_excel_sheet(
                 f"{found_columns - expected_columns}. Clean up your data, or use "
                 f"--ignore-superfluous-excel-columns to import the data anyway and ignore these columns."
             )
-    # check if language exist
-    c_l_name = db.dataset["LanguageTable", "name"].name
-    c_l_id = db.dataset["LanguageTable", "id"].name
-    language_name_to_language_id = {
-        row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()
-    }
-    language_name = normalize_string(sheet.title)
+    try:
+       # Assume we have a language table
+       c_l_name = db.dataset["LanguageTable", "name"].name
+       c_l_id = db.dataset["LanguageTable", "id"].name
+       language_name_to_language_id = {
+           row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()
+       }
+    except KeyError:
+        # Actually, there is no language table.
+        language_name_to_language_id = KeyKeyDict()
+    
+    if language_name_column: # TODO: Add CLI argument similar to --concept-name, and pass it through to here
+        def language_name_from_row(row):
+            return language_name_to_language_id[row[language_name_column]]
+    elif ...: # TODO: There is a languageReference column
+        c_f_language = db.dataset["FormTable", "languageReference"].name
+        def language_name_from_row(row):
+            return row[c_f_language]
+    else:
+        def language_name_from_row(row):
+            return normalize_string(sheet.title)
     if language_name in language_name_to_language_id:
         language_id = language_name_to_language_id[language_name]
         report[language_id].is_new_language = False
