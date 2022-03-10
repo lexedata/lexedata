@@ -99,6 +99,7 @@ def read_single_excel_sheet(
     match_form: t.Optional[t.List[str]] = None,
     entries_to_concepts: t.Mapping[str, str] = KeyKeyDict(),
     concept_column: t.Optional[str] = None,
+    language_name_column: t.Optional[str] = None,
     ignore_missing: bool = False,
     ignore_superfluous: bool = False,
     status_update: t.Optional[str] = None,
@@ -116,6 +117,8 @@ def read_single_excel_sheet(
             dataset["FormTable", "parameterReference"].name,
             concept_column,
         )
+    if language_column is None:
+        if
     db = DB(dataset)
     db.cache_dataset()
     # required cldf fields of a form
@@ -188,17 +191,20 @@ def read_single_excel_sheet(
     except KeyError:
         # Actually, there is no language table.
         language_name_to_language_id = KeyKeyDict()
-    
+    # infer language from sheet data
     if language_name_column: # TODO: Add CLI argument similar to --concept-name, and pass it through to here
         def language_name_from_row(row):
             return language_name_to_language_id[row[language_name_column]]
-    elif ...: # TODO: There is a languageReference column
+    elif db.dataset["FormTable", "languageReference"].name in sheet_header:
         c_f_language = db.dataset["FormTable", "languageReference"].name
         def language_name_from_row(row):
             return row[c_f_language]
     else:
         def language_name_from_row(row):
             return normalize_string(sheet.title)
+    for row in sheet.iter_rows(min_row=1):
+        language_name = language_name_from_row(row)
+        break
     if language_name in language_name_to_language_id:
         language_id = language_name_to_language_id[language_name]
         report[language_id].is_new_language = False
@@ -296,6 +302,7 @@ def add_single_languages(
     sheets: t.Iterable[openpyxl.worksheet.worksheet.Worksheet],
     match_form: t.Optional[t.List[str]],
     concept_name: t.Optional[str],
+    language_name: t.Optional[str],
     ignore_missing: bool,
     ignore_superfluous: bool,
     status_update: t.Optional[str],
@@ -330,6 +337,7 @@ def add_single_languages(
                 f"Did not find {dataset['ParameterTable'].url.string}. "
                 f"Importing all forms independent of concept"
             )
+        # set concept_column
         concepts = KeyKeyDict()
         if concept_name:
             concept_column = concept_name
@@ -348,6 +356,7 @@ def add_single_languages(
             match_form=match_form,
             entries_to_concepts=concepts,
             concept_column=concept_column,
+            language_name_column=language_name,
             ignore_missing=ignore_missing,
             ignore_superfluous=ignore_superfluous,
             status_update=status_update,
@@ -373,7 +382,17 @@ if __name__ == "__main__":
         "By default, it is assumed that the #parameterReference column, usually named 'Concept_ID' "
         "or similar, matches the IDs of the concept. Use this "
         "switch if instead of concept IDs you have concept Names in the excel file instead.",
-        metavar="COLUMN",
+        metavar="CONCEPT-COLUMN",
+    )
+    parser.add_argument(
+        "--language-name",
+        type=str,
+        help="Column to interpret as language names "
+             "By default, it is assumed that the #languageReference column, usually named 'Language_ID' "
+             "or similar, matches the IDs of the language. If no Language_ID appears in the sheet header,"
+             "the language name will be inferred by the sheet title. Use this "
+             "switch if instead of language IDs you have language Names in the excel file instead.",
+        metavar="LANGUAGE-COLUMN",
     )
     parser.add_argument(
         "--sheets",
@@ -444,6 +463,7 @@ if __name__ == "__main__":
         sheets=sheets,
         match_form=args.match_form,
         concept_name=args.concept_name,
+        language_name=args.language_name,
         ignore_missing=args.ignore_missing_excel_columns,
         ignore_superfluous=args.ignore_superfluous_excel_columns,
         status_update=args.status_update,
