@@ -31,16 +31,18 @@ try:
         clts_path = cldfcatalog.Config.from_file().get_clone("clts")
         clts = cldfbench.catalogs.CLTS(clts_path)
         bipa = clts.api.bipa
-except KeyError:  # pragma: no cover
+except (ValueError, KeyError):  # pragma: no cover
     # Make a temporary clone of CLTS. Mostly useful for ReadTheDocs.
+    cli.logging.warning(
+        "Failed to read the CLTS catalog. This script cannot be processed without that catalog, so I'm falling back to a manual clone of the repository. Please check your CLDF catalogs using `cldbench catinfo`, and consider installing CLTS using `cldfbench catconfig`."
+    )
     import os
     from tempfile import mkdtemp
 
     clts_path = mkdtemp("clts")
     os.system(
-        f"git clone -b v2.0.0 --depth 1 https://github.com/cldf-clts/clts.git {clts_path}"
+        f"git clone -b v2.0.0 --depth 1 https://github.com/cldf-clts/clts.git '{clts_path}'"
     )
-    clts_path.__enter__()
     clts = cldfbench.catalogs.CLTS(clts_path)
     bipa = clts.api.bipa
 

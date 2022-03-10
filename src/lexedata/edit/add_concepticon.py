@@ -12,7 +12,6 @@ dateset's ParameterTable with best guesses for Concepticon IDs, based on gloss
 columns in potentially different languages.
 
 """
-import os
 import collections
 import typing as t
 
@@ -26,11 +25,16 @@ from pyconcepticon.glosses import concept_map2
 from lexedata.edit.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
 
-if os.environ.get("READTHEDOCS") != "True":
-    # While building the documentation on ReadTheDocs, don't expect a clone of
-    # the concepticon catalog.
+try:
     concepticon_path = cldfcatalog.Config.from_file().get_clone("concepticon")
     concepticon = cldfbench.catalogs.Concepticon(concepticon_path)
+except (ValueError, KeyError):  # pragma: no cover
+    # While building the documentation on ReadTheDocs, don't expect a clone of
+    # the concepticon catalog. Everyone else will appreciate the message before
+    # the CLI dies on them.
+    cli.logging.error(
+        "Failed to read the Concepticon catalog. This tool will not run without it. Please check your CLDF catalogs using `cldbench catinfo`, and consider installing Concepticon using `cldfbench catconfig`."
+    )
 
 
 def equal_separated(option: str) -> t.Tuple[str, str]:
