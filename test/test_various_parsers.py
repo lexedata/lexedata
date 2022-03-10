@@ -13,25 +13,25 @@ from lexedata.exporter.phylogenetics import (
 from lexedata.exporter.cognates import parser as cex_parser
 
 
-def test_listorfromfile_list():
+def test_setorfromfile_list():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--objects", action=cli.ListOrFromFile, help="Some objects.")
+    parser.add_argument("--objects", action=cli.SetOrFromFile, help="Some objects.")
     parser.add_argument("--other", action="store_true", default=False)
     parameters = parser.parse_args(["--objects", "o1", "o2", "o3", "--other"])
     assert parameters.other
-    assert parameters.objects == ["o1", "o2", "o3"]
+    assert parameters.objects == {"o1", "o2", "o3"}
 
 
-def test_listorfromfile_file():
+def test_setorfromfile_file():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--objects", action=cli.ListOrFromFile, help="Some objects.")
+    parser.add_argument("--objects", action=cli.SetOrFromFile, help="Some objects.")
     parser.add_argument("--other", action="store_true", default=False)
     _, fname = tempfile.mkstemp(".csv")
     with open(fname, "w") as file:
         file.write("ID,ignored\no1,yes\no2\no3,")
     parameters = parser.parse_args(["--objects", fname, "--other"])
     assert parameters.other
-    assert parameters.objects == ["o1", "o2", "o3"]
+    assert parameters.objects == {"o1", "o2", "o3"}
 
 
 def test_filter_parser():
@@ -76,7 +76,7 @@ def test_phylo_parser():
     )
     assert parameters.format == "beast"
     assert parameters.output_file.absolute() == Path(ofname).absolute()
-    assert parameters.languages == ["l1", "l2", "l3"]
+    assert parameters.languages == {"l1", "l2", "l3"}
     assert type(parameters.concepts) == types.WorldSet
     assert type(parameters.cognatesets) == types.WorldSet
     assert parameters.coding == CodingProcedure.ROOTPRESENCE

@@ -67,7 +67,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--languages",
-        action=cli.ListOrFromFile,
+        action=cli.SetOrFromFile,
         help="Restrict the report to these lanugage id(s).",
     )
     args = parser.parse_args()
