@@ -57,7 +57,7 @@ class ChangeLoglevel(argparse.Action):
         setattr(namespace, self.dest, getattr(namespace, self.dest) + self.change)
 
 
-class ListOrFromFile(argparse.Action):
+class SetOrFromFile(argparse.Action):
     def __init__(
         self,
         option_strings,
@@ -79,7 +79,7 @@ class ListOrFromFile(argparse.Action):
                 pass
             else:
                 raise ValueError(
-                    "Optional ListOrFromFile makes sense only with variable argument count ('+')"
+                    "Optional SetOrFromFile makes sense only with variable argument count ('+')"
                 )
 
         if metavar is None:
@@ -118,16 +118,17 @@ class ListOrFromFile(argparse.Action):
         if len(values) == 1:
             path = Path(values[0])
             if path.exists():
-                values = []
+                values = set()
                 for c, concept in enumerate(csv.reader(path.open())):
                     first_column = concept[0]
                     if c == 0:
+                        # header row
                         logger.info(
                             "Reading concept IDs from column with header %s",
                             first_column,
                         )
                     else:
-                        values.append(first_column)
+                        values.add(first_column)
                 setattr(namespace, self.dest, values)
                 return
             logger.debug(
@@ -135,7 +136,9 @@ class ListOrFromFile(argparse.Action):
                 path,
                 str(option_string).lstrip("-").rstrip("s"),
             )
-        setattr(namespace, self.dest, values)
+            setattr(namespace, self.dest, values)
+        else:
+            setattr(namespace, self.dest, set(values))
 
 
 def add_log_controls(parser: argparse.ArgumentParser):

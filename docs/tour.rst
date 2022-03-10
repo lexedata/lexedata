@@ -1064,8 +1064,20 @@ interesting here. Let us consider the concepts
 
 and all languages::
 
-    $ python -m lexedata.exporter.edictor --concepts-file concepts_filter
-    [... Some notes on progress]
+    $ python -m lexedata.exporter.edictor --concepts concepts_filter -q
+    INFO:lexedata:Reading concept IDs from column with header ID
+    $ head cognate.tsv # doctest: +NORMALIZE_WHITESPACE
+    ID	CLDF_id	DOCULECT	CONCEPT	IPA	comment	TOKENS	source	variants	COGID	ALIGNMENT	_parameterReference
+    1	duala_come	Duala	come	pɔ		p ɔ			127	p ɔ -	come
+    2	duala_go_to	Duala	go_to	ala		a l a			236	a l a	go_to
+    3	duala_path	Duala	path	ngea		n g e a			424	n g e a - -	path
+    4	duala_stand	Duala	stand	tɛ́mɛ̀ mɔ́ny		t ɛ́ m ɛ̀ _ m ɔ́ n y			564	t ɛ́ m ɛ̀ _ m ɔ́ n y	stand
+    5	duala_walk	Duala	walk	ɗangwa		ɗ a n g w a			610	ɗ a n g w a	walk
+    6	ntomba_come	Ntomba	come	yá		y á			125	y á - - - - -	come
+    7	ntomba_go_to	Ntomba	go_to	ha		h a			235	h a - - -	go_to
+    8	ntomba_path	Ntomba	path	mbókà		m b ó k à		~mambóka	426	m b ó k à	path
+    9	ntomba_stand	Ntomba	stand	tɛ́lɛm		t ɛ́ l ɛ m			565	t ɛ́ l ɛ m - - -	stand
+
 
 This gives us a tab-separated value file, by default named `cognate.tsv`, which
 we can load in Edictor and edit there.
