@@ -9,6 +9,7 @@ import re
 import os
 import csv
 import logging
+import itertools
 import typing as t
 from pathlib import Path
 
@@ -27,8 +28,8 @@ def import_interleaved(
         types.Form_ID,
         types.Language_ID,
         types.Parameter_ID,
-        str,
-        None,
+        t.Optional[str],  # Form
+        t.Optional[str],  # Comment
         types.Cognateset_ID,
     ]
 ]:
@@ -107,11 +108,15 @@ def import_interleaved(
                         entry.coordinate, ", ".join(forms), ", ".join(cogsets)
                     )
                 )
-            for form, cogset in zip(forms, cogsets + [None]):
-                if form == "?" or cogset == "?":
+            for form, cogset in itertools.zip_longest(forms, cogsets):
+                if form == "?" and cogset == "?":
+                    continue
+                if form is None and cogset is None:
+                    # I'm not sure how this could happen, but if it happens,
+                    # this is what should be done about it.
                     continue
                 base_id = util.string_to_id(f"{language_name}_{concepts[c]}")
-                id = base_id
+                id: types.Cognateset_ID = base_id
                 synonym = 1
                 while id in ids:
                     synonym += 1
