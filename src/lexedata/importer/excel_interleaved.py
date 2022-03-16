@@ -104,9 +104,10 @@ def import_interleaved(
                 True
             else:
                 logger.warning(
-                    "{:}: Forms ({:}) did not match cognates ({:})".format(
-                        entry.coordinate, ", ".join(forms), ", ".join(cogsets)
-                    )
+                    "%s: Forms (%s) did not match cognates (%s), adding NA values to the shorter one.",
+                    entry.coordinate,
+                    ", ".join(forms),
+                    ", ".join(cogsets),
                 )
             for form, cogset in itertools.zip_longest(forms, cogsets):
                 if form == "?" and cogset == "?":
