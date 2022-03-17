@@ -9,6 +9,7 @@ import re
 import os
 import csv
 import logging
+import itertools
 import typing as t
 from pathlib import Path
 
@@ -27,8 +28,8 @@ def import_interleaved(
         types.Form_ID,
         types.Language_ID,
         types.Parameter_ID,
-        str,
-        None,
+        t.Optional[str],  # Form
+        t.Optional[str],  # Comment
         types.Cognateset_ID,
     ]
 ]:
@@ -99,19 +100,34 @@ def import_interleaved(
                 cogset = clean_cell_value(cogset)
                 cogsets = comma_or_semicolon.split(cogset.strip())
 
-            if len(cogsets) == 1 or len(cogsets) == len(forms):
-                True
+            if len(cogsets) == len(forms):
+                pass
+            elif len(cogsets) == 1:
+                logger.warning(
+                    "%s: Multiple forms (%s) did not match single cognateset (%s), using that cognateset for each form.",
+                    entry.coordinate,
+                    ", ".join(forms),
+                    cogsets[0],
+                )
+                cogsets = [cogsets[0] for _ in forms]
             else:
                 logger.warning(
-                    "{:}: Forms ({:}) did not match cognates ({:})".format(
-                        entry.coordinate, ", ".join(forms), ", ".join(cogsets)
-                    )
+                    "%s: Forms (%s) did not match cognates (%s), adding NA values to the shorter one.",
+                    entry.coordinate,
+                    ", ".join(forms),
+                    ", ".join(cogsets),
                 )
-            for form, cogset in zip(forms, cogsets + [None]):
-                if form == "?" or cogset == "?":
+            for form, cogset in itertools.zip_longest(forms, cogsets):
+                if form == "?" or form is None or not form.strip():
+                    form = None
+                if cogset == "?" or cogset is None or not cogset.strip():
+                    cogset = None
+                if form is None and cogset is None:
+                    # I'm not sure how this could happen, but if it happens,
+                    # this is what should be done about it.
                     continue
                 base_id = util.string_to_id(f"{language_name}_{concepts[c]}")
-                id = base_id
+                id: types.Cognateset_ID = base_id
                 synonym = 1
                 while id in ids:
                     synonym += 1

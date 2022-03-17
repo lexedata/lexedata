@@ -5,19 +5,10 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 import pycldf
-import cldfbench
-import cldfcatalog
 
 from mock_excel import MockSingleExcelSheet
 from lexedata.importer.excel_matrix import excel_parser_from_dialect
-
-
-@pytest.fixture
-def bipa():
-    clts_path = cldfcatalog.Config.from_file().get_clone("clts")
-    clts = cldfbench.catalogs.CLTS(clts_path)
-    bipa = clts.api.bipa
-    return bipa
+from lexedata.edit.add_segments import bipa
 
 
 @pytest.fixture
@@ -210,7 +201,7 @@ def test_form_association_id_after_normalization(minimal_parser_with_dialect):
     ], "Accordingly, there should be one form both C1 and C2 are linked to."
 
 
-def test_all_ipa_symbols(minimal_parser_with_dialect, bipa):
+def test_all_ipa_symbols(minimal_parser_with_dialect):
     lexicon_wb = MockSingleExcelSheet(
         [["", "L1"]] + [[s, f"<{s:}>{{bipa}}"] for s in bipa.sounds.keys()]
     )
