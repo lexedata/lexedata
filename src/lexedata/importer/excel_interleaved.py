@@ -107,7 +107,7 @@ def import_interleaved(
                     "%s: Multiple forms (%s) did not match single cognateset (%s), using that cognateset for each form.",
                     entry.coordinate,
                     ", ".join(forms),
-                    cogsets,
+                    cogsets[0],
                 )
                 cogsets = [cogsets[0] for _ in forms]
             else:
