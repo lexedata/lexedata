@@ -110,8 +110,10 @@ def import_interleaved(
                     ", ".join(cogsets),
                 )
             for form, cogset in itertools.zip_longest(forms, cogsets):
-                if form == "?" and cogset == "?":
-                    continue
+                if form == "?":
+                    form = None
+                if cogset == "?":
+                    cogset = None
                 if form is None and cogset is None:
                     # I'm not sure how this could happen, but if it happens,
                     # this is what should be done about it.
