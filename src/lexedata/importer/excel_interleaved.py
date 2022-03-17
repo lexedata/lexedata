@@ -100,8 +100,16 @@ def import_interleaved(
                 cogset = clean_cell_value(cogset)
                 cogsets = comma_or_semicolon.split(cogset.strip())
 
-            if len(cogsets) == 1 or len(cogsets) == len(forms):
-                True
+            if len(cogsets) == len(forms):
+                pass
+            elif len(cogsets) == 1:
+                logger.warning(
+                    "%s: Multiple forms (%s) did not match single cognateset (%s), using that cognateset for each form.",
+                    entry.coordinate,
+                    ", ".join(forms),
+                    cogsets,
+                )
+                cogsets = [cogsets[0] for _ in forms]
             else:
                 logger.warning(
                     "%s: Forms (%s) did not match cognates (%s), adding NA values to the shorter one.",
