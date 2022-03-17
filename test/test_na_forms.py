@@ -112,6 +112,8 @@ def test_interleaved_import_skips_na():
 
     assert forms == [
         ("duala_all", "Duala", "all", "ɓɛ́sɛ̃(nk)", None, "1"),
+        ("duala_arm", "Duala", "arm", None, None, "7"),
+        ("ntomba_all", "Ntomba", "all", "umá", None, None),
         ("ntomba_arm", "Ntomba", "arm", "lobɔ́kɔ", None, "1"),
     ]
 
