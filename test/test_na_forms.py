@@ -101,7 +101,7 @@ def test_interleaved_import_skips_na():
         ["arm", "?", "lobɔ́kɔ"],
         ["", "7", "1"],
         ["missing", "?", "?"],
-        ["", "?", None],
+        ["", "?"],  # Yes, this is purposefully a line with only two entries.
     ]
 
     # create excel with data
