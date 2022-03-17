@@ -1,8 +1,9 @@
+import logging
 import openpyxl as op
 from lexedata.importer.excel_interleaved import import_interleaved
 
 
-def test_interleaved_import_skips_na():
+def test_interleaved_import_count(caplog):
     data = [
         ["", "l1", "l2"],
         ["all", "one form", "more, than, one, form"],
@@ -17,7 +18,8 @@ def test_interleaved_import_skips_na():
     for row in data:
         ws.append(row)
     # import excel
-    forms = [tuple(r) for r in import_interleaved(ws)]
+    with caplog.at_level(logging.WARNING):
+        forms = [tuple(r) for r in import_interleaved(ws)]
 
     assert forms == [
         ("l1_all", "l1", "all", "one form", None, "1"),
@@ -31,3 +33,9 @@ def test_interleaved_import_skips_na():
         ("l2_arm_s2", "l2", "arm", None, None, "2"),
         ("l2_arm_s3", "l2", "arm", None, None, "3"),
     ]
+
+    assert (
+        "C2: Multiple forms (more, than, one, form) did not match single cognateset (2)"
+        in caplog.text
+    )
+    assert "C4: Forms (one form) did not match cognates (1, 2, 3)" in caplog.text

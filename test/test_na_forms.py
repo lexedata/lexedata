@@ -100,6 +100,8 @@ def test_interleaved_import_skips_na():
         ["", "1", "?"],
         ["arm", "?", "lobɔ́kɔ"],
         ["", "7", "1"],
+        ["missing", "?", "?"],
+        ["", "?", None],
     ]
 
     # create excel with data
