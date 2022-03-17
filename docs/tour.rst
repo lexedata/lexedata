@@ -388,7 +388,7 @@ within a concept::
     WARNING:lexedata:No segments found for form duala_arm (dia).
     WARNING:lexedata:No segments found for form duala_ashes (mabúdú).
     WARNING:lexedata:No segments found for form duala_bark (bwelé).
-    WARNING:lexedata:No segments found for 1585 forms. You can generate segments using `lexedata.edit.segment_using_clts`.
+    WARNING:lexedata:No segments found for 1592 forms. You can generate segments using `lexedata.edit.segment_using_clts`.
 
 Clean the data
 ==============
@@ -687,7 +687,7 @@ working on the cognate data in detail is a later step. ::
     INFO:lexedata:Caching table FormTable
     100%|██████████| 1592/1592 [...]
     INFO:lexedata:Aligning the cognate segments
-    100%|██████████| 1585/1585 [...]
+    100%|██████████| 1592/1592 [...]
     $ git commit -am "Align"
     [...]
 
@@ -877,7 +877,7 @@ polysemous forms connected to multiple concepts. ::
     cognates.csv:kikuyu_white,kikuyu_new,white_2,1:3,e r ũ,,automatically aligned
     $ git commit -am "Annotate polysemies"
     [master [...]] Annotate polysemies
-     4 files changed, 3295 insertions(+), 3281 deletions(-)
+     4 files changed, 3302 insertions(+), 3288 deletions(-)
      rewrite parameters.csv (100%)
 
 Improve Cognatesets
