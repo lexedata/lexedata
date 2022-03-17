@@ -123,7 +123,14 @@ With that in mind, we can run the interleaved importer simply with the Excel
 file as argument::
 
     $ python -m lexedata.importer.excel_interleaved -q bantu.xlsx
+    WARNING:lexedata:F48: Multiple forms (ly-aki, ma-ki) did not match single cognateset (1), using that cognateset for each form.
+    WARNING:lexedata:H30: Multiple forms (képié, mpfô) did not match single cognateset (9), using that cognateset for each form.
+    WARNING:lexedata:H90: Multiple forms (o-zyâ, o-jib) did not match single cognateset (1), using that cognateset for each form.
+    WARNING:lexedata:H200: Multiple forms (okáàr, mukal) did not match single cognateset (2), using that cognateset for each form.
+    WARNING:lexedata:I160: Multiple forms (kɛɛkɛ, kɛ) did not match single cognateset (3), using that cognateset for each form.
+    WARNING:lexedata:J144: Multiple forms (mũ-thanga, gĩ-thangathĩ) did not match single cognateset (4), using that cognateset for each form.
     WARNING:lexedata:Cell N16 was empty, but cognatesets ? were given in N17.
+    WARNING:lexedata:N28: Multiple forms (igi-ho (cloud, sky), ibi-chu (clouds)) did not match single cognateset (2), using that cognateset for each form.
 
 This shows a few minor issues in the data, but the import has succeeded, giving
 us a FormTable in the file ``forms.csv``::
