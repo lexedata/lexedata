@@ -197,8 +197,7 @@ def read_single_excel_sheet(
     # infer language from sheet data
     if (
         language_name_column
-    ):  # TODO: Add CLI argument similar to --concept-name, and pass it through to here
-
+    ):
         def language_name_from_row(row):
             return language_name_to_language_id[row[language_name_column]]
 
@@ -477,8 +476,8 @@ if __name__ == "__main__":
         match_form=args.match_form,
         concept_name=args.concept_name,
         language_name=args.language_name,
-        ignore_missing=args.ignore_missing_excel_columns,
-        ignore_superfluous=args.ignore_superfluous_excel_columns,
+        ignore_missing=args.ignore_missing_columns,
+        ignore_superfluous=args.ignore_superfluous_columns,
         status_update=args.status_update,
         logger=logger,
     )
