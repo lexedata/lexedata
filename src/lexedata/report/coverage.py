@@ -211,7 +211,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--with-concepts",
         "-c",
-        action=cli.ListOrFromFile,
+        action=cli.SetOrFromFile,
         default=[],
         metavar="CONCEPT",
         help="Only include languages that have a form for each CONCEPT. (default: No such constraint, include all languages.)",

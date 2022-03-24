@@ -421,17 +421,17 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--languages",
-        action=cli.ListOrFromFile,
+        action=cli.SetOrFromFile,
         help="Export only forms from these languages.",
     )
     parser.add_argument(
         "--concepts",
-        action=cli.ListOrFromFile,
+        action=cli.SetOrFromFile,
         help="Export only forms connected to these concepts.",
     )
     parser.add_argument(
         "--cognatesets",
-        action=cli.ListOrFromFile,
+        action=cli.SetOrFromFile,
         help="Export only these cognate sets.",
     )
     parser.add_argument(

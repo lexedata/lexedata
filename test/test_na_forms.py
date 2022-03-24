@@ -100,6 +100,8 @@ def test_interleaved_import_skips_na():
         ["", "1", "?"],
         ["arm", "?", "lobɔ́kɔ"],
         ["", "7", "1"],
+        ["missing", "?", "?"],
+        ["", "?"],  # Yes, this is purposefully a line with only two entries.
     ]
 
     # create excel with data
@@ -112,6 +114,8 @@ def test_interleaved_import_skips_na():
 
     assert forms == [
         ("duala_all", "Duala", "all", "ɓɛ́sɛ̃(nk)", None, "1"),
+        ("duala_arm", "Duala", "arm", None, None, "7"),
+        ("ntomba_all", "Ntomba", "all", "umá", None, None),
         ("ntomba_arm", "Ntomba", "arm", "lobɔ́kɔ", None, "1"),
     ]
 
