@@ -37,3 +37,5 @@ The following steps aren't the one and only solution to go about it, but are rea
     - pytest-cov
     - mypy
     - scriptdoctest@git+https://git@github.com/Anaphory/scriptdoctest.git
+
+If you want a local version of the documentation, make sure you have `sphinx` installed. Then you can build the documentation by running `make html` (or any other [Sphinx builder](https://www.sphinx-doc.org/en/master/man/sphinx-build.html#cmdoption-sphinx-build-b)).

@@ -123,7 +123,14 @@ With that in mind, we can run the interleaved importer simply with the Excel
 file as argument::
 
     $ python -m lexedata.importer.excel_interleaved -q bantu.xlsx
+    WARNING:lexedata:F48: Multiple forms (ly-aki, ma-ki) did not match single cognateset (1), using that cognateset for each form.
+    WARNING:lexedata:H30: Multiple forms (képié, mpfô) did not match single cognateset (9), using that cognateset for each form.
+    WARNING:lexedata:H90: Multiple forms (o-zyâ, o-jib) did not match single cognateset (1), using that cognateset for each form.
+    WARNING:lexedata:H200: Multiple forms (okáàr, mukal) did not match single cognateset (2), using that cognateset for each form.
+    WARNING:lexedata:I160: Multiple forms (kɛɛkɛ, kɛ) did not match single cognateset (3), using that cognateset for each form.
+    WARNING:lexedata:J144: Multiple forms (mũ-thanga, gĩ-thangathĩ) did not match single cognateset (4), using that cognateset for each form.
     WARNING:lexedata:Cell N16 was empty, but cognatesets ? were given in N17.
+    WARNING:lexedata:N28: Multiple forms (igi-ho (cloud, sky), ibi-chu (clouds)) did not match single cognateset (2), using that cognateset for each form.
 
 This shows a few minor issues in the data, but the import has succeeded, giving
 us a FormTable in the file ``forms.csv``::
@@ -381,7 +388,7 @@ within a concept::
     WARNING:lexedata:No segments found for form duala_arm (dia).
     WARNING:lexedata:No segments found for form duala_ashes (mabúdú).
     WARNING:lexedata:No segments found for form duala_bark (bwelé).
-    WARNING:lexedata:No segments found for 1585 forms. You can generate segments using `lexedata.edit.segment_using_clts`.
+    WARNING:lexedata:No segments found for 1592 forms. You can generate segments using `lexedata.edit.segment_using_clts`.
 
 Clean the data
 ==============
@@ -680,7 +687,7 @@ working on the cognate data in detail is a later step. ::
     INFO:lexedata:Caching table FormTable
     100%|██████████| 1592/1592 [...]
     INFO:lexedata:Aligning the cognate segments
-    100%|██████████| 1585/1585 [...]
+    100%|██████████| 1592/1592 [...]
     $ git commit -am "Align"
     [...]
 
@@ -870,7 +877,7 @@ polysemous forms connected to multiple concepts. ::
     cognates.csv:kikuyu_white,kikuyu_new,white_2,1:3,e r ũ,,automatically aligned
     $ git commit -am "Annotate polysemies"
     [master [...]] Annotate polysemies
-     4 files changed, 3295 insertions(+), 3281 deletions(-)
+     4 files changed, 3302 insertions(+), 3288 deletions(-)
      rewrite parameters.csv (100%)
 
 Improve Cognatesets
@@ -1064,8 +1071,20 @@ interesting here. Let us consider the concepts
 
 and all languages::
 
-    $ python -m lexedata.exporter.edictor --concepts-file concepts_filter
-    [... Some notes on progress]
+    $ python -m lexedata.exporter.edictor --concepts concepts_filter -q
+    INFO:lexedata:Reading concept IDs from column with header ID
+    $ head cognate.tsv # doctest: +NORMALIZE_WHITESPACE
+    ID	CLDF_id	DOCULECT	CONCEPT	IPA	comment	TOKENS	source	variants	COGID	ALIGNMENT	_parameterReference
+    1	duala_come	Duala	come	pɔ		p ɔ			127	p ɔ -	come
+    2	duala_go_to	Duala	go_to	ala		a l a			236	a l a	go_to
+    3	duala_path	Duala	path	ngea		n g e a			424	n g e a - -	path
+    4	duala_stand	Duala	stand	tɛ́mɛ̀ mɔ́ny		t ɛ́ m ɛ̀ _ m ɔ́ n y			564	t ɛ́ m ɛ̀ _ m ɔ́ n y	stand
+    5	duala_walk	Duala	walk	ɗangwa		ɗ a n g w a			610	ɗ a n g w a	walk
+    6	ntomba_come	Ntomba	come	yá		y á			125	y á - - - - -	come
+    7	ntomba_go_to	Ntomba	go_to	ha		h a			235	h a - - -	go_to
+    8	ntomba_path	Ntomba	path	mbókà		m b ó k à		~mambóka	426	m b ó k à	path
+    9	ntomba_stand	Ntomba	stand	tɛ́lɛm		t ɛ́ l ɛ m			565	t ɛ́ l ɛ m - - -	stand
+
 
 This gives us a tab-separated value file, by default named `cognate.tsv`, which
 we can load in Edictor and edit there.

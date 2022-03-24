@@ -27,8 +27,9 @@ Lexedata uses CLDF catalogs, `Glottolog <http://glottolog.org>`_ for languages,
 `CLTS <http://clts.clld.org>`_ for phonetic transcription symbols, and
 `Concepticon <http://concepticon.clld.org>`_ for concepts, in some of its
 scripts. You can install them using ``cldfbench catconfig``, it will prompt you
-– with sensible defaults – about the installation process and download and
-install those catalogs.
+about the installation process and download and install those catalogs. Make
+sure to *agree* to cloning the three repositories (`[y/N]`_ defaults to “No” for
+each catalog) and you will end up with local copies of them.
 
 Updating lexedata and Catalogs
 ------------------------------

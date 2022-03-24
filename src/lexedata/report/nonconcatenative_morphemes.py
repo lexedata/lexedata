@@ -126,7 +126,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--cognatesets",
-        action=cli.ListOrFromFile,
+        action=cli.SetOrFromFile,
         help="Only use these cognate sets as indication of overlapping morphemes.",
     )
     parser.add_argument(

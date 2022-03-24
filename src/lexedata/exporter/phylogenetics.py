@@ -849,17 +849,17 @@ def parser():
     )
     parser.add_argument(
         "--languages",
-        action=cli.ListOrFromFile,
+        action=cli.SetOrFromFile,
         help="Languages to include in the alignment.",
     )
     parser.add_argument(
         "--concepts",
-        action=cli.ListOrFromFile,
+        action=cli.SetOrFromFile,
         help="Concepts to be included or treated as primary concepts.",
     )
     parser.add_argument(
         "--cognatesets",
-        action=cli.ListOrFromFile,
+        action=cli.SetOrFromFile,
         help="Cognate sets to consider for the alignment.",
     )
     parser.add_argument(
