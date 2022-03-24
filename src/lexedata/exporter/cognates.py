@@ -541,6 +541,8 @@ if __name__ == "__main__":  # pragma: no cover
             cli.Exit.INVALID_COLUMN_NAME(
                 f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
             )
+    else:
+        cogset_order = None
     sort_cognatesets(cogsets, judgements, cogset_order, size=args.size_sort)
 
     # TODO: wrap the following two blocks into a
