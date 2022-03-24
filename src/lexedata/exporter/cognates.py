@@ -505,7 +505,7 @@ def cogsets_and_judgements(
         cogsets = util.cache_table(dataset, "CognatesetTable").values()
         judgements = util.cache_table(dataset, "CognateTable").values()
 
-    return cogsets, judgements
+    return list(cogsets), list(judgements)
 
 
 if __name__ == "__main__":  # pragma: no cover
