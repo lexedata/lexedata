@@ -195,9 +195,8 @@ def read_single_excel_sheet(
             f"Importing all forms independent of the language table"
         )
     # infer language from sheet data
-    if (
-        language_name_column
-    ):
+    if language_name_column:
+
         def language_name_from_row(row):
             return language_name_to_language_id[row[language_name_column]]
 
