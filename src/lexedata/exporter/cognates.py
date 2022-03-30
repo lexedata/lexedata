@@ -505,7 +505,7 @@ def cogsets_and_judgements(
         cogsets = util.cache_table(dataset, "CognatesetTable").values()
         judgements = util.cache_table(dataset, "CognateTable").values()
 
-    return cogsets, judgements
+    return list(cogsets), list(judgements)
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -529,18 +529,20 @@ if __name__ == "__main__":  # pragma: no cover
     cogsets, judgements = cogsets_and_judgements(
         dataset, args.add_singletons_with_status, args.by_segment, logger
     )
-
-    try:
-        cogset_order = (
-            util.cldf_property(
-                dataset["CognatesetTable", args.sort_cognatesets_by].propertyUrl
+    if args.sort_cognatesets_by:
+        try:
+            cogset_order = (
+                util.cldf_property(
+                    dataset["CognatesetTable", args.sort_cognatesets_by].propertyUrl
+                )
+                or dataset["CognatesetTable", args.sort_cognatesets_by].name
             )
-            or dataset["CognatesetTable", args.sort_cognatesets_by].name
-        )
-    except (KeyError):
-        cli.Exit.INVALID_COLUMN_NAME(
-            f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
-        )
+        except (KeyError):
+            cli.Exit.INVALID_COLUMN_NAME(
+                f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
+            )
+    else:
+        cogset_order = None
     sort_cognatesets(cogsets, judgements, cogset_order, size=args.size_sort)
 
     # TODO: wrap the following two blocks into a
