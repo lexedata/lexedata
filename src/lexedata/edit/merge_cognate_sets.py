@@ -16,11 +16,17 @@ from pathlib import Path
 import pycldf
 
 from lexedata import cli, types, util
-from lexedata.edit.merge_homophones import (Merger, Skip, all_mergers, default,
-                                            first, format_mergers,
-                                            must_be_equal,
-                                            parse_homophones_report,
-                                            parse_merge_override)
+from lexedata.edit.merge_homophones import (
+    Merger,
+    Skip,
+    all_mergers,
+    default,
+    first,
+    format_mergers,
+    must_be_equal,
+    parse_homophones_report,
+    parse_merge_override,
+)
 from lexedata.edit.simplify_ids import update_ids
 
 # TODO: Options given on the command line should have preference over defaults,
@@ -168,7 +174,7 @@ def merge_cogsets(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Merge script for cognate sets.",
         epilog="""The default merging functions are:
 {:}

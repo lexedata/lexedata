@@ -25,7 +25,7 @@ def status_column_to_table_list(
 if __name__ == "__main__":
 
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Add Status_Column to specified tables of the dataset",
     )
     parser.add_argument(

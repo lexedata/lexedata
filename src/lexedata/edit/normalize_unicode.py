@@ -25,7 +25,9 @@ def normalize(file, original_encoding="utf-8"):
 
 
 if __name__ == "__main__":
-    parser = cli.parser(__package__ + Path(__file__).stem, __doc__.split("\n\n\n")[1])
+    parser = cli.parser(
+        __package__ + "." + Path(__file__).stem, __doc__.split("\n\n\n")[1]
+    )
     parser.add_argument(
         "file",
         nargs="*",

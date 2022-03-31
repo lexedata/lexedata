@@ -201,7 +201,7 @@ def cognate_code_to_file(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(__package__ + Path(__file__).stem, description=__doc__)
+    parser = cli.parser(__package__ + "." + Path(__file__).stem, description=__doc__)
     parser.add_argument(
         "--output-file",
         "-o",

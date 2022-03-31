@@ -79,7 +79,7 @@ def filter(
 
 def parser():
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description=__doc__.split("\n\n\n")[0],
         epilog=__doc__.split("\n\n\n")[1],
     )

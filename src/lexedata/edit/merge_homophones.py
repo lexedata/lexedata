@@ -601,7 +601,7 @@ for name, item in list(vars().items()):
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Script for merging homophones.",
         epilog="""The default merging functions are:
 {:}

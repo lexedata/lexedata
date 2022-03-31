@@ -14,7 +14,7 @@ import pycldf
 from lexedata import cli, util
 
 if __name__ == "__main__":
-    parser = cli.parser(__package__ + Path(__file__).stem, __doc__)
+    parser = cli.parser(__package__ + "." + Path(__file__).stem, __doc__)
     parser.add_argument(
         "table",
         help="""The table to add. Examples: LanguageTable, CognatesetTable, or

@@ -109,7 +109,7 @@ def replace_column(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Replace the ID of an object (eg. a language ID) in the wordlist",
     )
     parser.add_argument("table", type=str, help="The table to apply the replacement to")

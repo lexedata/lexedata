@@ -13,7 +13,6 @@ columns in potentially different languages.
 
 """
 import collections
-import os
 import typing as t
 from pathlib import Path
 
@@ -235,7 +234,7 @@ def create_concepticon_for_concepts(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description=__doc__.split("\n\n\n")[0],
         epilog=__doc__.split("\n\n\n")[1],
     )

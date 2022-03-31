@@ -12,8 +12,16 @@ import pycldf
 import lexedata.cli as cli
 import lexedata.util.excel as cell_parsers
 from lexedata.edit.add_status_column import add_status_column_to_table
-from lexedata.types import (CogSet, Concept, Form, Judgement, Language, Object,
-                            R, RowObject)
+from lexedata.types import (
+    CogSet,
+    Concept,
+    Form,
+    Judgement,
+    Language,
+    Object,
+    R,
+    RowObject,
+)
 from lexedata.util import edit_distance, string_to_id
 from lexedata.util.excel import clean_cell_value, get_cell_comment
 
@@ -827,7 +835,7 @@ if __name__ == "__main__":
     import pycldf
 
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Imports a dataset from an excel file into CLDF. "
         "The import is configured by a special key in the metadata file, check "
         "./test/data/cldf/smallmawetiguarani/Wordlist-metadata.json for examples.",

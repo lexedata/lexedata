@@ -76,7 +76,7 @@ class MatrixExcelWriter(BaseExcelWriter):
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Create an Excel matrix view from a CLDF dataset",
     )
     parser.add_argument(

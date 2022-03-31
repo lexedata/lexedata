@@ -8,7 +8,7 @@ from lexedata.util.simplify_ids import string_to_id, update_ids
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Replace the ID column of a table by some other column",
     )
     parser.add_argument(

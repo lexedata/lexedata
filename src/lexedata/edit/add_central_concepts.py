@@ -237,7 +237,7 @@ def add_central_concepts_to_cognateset_table(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="""Add central concepts to cognatesets.
 
         Write a #ParameterReference column to #CognatesetTable based on the

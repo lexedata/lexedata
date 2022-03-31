@@ -186,7 +186,7 @@ def coverage_report_concepts(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Summarise coverage, i.e. how many concepts are known for each language.",
     )
     # parser.add_argument(

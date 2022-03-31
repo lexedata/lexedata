@@ -7,7 +7,7 @@ from lexedata.util.simplify_ids import update_ids
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Replace the ID of an object (e.g. a language ID) in the wordlist",
     )
     parser.add_argument(

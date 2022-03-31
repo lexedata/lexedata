@@ -121,7 +121,7 @@ def network_of_overlaps(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="List segments that indicate non-concatenative morphology.",
         epilog="If you want a more general report on the cognate judgements, run `lexedata.report.judgements`.",
     )

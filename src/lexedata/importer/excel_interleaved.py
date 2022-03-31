@@ -139,7 +139,9 @@ def import_interleaved(
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        prog=f"python -m {__package__}.{Path(__file__).stem}", description=__doc__
+    )
     parser.add_argument(
         "excel", type=Path, help="The Excel file to parse", metavar="EXCEL"
     )

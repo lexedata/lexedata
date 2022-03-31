@@ -11,11 +11,15 @@ import pycldf
 
 import lexedata.cli as cli
 from lexedata.util import cache_table
-from lexedata.util.simplify_ids import (ID_COMPONENTS, clean_mapping,
-                                        update_ids, update_integer_ids)
+from lexedata.util.simplify_ids import (
+    ID_COMPONENTS,
+    clean_mapping,
+    update_ids,
+    update_integer_ids,
+)
 
 if __name__ == "__main__":
-    parser = cli.parser(__package__ + Path(__file__).stem, __doc__)
+    parser = cli.parser(__package__ + "." + Path(__file__).stem, __doc__)
     parser.add_argument(
         "--transparent",
         action="store_true",

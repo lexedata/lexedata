@@ -234,7 +234,7 @@ def check_cognate_table(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(__package__ + Path(__file__).stem, description=__doc__)
+    parser = cli.parser(__package__ + "." + Path(__file__).stem, description=__doc__)
     parser.add_argument(
         "--strict",
         action="store_true",

@@ -115,7 +115,7 @@ def add_cognate_table(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(__package__ + Path(__file__).stem, __doc__)
+    parser = cli.parser(__package__ + "." + Path(__file__).stem, __doc__)
     parser.add_argument(
         "--unique-id",
         choices=["dataset", "concept"],

@@ -345,7 +345,7 @@ def edictor_to_cldf(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Import the tsv format used by Edictor and Lingpy. Try to only change the subset of forms and cognatesets contained in the TSV, from a partial export.",
     )
     parser.add_argument(

@@ -157,7 +157,7 @@ def create_singletons(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Add singleton cognatesets to a CLDF dataset",
     )
     parser.add_argument(

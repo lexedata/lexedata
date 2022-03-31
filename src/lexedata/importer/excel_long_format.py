@@ -337,7 +337,7 @@ def add_single_languages(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Import forms and associated metadata from an excel file to a cldf dataset.",
     )
     parser.add_argument(

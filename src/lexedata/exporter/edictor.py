@@ -416,7 +416,7 @@ def add_edictor_settings(file, dataset):
 
 if __name__ == "__main__":
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Export #FormTable to tsv format for import to edictor",
     )
     parser.add_argument(

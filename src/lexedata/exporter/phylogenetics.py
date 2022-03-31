@@ -818,7 +818,7 @@ def add_partitions(data_object: ET.Element, partitions):
 def parser():
     """Construct the CLI argument parser for this script."""
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Export a CLDF dataset to a coded character matrix to be used as input for phylogenetic analyses.",
     )
 

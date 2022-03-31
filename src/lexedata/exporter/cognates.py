@@ -436,7 +436,7 @@ def sort_cognatesets(
 
 def parser():
     parser = cli.parser(
-        __package__ + Path(__file__).stem,
+        __package__ + "." + Path(__file__).stem,
         description="Create an Excel cognate view from a CLDF dataset",
     )
     parser.add_argument(
