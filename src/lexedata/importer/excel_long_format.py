@@ -115,7 +115,13 @@ def read_single_excel_sheet(
     c_f_id = db.dataset["FormTable", "id"].name
     c_f_language = db.dataset["FormTable", "languageReference"].name
     c_f_form = db.dataset["FormTable", "form"].name
-    c_f_value = db.dataset["FormTable", "value"].name
+    try:
+        c_f_value = db.dataset["FormTable", "value"].name
+    except KeyError:
+        c_f_value = None
+        logger.warning(
+            "Your metadata file does not specify a #value column (usually called Value) to store the forms as given in the source. Consider adding it to your FormTable."
+        )
     c_f_concept = db.dataset["FormTable", "parameterReference"].name
     if not match_form:
         match_form = [c_f_form, c_f_language]
@@ -142,7 +148,7 @@ def read_single_excel_sheet(
         implicit["languageReference"] = c_f_language
     if c_f_id not in sheet_header:
         implicit["id"] = c_f_id
-    if c_f_value not in sheet_header:
+    if c_f_value is not None and c_f_value not in sheet_header:
         implicit["value"] = c_f_value
 
     found_columns = set(sheet_header) - {concept_column} - set(implicit.values())
