@@ -83,7 +83,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--concepts",
-        action=cli.ListOrFromFile,
+        action=cli.SetOrFromFile,
         help="Concepts to output.",
     )
     parser.add_argument(
