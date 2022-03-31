@@ -377,7 +377,7 @@ CognateTable, and *that* table then refers to a CognatesetTable we can make
 explicit. ::
 
     $ python -m lexedata.edit.add_cognate_table
-    CRITICAL:lexedata:You must specify whether cognateset have dataset-wide unique ids or not (--unique-id)
+    CRITICAL:lexedata:You must specify whether cognatesets have dataset-wide unique ids or not (--unique-id)
 
 In our example dataset, cognate class “1” for all is not cognate with class “1”
 for arm, so we need to tell ``add_cognate_table`` that these IDs are only unique
