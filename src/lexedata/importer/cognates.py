@@ -1,14 +1,15 @@
 """Load #cognate and #cognatesets from excel file into CLDF"""
 import re
 import typing as t
+from pathlib import Path
 
-import pycldf
 import openpyxl
+import pycldf
 
-from lexedata import cli
-from lexedata.types import Language, RowObject, CogSet
 import lexedata.util.excel as cell_parsers
+from lexedata import cli
 from lexedata.importer.excel_matrix import ExcelCognateParser
+from lexedata.types import CogSet, Language, RowObject
 from lexedata.util.excel import clean_cell_value, get_cell_comment
 
 
@@ -132,7 +133,7 @@ def import_cognates_from_excel(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description=__doc__)
+    parser = cli.parser(__package__ + Path(__file__).stem, description=__doc__)
     parser.add_argument(
         "cogsets",
         nargs="?",

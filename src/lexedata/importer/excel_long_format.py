@@ -1,25 +1,18 @@
 import typing as t
-from pathlib import Path
 from collections import defaultdict
-from tabulate import tabulate
+from pathlib import Path
 
 import attr
 import openpyxl
 import pycldf
+from tabulate import tabulate
 
-from lexedata.util import (
-    string_to_id,
-    normalize_string,
-)
-from lexedata.util.excel import (
-    clean_cell_value,
-    normalize_header,
-)
+import lexedata.cli as cli
+from lexedata.edit.add_status_column import add_status_column_to_table
 from lexedata.importer.excel_matrix import DB
 from lexedata.types import Form, KeyKeyDict
-from lexedata.edit.add_status_column import add_status_column_to_table
-import lexedata.cli as cli
-
+from lexedata.util import normalize_string, string_to_id
+from lexedata.util.excel import clean_cell_value, normalize_header
 
 try:
     from typing import Literal
@@ -344,7 +337,8 @@ def add_single_languages(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Import forms and associated metadata from an excel file to a cldf dataset."
+        __package__ + Path(__file__).stem,
+        description="Import forms and associated metadata from an excel file to a cldf dataset.",
     )
     parser.add_argument(
         "excel",

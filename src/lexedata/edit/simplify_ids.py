@@ -5,19 +5,17 @@ Take every ID column and convert it to either an integer-valued or a restricted-
 Optionally, create ‘transparent’ IDs, that is alphanumerical IDs which are derived from the characteristic columns of the corresponding table. For example, the ID of a FormTable would be derived from language and concept; for a CognatesetTable from the central concept if there is one.
 
 """
+from pathlib import Path
+
 import pycldf
 
-from lexedata.util import cache_table
 import lexedata.cli as cli
-from lexedata.util.simplify_ids import (
-    clean_mapping,
-    update_integer_ids,
-    update_ids,
-    ID_COMPONENTS,
-)
+from lexedata.util import cache_table
+from lexedata.util.simplify_ids import (ID_COMPONENTS, clean_mapping,
+                                        update_ids, update_integer_ids)
 
 if __name__ == "__main__":
-    parser = cli.parser(__doc__)
+    parser = cli.parser(__package__ + Path(__file__).stem, __doc__)
     parser.add_argument(
         "--transparent",
         action="store_true",

@@ -1,13 +1,13 @@
-import sys
-from pathlib import Path
-import typing as t
 import itertools
+import sys
+import typing as t
+from pathlib import Path
 
-import pycldf
 import networkx.algorithms.community
+import pycldf
 
 from lexedata import cli, types, util
-from lexedata.util import parse_segment_slices, indices_to_segment_slice
+from lexedata.util import indices_to_segment_slice, parse_segment_slices
 
 
 def segment_to_cognateset(
@@ -121,6 +121,7 @@ def network_of_overlaps(
 
 if __name__ == "__main__":
     parser = cli.parser(
+        __package__ + Path(__file__).stem,
         description="List segments that indicate non-concatenative morphology.",
         epilog="If you want a more general report on the cognate judgements, run `lexedata.report.judgements`.",
     )

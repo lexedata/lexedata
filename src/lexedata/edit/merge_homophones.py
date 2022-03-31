@@ -8,15 +8,15 @@ What other columns give warnings, what other columns give errors?
 *Optionally*, merge cognate sets that get merged by this procedure.
 """
 
-import re
 import argparse
+import re
 import typing as t
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
 import pycldf
 
-from lexedata import cli, util, types
+from lexedata import cli, types, util
 from lexedata.edit.simplify_ids import update_ids
 
 # The cell value type, which tends to be string, lists of string, or int:
@@ -601,6 +601,7 @@ for name, item in list(vars().items()):
 
 if __name__ == "__main__":
     parser = cli.parser(
+        __package__ + Path(__file__).stem,
         description="Script for merging homophones.",
         epilog="""The default merging functions are:
 {:}

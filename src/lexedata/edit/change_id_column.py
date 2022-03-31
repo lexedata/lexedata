@@ -1,8 +1,10 @@
-import pycldf
 import typing as t
+from pathlib import Path
 
-from lexedata.edit.add_status_column import add_status_column_to_table
+import pycldf
+
 import lexedata.cli as cli
+from lexedata.edit.add_status_column import add_status_column_to_table
 
 # TODO: use lexedata.edit.clean_ids.update_ids
 
@@ -107,7 +109,8 @@ def replace_column(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Replace the ID of an object (eg. a language ID) in the wordlist"
+        __package__ + Path(__file__).stem,
+        description="Replace the ID of an object (eg. a language ID) in the wordlist",
     )
     parser.add_argument("table", type=str, help="The table to apply the replacement to")
     parser.add_argument(

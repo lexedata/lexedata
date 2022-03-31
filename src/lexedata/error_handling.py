@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import typing as t
 import logging
+import typing as t
 
 
 class ObjectNotFoundWarning(UserWarning):

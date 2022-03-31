@@ -1,7 +1,7 @@
-import pycldf
-import typing as t
 import abc
+import typing as t
 
+import pycldf
 
 H = t.TypeVar("H", bound=t.Hashable)
 

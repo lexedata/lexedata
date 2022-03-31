@@ -1,13 +1,15 @@
 from collections import defaultdict
+from pathlib import Path
 
 import pycldf
 
 import lexedata.cli as cli
-from lexedata.util.simplify_ids import update_ids, string_to_id
+from lexedata.util.simplify_ids import string_to_id, update_ids
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Replace the ID column of a table by some other column"
+        __package__ + Path(__file__).stem,
+        description="Replace the ID column of a table by some other column",
     )
     parser.add_argument(
         "table", type=str, help="The table to apply the replacement to", metavar="TABLE"

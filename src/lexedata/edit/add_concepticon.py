@@ -13,17 +13,18 @@ columns in potentially different languages.
 
 """
 import collections
+import os
 import typing as t
+from pathlib import Path
 
-from csvw.metadata import URITemplate
-
-import pycldf
-import cldfcatalog
 import cldfbench
+import cldfcatalog
+import pycldf
+from csvw.metadata import URITemplate
 from pyconcepticon.glosses import concept_map2
 
-from lexedata.edit.add_status_column import add_status_column_to_table
 import lexedata.cli as cli
+from lexedata.edit.add_status_column import add_status_column_to_table
 
 try:
     concepticon_path = cldfcatalog.Config.from_file().get_clone("concepticon")
@@ -234,7 +235,9 @@ def create_concepticon_for_concepts(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
+        __package__ + Path(__file__).stem,
+        description=__doc__.split("\n\n\n")[0],
+        epilog=__doc__.split("\n\n\n")[1],
     )
     parser.add_argument(
         "--overwrite",

@@ -1,13 +1,14 @@
-import typing as t
 import collections
+import typing as t
+from pathlib import Path
 
-from csvw.metadata import URITemplate
-import pycldf
 import networkx
+import pycldf
+from csvw.metadata import URITemplate
 
 from lexedata import cli
-from lexedata.util import load_clics
 from lexedata.edit.add_status_column import add_status_column_to_table
+from lexedata.util import load_clics
 
 FormID = str
 ConceptID = str
@@ -236,13 +237,14 @@ def add_central_concepts_to_cognateset_table(
 
 if __name__ == "__main__":
     parser = cli.parser(
+        __package__ + Path(__file__).stem,
         description="""Add central concepts to cognatesets.
 
         Write a #ParameterReference column to #CognatesetTable based on the
         concepts linked to the cognateset through the cognate judgements. If
         links to Concepticon are available, the central concept is calculated
         according to CLICS. Otherwise, the most common concept is retained
-        as the central concept."""
+        as the central concept.""",
     )
     parser.add_argument(
         "--overwrite",

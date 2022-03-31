@@ -5,11 +5,12 @@ If possible, align using existing lexstat scorer.
 """
 
 import typing as t
+from pathlib import Path
+
 import pycldf
 
-from lexedata import util
+from lexedata import cli, util
 from lexedata.edit.add_status_column import add_status_column_to_table
-from lexedata import cli
 
 
 def align(forms):
@@ -73,7 +74,7 @@ def aligne_cognate_table(
 
 if __name__ == "__main__":
 
-    parser = cli.parser(description=__doc__)
+    parser = cli.parser(__package__ + Path(__file__).stem, description=__doc__)
     parser.add_argument(
         "--status-update",
         type=str,

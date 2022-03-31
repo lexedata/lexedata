@@ -13,16 +13,16 @@ For details on the segmentation procedure, see the manual.
 
 import typing as t
 from collections import defaultdict
-from tabulate import tabulate
+from pathlib import Path
 
-from csvw.metadata import URITemplate
-
+import attr
+import cldfbench
+import cldfcatalog
 import pycldf
 import pyclts
 import segments
-import cldfbench
-import cldfcatalog
-import attr
+from csvw.metadata import URITemplate
+from tabulate import tabulate
 
 import lexedata.cli as cli
 
@@ -292,7 +292,9 @@ def add_segments_to_dataset(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
+        __package__ + Path(__file__).stem,
+        description=__doc__.split("\n\n\n")[0],
+        epilog=__doc__.split("\n\n\n")[1],
     )
     parser.add_argument(
         "transcription_column",

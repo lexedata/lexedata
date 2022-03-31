@@ -1,10 +1,11 @@
 import enum
 import typing as t
-from tabulate import tabulate
+from pathlib import Path
 
 import pycldf
+from tabulate import tabulate
 
-from lexedata import util, cli, types
+from lexedata import cli, types, util
 
 
 class Missing(enum.Enum):
@@ -185,7 +186,8 @@ def coverage_report_concepts(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Summarise coverage, i.e. how many concepts are known for each language."
+        __package__ + Path(__file__).stem,
+        description="Summarise coverage, i.e. how many concepts are known for each language.",
     )
     # parser.add_argument(
     #     "--min-concepts",

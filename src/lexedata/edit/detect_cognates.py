@@ -5,12 +5,11 @@ import hashlib
 import typing as t
 from pathlib import Path
 
+import lingpy
+import lingpy.compare.partial
 import pycldf
 import pyclts
 import segments
-
-import lingpy
-import lingpy.compare.partial
 
 import lexedata.cli as cli
 import lexedata.types as types
@@ -202,7 +201,7 @@ def cognate_code_to_file(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description=__doc__)
+    parser = cli.parser(__package__ + Path(__file__).stem, description=__doc__)
     parser.add_argument(
         "--output-file",
         "-o",

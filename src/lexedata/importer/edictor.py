@@ -1,12 +1,12 @@
-from pathlib import Path
-import csv
-from tqdm import tqdm
 import collections
+import csv
 import typing as t
+from pathlib import Path
 
 import pycldf
+from tqdm import tqdm
 
-from lexedata import util, cli, types
+from lexedata import cli, types, util
 
 
 def extract_partial_judgements(
@@ -345,7 +345,8 @@ def edictor_to_cldf(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Import the tsv format used by Edictor and Lingpy. Try to only change the subset of forms and cognatesets contained in the TSV, from a partial export."
+        __package__ + Path(__file__).stem,
+        description="Import the tsv format used by Edictor and Lingpy. Try to only change the subset of forms and cognatesets contained in the TSV, from a partial export.",
     )
     parser.add_argument(
         "--source",
