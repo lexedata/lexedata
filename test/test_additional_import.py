@@ -208,6 +208,45 @@ def test_superfluous_columns1(single_import_parameters):
         )
 
 
+def test_missing_value_column(single_import_parameters, caplog):
+    dataset, target, excel, concept_name = single_import_parameters
+    dataset.remove_columns("FormTable", "Value")
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "English",
+                "variants",
+                "Form",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "phonemic",
+                "orthographic",
+                "superfluous",
+            ],
+            [],
+        ]
+    )
+    # Check that we are warned about a missing value column
+    with caplog.at_level(logging.WARNING):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column="English",
+            ignore_superfluous=True,
+        )
+    assert re.search(
+        "does not specify .* #value .* Value",
+        caplog.text,
+    )
+
+
 def test_missing_concept(single_import_parameters, caplog):
     dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
