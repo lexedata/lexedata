@@ -400,7 +400,7 @@ def mawetiparser():
     initialized_cell_parser = getattr(c, dialect.cell_parser["name"])(
         dataset,
         element_semantics=dialect.cell_parser["cell_parser_semantics"],
-        separation_pattern=fr"([{''.join(dialect.cell_parser['form_separator'])}])",
+        separation_pattern=rf"([{''.join(dialect.cell_parser['form_separator'])}])",
         variant_separator=dialect.cell_parser["variant_separator"],
         add_default_source=dialect.cell_parser["add_default_source"],
     )

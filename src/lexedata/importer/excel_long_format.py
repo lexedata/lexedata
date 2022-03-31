@@ -430,8 +430,8 @@ if __name__ == "__main__":
         sheets=sheets,
         match_form=args.match_form,
         concept_name=args.concept_name,
-        ignore_missing=args.ignore_missing_excel_columns,
-        ignore_superfluous=args.ignore_superfluous_excel_columns,
+        ignore_missing=args.ignore_missing_columns,
+        ignore_superfluous=args.ignore_superfluous_columns,
         status_update=args.status_update,
         logger=logger,
     )
