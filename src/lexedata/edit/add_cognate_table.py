@@ -121,7 +121,7 @@ if __name__ == "__main__":
         "--unique-id",
         choices=["dataset", "concept"],
         default=False,
-        help="Are cognateset IDs unique over the whole *dataset* (including, but not limited to, cross-meaning cognatesets), or are they unique only *within a concept* (eg. cognateset 1 for concept ‘the hand’ has no relation cognateset 1 for concept ‘to eat’",
+        help="Are cognateset IDs unique over the whole *dataset* (including, but not limited to, cross-concept cognatesets), or are they unique only *within a concept* (eg. cognateset 1 for concept ‘hand’ is different than cognateset 1 for concept ‘to eat’",
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         split = True
     else:
         cli.Exit.CLI_ARGUMENT_ERROR(
-            "You must specify whether cognateset have dataset-wide unique ids or not (--unique-id)"
+            "You must specify whether cognatesets have dataset-wide unique ids or not (--unique-id)"
         )
 
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
