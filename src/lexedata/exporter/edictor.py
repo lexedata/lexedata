@@ -15,10 +15,9 @@ from pathlib import Path
 
 import pycldf
 
-
-from lexedata import cli, types, util
 import lexedata.report.nonconcatenative_morphemes
-from lexedata.util import parse_segment_slices, ensure_list
+from lexedata import cli, types, util
+from lexedata.util import ensure_list, parse_segment_slices
 
 
 def rename(form_column):
@@ -417,7 +416,8 @@ def add_edictor_settings(file, dataset):
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Export #FormTable to tsv format for import to edictor"
+        __package__ + "." + Path(__file__).stem,
+        description="Export #FormTable to tsv format for import to edictor",
     )
     parser.add_argument(
         "--languages",

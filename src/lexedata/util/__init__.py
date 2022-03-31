@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import re
-import zipfile
 import typing as t
-
 import unicodedata
-import unidecode as uni
-import networkx
-from lingpy.compare.strings import ldn_swap
+import zipfile
 
 import csvw
+import networkx
 import pkg_resources
-from lexedata.cli import tq, logger
+import unidecode as uni
+from lingpy.compare.strings import ldn_swap
+
+from lexedata.cli import logger, tq
 
 from ..types import KeyKeyDict
 from . import fs

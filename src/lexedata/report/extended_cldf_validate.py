@@ -13,14 +13,15 @@ reports. Those automatic fixes should be made more obvious.
 """
 
 import typing as t
+import unicodedata
+from pathlib import Path
 
 import pycldf
-import unicodedata
+
+from lexedata import cli, types, util
+from lexedata.report.judgements import check_cognate_table
 
 # from clldutils.misc import log_or_raise
-
-from lexedata import cli, util, types
-from lexedata.report.judgements import check_cognate_table
 
 
 def log_or_raise(message, log: cli.logging.Logger = cli.logger):
@@ -237,7 +238,9 @@ def check_na_form_has_no_alternative(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
+        __package__ + "." + Path(__file__).stem,
+        description=__doc__.split("\n\n\n")[0],
+        epilog=__doc__.split("\n\n\n")[1],
     )
     args = parser.parse_args()
     logger = cli.setup_logging(args)

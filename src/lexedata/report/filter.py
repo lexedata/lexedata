@@ -23,12 +23,12 @@ otherwise vastly reduced implementation of `grep`.
 # forms to those linked to primary concepts: i.e. allow the regex to be derived
 # from a list of IDs elsewhere.
 
-
+import argparse
 import re
 import sys
-import argparse
 import typing as t
 from csv import DictReader, DictWriter
+from pathlib import Path
 
 import pycldf
 
@@ -79,7 +79,9 @@ def filter(
 
 def parser():
     parser = cli.parser(
-        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
+        __package__ + "." + Path(__file__).stem,
+        description=__doc__.split("\n\n\n")[0],
+        epilog=__doc__.split("\n\n\n")[1],
     )
     parser.add_argument("column", help="The column to filter.", metavar="COLUMN")
     parser.add_argument("filter", help="An expression to filter by.", metavar="FILTER")

@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
-import re
 import abc
+import re
 import typing as t
 import urllib.parse
 from pathlib import Path
 
-import pycldf
 import openpyxl as op
+import pycldf
 
-from lexedata import types, cli, util
-from lexedata.util import parse_segment_slices
+from lexedata import cli, types, util
 from lexedata.edit.add_singleton_cognatesets import create_singletons
-
+from lexedata.util import parse_segment_slices
 
 WARNING = "\u26A0"
 
@@ -436,7 +435,10 @@ def sort_cognatesets(
 
 
 def parser():
-    parser = cli.parser(description="Create an Excel cognate view from a CLDF dataset")
+    parser = cli.parser(
+        __package__ + "." + Path(__file__).stem,
+        description="Create an Excel cognate view from a CLDF dataset",
+    )
     parser.add_argument(
         "excel",
         type=Path,

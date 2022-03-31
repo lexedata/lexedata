@@ -5,17 +5,17 @@ multiple forms), while every odd row contains the associated cognate codes (a on
 Forms and cognate codes are separated by commas (",") and semi-colons (";"). Any other information existing in the cell will be parsed as
 part of the form or the cognate code.
 """
-import re
-import os
 import csv
-import logging
 import itertools
+import logging
+import os
+import re
 import typing as t
 from pathlib import Path
 
 import openpyxl
 
-from lexedata import cli, util, types
+from lexedata import cli, types, util
 from lexedata.util.excel import clean_cell_value
 
 
@@ -139,7 +139,9 @@ def import_interleaved(
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        prog=f"python -m {__package__}.{Path(__file__).stem}", description=__doc__
+    )
     parser.add_argument(
         "excel", type=Path, help="The Excel file to parse", metavar="EXCEL"
     )

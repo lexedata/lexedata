@@ -6,10 +6,11 @@ each language, each with frequencies and whether the segments are valid CLTS.
 """
 
 import typing as t
+from pathlib import Path
 
 import pycldf
-
 from tabulate import tabulate
+
 from lexedata import cli, types
 from lexedata.edit.add_segments import bipa
 
@@ -63,7 +64,9 @@ def comment_on_sound(sound: str) -> str:
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
+        __package__ + "." + Path(__file__).stem,
+        description=__doc__.split("\n\n\n")[0],
+        epilog=__doc__.split("\n\n\n")[1],
     )
     parser.add_argument(
         "--languages",
