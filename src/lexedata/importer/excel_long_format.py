@@ -168,7 +168,7 @@ def read_single_excel_sheet(
         else:
             raise ValueError(
                 f"Your Excel sheet {sheet.title} is missing columns {expected_columns - found_columns}. "
-                f"Clean up your data, or use --ignore-missing-excel-columns to import anyway and leave these "
+                f"Clean up your data, or use --ignore-missing-columns to import anyway and leave these "
                 f"columns empty in the dataset for the newly imported forms."
             )
     if not found_columns <= expected_columns:
@@ -181,7 +181,7 @@ def read_single_excel_sheet(
             raise ValueError(
                 f"Your Excel sheet {sheet.title} contained unexpected columns "
                 f"{found_columns - expected_columns}. Clean up your data, or use "
-                f"--ignore-superfluous-excel-columns to import the data anyway and ignore these columns."
+                f"--ignore-superfluous-columns to import the data anyway and ignore these columns."
             )
     try:
         # Assume we have a language table
@@ -270,7 +270,14 @@ def read_single_excel_sheet(
         if form_candidates:
             new_concept_added = False
             for form_id in form_candidates:
-                logger.info(f"Form {form[c_f_value]} was already in dataset.")
+                try:
+                    logger.info(
+                        f"Form {form[c_f_value]} was already in dataset. I have not added it again."
+                    )
+                except KeyError:
+                    logger.info(
+                        f"Form {form[c_f_form]} '{form[c_f_concept]}' in Language {form[c_f_language]} was already in dataset. I have not added it again."
+                    )
 
                 if db.dataset["FormTable", c_f_concept].separator:
                     for new_concept in form[c_f_concept]:
@@ -507,7 +514,7 @@ if __name__ == "__main__":
                     "New forms",
                     "Existing forms",
                     "Skipped forms",
-                    "New concept reference",
+                    "New concept association",
                 ],
                 tablefmt="orgtbl",
             )
