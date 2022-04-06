@@ -1,16 +1,13 @@
-import sys
 import enum
+import sys
 import typing as t
 from pathlib import Path
-import lxml.etree as ET
+from typing import Literal
 
+import lxml.etree as ET
 import pycldf
 
-from lexedata import util
-from lexedata import types
-from lexedata import cli
-
-from typing import Literal
+from lexedata import cli, types, util
 
 
 # Some type aliases, which should probably be moved elsewhere or made obsolete.
@@ -821,7 +818,8 @@ def add_partitions(data_object: ET.Element, partitions):
 def parser():
     """Construct the CLI argument parser for this script."""
     parser = cli.parser(
-        description="Export a CLDF dataset to a coded character matrix to be used as input for phylogenetic analyses."
+        __package__ + "." + Path(__file__).stem,
+        description="Export a CLDF dataset to a coded character matrix to be used as input for phylogenetic analyses.",
     )
 
     parser.add_argument(

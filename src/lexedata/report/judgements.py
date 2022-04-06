@@ -2,11 +2,13 @@
 
 """
 import typing as t
+import unicodedata
+from pathlib import Path
+
 import pycldf
 
-import unicodedata
 from lexedata import cli
-from lexedata.util import parse_segment_slices, cache_table
+from lexedata.util import cache_table, parse_segment_slices
 
 
 def log_or_raise(message, logger=cli.logger):
@@ -232,7 +234,7 @@ def check_cognate_table(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description=__doc__)
+    parser = cli.parser(__package__ + "." + Path(__file__).stem, description=__doc__)
     parser.add_argument(
         "--strict",
         action="store_true",

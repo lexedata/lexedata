@@ -1,25 +1,18 @@
 import typing as t
-from pathlib import Path
 from collections import defaultdict
-from tabulate import tabulate
+from pathlib import Path
 
 import attr
 import openpyxl
 import pycldf
+from tabulate import tabulate
 
-from lexedata.util import (
-    string_to_id,
-    normalize_string,
-)
-from lexedata.util.excel import (
-    clean_cell_value,
-    normalize_header,
-)
+import lexedata.cli as cli
+from lexedata.edit.add_status_column import add_status_column_to_table
 from lexedata.importer.excel_matrix import DB
 from lexedata.types import Form, KeyKeyDict
-from lexedata.edit.add_status_column import add_status_column_to_table
-import lexedata.cli as cli
-
+from lexedata.util import normalize_string, string_to_id
+from lexedata.util.excel import clean_cell_value, normalize_header
 
 try:
     from typing import Literal
@@ -124,7 +117,13 @@ def read_single_excel_sheet(
     c_f_id = db.dataset["FormTable", "id"].name
     c_f_language = db.dataset["FormTable", "languageReference"].name
     c_f_form = db.dataset["FormTable", "form"].name
-    c_f_value = db.dataset["FormTable", "value"].name
+    try:
+        c_f_value = db.dataset["FormTable", "value"].name
+    except KeyError:
+        c_f_value = None
+        logger.warning(
+            "Your metadata file does not specify a #value column (usually called Value) to store the forms as given in the source. Consider adding it to your FormTable."
+        )
     c_f_concept = db.dataset["FormTable", "parameterReference"].name
     if not match_form:
         match_form = [c_f_form, c_f_language]
@@ -151,7 +150,7 @@ def read_single_excel_sheet(
         implicit["languageReference"] = c_f_language
     if c_f_id not in sheet_header:
         implicit["id"] = c_f_id
-    if c_f_value not in sheet_header:
+    if c_f_value is not None and c_f_value not in sheet_header:
         implicit["value"] = c_f_value
 
     found_columns = set(sheet_header) - {concept_column} - set(implicit.values())
@@ -378,7 +377,8 @@ def add_single_languages(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description="Import forms and associated metadata from an excel file to a cldf dataset."
+        __package__ + "." + Path(__file__).stem,
+        description="Import forms and associated metadata from an excel file to a cldf dataset.",
     )
     parser.add_argument(
         "excel",

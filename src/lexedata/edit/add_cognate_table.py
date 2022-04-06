@@ -5,13 +5,12 @@ If the dataset has no cognatesetReference column anywhere, add an empty CognateT
 If the dataset has a cognatesetReference in the FormTable, extract that to a separate cognateTable, also transferring alignments if they exist.
 If the dataset has a cognatesetReference anywhere else, admit you don't know what is going on and die.
 """
+from pathlib import Path
 
 import pycldf
 
-
+from lexedata import cli, util
 from lexedata.util import cache_table
-from lexedata import cli
-from lexedata import util
 
 
 def add_cognate_table(
@@ -116,7 +115,7 @@ def add_cognate_table(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(__doc__)
+    parser = cli.parser(__package__ + "." + Path(__file__).stem, __doc__)
     parser.add_argument(
         "--unique-id",
         choices=["dataset", "concept"],

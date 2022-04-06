@@ -8,7 +8,7 @@ from lexedata import cli
 from lexedata.util.add_metadata import add_metadata
 
 if __name__ == "__main__":
-    parser = cli.parser(__doc__)
+    parser = cli.parser(__package__ + "." + Path(__file__).stem, __doc__)
     parser.add_argument(
         "--keep-forms",
         action="store_true",

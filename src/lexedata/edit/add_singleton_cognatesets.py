@@ -6,11 +6,11 @@ cognatesets for streaks of segments not in cognatesets.
 
 """
 import typing as t
+from pathlib import Path
 
 import pycldf
 
-from lexedata import types, cli, util
-
+from lexedata import cli, types, util
 from lexedata.report.nonconcatenative_morphemes import segment_to_cognateset
 from lexedata.util import indices_to_segment_slice
 
@@ -156,7 +156,10 @@ def create_singletons(
 
 
 if __name__ == "__main__":
-    parser = cli.parser(description="Add singleton cognatesets to a CLDF dataset")
+    parser = cli.parser(
+        __package__ + "." + Path(__file__).stem,
+        description="Add singleton cognatesets to a CLDF dataset",
+    )
     parser.add_argument(
         "--status",
         default=None,

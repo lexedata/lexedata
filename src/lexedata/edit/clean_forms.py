@@ -12,6 +12,7 @@ This is a rough heuristic, but hopefully it helps with the majority of cases.
 
 import string
 import typing as t
+from pathlib import Path
 
 import pycldf
 
@@ -199,7 +200,9 @@ def clean_forms(
 
 if __name__ == "__main__":
     parser = cli.parser(
-        description=__doc__.split("\n\n\n")[0], epilog=__doc__.split("\n\n\n")[1]
+        __package__ + "." + Path(__file__).stem,
+        description=__doc__.split("\n\n\n")[0],
+        epilog=__doc__.split("\n\n\n")[1],
     )
     parser.add_argument(
         "--brackets",

@@ -8,12 +8,11 @@ import typing as t
 import unicodedata
 
 import openpyxl as op
-
 import pycldf
 
-from lexedata.util import string_to_id
-from lexedata.types import Form, Judgement
 import lexedata.cli as cli
+from lexedata.types import Form, Judgement
+from lexedata.util import string_to_id
 
 
 def clean_cell_value(cell: op.cell.cell.Cell):

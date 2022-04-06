@@ -1,35 +1,29 @@
 # -*- coding: utf-8 -*-
 
+import argparse
+import logging
 import re
 import typing as t
 from pathlib import Path
-import logging
-import argparse
 
-import pycldf
 import openpyxl
+import pycldf
 
-from lexedata.types import (
-    Object,
-    Language,
-    RowObject,
-    Form,
-    Concept,
-    CogSet,
-    Judgement,
-    R,
-)
-from lexedata.util import (
-    string_to_id,
-    edit_distance,
-)
-from lexedata.util.excel import (
-    clean_cell_value,
-    get_cell_comment,
-)
+import lexedata.cli as cli
 import lexedata.util.excel as cell_parsers
 from lexedata.edit.add_status_column import add_status_column_to_table
-import lexedata.cli as cli
+from lexedata.types import (
+    CogSet,
+    Concept,
+    Form,
+    Judgement,
+    Language,
+    Object,
+    R,
+    RowObject,
+)
+from lexedata.util import edit_distance, string_to_id
+from lexedata.util.excel import clean_cell_value, get_cell_comment
 
 Ob = t.TypeVar("Ob", bound=Object)
 
@@ -841,9 +835,10 @@ if __name__ == "__main__":
     import pycldf
 
     parser = cli.parser(
+        __package__ + "." + Path(__file__).stem,
         description="Imports a dataset from an excel file into CLDF. "
         "The import is configured by a special key in the metadata file, check "
-        "./test/data/cldf/smallmawetiguarani/Wordlist-metadata.json for examples."
+        "./test/data/cldf/smallmawetiguarani/Wordlist-metadata.json for examples.",
     )
     parser.add_argument(
         "wordlist",

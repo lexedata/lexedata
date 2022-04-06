@@ -1,8 +1,8 @@
+import argparse
 import csv
-import sys
 import enum
 import logging
-import argparse
+import sys
 import typing as t
 from enum import IntEnum
 from pathlib import Path
@@ -153,8 +153,10 @@ def setup_logging(args: argparse.Namespace):
     return logger
 
 
-def parser(description: str, **kwargs) -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=description, **kwargs)
+def parser(name: str, description: str, **kwargs) -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=description, prog=f"python -m {name}", **kwargs
+    )
     parser.add_argument(
         "--metadata",
         type=Path,
