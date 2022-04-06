@@ -204,7 +204,6 @@ def test_merge_group_not_implemented(copy_dataset, caplog):
             merge_homophones.merge_group(
                 forms=forms, target=target, mergers=mergers, dataset=dataset
             )
-            print(target)
         assert re.search(
             r".+\nThe merge function union is not implemented for type.+\n.+",
             caplog.text,

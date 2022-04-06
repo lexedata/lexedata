@@ -10,6 +10,7 @@ from lexedata.importer.excel_long_format import (
     ImportLanguageReport,
     add_single_languages,
 )
+from lexedata.cli import logger
 from mock_excel import MockSingleExcelSheet
 from helper_functions import copy_metadata, copy_to_temp_no_bib
 
@@ -31,9 +32,24 @@ def single_import_parameters(request):
     return dataset, target, excel, concept_name
 
 
-def test_concept_file_not_found(caplog):
-    from lexedata.cli import logger
+def test_no_metadata(caplog):
+    with pytest.raises(SystemExit):
+        with caplog.at_level(logging.ERROR):
+            add_single_languages(
+                metadata="",
+                sheets=[],
+                match_form=None,
+                concept_name=None,
+                language_name=None,
+                ignore_missing=True,
+                ignore_superfluous=True,
+                status_update=None,
+                logger=logger,
+            )
+        assert "No cldf metadata found" in caplog.text
 
+
+def test_concept_file_not_found(caplog):
     copy = copy_metadata(Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json")
     add_single_languages(
         metadata=copy,
