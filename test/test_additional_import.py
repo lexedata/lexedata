@@ -40,6 +40,7 @@ def test_concept_file_not_found(caplog):
         sheets=[],
         match_form=None,
         concept_name=None,
+        language_name=None,
         ignore_missing=True,
         ignore_superfluous=True,
         status_update=None,
