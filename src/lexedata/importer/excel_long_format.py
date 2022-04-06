@@ -155,6 +155,10 @@ def read_single_excel_sheet(
 
     found_columns = set(sheet_header) - {concept_column} - set(implicit.values())
     expected_columns = set(form_header) - {c_f_concept} - set(implicit.values())
+    if language_name_column:
+        expected_columns = expected_columns - {c_f_language}
+        expected_columns.add(language_name_column)
+
     if not found_columns >= expected_columns:
         if ignore_missing:
             logger.info(
@@ -197,22 +201,25 @@ def read_single_excel_sheet(
     if language_name_column:
 
         def language_name_from_row(row):
-            return language_name_to_language_id[row[language_name_column]]
+            return language_name_to_language_id[
+                row[sheet_header.index(language_name_column)].value
+            ]
 
-    elif db.dataset["FormTable", "languageReference"].name in sheet_header:
-        c_f_language = db.dataset["FormTable", "languageReference"].name
+    elif c_f_language in sheet_header:
 
         def language_name_from_row(row):
-            return row[c_f_language]
+            return row[sheet_header.index(c_f_language)].value
 
     else:
 
         def language_name_from_row(row):
             return normalize_string(sheet.title)
 
-    for row in sheet.iter_rows(min_row=1):
-        language_name = language_name_from_row(row)
+    row = ""
+    for r in sheet.iter_rows(min_row=2):
+        row = r
         break
+    language_name = language_name_from_row(row)
     if language_name in language_name_to_language_id:
         language_id = language_name_to_language_id[language_name]
         report[language_id].is_new_language = False
