@@ -7,17 +7,18 @@
 """
 
 import csv
-import pytest
 import logging
 import tempfile
 from pathlib import Path
 
+import pytest
 import openpyxl
 
 from lexedata import util
 from lexedata.importer import excel_interleaved
 from lexedata.edit import add_cognate_table
 from lexedata.util.add_metadata import add_metadata
+from lexedata.cli import logger
 
 
 def assert_datasets_are_equal(ds1, ds2):
@@ -466,7 +467,7 @@ def test_interleaved(interleaved_excel_example):
             )
         )
         for row in excel_interleaved.import_interleaved(
-            interleaved_excel_example, logger=logging.Logger, ids=ids
+            interleaved_excel_example, logger=logger, ids=ids
         )
     ]
 
@@ -601,7 +602,7 @@ def test_create_metadata_correct(interleaved_excel_example, formtable_only_examp
             )
         )
         for row in excel_interleaved.import_interleaved(
-            interleaved_excel_example, logger=logging.Logger
+            interleaved_excel_example, logger=logger
         )
     ]
 

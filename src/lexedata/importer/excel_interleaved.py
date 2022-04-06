@@ -58,6 +58,11 @@ def import_interleaved(
                         f"Cell {entry.coordinate} was empty, but cognatesets {cogset.value} were given in {cogset.coordinate}."
                     )
                 continue
+            if not cogset.value and entry.value:
+                logger.warning(
+                    f"Cell {entry.coordinate} is a form cell, but is not followed by a cognateset. "
+                    f"There was an even number of header rows which needs to be fixed."
+                )
             bracket_level = 0
             i = 0
             f = clean_cell_value(entry)
