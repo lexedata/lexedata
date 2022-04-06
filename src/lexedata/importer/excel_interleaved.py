@@ -50,6 +50,7 @@ def import_interleaved(
         ws.iter_cols(min_col=2), task="Parsing cells", total=ws.max_column
     ):
         language_name = clean_cell_value(language[0])
+        last_number = 0
         for c, (entry, cogset) in enumerate(zip(language[1::2], language[2::2])):
             if not entry.value:
                 if cogset.value:
@@ -134,6 +135,12 @@ def import_interleaved(
                     id = f"{base_id}_s{synonym:d}"
                 yield (id, language_name, concepts[c], form, None, cogset)
                 ids.add(id)
+            last_number = c
+        if last_number % 2 != 0:
+            logger.warning(
+                f"The sheet {ws.title} contained an odd number of rows. "
+                f"There might have been an even number of header rows"
+            )
 
 
 if __name__ == "__main__":
