@@ -7,19 +7,21 @@ they don't all match.
 
 """
 
-import sys
 import json
-import configparser
+import sys
 from pathlib import Path
+import importlib.metadata
+
+import lexedata
+from conf import release
 
 if __name__ == "__main__":
     root = Path(__file__).absolute().parent.parent
 
-    py = root / "setup.cfg"
-    config = configparser.ConfigParser()
-    config.read(py)
-    py_version = config["metadata"]["version"]
-    print(py, py_version)
+    package_version = importlib.metadata.version("lexedata")
+
+    py_version = lexedata.__version__
+    print(lexedata.__file__, py_version)
 
     zenodo = root / ".zenodo.json"
     zenodo_version = json.load(zenodo.open())["version"]
@@ -36,12 +38,12 @@ if __name__ == "__main__":
 
     docs = root / "docs"
     sys.path.append(str(docs))
-    from conf import release
 
     print(docs / "conf.py", release)
 
     if not (
-        py_version.strip()
+        package_version.strip()
+        == py_version.strip()
         == zenodo_version.strip()
         == cff_version.strip()
         == release.strip()
