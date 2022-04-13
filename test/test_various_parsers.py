@@ -1,6 +1,7 @@
 import logging
 import tempfile
 import argparse
+import openpyxl
 from pathlib import Path
 
 from lexedata import cli, types
@@ -92,6 +93,7 @@ def test_cex_parser():
 
 def test_ilong_parser():
     _, fname = tempfile.mkstemp(".xlsx")
+    openpyxl.Workbook().save(fname)
     parameters = ilong_parser().parse_args([fname, "--language-name", "Language"])
-    assert parameters.excel == fname
+    assert parameters.excel.worksheets
     assert parameters.language_name == "Language"
