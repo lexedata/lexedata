@@ -154,9 +154,16 @@ if __name__ == "__main__":
     if graph.nodes():
         out = args.output_file.open("w") if args.output_file else sys.stdout
 
+        communities = [
+            community
+            for comp in networkx.connected_components(graph)
+            for community in networkx.algorithms.community.greedy_modularity_communities(
+                graph.subgraph(comp)
+            )
+        ]
         # Sort to keep order persistent
         for community in sorted(
-            networkx.algorithms.community.greedy_modularity_communities(graph),
+            communities,
             key=lambda x: sorted(x),
         ):
             print("Cluster of overlapping cognate sets:", file=out)
