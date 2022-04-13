@@ -382,7 +382,7 @@ def add_single_languages(
     return report
 
 
-if __name__ == "__main__":
+def parser():
     parser = cli.parser(
         __package__ + "." + Path(__file__).stem,
         description="Import forms and associated metadata from an excel file to a cldf dataset.",
@@ -464,8 +464,11 @@ if __name__ == "__main__":
         default=False,
         help="Prints report of newly added forms",
     )
+    return parser
 
-    args = parser.parse_args()
+
+if __name__ == "__main__":
+    args = parser().parse_args()
     logger = cli.setup_logging(args)
 
     if not args.sheets:

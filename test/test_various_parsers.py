@@ -11,6 +11,7 @@ from lexedata.exporter.phylogenetics import (
     parser as phylo_parser,
 )
 from lexedata.exporter.cognates import parser as cex_parser
+from lexedata.importer.excel_long_format import parser as ilong_parser
 
 
 def test_setorfromfile_list():
@@ -87,3 +88,10 @@ def test_cex_parser():
     _, fname = tempfile.mkstemp(".xlsx")
     parameters = cex_parser().parse_args([fname, "--add-singletons"])
     assert parameters.add_singletons_with_status == "automatic singleton"
+
+
+def test_ilong_parser():
+    _, fname = tempfile.mkstemp(".xlsx")
+    parameters = ilong_parser().parse_args([fname, "--language-name", "Language"])
+    assert parameters.excel == fname
+    assert parameters.language_name == "Language"
