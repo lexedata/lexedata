@@ -17,6 +17,7 @@ from lexedata.util import string_to_id
 
 
 def clean_cell_value(cell: op.cell.cell.Cell, logger=cli.logger):
+    """Return the value of an Excel cell in a useful format and normalized."""
     if cell.value is None:
         return ""
     if type(cell.value) == float:
@@ -25,7 +26,7 @@ def clean_cell_value(cell: op.cell.cell.Cell, logger=cli.logger):
         return cell.value
     elif type(cell.value) == int:
         return cell.value
-    elif type(cell.value) == datetime.datetime:
+    elif type(cell.value) == datetime.datetime:  # pragma: no cover
         logger.warning(
             "Encountered Date/Time value %s in cell %s.", cell.value, cell.coordinate
         )
