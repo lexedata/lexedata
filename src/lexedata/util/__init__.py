@@ -8,9 +8,8 @@ import csvw
 import networkx
 import pkg_resources
 import unidecode as uni
-from lingpy.compare.strings import ldn_swap
-
 from lexedata.cli import logger, tq
+from lingpy.compare.strings import ldn_swap
 
 from ..types import KeyKeyDict
 from . import fs
