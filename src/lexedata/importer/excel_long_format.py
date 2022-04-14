@@ -190,7 +190,7 @@ def read_single_excel_sheet(
         language_name_to_language_id = {
             row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()
         }
-    except KeyError:
+    except pycldf.dataset.SchemaError:
         # Actually, there is no language table.
         language_name_to_language_id = KeyKeyDict()
         logger.info(

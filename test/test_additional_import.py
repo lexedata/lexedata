@@ -479,6 +479,52 @@ def test_language_id(single_import_parameters, caplog):
             concept_column=concept_name,
         )
     assert {"ache"} == {f["Language_ID"] for f in dataset["FormTable"]}
+
+
+def test_no_language_table(single_import_parameters, caplog):
+    dataset, target, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    dataset.remove_table("LanguageTable")
+    dataset.write(FormTable=[])
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "Language_ID",
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "ache",
+                "one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    with caplog.at_level(logging.INFO):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column=concept_name,
+        )
     assert "no LanguageTable" in caplog.text
 
 
