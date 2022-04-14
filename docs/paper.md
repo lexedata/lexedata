@@ -1,5 +1,5 @@
 ---
-title: 'Lexedata: A toolbox to edit CLDF lexical datasets'
+title: 'Lexedata: a toolbox to edit CLDF lexical datasets'
 tags:
   - Python
   - linguistics
@@ -48,7 +48,7 @@ import and export functions to formats more familiar to linguists, and integrity
 checks for bulk edit and import functionality it provides. For example, there
 are scripts for importing data from MS Excel sheets of various common formats
 into CLDF, checking for homophones, manipulating etymological
-judgements, or exporting coded datasets for use in phylogenetic software.
+judgements, and exporting coded datasets for use in phylogenetic software.
 
 ![Overview over the functionality in Lexedata.\label{fig:structure}](structure.pdf)
 
