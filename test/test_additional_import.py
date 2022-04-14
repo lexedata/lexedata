@@ -142,7 +142,7 @@ def test_missing_columns1(single_import_parameters):
     )
     with pytest.raises(
         ValueError,
-        match=".*sheet MockSingleExcelSheet.*missing col.*{[^a-z]*orthographic[^a-z]*}.*--ignore-missing-excel-columns",
+        match=".*sheet MockSingleExcelSheet.*missing col.*{[^a-z]*orthographic[^a-z]*}.*--ignore-missing-columns",
     ):
         read_single_excel_sheet(
             dataset=dataset,
@@ -187,7 +187,7 @@ def test_missing_columns2(single_import_parameters):
         )
     assert "undescribed" in ex_info.value.args[0]
     assert "superfluous2" in ex_info.value.args[0]
-    assert "--ignore-superfluous-excel-columns" in ex_info.value.args[0]
+    assert "--ignore-superfluous-columns" in ex_info.value.args[0]
 
 
 def test_superfluous_columns1(single_import_parameters):
@@ -215,7 +215,7 @@ def test_superfluous_columns1(single_import_parameters):
     with pytest.raises(
         ValueError,
         match=".* Excel sheet MockSingleExcelSheet contained unexpected columns {'superfluous'}.*"
-        ".* use --ignore-superfluous-excel-columns .*",
+        ".* use --ignore-superfluous-columns .*",
     ):
         read_single_excel_sheet(
             dataset=dataset,
@@ -433,6 +433,66 @@ def test_no_concept_separator(single_import_parameters, caplog):
         r"not.* polysemous forms.*separator.*FormTable.*parameterReference.*json.*lexedata\.report\.list_homophones",
         caplog.text,
     )
+
+
+def test_duplicate_forms_no_value(single_import_parameters, caplog):
+    dataset, target, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    del dataset["FormTable", "value"]
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    dataset.write(FormTable=[])
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "Language_ID",
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "ache",
+                "one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+            [
+                "ache",
+                "one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    with caplog.at_level(logging.INFO):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column=concept_name,
+        )
+    assert "Form form 'one' in Language ache was already in dataset"
 
 
 def test_language_id(single_import_parameters, caplog):
