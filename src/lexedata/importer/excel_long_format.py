@@ -193,9 +193,8 @@ def read_single_excel_sheet(
     except KeyError:
         # Actually, there is no language table.
         language_name_to_language_id = KeyKeyDict()
-        logger.warning(
-            f"Did not find {dataset['LanguageTable'].url.string}. "
-            f"Importing all forms independent of the language table"
+        logger.info(
+            "You have no LanguageTable, so I will have to assume that forms that already exist have the same Language IDs that is already in your FormTable."
         )
     # infer language from sheet data
     if language_name_column:

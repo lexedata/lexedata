@@ -435,6 +435,54 @@ def test_no_concept_separator(single_import_parameters, caplog):
     )
 
 
+def test_language_id(single_import_parameters, caplog):
+    dataset, target, excel, concept_name = single_import_parameters
+    c_f_language = dataset["FormTable", "languageReference"].name = "Language"
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    dataset.write(FormTable=[])
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "Language",
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "Aché",
+                "one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    with caplog.at_level(logging.INFO):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column=concept_name,
+        )
+    assert {"Aché"} == {f[c_f_language] for f in dataset["FormTable"]}
+    assert "no LanguageTable" in caplog.text
+
+
 def test_language_name(single_import_parameters):
     dataset, target, excel, concept_name = single_import_parameters
     c_f_language = dataset["FormTable", "languageReference"].name
