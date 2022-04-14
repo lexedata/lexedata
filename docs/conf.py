@@ -14,6 +14,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+from lexedata import __version__ as release
 
 # -- Project information -----------------------------------------------------
 
@@ -22,8 +23,9 @@ copyright = "2021: Kaiping, Gereon A. & Steiger, Melvin S. & Chousou-Polydouri, 
 author = "Melvin Steiger, Gereon A. Kaiping"
 
 # The full version, including alpha/beta/rc tags
-release = "1.0.0"
 
+if release.startswith("v"):
+    release = release[1:]
 
 # -- General configuration ---------------------------------------------------
 
