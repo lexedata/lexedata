@@ -156,6 +156,9 @@ def update_ids(
     for other_table, columns in foreign_keys_to_here.items():
         if not columns:
             continue
+        for column in columns:
+            # Temporarily open up the datatype format, otherwise we may be unable to read.
+            ds[other_table, column].datatype = "string"
         logger.info(
             f"Applying changed foreign key to columns {columns:} in {other_table:}…"
         )
