@@ -92,6 +92,7 @@ def read_single_excel_sheet(
     match_form: t.Optional[t.List[str]] = None,
     entries_to_concepts: t.Mapping[str, str] = KeyKeyDict(),
     concept_column: t.Optional[str] = None,
+    language_name_column: t.Optional[str] = None,
     ignore_missing: bool = False,
     ignore_superfluous: bool = False,
     status_update: t.Optional[str] = None,
@@ -109,6 +110,7 @@ def read_single_excel_sheet(
             dataset["FormTable", "parameterReference"].name,
             concept_column,
         )
+
     db = DB(dataset)
     db.cache_dataset()
     # required cldf fields of a form
@@ -153,6 +155,10 @@ def read_single_excel_sheet(
 
     found_columns = set(sheet_header) - {concept_column} - set(implicit.values())
     expected_columns = set(form_header) - {c_f_concept} - set(implicit.values())
+    if language_name_column:
+        expected_columns = expected_columns - {c_f_language}
+        expected_columns.add(language_name_column)
+
     if not found_columns >= expected_columns:
         if ignore_missing:
             logger.info(
@@ -177,19 +183,56 @@ def read_single_excel_sheet(
                 f"{found_columns - expected_columns}. Clean up your data, or use "
                 f"--ignore-superfluous-excel-columns to import the data anyway and ignore these columns."
             )
-    # check if language exist
-    c_l_name = db.dataset["LanguageTable", "name"].name
-    c_l_id = db.dataset["LanguageTable", "id"].name
-    language_name_to_language_id = {
-        row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()
-    }
-    language_name = normalize_string(sheet.title)
+    try:
+        # Assume we have a language table
+        c_l_name = db.dataset["LanguageTable", "name"].name
+        c_l_id = db.dataset["LanguageTable", "id"].name
+        language_name_to_language_id = {
+            row[c_l_name]: row[c_l_id] for row in db.cache["LanguageTable"].values()
+        }
+    except pycldf.dataset.SchemaError:
+        # Actually, there is no language table.
+        language_name_to_language_id = KeyKeyDict()
+        logger.info(
+            "You have no LanguageTable, so I will have to assume that forms that already exist have the same Language IDs that is already in your FormTable."
+        )
+    # infer language from sheet data
+    if language_name_column:
+
+        def language_name_from_row(row):
+            return language_name_to_language_id[
+                row[sheet_header.index(language_name_column)].value
+            ]
+
+    elif c_f_language in sheet_header:
+
+        def language_name_from_row(row):
+            return row[sheet_header.index(c_f_language)].value
+
+    else:
+
+        def language_name_from_row(row):
+            return normalize_string(sheet.title)
+
+    row = ""
+    for r in sheet.iter_rows(min_row=2):
+        row = r
+        break
+    language_name = language_name_from_row(row)
     if language_name in language_name_to_language_id:
         language_id = language_name_to_language_id[language_name]
         report[language_id].is_new_language = False
     else:
         language_id = language_name
         report[language_id].is_new_language = True
+        logger.warning(
+            "I am adding forms for a new language %s, but I don't know how to add languages to your LanguageTable. Please ensure to add this language to the LanguageTable manually.",
+            language_name,
+        )
+        logger.info(
+            "To add the new language, you may want to add a row with ID %s to the LanguageTable, even if that does not fit the intended ID format, and then fix language IDs using lexedata.edit.simplify_ids --tables LanguageTable",
+            language_id,
+        )
 
     # read new data from sheet
     for form in cli.tq(
@@ -281,6 +324,7 @@ def add_single_languages(
     sheets: t.Iterable[openpyxl.worksheet.worksheet.Worksheet],
     match_form: t.Optional[t.List[str]],
     concept_name: t.Optional[str],
+    language_name: t.Optional[str],
     ignore_missing: bool,
     ignore_superfluous: bool,
     status_update: t.Optional[str],
@@ -288,13 +332,15 @@ def add_single_languages(
 ) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
-    # initiate dataset from meta data or csv depending on command line arguments
-    if metadata:
-        if metadata.name == "forms.csv":
-            dataset = pycldf.Dataset.from_data(metadata)
-        else:
-            dataset = pycldf.Dataset.from_metadata(metadata)
-
+    # initiate dataset from meta
+    try:
+        dataset = pycldf.Dataset.from_metadata(metadata)
+    except FileNotFoundError:
+        cli.Exit.FILE_NOT_FOUND(
+            "No cldf metadata found, if you have no metadata, "
+            "export to csv from your excel file and run lexedata.edit.add_metadata"
+        )
+    # create concept mapping
     concepts: t.Mapping[str, str]
     try:
         cid = dataset["ParameterTable", "id"].name
@@ -315,6 +361,7 @@ def add_single_languages(
                 f"Did not find {dataset['ParameterTable'].url.string}. "
                 f"Importing all forms independent of concept"
             )
+        # set concept_column
         concepts = KeyKeyDict()
         if concept_name:
             concept_column = concept_name
@@ -333,6 +380,7 @@ def add_single_languages(
             match_form=match_form,
             entries_to_concepts=concepts,
             concept_column=concept_column,
+            language_name_column=language_name,
             ignore_missing=ignore_missing,
             ignore_superfluous=ignore_superfluous,
             status_update=status_update,
@@ -341,7 +389,7 @@ def add_single_languages(
     return report
 
 
-if __name__ == "__main__":
+def parser():
     parser = cli.parser(
         __package__ + "." + Path(__file__).stem,
         description="Import forms and associated metadata from an excel file to a cldf dataset.",
@@ -359,7 +407,17 @@ if __name__ == "__main__":
         "By default, it is assumed that the #parameterReference column, usually named 'Concept_ID' "
         "or similar, matches the IDs of the concept. Use this "
         "switch if instead of concept IDs you have concept Names in the excel file instead.",
-        metavar="COLUMN",
+        metavar="CONCEPT-COLUMN",
+    )
+    parser.add_argument(
+        "--language-name",
+        type=str,
+        help="Column to interpret as language names "
+        "By default, it is assumed that the #languageReference column, usually named 'Language_ID' "
+        "or similar, matches the IDs of the language. If no Language_ID appears in the sheet header,"
+        "the language name will be inferred by the sheet title. Use this "
+        "switch if instead of language IDs you have language Names in the excel file instead.",
+        metavar="LANGUAGE-COLUMN",
     )
     parser.add_argument(
         "--sheets",
@@ -413,8 +471,11 @@ if __name__ == "__main__":
         default=False,
         help="Prints report of newly added forms",
     )
+    return parser
 
-    args = parser.parse_args()
+
+if __name__ == "__main__":
+    args = parser().parse_args()
     logger = cli.setup_logging(args)
 
     if not args.sheets:
@@ -430,6 +491,7 @@ if __name__ == "__main__":
         sheets=sheets,
         match_form=args.match_form,
         concept_name=args.concept_name,
+        language_name=args.language_name,
         ignore_missing=args.ignore_missing_columns,
         ignore_superfluous=args.ignore_superfluous_columns,
         status_update=args.status_update,

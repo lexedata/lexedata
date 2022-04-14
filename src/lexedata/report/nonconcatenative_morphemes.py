@@ -119,6 +119,35 @@ def network_of_overlaps(
     return mergers
 
 
+def cluster_overlaps(
+    overlapping_cognatesets: t.Iterable[
+        t.Tuple[types.Cognateset_ID, types.Cognateset_ID]
+    ],
+    out=sys.stdout,
+) -> None:
+    graph = networkx.Graph()
+    graph.add_edges_from(overlapping_cognatesets)
+    if graph.nodes():
+        communities = [
+            community
+            for comp in networkx.connected_components(graph)
+            for community in networkx.algorithms.community.greedy_modularity_communities(
+                graph.subgraph(comp)
+            )
+        ]
+        # Sort to keep order persistent
+        for community in sorted(
+            communities,
+            key=lambda x: sorted(x),
+        ):
+            print("Cluster of overlapping cognate sets:", file=out)
+            for cognateset in sorted(community):
+                print(f"\t {cognateset}", file=out)
+                # TODO: Generate form segments, if considered informative
+                # forms = ["".join(segments) for segments in forms_by_cogset[cognateset]]
+                # print(f"\t {cognateset} ({forms})")
+
+
 if __name__ == "__main__":
     parser = cli.parser(
         __package__ + "." + Path(__file__).stem,
@@ -146,22 +175,12 @@ if __name__ == "__main__":
         logger=logger,
     )
 
-    overlapping_cognatesets = network_of_overlaps(
-        which_segment_belongs_to_which_cognateset, forms_cache=util.cache_table(dataset)
-    )
-    graph = networkx.Graph()
-    graph.add_edges_from(overlapping_cognatesets)
-    if graph.nodes():
-        out = args.output_file.open("w") if args.output_file else sys.stdout
+    out = args.output_file.open("w") if args.output_file else sys.stdout
 
-        # Sort to keep order persistent
-        for community in sorted(
-            networkx.algorithms.community.greedy_modularity_communities(graph),
-            key=lambda x: sorted(x),
-        ):
-            print("Cluster of overlapping cognate sets:", file=out)
-            for cognateset in sorted(community):
-                print(f"\t {cognateset}", file=out)
-                # TODO: Generate form segments, if considered informative
-                # forms = ["".join(segments) for segments in forms_by_cogset[cognateset]]
-                # print(f"\t {cognateset} ({forms})")
+    cluster_overlaps(
+        network_of_overlaps(
+            which_segment_belongs_to_which_cognateset,
+            forms_cache=util.cache_table(dataset),
+        ),
+        out,
+    )

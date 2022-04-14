@@ -10,6 +10,7 @@ from lexedata.importer.excel_long_format import (
     ImportLanguageReport,
     add_single_languages,
 )
+from lexedata.cli import logger
 from mock_excel import MockSingleExcelSheet
 from helper_functions import copy_metadata, copy_to_temp_no_bib
 
@@ -31,15 +32,31 @@ def single_import_parameters(request):
     return dataset, target, excel, concept_name
 
 
-def test_concept_file_not_found(caplog):
-    from lexedata.cli import logger
+def test_no_metadata(caplog):
+    with pytest.raises(SystemExit):
+        with caplog.at_level(logging.ERROR):
+            add_single_languages(
+                metadata="",
+                sheets=[],
+                match_form=None,
+                concept_name=None,
+                language_name=None,
+                ignore_missing=True,
+                ignore_superfluous=True,
+                status_update=None,
+                logger=logger,
+            )
+        assert "No cldf metadata found" in caplog.text
 
+
+def test_concept_file_not_found(caplog):
     copy = copy_metadata(Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json")
     add_single_languages(
         metadata=copy,
         sheets=[],
         match_form=None,
         concept_name=None,
+        language_name=None,
         ignore_missing=True,
         ignore_superfluous=True,
         status_update=None,
@@ -416,6 +433,146 @@ def test_no_concept_separator(single_import_parameters, caplog):
         r"not.* polysemous forms.*separator.*FormTable.*parameterReference.*json.*lexedata\.report\.list_homophones",
         caplog.text,
     )
+
+
+def test_language_id(single_import_parameters, caplog):
+    dataset, target, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    dataset.write(FormTable=[])
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "Language_ID",
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "ache",
+                "one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    with caplog.at_level(logging.INFO):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column=concept_name,
+        )
+    assert {"ache"} == {f["Language_ID"] for f in dataset["FormTable"]}
+
+
+def test_no_language_table(single_import_parameters, caplog):
+    dataset, target, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    dataset.remove_table("LanguageTable")
+    dataset.write(FormTable=[])
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "Language_ID",
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "ache",
+                "one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    with caplog.at_level(logging.INFO):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column=concept_name,
+        )
+    assert "no LanguageTable" in caplog.text
+
+
+def test_language_name(single_import_parameters):
+    dataset, target, excel, concept_name = single_import_parameters
+    c_f_language = dataset["FormTable", "languageReference"].name
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    dataset.write(FormTable=[])
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "Language",
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "Aché",
+                "one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    read_single_excel_sheet(
+        dataset=dataset,
+        sheet=sheet,
+        entries_to_concepts=concepts,
+        concept_column=concept_name,
+        language_name_column="Language",
+    )
+    assert {"ache"} == {f[c_f_language] for f in dataset["FormTable"]}
 
 
 def test_concept_separator(single_import_parameters, caplog):
