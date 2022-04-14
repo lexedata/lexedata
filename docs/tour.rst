@@ -21,10 +21,14 @@ tester cannot use the GUI.) ::
     $ export LANG=C
 
 Lexedata is a collection of command line tools. If you have never worked on the
-command line before, check out :doc:`our quick primer on the command line <cli>`. This
-tutorial further assumes you have a working :doc:`installation` of lexedata and
-:doc:`git`. The tutorial will manipulate the Git repository using Git's command line
-interface, but you can use a Git GUI instead. While it is possible to use lexedata without Git, we do not recommend this, as lexedata does not have an 'undo' function. Git is a version control system and allows you to access and restore previous versions, while it also makes collaboration with others easier.
+command line before, check out :doc:`our quick primer on the command line
+<cli>`. This tutorial further assumes you have a working :doc:`installation` of
+lexedata and :doc:`git`. The tutorial will manipulate the Git repository using
+Git's command line interface, but you can use a Git GUI instead. While it is
+possible to use lexedata without Git, we do not recommend this, as lexedata does
+not have an 'undo' function. Git is a version control system and allows you to
+access and restore previous versions, while it also makes collaboration with
+others easier.
 
 *****************************
 Importing a dataset into CLDF
@@ -39,13 +43,15 @@ start terminal and execute ::
     $ cd bantu
 
 For this tutorial, we will be using lexical data from the Bantu family,
-collected by Hilde Gunnink. The dataset is a subset of an earlier version 
-(deliberately, so this tour can show some steps in the cleaning process) of her lexical dataset.
-The data is stored in an Excel file which you can download from
-the lexedata repository ::
+collected by Hilde Gunnink. The dataset is a subset of an earlier version
+(deliberately, so this tour can show some steps in the cleaning process) of her
+lexical dataset. The data is stored in an Excel file which you can download from
+https://github.com/Anaphory/lexedata/blob/master/src/lexeadata/data/example-bantu.xlsx
+in the lexedata repository. (I will use the most recent version here, which
+comes shipped with lexedata. Sorry this looks a bit cryptic, but as I said, this
+way the testing system also knows where to find the file.) ::
 
-    $ curl -L https://github.com/Anaphory/lexedata/blob/master/docs/examples/bantu.xlsx?raw=true -o bantu.xlsx
-    [... Download progress]
+    $ python -c 'import pkg_resources; open("bantu.xlsx", "wb").write(pkg_resources.resource_stream("lexedata", "data/example-bantu.xlsx").read())'
 
 (curl is a command line tool to download files from URLs, available
 under Linux and Windows. You can, of course, download the file

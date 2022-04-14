@@ -6,6 +6,7 @@
 import re
 import typing as t
 import unicodedata
+import datetime
 
 import openpyxl as op
 import pycldf
@@ -15,7 +16,8 @@ from lexedata.types import Form, Judgement
 from lexedata.util import string_to_id
 
 
-def clean_cell_value(cell: op.cell.cell.Cell):
+def clean_cell_value(cell: op.cell.cell.Cell, logger=cli.logger):
+    """Return the value of an Excel cell in a useful format and normalized."""
     if cell.value is None:
         return ""
     if type(cell.value) == float:
@@ -24,8 +26,13 @@ def clean_cell_value(cell: op.cell.cell.Cell):
         return cell.value
     elif type(cell.value) == int:
         return cell.value
-    v = unicodedata.normalize("NFC", (cell.value or "").strip())
+    elif type(cell.value) == datetime.datetime:  # pragma: no cover
+        logger.warning(
+            "Encountered Date/Time value %s in cell %s.", cell.value, cell.coordinate
+        )
+        cell.value = str(cell.value)
     try:
+        v = unicodedata.normalize("NFC", (cell.value or "").strip())
         return v.replace("\n", ";\t")
     except TypeError:
         return str(v)

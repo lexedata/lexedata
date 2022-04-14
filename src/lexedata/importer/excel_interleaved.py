@@ -46,6 +46,16 @@ def import_interleaved(
             except AttributeError:
                 break
 
+    if ws.max_row % 2 == 0:
+        logger.warning(
+            f"The sheet {ws.title} contained an even number of rows in total "
+            f"({ws.max_row} including headers). "
+            f"Given that all other rows come in pairs (forms+cognatesets), "
+            f"I may have a problem with the format. "
+            f"Are there multiple header rows, "
+            f"or rows that look empty but are not after the end of the word list?"
+        )
+
     for language in cli.tq(
         ws.iter_cols(min_col=2), task="Parsing cells", total=ws.max_column
     ):
@@ -57,6 +67,11 @@ def import_interleaved(
                         f"Cell {entry.coordinate} was empty, but cognatesets {cogset.value} were given in {cogset.coordinate}."
                     )
                 continue
+            if not cogset.value and entry.value:
+                logger.warning(
+                    f"Cell {entry.coordinate} is a form cell, but is not followed by a cognateset. "
+                    f"There was an even number of header rows which needs to be fixed."
+                )
             bracket_level = 0
             i = 0
             f = clean_cell_value(entry)
