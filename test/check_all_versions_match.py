@@ -13,12 +13,12 @@ from pathlib import Path
 import importlib.metadata
 
 import lexedata
-from conf import release
 
 if __name__ == "__main__":
     root = Path(__file__).absolute().parent.parent
 
     package_version = importlib.metadata.version("lexedata")
+    print(root / "setup.cfg", package_version)
 
     py_version = lexedata.__version__
     print(lexedata.__file__, py_version)
@@ -38,6 +38,7 @@ if __name__ == "__main__":
 
     docs = root / "docs"
     sys.path.append(str(docs))
+    from conf import release
 
     print(docs / "conf.py", release)
 
