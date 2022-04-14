@@ -1,5 +1,5 @@
 ---
-title: 'Lexedata: a toolbox to edit CLDF lexical datasets'
+title: 'Lexedata: A toolbox to edit CLDF lexical datasets'
 tags:
   - Python
   - linguistics
