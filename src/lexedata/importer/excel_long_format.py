@@ -226,6 +226,14 @@ def read_single_excel_sheet(
     else:
         language_id = language_name
         report[language_id].is_new_language = True
+        logger.warning(
+            "I am adding forms for a new language %s, but I don't know how to add languages to your LanguageTable. Please ensure to add this language to the LanguageTable manually.",
+            language_name,
+        )
+        logger.info(
+            "To add the new language, you may want to add a row with ID %s to the LanguageTable, even if that does not fit the intended ID format, and then fix language IDs using lexedata.edit.simplify_ids --tables LanguageTable",
+            language_id,
+        )
 
     # read new data from sheet
     for form in cli.tq(
