@@ -50,7 +50,7 @@ are scripts for importing data from MS Excel sheets of various common formats
 into CLDF, checking for homophones, manipulating etymological
 judgements, or exporting coded datasets for use in phylogenetic software.
 
-![Overview over the functionality in Lexedata.\label{fig:structure}](structure.png)
+![Overview over the functionality in Lexedata.\label{fig:structure}](structure.pdf)
 
 # Statement of Need
 
