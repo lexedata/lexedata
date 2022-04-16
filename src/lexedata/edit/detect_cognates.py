@@ -84,52 +84,21 @@ def get_slices(*args, **kwargs):
 
 def get_partial_matrices(
     self,
-    concept=False,
+    concepts,
     method="sca",
     scale=0.5,
     factor=0.3,
     restricted_chars="_T",
     mode="global",
     gop=-2.0,
-    defaults=False,
-    external_scorer=False,  # external scoring function
-    imap_mode=False,
-    sep=lingpy.settings.rcParams["morpheme_separator"],
-    word_sep=lingpy.settings.rcParams["word_separator"],
-    word_seps=lingpy.settings.rcParams["word_separators"],
-    seps=lingpy.settings.rcParams["morpheme_separators"],
-    tones="T",
-    split_on_tones=False,
 ):
     """
     Function creates matrices for the purpose of partial cognate detection.
     """
 
     def function(idxA, idxB, sA, sB):
-        if method == "lexstat":
-            args = [
-                self[idxA, self._numbers][sA[0] : sA[1]],
-                self[idxB, self._numbers][sB[0] : sB[1]],
-                [
-                    self.cscorer[_charstring(self[idxB, self._langid]), n]
-                    for n in self[idxA, self._numbers][sA[0] : sA[1]]
-                ],
-                [
-                    self.cscorer[_charstring(self[idxA, self._langid]), n]
-                    for n in self[idxB, self._numbers][sB[0] : sB[1]]
-                ],
-                self[idxA, self._prostrings][sA[0] : sA[1]],
-                self[idxB, self._prostrings][sB[0] : sB[1]],
-                1,
-                scale,
-                factor,
-                self.cscorer,
-                mode,
-                restricted_chars,
-                1,
-            ]
-        elif method == "sca":
-            args = [
+        if method == "sca":
+            return calign.align_pair(
                 [n.split(".", 1)[1] for n in self[idxA, self._numbers][sA[0] : sA[1]]],
                 [n.split(".", 1)[1] for n in self[idxB, self._numbers][sB[0] : sB[1]]],
                 self[idxA, self._weights][sA[0] : sA[1]],
@@ -143,21 +112,17 @@ def get_partial_matrices(
                 mode,
                 restricted_chars,
                 1,
-            ]
+            )[2]
         else:
             raise ValueError(f"Method {method} unknown.")
-        return calign.align_pair(*args)[2]
 
-    concepts = [concept] if concept else sorted(self.rows)
-
-    # we have two basic constraints in the algorithm:
-    # a) set cognacy between morphemes in the same word to zero
-    # b) set cognacy for those parts to zero which are superceded by
-    # another part in all comparisons of two words
-    # essentially, setting things to zero, means setting them to 1, since
-    # we are dealing with distances here
+    # We have two basic constraints in the algorithm:
+    # a) Morphemes in the same word are not cognate
+    # b) Morphemes can be cognate with only (at most) one morpheme in another word
+    #
+    # “Not cognate” means setting values to 1 here, since we are dealing with
+    # normalized distances.
     for c in concepts:
-
         indices = self.get_list(row=c, flat=True)
         matrix = []
         tracer = []
@@ -179,69 +144,43 @@ def get_partial_matrices(
                 trace[idx] += [(i, slc, count)]
                 count += 1
 
-        if imap_mode:
-            # now, iterate for each string pair, asses the scores, and make
-            # sure, we only assign the best of those to the matrix
+        # Now, iterate for each string pair, asses the scores, and make
+        # sure we only assign the best of those to the matrix
 
-            matrix = [[0 for i in tracer] for j in tracer]
-            # reset the self-constraints (we missed it before)
+        matrix = [[0 for i in tracer] for j in tracer]
+        # reset the self-constraints (we missed it before)
 
-            for idxA, idxB in itertools.combinations(indices, r=2):
-                # iterate over all parts
-                scores = []
-                idxs = []
-                for i, sliceA, posA in trace[idxA]:
-                    for j, sliceB, posB in trace[idxB]:
-                        d = function(idxA, idxB, sliceA, sliceB)
-                        scores += [d]
-                        idxs += [(posA, posB)]
+        for idxA, idxB in itertools.combinations(indices, r=2):
+            # iterate over all parts
+            scores = []
+            idxs = []
+            for i, sliceA, posA in trace[idxA]:
+                for j, sliceB, posB in trace[idxB]:
+                    d = function(idxA, idxB, sliceA, sliceB)
+                    scores += [d]
+                    idxs += [(posA, posB)]
 
-                visited_seqs = set([])
-                while scores:
-                    min_score_index = scores.index(min(scores))
-                    min_score = scores.pop(min_score_index)
-                    posA, posB = idxs.pop(min_score_index)
-                    if posA in visited_seqs or posB in visited_seqs:
+            visited_seqs = set([])
+            while scores:
+                min_score_index = scores.index(min(scores))
+                min_score = scores.pop(min_score_index)
+                posA, posB = idxs.pop(min_score_index)
+                if posA in visited_seqs or posB in visited_seqs:
+                    matrix[posA][posB] = 1
+                    matrix[posB][posA] = 1
+                else:
+                    matrix[posA][posB] = min_score
+                    matrix[posB][posA] = min_score
+                    visited_seqs.add(posA)
+                    visited_seqs.add(posB)
+        for idx in indices:
+            for i, (_, sliceA, posA) in enumerate(trace[idx]):
+                for j, (_, sliceB, posB) in enumerate(trace[idx]):
+
+                    if i < j:
                         matrix[posA][posB] = 1
                         matrix[posB][posA] = 1
-                    else:
-                        matrix[posA][posB] = min_score
-                        matrix[posB][posA] = min_score
-                        visited_seqs.add(posA)
-                        visited_seqs.add(posB)
-            for idx in indices:
-                for i, (_, sliceA, posA) in enumerate(trace[idx]):
-                    for j, (_, sliceB, posB) in enumerate(trace[idx]):
-
-                        if i < j:
-                            matrix[posA][posB] = 1
-                            matrix[posB][posA] = 1
-        else:
-            matrix = []
-            for (idxA, posA, sliceA), (idxB, posB, sliceB) in itertools.combinations(
-                tracer, r=2
-            ):
-
-                if idxA == idxB:
-                    d = 1
-                else:
-                    try:
-                        d = function(idxA, idxB, sliceA, sliceB)
-                    except ZeroDivisionError:
-                        lingpy.log.warning(
-                            "Encountered Zero-Division for the comparison of "
-                            "{0} and {1}".format(
-                                "".join(self[idxA, self._tokens]),
-                                "".join(self[idxB, self._tokens]),
-                            )
-                        )
-                        d = 100
-                matrix += [d]
-            matrix = lingpy.algorithm.misc.squareform(matrix)
-        if not concept:
-            yield c, tracer, matrix
-        else:
-            yield matrix
+        yield c, tracer, matrix
 
 
 def partial_cluster(
@@ -252,30 +191,28 @@ def partial_cluster(
     factor=0.3,
     restricted_chars="_T",
     mode="overlap",
-    cluster_method="infomap",
     gop=-1.0,
     ref="",
     cluster_function=extra.infomap_clustering,
-    split_on_tones=False,
-    imap_mode=True,
 ):
 
     # check for parameters and add clustering, in order to make sure that
     # analyses are not repeated
+
+    concepts = sorted(self.rows)
 
     min_concept_cognateset = 0
     partial_cogids = defaultdict(list)  # stores the pcogids
     for concept, trace, matrix in cli.tq(
         get_partial_matrices(
             self,
+            concepts,
             method=method,
             scale=scale,
             factor=factor,
             restricted_chars=restricted_chars,
             mode=mode,
             gop=gop,
-            imap_mode=imap_mode,
-            split_on_tones=split_on_tones,
         ),
         "partial sequence clustering",
     ):
