@@ -32,7 +32,7 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
     string it is passed, and removes empty morphemes by collapsing subsequent
     morpheme boundary markers (_#◦+→←) into one.
 
-    >>> segments = "+ _ t a + 0 + a t"
+    >>> segments = "+ _ t a + 0 + a t".split()
     >>> c = clean_segments(segments)
     >>> [str(s) for s in c]
     ['t', 'a', '+', 'a', 't']
@@ -51,6 +51,28 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
                 del segments[s - 1]
             continue
     return segments[1:-1]
+
+
+def get_slices(tokens: t.List[str], nonempty_only=True) -> t.Iterator[slice]:
+    """Return slices for all morphemes in the token string
+
+    This function removes all unknown sound segments (/0/) from the segments
+    string it is passed, and removes empty morphemes by collapsing subsequent
+    morpheme boundary markers (_#◦+→←) into one.
+
+    >>> segments = "+ _ t a + 0 + a t".split()
+    >>> list(get_slices(segments))
+    [slice(2, 4), slice(5,6), slice(7, 9)]
+    """
+    start = 0
+    i = 0
+    for i, s in enumerate(tokens):
+        if s in {"_", "+"}:
+            if i > start or not nonempty_only:
+                yield slice(start, i)
+            start = i + 1
+    if i > start or not nonempty_only:
+        yield slice(start, i)
 
 
 def filter_function_factory(
@@ -73,8 +95,12 @@ def filter_function_factory(
     return filter
 
 
-def get_slices(*args, **kwargs):
-    breakpoint()
+alignment_functions = {
+    "global": lingpy.algorithm.calign.globalign,
+    "local": lingpy.algorithm.calign.localign,
+    "overlap": lingpy.algorithm.calign.semi_globalign,
+    "dialign": lingpy.algorithm.calign.dialign,
+}
 
 
 def get_partial_matrices(
@@ -83,7 +109,6 @@ def get_partial_matrices(
     method="sca",
     scale=0.5,
     factor=0.3,
-    restricted_chars="_T",
     mode="global",
     gop=-2.0,
 ):
@@ -93,20 +118,22 @@ def get_partial_matrices(
 
     def function(idxA, idxB, sA, sB):
         if method == "sca":
-            return lingpy.algorithm.calign.align_pair(
-                [n.split(".", 1)[1] for n in self[idxA, self._numbers][sA[0] : sA[1]]],
-                [n.split(".", 1)[1] for n in self[idxB, self._numbers][sB[0] : sB[1]]],
-                self[idxA, self._weights][sA[0] : sA[1]],
-                self[idxB, self._weights][sB[0] : sB[1]],
-                self[idxA, self._prostrings][sA[0] : sA[1]],
-                self[idxB, self._prostrings][sB[0] : sB[1]],
-                gop,
-                scale,
-                factor,
-                self.rscorer,
-                mode,
-                restricted_chars,
-                1,
+            return alignment_functions[mode](
+                seqA=[
+                    n.split(".", 1)[1] for n in self[idxA, self._numbers][sA[0] : sA[1]]
+                ],
+                seqB=[
+                    n.split(".", 1)[1] for n in self[idxB, self._numbers][sB[0] : sB[1]]
+                ],
+                gopA=self[idxA, self._weights][sA[0] : sA[1]],
+                gopB=self[idxB, self._weights][sB[0] : sB[1]],
+                proA=self[idxA, self._prostrings][sA[0] : sA[1]],
+                proB=self[idxB, self._prostrings][sB[0] : sB[1]],
+                M=sA[1] - sA[0],
+                N=sB[1] - sB[0],
+                scale=scale,
+                factor=factor,
+                scorer=self.rscorer,
             )[2]
         else:
             raise ValueError(f"Method {method} unknown.")
@@ -131,9 +158,7 @@ def get_partial_matrices(
             tokens = self[idx, self._segments]
 
             # now get the slices with the function
-            slices = get_slices(tokens)
-
-            for i, slc in enumerate(slices):
+            for i, slc in enumerate(get_slices(tokens)):
                 tracer += [(idx, i, slc)]
                 trace[idx] += [(i, slc, count)]
                 count += 1
