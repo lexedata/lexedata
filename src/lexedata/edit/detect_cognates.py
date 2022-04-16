@@ -2,18 +2,20 @@
 
 import csv
 import hashlib
+import itertools
 import typing as t
+from collections import defaultdict
 from pathlib import Path
 
+import lexedata.cli as cli
+import lexedata.types as types
 import lingpy
 import lingpy.compare.partial
 import pycldf
 import pyclts
 import segments
-
-import lexedata.cli as cli
-import lexedata.types as types
 from lexedata.edit.add_segments import bipa
+from lingpy.algorithm import calign, extra
 
 # TODO maybe the CLTS logic from here and there belongs in util?
 
@@ -70,6 +72,221 @@ def filter_function_factory(
         return row["segments"] and row["concept"]
 
     return filter
+
+
+def _charstring(id_, char="X", cls="-"):
+    return "{0}.{1}.{2}".format(id_, char, cls)
+
+
+def get_slices(*args, **kwargs):
+    breakpoint()
+
+
+def get_partial_matrices(
+    self,
+    concept=False,
+    method="sca",
+    scale=0.5,
+    factor=0.3,
+    restricted_chars="_T",
+    mode="global",
+    gop=-2.0,
+    defaults=False,
+    external_scorer=False,  # external scoring function
+    imap_mode=False,
+    sep=lingpy.settings.rcParams["morpheme_separator"],
+    word_sep=lingpy.settings.rcParams["word_separator"],
+    word_seps=lingpy.settings.rcParams["word_separators"],
+    seps=lingpy.settings.rcParams["morpheme_separators"],
+    tones="T",
+    split_on_tones=False,
+):
+    """
+    Function creates matrices for the purpose of partial cognate detection.
+    """
+
+    def function(idxA, idxB, sA, sB):
+        if method == "lexstat":
+            args = [
+                self[idxA, self._numbers][sA[0] : sA[1]],
+                self[idxB, self._numbers][sB[0] : sB[1]],
+                [
+                    self.cscorer[_charstring(self[idxB, self._langid]), n]
+                    for n in self[idxA, self._numbers][sA[0] : sA[1]]
+                ],
+                [
+                    self.cscorer[_charstring(self[idxA, self._langid]), n]
+                    for n in self[idxB, self._numbers][sB[0] : sB[1]]
+                ],
+                self[idxA, self._prostrings][sA[0] : sA[1]],
+                self[idxB, self._prostrings][sB[0] : sB[1]],
+                1,
+                scale,
+                factor,
+                self.cscorer,
+                mode,
+                restricted_chars,
+                1,
+            ]
+        elif method == "sca":
+            args = [
+                [n.split(".", 1)[1] for n in self[idxA, self._numbers][sA[0] : sA[1]]],
+                [n.split(".", 1)[1] for n in self[idxB, self._numbers][sB[0] : sB[1]]],
+                self[idxA, self._weights][sA[0] : sA[1]],
+                self[idxB, self._weights][sB[0] : sB[1]],
+                self[idxA, self._prostrings][sA[0] : sA[1]],
+                self[idxB, self._prostrings][sB[0] : sB[1]],
+                gop,
+                scale,
+                factor,
+                self.rscorer,
+                mode,
+                restricted_chars,
+                1,
+            ]
+        else:
+            raise ValueError(f"Method {method} unknown.")
+        return calign.align_pair(*args)[2]
+
+    concepts = [concept] if concept else sorted(self.rows)
+
+    # we have two basic constraints in the algorithm:
+    # a) set cognacy between morphemes in the same word to zero
+    # b) set cognacy for those parts to zero which are superceded by
+    # another part in all comparisons of two words
+    # essentially, setting things to zero, means setting them to 1, since
+    # we are dealing with distances here
+    for c in concepts:
+
+        indices = self.get_list(row=c, flat=True)
+        matrix = []
+        tracer = []
+
+        # first assemble all partial parts
+        trace = defaultdict(list)  # stores where the stuff is in the matrix
+        count = 0
+        for idx in indices:
+
+            # we need the slices for both words, so let's just take the
+            # tokens for this time
+            tokens = self[idx, self._segments]
+
+            # now get the slices with the function
+            slices = get_slices(tokens)
+
+            for i, slc in enumerate(slices):
+                tracer += [(idx, i, slc)]
+                trace[idx] += [(i, slc, count)]
+                count += 1
+
+        if imap_mode:
+            # now, iterate for each string pair, asses the scores, and make
+            # sure, we only assign the best of those to the matrix
+
+            matrix = [[0 for i in tracer] for j in tracer]
+            # reset the self-constraints (we missed it before)
+
+            for idxA, idxB in itertools.combinations(indices, r=2):
+                # iterate over all parts
+                scores = []
+                idxs = []
+                for i, sliceA, posA in trace[idxA]:
+                    for j, sliceB, posB in trace[idxB]:
+                        d = function(idxA, idxB, sliceA, sliceB)
+                        scores += [d]
+                        idxs += [(posA, posB)]
+
+                visited_seqs = set([])
+                while scores:
+                    min_score_index = scores.index(min(scores))
+                    min_score = scores.pop(min_score_index)
+                    posA, posB = idxs.pop(min_score_index)
+                    if posA in visited_seqs or posB in visited_seqs:
+                        matrix[posA][posB] = 1
+                        matrix[posB][posA] = 1
+                    else:
+                        matrix[posA][posB] = min_score
+                        matrix[posB][posA] = min_score
+                        visited_seqs.add(posA)
+                        visited_seqs.add(posB)
+            for idx in indices:
+                for i, (_, sliceA, posA) in enumerate(trace[idx]):
+                    for j, (_, sliceB, posB) in enumerate(trace[idx]):
+
+                        if i < j:
+                            matrix[posA][posB] = 1
+                            matrix[posB][posA] = 1
+        else:
+            matrix = []
+            for (idxA, posA, sliceA), (idxB, posB, sliceB) in itertools.combinations(
+                tracer, r=2
+            ):
+
+                if idxA == idxB:
+                    d = 1
+                else:
+                    try:
+                        d = function(idxA, idxB, sliceA, sliceB)
+                    except ZeroDivisionError:
+                        lingpy.log.warning(
+                            "Encountered Zero-Division for the comparison of "
+                            "{0} and {1}".format(
+                                "".join(self[idxA, self._tokens]),
+                                "".join(self[idxB, self._tokens]),
+                            )
+                        )
+                        d = 100
+                matrix += [d]
+            matrix = lingpy.algorithm.misc.squareform(matrix)
+        if not concept:
+            yield c, tracer, matrix
+        else:
+            yield matrix
+
+
+def partial_cluster(
+    self,
+    method="sca",
+    threshold=0.45,
+    scale=0.5,
+    factor=0.3,
+    restricted_chars="_T",
+    mode="overlap",
+    cluster_method="infomap",
+    gop=-1.0,
+    ref="",
+    cluster_function=extra.infomap_clustering,
+    split_on_tones=False,
+    imap_mode=True,
+):
+
+    # check for parameters and add clustering, in order to make sure that
+    # analyses are not repeated
+
+    min_concept_cognateset = 0
+    partial_cogids = defaultdict(list)  # stores the pcogids
+    for concept, trace, matrix in cli.tq(
+        get_partial_matrices(
+            self,
+            method=method,
+            scale=scale,
+            factor=factor,
+            restricted_chars=restricted_chars,
+            mode=mode,
+            gop=gop,
+            imap_mode=imap_mode,
+            split_on_tones=split_on_tones,
+        ),
+        "partial sequence clustering",
+    ):
+        c = cluster_function(
+            threshold, matrix, taxa=list(range(len(matrix))), revert=True
+        )
+        for i, (idx, pos, slc) in enumerate(trace):
+            partial_cogids[idx].append(c[i] + min_concept_cognateset)
+
+        min_concept_cognateset += len(matrix) + 1
+    self.add_entries(ref or self._partials, partial_cogids, lambda x: x)
 
 
 def cognate_code_to_file(
@@ -143,13 +360,12 @@ def cognate_code_to_file(
         mode=mode,
     )
     # But actually, in most cases partial cognates are much more useful.
-    lex.partial_cluster(
+    partial_cluster(
+        lex,
         method="lexstat",
         threshold=threshold,
         cluster_method=cluster_method,
         ref="partialcognateids",
-        override=True,
-        verbose=True,
         gop=gop,
         mode=mode,
     )
