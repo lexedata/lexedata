@@ -73,7 +73,7 @@ def filter_function_factory(
 
 
 def cognate_code_to_file(
-    metadata: Path,
+    dataset: pycldf.Wordlist,
     ratio: float,
     soundclass: str,
     cluster_method: str,
@@ -83,13 +83,12 @@ def cognate_code_to_file(
     mode: str,
     output_file: Path,
 ) -> None:
-    dataset = pycldf.Wordlist.from_metadata(metadata)
     assert (
         dataset.column_names.forms.segments is not None
     ), "Dataset must have a CLDF #segments column."
 
     lex = lingpy.compare.partial.Partial.from_cldf(
-        metadata,
+        dataset.tablegroup._fname,
         filter=filter_function_factory(dataset),
         columns=["doculect", "concept", "tokens"],
         model=lingpy.data.model.Model(soundclass),
@@ -117,7 +116,7 @@ def cognate_code_to_file(
     try:
         scorers_etc = lingpy.compare.lexstat.LexStat(
             filename="lexstats-{:}-{:s}{:s}.tsv".format(
-                sha1(metadata), soundclass, ratio_str
+                sha1(dataset.tablegroup._fname), soundclass, ratio_str
             )
         )
         lex.scorer = scorers_etc.scorer
@@ -128,7 +127,7 @@ def cognate_code_to_file(
         lex.output(
             "tsv",
             filename="lexstats-{:}-{:s}{:s}".format(
-                sha1(metadata), soundclass, ratio_str
+                sha1(dataset.tablegroup._fname), soundclass, ratio_str
             ),
             ignore=[],
         )
@@ -159,6 +158,10 @@ def cognate_code_to_file(
     alm.align(method="progressive")
     alm.output("tsv", filename=str(output_file), ignore="all", prettify=False)
 
+
+# TODO: This should have quite a lot of overlapping functionality with
+# lexedata.importer.cognates, and should be consolidated.
+def import_back(dataset, output_file):
     try:
         dataset.add_component("CognateTable")
     except ValueError:
@@ -257,8 +260,10 @@ if __name__ == "__main__":
         " bootstrap the calculation (default: 0.7)",
     )
     args = parser.parse_args()
+
+    dataset = pycldf.Wordlist.from_metadata(args.metadata)
     cognate_code_to_file(
-        metadata=args.metadata,
+        dataset=dataset,
         ratio=args.ratio,
         cluster_method=args.clustering_method,
         soundclass=args.sound_class,
@@ -268,3 +273,4 @@ if __name__ == "__main__":
         gop=args.gop,
         output_file=args.output_file,
     )
+    import_back(dataset=dataset, output_file=args.output_file)
