@@ -15,7 +15,6 @@ import pycldf
 import pyclts
 import segments
 from lexedata.edit.add_segments import bipa
-from lingpy.algorithm import calign, extra
 
 # TODO maybe the CLTS logic from here and there belongs in util?
 
@@ -74,10 +73,6 @@ def filter_function_factory(
     return filter
 
 
-def _charstring(id_, char="X", cls="-"):
-    return "{0}.{1}.{2}".format(id_, char, cls)
-
-
 def get_slices(*args, **kwargs):
     breakpoint()
 
@@ -98,7 +93,7 @@ def get_partial_matrices(
 
     def function(idxA, idxB, sA, sB):
         if method == "sca":
-            return calign.align_pair(
+            return lingpy.algorithm.calign.align_pair(
                 [n.split(".", 1)[1] for n in self[idxA, self._numbers][sA[0] : sA[1]]],
                 [n.split(".", 1)[1] for n in self[idxB, self._numbers][sB[0] : sB[1]]],
                 self[idxA, self._weights][sA[0] : sA[1]],
@@ -124,7 +119,6 @@ def get_partial_matrices(
     # normalized distances.
     for c in concepts:
         indices = self.get_list(row=c, flat=True)
-        matrix = []
         tracer = []
 
         # first assemble all partial parts
@@ -193,7 +187,7 @@ def partial_cluster(
     mode="overlap",
     gop=-1.0,
     ref="",
-    cluster_function=extra.infomap_clustering,
+    cluster_function=lingpy.algorithm.extra.infomap_clustering,
 ):
 
     # check for parameters and add clustering, in order to make sure that
