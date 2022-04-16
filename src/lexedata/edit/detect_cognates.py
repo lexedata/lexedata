@@ -34,6 +34,7 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
 
     >>> segments = "t w o _ m o r ph e m e s".split()
     >>> c = clean_segments(segments)
+    >>> [str(s) for s in c]
     ["t", "w", "o", "_", "m", "o", "r", "ph", "e", "m", "e", "s"]
 
     >>> segments = "+ _ t a + 0 + a t".split()
@@ -122,24 +123,23 @@ def get_partial_matrices(
     """
     Function creates matrices for the purpose of partial cognate detection.
     """
+    if method != "sca":
+        raise ValueError(f"Method {method} unknown.")
 
     def function(idxA, idxB, sA: slice, sB: slice):
-        if method == "sca":
-            return alignment_functions[mode](
-                seqA=[n.split(".", 1)[1] for n in self[idxA, self._numbers][sA]],
-                seqB=[n.split(".", 1)[1] for n in self[idxB, self._numbers][sB]],
-                gopA=self[idxA, self._weights][sA],
-                gopB=self[idxB, self._weights][sB],
-                proA=self[idxA, self._prostrings][sA],
-                proB=self[idxB, self._prostrings][sB],
-                M=sA.stop - sA.start,
-                N=sB.stop - sB.start,
-                scale=scale,
-                factor=factor,
-                scorer=self.rscorer,
-            )[2]
-        else:
-            raise ValueError(f"Method {method} unknown.")
+        return alignment_functions[mode](
+            seqA=[n.split(".", 1)[1] for n in self[idxA, self._numbers][sA]],
+            seqB=[n.split(".", 1)[1] for n in self[idxB, self._numbers][sB]],
+            gopA=self[idxA, self._weights][sA],
+            gopB=self[idxB, self._weights][sB],
+            proA=self[idxA, self._prostrings][sA],
+            proB=self[idxB, self._prostrings][sB],
+            M=sA.stop - sA.start,
+            N=sB.stop - sB.start,
+            scale=scale,
+            factor=factor,
+            scorer=self.rscorer,
+        )[2]
 
     # We have two basic constraints in the algorithm:
     # a) Morphemes in the same word are not cognate
@@ -169,7 +169,7 @@ def get_partial_matrices(
         # Now, iterate for each string pair, asses the scores, and make
         # sure we only assign the best of those to the matrix
 
-        matrix = [[0 for i in tracer] for j in tracer]
+        matrix = [[0 for _ in tracer] for _ in tracer]
         # reset the self-constraints (we missed it before)
 
         for idxA, idxB in itertools.combinations(indices, r=2):
