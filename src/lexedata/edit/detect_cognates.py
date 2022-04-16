@@ -73,7 +73,7 @@ def filter_function_factory(
 
 
 def cognate_code_to_file(
-    dataset: pycldf.Wordlist,
+    dataset: types.Wordlist,
     ratio: float,
     soundclass: str,
     cluster_method: str,
