@@ -57,27 +57,28 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
     return segments[1:-1]
 
 
-def get_slices(tokens: t.List[str], nonempty_only=True) -> t.Iterator[slice]:
+def get_slices(tokens: t.List[str], include_empty=False) -> t.Iterator[slice]:
     """Return slices for all morphemes in the token string
 
-    This function removes all unknown sound segments (/0/) from the segments
-    string it is passed, and removes empty morphemes by collapsing subsequent
-    morpheme boundary markers (_#◦+→←) into one.
+    This function computes the morpheme slices in an annotated token set.
+    Empty morphemes are not yielded, unless include_empty is set to True.
 
     >>> list(get_slices("t w o _ m o r ph e m e s".split()))
     [slice(0, 3, None), slice(4, 12, None)]
+
     >>> list(get_slices("+ _ t a + 0 + a t".split()))
     [slice(2, 4, None), slice(5, 6, None), slice(7, 9, None)]
+
     """
     start = 0
     i = -1
     for i, s in enumerate(tokens):
-        if s in {"_", "+"}:
-            if i > start or not nonempty_only:
+        if s in {"_", "#", "◦", "+", "→", "←"}:
+            if i > start or include_empty:
                 yield slice(start, i)
             start = i + 1
     i += 1
-    if i > start or not nonempty_only:
+    if i > start or include_empty:
         yield slice(start, i)
 
 
