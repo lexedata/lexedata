@@ -32,6 +32,10 @@ def clean_segments(segment_string: t.List[str]) -> t.Iterable[pyclts.models.Symb
     string it is passed, and removes empty morphemes by collapsing subsequent
     morpheme boundary markers (_#◦+→←) into one.
 
+    >>> segments = "t w o _ m o r ph e m e s".split()
+    >>> c = clean_segments(segments)
+    ["t", "w", "o", "_", "m", "o", "r", "ph", "e", "m", "e", "s"]
+
     >>> segments = "+ _ t a + 0 + a t".split()
     >>> c = clean_segments(segments)
     >>> [str(s) for s in c]
@@ -60,17 +64,19 @@ def get_slices(tokens: t.List[str], nonempty_only=True) -> t.Iterator[slice]:
     string it is passed, and removes empty morphemes by collapsing subsequent
     morpheme boundary markers (_#◦+→←) into one.
 
-    >>> segments = "+ _ t a + 0 + a t".split()
-    >>> list(get_slices(segments))
-    [slice(2, 4), slice(5,6), slice(7, 9)]
+    >>> list(get_slices("t w o _ m o r ph e m e s".split()))
+    [slice(0, 3, None), slice(4, 12, None)]
+    >>> list(get_slices("+ _ t a + 0 + a t".split()))
+    [slice(2, 4, None), slice(5, 6, None), slice(7, 9, None)]
     """
     start = 0
-    i = 0
+    i = -1
     for i, s in enumerate(tokens):
         if s in {"_", "+"}:
             if i > start or not nonempty_only:
                 yield slice(start, i)
             start = i + 1
+    i += 1
     if i > start or not nonempty_only:
         yield slice(start, i)
 
@@ -116,21 +122,17 @@ def get_partial_matrices(
     Function creates matrices for the purpose of partial cognate detection.
     """
 
-    def function(idxA, idxB, sA, sB):
+    def function(idxA, idxB, sA: slice, sB: slice):
         if method == "sca":
             return alignment_functions[mode](
-                seqA=[
-                    n.split(".", 1)[1] for n in self[idxA, self._numbers][sA[0] : sA[1]]
-                ],
-                seqB=[
-                    n.split(".", 1)[1] for n in self[idxB, self._numbers][sB[0] : sB[1]]
-                ],
-                gopA=self[idxA, self._weights][sA[0] : sA[1]],
-                gopB=self[idxB, self._weights][sB[0] : sB[1]],
-                proA=self[idxA, self._prostrings][sA[0] : sA[1]],
-                proB=self[idxB, self._prostrings][sB[0] : sB[1]],
-                M=sA[1] - sA[0],
-                N=sB[1] - sB[0],
+                seqA=[n.split(".", 1)[1] for n in self[idxA, self._numbers][sA]],
+                seqB=[n.split(".", 1)[1] for n in self[idxB, self._numbers][sB]],
+                gopA=self[idxA, self._weights][sA],
+                gopB=self[idxB, self._weights][sB],
+                proA=self[idxA, self._prostrings][sA],
+                proB=self[idxB, self._prostrings][sB],
+                M=sA.stop - sA.start,
+                N=sB.stop - sB.start,
                 scale=scale,
                 factor=factor,
                 scorer=self.rscorer,
