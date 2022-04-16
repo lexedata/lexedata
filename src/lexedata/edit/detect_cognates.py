@@ -4,7 +4,6 @@ import csv
 import hashlib
 import itertools
 import typing as t
-from collections import defaultdict
 from pathlib import Path
 
 import lexedata.cli as cli
@@ -121,7 +120,9 @@ alignment_functions = {
     "global": lingpy.algorithm.calign.globalign,
     "local": lingpy.algorithm.calign.localign,
     "overlap": lingpy.algorithm.calign.semi_globalign,
-    "dialign": lingpy.algorithm.calign.dialign,
+    "dialign": lambda seqA, seqB, gopA, gopB, proA, proB, M, N, scale, factor, scorer: lingpy.algorithm.calign.dialign(
+        seqA, seqB, proA, proB, M, N, scale, factor, scorer
+    ),
 }
 
 
@@ -238,12 +239,18 @@ def compute_one_matrix(
 
 def get_partial_matrices(
     self,
-    concepts,
+    concepts: t.Iterable[types.Parameter_ID],
     method="lexstat",
     scale=0.5,
     factor=0.3,
     mode="global",
-):
+) -> t.Iterator[
+    t.Tuple[
+        types.Parameter_ID,
+        t.Mapping[t.Hashable, t.List[t.Tuple[slice, int]]],
+        t.List[t.List[float]],
+    ]
+]:
     """
     Function creates matrices for the purpose of partial cognate detection.
     """
@@ -299,8 +306,6 @@ def partial_cluster(
     scale=0.5,
     factor=0.3,
     mode="overlap",
-    gop=-1.0,
-    ref="",
     cluster_function=lingpy.algorithm.extra.infomap_clustering,
 ):
 
@@ -310,8 +315,7 @@ def partial_cluster(
     concepts = sorted(self.rows)
 
     min_concept_cognateset = 0
-    partial_cogids = defaultdict(list)  # stores the pcogids
-    for concept, trace, matrix in cli.tq(
+    for concept, morphemes, matrix in cli.tq(
         get_partial_matrices(
             self,
             concepts,
@@ -325,11 +329,10 @@ def partial_cluster(
         c = cluster_function(
             threshold, matrix, taxa=list(range(len(matrix))), revert=True
         )
-        for i, (idx, pos, slc) in enumerate(trace):
-            partial_cogids[idx].append(c[i] + min_concept_cognateset)
+        for i, (slc, idx) in enumerate(morphemes.items()):
+            yield idx, slc, c[i] + min_concept_cognateset
 
         min_concept_cognateset += len(matrix) + 1
-    self.add_entries(ref or self._partials, partial_cogids, lambda x: x)
 
 
 def cognate_code_to_file(
