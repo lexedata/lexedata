@@ -7,16 +7,9 @@ Optionally, create ‘transparent’ IDs, that is alphanumerical IDs which are d
 """
 from pathlib import Path
 
-import pycldf
-
 import lexedata.cli as cli
-from lexedata.util import cache_table
-from lexedata.util.simplify_ids import (
-    ID_COMPONENTS,
-    clean_mapping,
-    update_ids,
-    update_integer_ids,
-)
+import pycldf
+from lexedata.util.simplify_ids import simplify_table_ids_and_references
 
 if __name__ == "__main__":
     parser = cli.parser(__package__ + "." + Path(__file__).stem, __doc__)
@@ -58,30 +51,6 @@ if __name__ == "__main__":
 
     for table in tables:
         logger.info(f"Handling table {table.url.string}…")
-        ttype = ds.get_tabletype(table)
-        c_id = table.get_column("http://cldf.clld.org/v1.0/terms.rdf#id")
-        if c_id.datatype.base == "string":
-            # Temporarily open up the datatype format, otherwise we may be unable to read
-            c_id.datatype.format = None
-        elif c_id.datatype.base == "integer":
-            # Temporarily open up the datatype format, otherwise we may be unable to read
-            c_id.datatype = "string"
-            update_integer_ids(ds, table)
-            c_id.datatype = "integer"
-            continue
-        else:
-            logger.warning(
-                f"Table {table.uri} had an id column ({c_id.name}) that is neither integer nor string. I did not touch it."
-            )
-            continue
-
-        if args.transparent and ttype in ID_COMPONENTS:
-            cols = {prop: ds[ttype, prop].name for prop in ID_COMPONENTS[ttype]}
-            mapping = clean_mapping(cache_table(ds, ttype, cols))
-        else:
-            ids = {row[c_id.name] for row in ds[table]}
-            mapping = clean_mapping(cache_table(ds, table.url.string, {}))
-
-        update_ids(ds, table, mapping)
+        simplify_table_ids_and_references(ds, table, args.transparent, logger)
 
     ds.write_metadata()

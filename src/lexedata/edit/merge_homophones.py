@@ -17,7 +17,7 @@ from pathlib import Path
 import pycldf
 
 from lexedata import cli, types, util
-from lexedata.edit.simplify_ids import update_ids
+from lexedata.util.simplify_ids import update_ids
 
 # The cell value type, which tends to be string, lists of string, or int:
 C = t.TypeVar("C")
@@ -32,25 +32,33 @@ Merger = t.Callable[[t.Sequence[C], MaybeRow], t.Optional[C]]
 SEPARATOR = "; "
 
 
-def isiterable(object):
-    if isinstance(object, str):
+def isiterable(obj: object) -> bool:
+    """Test whether object is iterable, BUT NOT A STRING.
+
+    For merging purposes, we consider strings ATOMIC and thus NOT iterable.
+
+    """
+    if isinstance(obj, str):
         return False
     try:
-        _ = iter(object)
+        _ = iter(obj)
     except TypeError:
         return False
     return True
 
 
 class Skip(Exception):
-    """Skip this merge, leave all forms as expected. This is not an Error!"""
+    """Skip this merge, leave all forms as expected.
+
+    This is not an Error! It is more akin to StopIteration.
+    """
 
 
 def cancel_and_skip(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """If entries differ, do not merge this set of forms
+    """If entries differ, do not merge this set of forms.
 
     >>> cancel_and_skip([])
 
@@ -77,8 +85,8 @@ def must_be_equal(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """
-    End with an error if entries are not equal
+    """End with an error if entries are not equal.
+
     >>> must_be_equal([1, 2]) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     AssertionError: assert 2 <= 1
@@ -100,8 +108,8 @@ def must_be_equal_or_null(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """
-    End with an error if those entries which are present are not equal
+    """End with an error if those entries which are present are not equal.
+
     >>> must_be_equal_or_null([1, 2]) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     AssertionError: assert 2 <= 1
@@ -119,7 +127,7 @@ def warn(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """Print a warning if entries are not equal, but proceed taking the first one
+    """Print a warning if entries are not equal, but proceed taking the first one.
 
     >>> warn([1, 2])
     1
@@ -143,7 +151,7 @@ def first(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """Take the first nonzero entry, no matter whether the others match or not
+    """Take the first nonzero entry, no matter whether the others match or not.
 
     >>> first([1, 2])
     1
@@ -159,7 +167,7 @@ def first(
 
 
 def transcription(wrapper: str = "{}"):
-    """Make a closure that adds variants to a variants column
+    """Make a closure that adds variants to a variants column.
 
     >>> row = {"variants": None}
     >>> orthographic = transcription("<{}>")
@@ -198,7 +206,7 @@ def concatenate(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """Concatenate all entries, even if they are identical, in the given order
+    """Concatenate all entries, even if they are identical, in the given order.
 
     Strings are concatenated using '; ' as a separator. Other iterables are
     flattened.
@@ -247,7 +255,7 @@ def union(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """Concatenate all entries, without duplicates
+    """Concatenate all entries, without duplicates.
 
     Iterables are flattened. Strings are considered sequences of '; '-separated
     strings and flattened accordingly. Empty values are ignored.
@@ -297,7 +305,7 @@ def union(
 
 
 def constant_factory(c: C) -> Merger[C]:
-    """Create a merger taht always returns c.
+    """Create a merger that always returns c.
 
     This is useful eg. for the status column, which needs to be updated when
     forms are merged, to a value that does not depend on the earlier status.
@@ -325,7 +333,7 @@ def default(
     sequence: t.Sequence[C],
     target: MaybeRow = None,
 ) -> t.Optional[C]:
-    """A default merger.
+    """Merge with senbible defaults.
 
     Union for sequence-shaped entries (strings, and lists with a separator in
     the metadata), must_be_equal otherwise
@@ -389,7 +397,7 @@ def merge_group(
     ],
     logger: cli.logging.Logger = cli.logger,
 ) -> types.Form:
-    """Merge one group of homophones
+    """Merge one group of homophones.
 
     >>> merge_group(
     ...   [{"Parameter_ID": [1, 1]}, {"Parameter_ID": [2]}],

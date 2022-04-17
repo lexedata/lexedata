@@ -27,7 +27,7 @@ from lexedata.edit.merge_homophones import (
     parse_homophones_report,
     parse_merge_override,
 )
-from lexedata.edit.simplify_ids import update_ids
+from lexedata.util.simplify_ids import update_ids
 
 # TODO: Options given on the command line should have preference over defaults,
 # no matter whether they are given in terms of names ("Parameter_ID") or
@@ -54,7 +54,7 @@ def merge_group(
     ],
     logger: cli.logging.Logger = cli.logger,
 ) -> types.CogSet:
-    """Merge one group of cognate sets
+    """Merge one group of cognate sets.
 
     The target is assumed to be already included in the forms.
 
