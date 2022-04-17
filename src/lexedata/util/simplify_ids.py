@@ -5,6 +5,8 @@ import pycldf
 
 from lexedata import cli
 from lexedata.util import ID_FORMAT, string_to_id
+from lexedata import types
+from lexedata.util import cache_table
 
 ID_COMPONENTS: t.Mapping[str, t.Sequence[str]] = {
     "FormTable": ["languageReference", "parameterReference"]
@@ -113,8 +115,9 @@ def update_integer_ids(
             rows.append(row)
 
         for column in columns:
-            ds[other_table, column].datatype = c_id.datatype
-
+            ds[other_table, column].datatype = csvw.metadata.Datatype.fromvalue(
+                {"base": "integer"}
+            )
         logger.info(f"Writing {other_table} back to file…")
 
         ds[other_table].write(rows)
@@ -158,7 +161,9 @@ def update_ids(
             continue
         for column in columns:
             # Temporarily open up the datatype format, otherwise we may be unable to read.
-            ds[other_table, column].datatype = "string"
+            ds[other_table, column].datatype = csvw.metadata.Datatype.fromvalue(
+                {"base": "string"}
+            )
         logger.info(
             f"Applying changed foreign key to columns {columns:} in {other_table:}…"
         )
@@ -180,3 +185,43 @@ def update_ids(
 
         for column in columns:
             ds[other_table, column].datatype = c_id.datatype
+
+
+def simplify_table_ids_and_references(
+    ds: types.Wordlist[
+        types.Language_ID,
+        types.Form_ID,
+        types.Parameter_ID,
+        types.Cognate_ID,
+        types.Cognateset_ID,
+    ],
+    table: csvw.Table,
+    transparent: bool = True,
+    logger: cli.logging.Logger = cli.logger,
+) -> bool:
+    """Simplify the IDs of the given table."""
+    ttype = ds.get_tabletype(table)
+    c_id = table.get_column("http://cldf.clld.org/v1.0/terms.rdf#id")
+    if c_id.datatype.base == "string":
+        # Temporarily open up the datatype format, otherwise we may be unable to read
+        c_id.datatype.format = None
+    elif c_id.datatype.base == "integer":
+        # Temporarily open up the datatype format, otherwise we may be unable to read
+        c_id.datatype = csvw.metadata.Datatype.fromvalue({"base": "string"})
+        update_integer_ids(ds, table)
+        c_id.datatype = csvw.metadata.Datatype.fromvalue({"base": "integer"})
+        return True
+    else:
+        logger.warning(
+            f"Table {table.uri} had an id column ({c_id.name}) that is neither integer nor string. I did not touch it."
+        )
+        return False
+
+    if transparent and ttype in ID_COMPONENTS:
+        cols = {prop: ds[ttype, prop].name for prop in ID_COMPONENTS[ttype]}
+        mapping = clean_mapping(cache_table(ds, ttype, cols))
+    else:
+        mapping = clean_mapping(cache_table(ds, table.url.string, {}))
+
+    update_ids(ds, table, mapping)
+    return True
