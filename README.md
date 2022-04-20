@@ -2,7 +2,7 @@
 
 ![lexedata: edit lexi data](lexedata.png)
 
-Lexedata is an open source Python package that incudes a collection of command line tools to edit comparative lexical data in the CLDF format (https://doi.org/10.1038/sdata.2018.205), which adds an ontology of terms from comparative linguistics (https://cldf.clld.org/v1.0/terms.html) to the W3C “CSV for the Web” (csvw, https://w3c.github.io/csvw/) standard. The package includes tools to run batch-editing operations as well as tools to convert CLDF to and from other data formats in use in computational historical linguistics.
+Lexedata is an open source Python package that includes a collection of command line tools to edit comparative lexical data in the CLDF format (https://doi.org/10.1038/sdata.2018.205), which adds an ontology of terms from comparative linguistics (https://cldf.clld.org/v1.0/terms.html) to the W3C “CSV for the Web” (csvw, https://w3c.github.io/csvw/) standard. The package includes tools to run batch-editing operations as well as tools to convert CLDF to and from other data formats in use in computational historical linguistics.
 
 The documentation for Lexedata can be found on [ReadTheDocs.IO](https://lexedata.readthedocs.io/en/latest/).
 
