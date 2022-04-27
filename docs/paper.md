@@ -34,7 +34,7 @@ comparative and historical linguistics, including their use as raw data for
 language phylogenetics [@gray2009language;@grollemund2015bantu].
 
 The `lexedata` package uses the “Cross-Linguistic Data Format” (CLDF,
-@cldf11, @cldf-paper) as main data format for a relational database containing
+@cldf11, @cldf-paper) as the main data format for a relational database containing
 forms, languages, concepts, and etymological relationships. The CLDF
 specification builds on top of the CSV for the Web (CSVW,
 @pollock2015metadata) specs by the W3C, and as such consists of one or more
@@ -44,13 +44,13 @@ in JSON format.
 Implemented in Python as a set of command line tools, Lexedata provides various
 helper functions to address issues that frequently arise when working with comparative wordlists
 for multiple languages, as shown in \autoref{fig:structure}. These include
-import and export functions to formats more familiar to linguists, and integrity
-checks for bulk edit and import functionality it provides. For example, there
+importing from and exporting to formats more familiar to linguists, as well as bulk edit functions
+and associated integrity checks. For example, there
 are scripts for importing data from MS Excel sheets of various common formats
 into CLDF, checking for homophones, manipulating etymological
-judgements, or exporting coded datasets for use in phylogenetic software.
+judgements, and exporting coded datasets for use in phylogenetic software.
 
-![Overview over the functionality in Lexedata.\label{fig:structure}](structure.png)
+![Overview of the functionality in Lexedata.\label{fig:structure}](structure.pdf)
 
 # Statement of Need
 
@@ -100,9 +100,9 @@ intermediate info messages and final reports.
 In summary, Lexedata addresses the need to curate and edit a lexical dataset in
 CLDF format without the ability to program, which is still a rare skill among
 comparative linguists. It allows this without sacrificing the power and
-familiarity of existing software such as GUI spreadsheed apps or Edictor, by
+familiarity of existing software, such as GUI spreadsheed apps or Edictor, and by
 providing user-friendly access to format conversions and bulk editing functionality 
-from simple terminal commands.
+through simple terminal commands.
 
 # Research use
 The extensive lexical dataset editing functionality is currently used by projects
@@ -112,7 +112,7 @@ Precursor scripts have also been used for Timor-Alor-Pantar and Austronesian lan
 The export to phylogenetic alignments, derived from BEASTling
 [@maurits2017beastling;@beastling14], has been used in different language
 phylogenetics projects that are already under review
-[@kaiping2019subgrouping;@kaiping2021burst;@gunnink2022bantu].
+[@kaiping2019subgrouping;@gunnink2022bantu].
 
 # Acknowledgement
 Development of Lexedata was funded by the Swiss National Science Foundation
