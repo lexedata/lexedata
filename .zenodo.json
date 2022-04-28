@@ -30,7 +30,12 @@
     "related_identifiers": [
         {
             "scheme": "url",
-            "identifier": "https://github.com/Anaphory/lexedata/tree/v1.0.0",
+            "identifier": "https://github.com/Anaphory/lexedata/tree/v1.0.2",
+            "relation": "isSupplementTo"
+        },
+        {
+            "scheme": "doi",
+            "identifier": "10.21105/joss.04140",
             "relation": "isSupplementTo"
         }
     ]

@@ -23,9 +23,15 @@ if __name__ == "__main__":
     py_version = lexedata.__version__
     print(lexedata.__file__, py_version)
 
-    zenodo = root / ".zenodo.json"
-    zenodo_version = json.load(zenodo.open(encoding="utf-8"))["version"]
+    zenodo_file = root / ".zenodo.json"
+    zenodo = json.load(zenodo_file.open(encoding="utf-8"))
+    zenodo_version = zenodo["version"]
     print(zenodo, zenodo_version)
+
+    zenodo_github_version = zenodo["related_identifiers"][0]["identifier"].split("/")[
+        -1
+    ]
+    print(zenodo, zenodo_github_version)
 
     cff = root / "CITATION.cff"
     # Maybe use cffconvert to parse? Or at least YAML?
