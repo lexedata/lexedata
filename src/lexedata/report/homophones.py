@@ -90,6 +90,8 @@ if __name__ == "__main__":
     logger = cli.setup_logging(args)
     list_homophones(
         dataset=pycldf.Dataset.from_metadata(args.metadata),
-        out=args.output_file.open("w") if args.output_file else sys.stdout,
+        out=args.output_file.open("w", encoding="utf-8")
+        if args.output_file
+        else sys.stdout,
         logger=logger,
     )

@@ -175,7 +175,9 @@ if __name__ == "__main__":
         logger=logger,
     )
 
-    out = args.output_file.open("w") if args.output_file else sys.stdout
+    out = (
+        args.output_file.open("w", encoding="utf-8") if args.output_file else sys.stdout
+    )
 
     cluster_overlaps(
         network_of_overlaps(

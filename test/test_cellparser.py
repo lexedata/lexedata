@@ -37,7 +37,7 @@ def no_dialect(request):
             "url": "forms.csv",
         }
 
-    with open(target, "w") as file:
+    with open(target, "w", encoding="utf-8") as file:
         json.dump(j, file, indent=4)
     dataset = pycldf.Dataset.from_metadata(target)
     return dataset

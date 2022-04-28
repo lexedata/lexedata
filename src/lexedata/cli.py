@@ -119,7 +119,7 @@ class SetOrFromFile(argparse.Action):
             path = Path(values[0])
             if path.exists():
                 values = set()
-                for c, concept in enumerate(csv.reader(path.open())):
+                for c, concept in enumerate(csv.reader(path.open(encoding="utf-8"))):
                     first_column = concept[0]
                     if c == 0:
                         # header row

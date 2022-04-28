@@ -3,16 +3,15 @@ from collections import defaultdict
 from pathlib import Path
 
 import attr
+import lexedata.cli as cli
 import openpyxl
 import pycldf
-from tabulate import tabulate
-
-import lexedata.cli as cli
 from lexedata.edit.add_status_column import add_status_column_to_table
 from lexedata.importer.excel_matrix import DB
 from lexedata.types import Form, KeyKeyDict
 from lexedata.util import normalize_string, string_to_id
 from lexedata.util.excel import clean_cell_value, normalize_header
+from tabulate import tabulate
 
 try:
     from typing import Literal
@@ -96,6 +95,7 @@ def read_single_excel_sheet(
     ignore_missing: bool = False,
     ignore_superfluous: bool = False,
     status_update: t.Optional[str] = None,
+    missing_concepts: t.Set[str] = set(),
 ) -> t.Mapping[str, ImportLanguageReport]:
     report: t.Dict[str, ImportLanguageReport] = defaultdict(ImportLanguageReport)
 
@@ -255,6 +255,7 @@ def read_single_excel_sheet(
                 f"Concept {concept_entry} was not found. Please add it to the concepts.csv file manually. "
                 f"The corresponding form was ignored and not added to the dataset."
             )
+            missing_concepts.add(concept_entry)
             report[language_id].skipped += 1
             continue
         # else, look for candidates, link to existing form or add new form
@@ -336,6 +337,7 @@ def add_single_languages(
     ignore_superfluous: bool,
     status_update: t.Optional[str],
     logger: cli.logging.Logger,
+    missing_concepts: t.Set[str] = set(),
 ) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
@@ -391,6 +393,7 @@ def add_single_languages(
             ignore_missing=ignore_missing,
             ignore_superfluous=ignore_superfluous,
             status_update=status_update,
+            missing_concepts=missing_concepts,
         ).items():
             report[lang] += subreport
     return report
@@ -478,10 +481,16 @@ def parser():
         default=False,
         help="Prints report of newly added forms",
     )
+    parser.add_argument(
+        "--list-missing-concepts",
+        action="store_true",
+        default=False,
+        help="In the end, list all concepts that were not found.",
+    )
     return parser
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     args = parser().parse_args()
     logger = cli.setup_logging(args)
 
@@ -493,6 +502,7 @@ if __name__ == "__main__":
     else:
         sheets = [args.excel[s] for s in args.sheets]
 
+    missing_concepts = set()
     report = add_single_languages(
         metadata=args.metadata,
         sheets=sheets,
@@ -503,6 +513,7 @@ if __name__ == "__main__":
         ignore_superfluous=args.ignore_superfluous_columns,
         status_update=args.status_update,
         logger=logger,
+        missing_concepts=missing_concepts,
     )
     if args.report:
         report_data = [report(language) for language, report in report.items()]
@@ -519,3 +530,10 @@ if __name__ == "__main__":
                 tablefmt="orgtbl",
             )
         )
+
+    if args.list_missing_concepts:
+        logger.info(
+            "Now outputting the list of missing concepts. Check them for typos (and other minor mismatches) before adding them to the ParameterTable."
+        )
+        for concept in sorted(missing_concepts):
+            print(concept)

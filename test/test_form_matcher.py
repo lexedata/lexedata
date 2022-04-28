@@ -15,7 +15,7 @@ from lexedata.edit.add_segments import bipa
 def minimal_parser_with_dialect():
     tmpdir = Path(mkdtemp("", "fromexcel"))
     forms = tmpdir / "forms.csv"
-    with (forms).open("w") as f:
+    with forms.open("w", encoding="utf-8") as f:
         f.write("ID,Form,Language_ID,Parameter_ID")
 
     dataset = pycldf.Wordlist.from_data(forms)

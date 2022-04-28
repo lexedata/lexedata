@@ -53,6 +53,6 @@ def copy_to_temp_no_bib(cldf_wordlist):
 def copy_to_temp_bad_bib(cldf_wordlist):
     """Copy the dataset to a temporary location, then mess with the source file syntax."""
     dataset, target = copy_to_temp(cldf_wordlist)
-    with dataset.bibpath.open("a") as bibfile:
+    with dataset.bibpath.open("a", encoding="utf-8") as bibfile:
         bibfile.write("\n { \n")
     return dataset, target

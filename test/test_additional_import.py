@@ -334,7 +334,6 @@ def test_superfluous_columns2(single_import_parameters, caplog):
     )
 
 
-# TODO: Discuss. Too manny asserts
 def test_no_concept_separator(single_import_parameters, caplog):
     dataset, target, excel, concept_name = single_import_parameters
     dataset["FormTable", "parameterReference"].separator = None
@@ -433,6 +432,93 @@ def test_no_concept_separator(single_import_parameters, caplog):
         r"not.* polysemous forms.*separator.*FormTable.*parameterReference.*json.*lexedata\.report\.list_homophones",
         caplog.text,
     )
+
+
+def test_list_missing_concepts(single_import_parameters, capsys):
+    dataset, target, excel, concept_name = single_import_parameters
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    del dataset["FormTable", "value"]
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    dataset.write(FormTable=[])
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "Language_ID",
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "ache",
+                "missing1",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+            [
+                "ache",
+                "one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+            [
+                "ache",
+                "missing2",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+            [
+                "ache",
+                "missing2",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    missing = set()
+    read_single_excel_sheet(
+        dataset=dataset,
+        sheet=sheet,
+        entries_to_concepts=concepts,
+        concept_column=concept_name,
+        missing_concepts=missing,
+    )
+    assert missing == {"missing1", "missing2"}
 
 
 def test_duplicate_forms_no_value(single_import_parameters, caplog):

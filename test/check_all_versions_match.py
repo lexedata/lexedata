@@ -24,12 +24,14 @@ if __name__ == "__main__":
     print(lexedata.__file__, py_version)
 
     zenodo = root / ".zenodo.json"
-    zenodo_version = json.load(zenodo.open())["version"]
+    zenodo_version = json.load(zenodo.open(encoding="utf-8"))["version"]
     print(zenodo, zenodo_version)
 
     cff = root / "CITATION.cff"
     # Maybe use cffconvert to parse? Or at least YAML?
-    _, cff_version = [r for r in cff.open() if r.startswith("version:")][0].split(" ")
+    _, cff_version = [
+        r for r in cff.open(encoding="utf-8") if r.startswith("version:")
+    ][0].split(" ")
     print(cff, cff_version.strip())
 
     # There is also CodeMeta (https://codemeta.github.io/), which is the
