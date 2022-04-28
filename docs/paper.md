@@ -22,8 +22,10 @@ affiliations:
    index: 2
  - name: Center for the Interdisciplinary Study of Language Evolution, Universität Zürich, CH
    index: 3
-date: 01 February 2022
+date: 20 April 2022
 bibliography: bibliography.bib
+doi: https://doi.org/10.21105/joss.04140
+citation: Kaiping et al., (2022). Lexedata: A toolbox to edit CLDF lexical datasets. Journal of Open Source Software, 7(72), 4140, https://doi.org/10.21105/joss.04140
 ---
 # Summary
 Lexedata is a collection of tools to support the editing process of comparative
