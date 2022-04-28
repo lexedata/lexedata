@@ -490,7 +490,7 @@ def parser():
     return parser
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     args = parser().parse_args()
     logger = cli.setup_logging(args)
 
