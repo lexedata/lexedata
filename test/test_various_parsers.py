@@ -29,7 +29,7 @@ def test_setorfromfile_file():
     parser.add_argument("--objects", action=cli.SetOrFromFile, help="Some objects.")
     parser.add_argument("--other", action="store_true", default=False)
     _, fname = tempfile.mkstemp(".csv")
-    with open(fname, "w") as file:
+    with open(fname, "w", encoding="utf-8") as file:
         file.write("ID,ignored\no1,yes\no2\no3,")
     parameters = parser.parse_args(["--objects", fname, "--other"])
     assert parameters.other
@@ -60,7 +60,7 @@ def test_loglevel_parser():
 
 def test_phylo_parser():
     _, fname = tempfile.mkstemp(".csv")
-    with open(fname, "w") as file:
+    with open(fname, "w", encoding="utf-8") as file:
         file.write("ID,ignored\nl1,yes\nl2\nl3,")
     _, ofname = tempfile.mkstemp(".csv")
     parameters = phylo_parser().parse_args(

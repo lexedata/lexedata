@@ -54,7 +54,7 @@ def read_cldf_dataset(
     >>> import tempfile
     >>> dirname = Path(tempfile.mkdtemp(prefix="lexedata-test"))
     >>> target = dirname / "forms.csv"
-    >>> _size = open(target, "w").write('''
+    >>> _size = open(target, "w", encoding="utf-8").write('''
     ... ID,Language_ID,Parameter_ID,Form,Cognateset_ID
     ... '''.strip())
     >>> ds = pycldf.Wordlist.from_data(target)
