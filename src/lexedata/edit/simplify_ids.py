@@ -40,10 +40,14 @@ if __name__ == "__main__":
     ds = pycldf.Wordlist.from_metadata(args.metadata)
 
     if args.tables:
+        logger.warning(
+            "I currently have problems reading data that is not clean, so if I read your FormTable first, but you have IDs that need simplification in your LanguageTable which appear in your FormTable, I will fail with a confusing error. If I do, please try to specify the tables you need simplified using --tables."
+        )
         tables = []
         for table in args.tables:
             try:
-                tables.append(ds[table])
+                ds[table]
+                tables.append()
             except KeyError:
                 cli.Exit.INVALID_TABLE_NAME(f"No table {table} in dataset.")
     else:
@@ -51,6 +55,12 @@ if __name__ == "__main__":
 
     for table in tables:
         logger.info(f"Handling table {table.url.string}…")
-        simplify_table_ids_and_references(ds, table, args.transparent, logger)
+        try:
+            simplify_table_ids_and_references(ds, table, args.transparent, logger)
+        except ValueError:
+            logger.critical(
+                f"I could not simplify your {table}. Maybe try specifying the table with specific ID issues first, using --tables?"
+            )
+            cli.Exit.INVALID_DATASET()
 
     ds.write_metadata()
