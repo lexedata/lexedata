@@ -413,7 +413,7 @@ def parser():
     parser.add_argument(
         "--concept-name",
         type=str,
-        help="Column to interpret as concept names "
+        help="Excel column to interpret as concept names "
         "By default, it is assumed that the #parameterReference column, usually named 'Concept_ID' "
         "or similar, matches the IDs of the concept. Use this "
         "switch if instead of concept IDs you have concept Names in the excel file instead.",
@@ -422,7 +422,7 @@ def parser():
     parser.add_argument(
         "--language-name",
         type=str,
-        help="Column to interpret as language names "
+        help="Excel column to interpret as language names "
         "By default, it is assumed that the #languageReference column, usually named 'Language_ID' "
         "or similar, matches the IDs of the language. If no Language_ID appears in the sheet header,"
         "the language name will be inferred by the sheet title. Use this "
