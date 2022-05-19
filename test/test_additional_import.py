@@ -521,6 +521,100 @@ def test_list_missing_concepts(single_import_parameters, capsys):
     assert missing == {"missing1", "missing2"}
 
 
+def test_list_multi_concepts(single_import_parameters, caplog):
+    dataset, target, excel, concept_name = single_import_parameters
+    dataset["FormTable", "parameterReference"].separator = "; "
+    c_c_id = dataset["ParameterTable", "id"].name
+    c_c_name = dataset["ParameterTable", "name"].name
+    del dataset["FormTable", "value"]
+    concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
+    dataset.write(FormTable=[])
+    sheet = MockSingleExcelSheet(
+        [
+            [
+                "Language_ID",
+                "English",
+                "Form",
+                "phonemic",
+                "orthographic",
+                "Segments",
+                "procedural_comment",
+                "Comment",
+                "Source",
+                "phonetic",
+                "variants",
+            ],
+            [
+                "ache",
+                "missing1; one",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+            [
+                "ache",
+                "one; two",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+            [
+                "ache",
+                "missing1; missing2",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+            [
+                "ache",
+                "one; missing3; two",
+                "form",
+                "phonemic",
+                "orthographic",
+                "f o r m",
+                "-",
+                "None",
+                "source[10]",
+                "phonetic",
+                "",
+            ],
+        ]
+    )
+    missing = set()
+    with caplog.at_level(logging.WARNING):
+        read_single_excel_sheet(
+            dataset=dataset,
+            sheet=sheet,
+            entries_to_concepts=concepts,
+            concept_column=concept_name,
+            missing_concepts=missing,
+        )
+    assert missing == {"missing1", "missing2", "missing3"}
+    assert re.search(r"concept.*missing1.*not.*found.*links", caplog.text)
+    assert re.search(
+        r"concept.*missing1[^a-zA-z]*missing2.*not.*found.*skipped", caplog.text
+    )
+    assert re.search(r"concept.*missing3.*not.*found.*links", caplog.text)
+
+
 def test_duplicate_forms_no_value(single_import_parameters, caplog):
     dataset, target, excel, concept_name = single_import_parameters
     c_c_id = dataset["ParameterTable", "id"].name
@@ -808,7 +902,7 @@ def test_concept_not_found(single_import_parameters, caplog):
         entries_to_concepts=concepts,
         concept_column=concept_name,
     )
-    assert re.search(r"Concept FAKE was not found", caplog.text)
+    assert re.search(r"concept.*FAKE.*not.*found", caplog.text)
 
 
 def test_form_exists(single_import_parameters, caplog):

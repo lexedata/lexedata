@@ -9,7 +9,7 @@ import pycldf
 from lexedata.edit.add_status_column import add_status_column_to_table
 from lexedata.importer.excel_matrix import DB
 from lexedata.types import Form, KeyKeyDict
-from lexedata.util import normalize_string, string_to_id
+from lexedata.util import normalize_string, string_to_id, ensure_list
 from lexedata.util.excel import clean_cell_value, normalize_header
 from tabulate import tabulate
 
@@ -246,18 +246,6 @@ def read_single_excel_sheet(
         task=f"Parsing cells of sheet {sheet.title}",
         total=sheet.max_row,
     ):
-        # if concept not in dataset, don't add form
-        try:
-            concept_entry = form[c_f_concept]
-            entries_to_concepts[concept_entry]
-        except KeyError:
-            logger.warning(
-                f"Concept {concept_entry} was not found. Please add it to the concepts.csv file manually. "
-                f"The corresponding form was ignored and not added to the dataset."
-            )
-            missing_concepts.add(concept_entry)
-            report[language_id].skipped += 1
-            continue
         # else, look for candidates, link to existing form or add new form
         for item, value in form.items():
             try:
@@ -267,6 +255,30 @@ def read_single_excel_sheet(
             if sep is None:
                 continue
             form[item] = value.split(sep)
+
+        # if concept not in dataset, don't add form
+        concept_entries = ensure_list(form[c_f_concept])
+        concepts = [
+            entries_to_concepts.get(concept_entry) for concept_entry in concept_entries
+        ]
+        if not any(concepts):
+            logger.warning(
+                f"The concept(s) {concept_entries} could not be found. Please add them to the concepts.csv file manually. "
+                f"The corresponding form {form[c_f_form]} was skipped and not imported."
+            )
+            missing_concepts.update(concept_entries)
+            report[language_id].skipped += 1
+            continue
+        elif not all(concepts):
+            missing = {
+                c for c, mapping in zip(concept_entries, concepts) if mapping is None
+            }
+            missing_concepts.update(missing)
+            logger.warning(
+                f"The concept(s) {missing} could not be found. Please add them to the concepts.csv file manually. "
+                f"The corresponding links to form {form[c_f_form]} were not imported, but they *should* be just added in a later run after you have created the concepts."
+            )
+
         form_candidates = db.find_db_candidates(form, match_form)
         if form_candidates:
             new_concept_added = False
