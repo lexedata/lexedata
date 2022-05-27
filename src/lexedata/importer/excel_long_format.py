@@ -279,6 +279,11 @@ def read_single_excel_sheet(
                 f"The corresponding links to form {form[c_f_form]} were not imported, but they *should* be just added in a later run after you have created the concepts."
             )
 
+        if db.dataset["FormTable", c_f_concept].separator:
+            form[c_f_concept] = concepts
+        else:
+            (form[c_f_concept],) = concepts
+
         form_candidates = db.find_db_candidates(form, match_form)
         if form_candidates:
             new_concept_added = False
