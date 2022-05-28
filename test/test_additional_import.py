@@ -72,6 +72,7 @@ def test_add_new_forms_maweti(single_import_parameters):
     dataset, original, excel, concept_name = single_import_parameters
     excel = openpyxl.load_workbook(excel)
     c_f_id = dataset["FormTable", "id"].name
+    c_f_concept = dataset["FormTable", "parameterReference"].name
     c_c_id = dataset["ParameterTable", "id"].name
     c_c_name = dataset["ParameterTable", "name"].name
     concepts = {c[c_c_name]: c[c_c_id] for c in dataset["ParameterTable"]}
@@ -86,6 +87,8 @@ def test_add_new_forms_maweti(single_import_parameters):
         )
     new_form_ids = {row[c_f_id] for row in dataset["FormTable"]}
     assert new_form_ids - old_form_ids == {"ache_one_1"}
+    (new_form,) = [row for row in dataset["FormTable"] if row[c_f_id] == "ache_one_1"]
+    assert new_form[c_f_concept] == ["one_1"]
 
 
 def test_import_error_missing_parameter_column(single_import_parameters):
