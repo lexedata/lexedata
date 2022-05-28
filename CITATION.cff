@@ -11,7 +11,7 @@ authors:
   orcid: "https://orcid.org/0000-0002-5693-975X"
 title: "Lexedata"
 subtitle: "Lexical Data Editing tools"
-version: 1.0.3
+version: 1.0.4
 license: GPL-3.0+
 doi: 10.5281/zenodo.5541167
 date-released: 2022-04-28
