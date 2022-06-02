@@ -1,10 +1,8 @@
 import tempfile
-
 import unicodedata
-import openpyxl as op
 
-from lexedata.util.excel import clean_cell_value, normalize_header
-from mock_excel import MockSingleExcelSheet
+import openpyxl as op
+from lexedata.util.excel import clean_cell_value
 
 
 # TODO: discuss these multiple asserts
@@ -31,9 +29,3 @@ def test_cell_value():
     assert clean_cell_value(ws["B1"]) == unicodedata.normalize("NFC", "über")
     assert clean_cell_value(ws["B2"]) == unicodedata.normalize("NFC", "über")
     assert clean_cell_value(ws["B3"]) == "Line;\tover;\tline"
-
-
-def test_normalize_header():
-    sheet = MockSingleExcelSheet([["Language ID", "Gloss (eng)"]])
-    for row in sheet.iter_rows():
-        assert normalize_header(row) == ["Language_ID", "Gloss_eng"]
