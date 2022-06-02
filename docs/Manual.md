@@ -18,7 +18,9 @@ Probably the most important thing to know before you get started with Lexedata i
 
 > python -m lexedata.*package*.*command_name* -\\\-help
 
-The help explains how the command is used, what it does and lists all the positional and optional arguments, along with their default values, if any. If you find the help confusing, or something is missing, do not hesitate to let us know by [opening an issue on GitHub](https://github.com/Anaphory/lexedata/issues/new/choose).
+The help explains how the command is used, what it does and lists all the positional and optional arguments, along with their default values, if any. You can export to file the output of many of the scripts in order to use it later. In order to output to file rather than the terminal, add `> FILENAME` after the command for reports, and `2> FILENAME` for lists of errors and/or warnings.
+
+If you find the help confusing, something is missing, or does not work as expected, do not hesitate to let us know by [opening an issue on GitHub](https://github.com/Anaphory/lexedata/issues/new/choose).
 
 ## Importing data (lexedata.importer)
 
