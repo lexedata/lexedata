@@ -75,13 +75,17 @@ def add_cognate_table(
     dataset: pycldf.Wordlist,
     split: bool = True,
     logger: cli.logging.Logger = cli.logger,
-) -> None:
+) -> int:
     """Add a cognate (judgment) table.
 
     split: bool
         Make sure that the same raw cognate code in different concepts gives
         rise to different cognate set ids, because raw cognate codes are not
         globally unique, only within each concept.
+
+    Returns
+    =======
+    The number of partial cognate judgements in the new cognate table
 
     """
     if "CognateTable" in dataset:
@@ -94,40 +98,32 @@ def add_cognate_table(
 
     # Load anything that's useful for a cognate set table: Form IDs, segments,
     # segment slices, cognateset references, alignments
-    columns = {
-        "id": dataset["FormTable", "id"].name,
-        "concept": dataset["FormTable", "parameterReference"].name,
-        "form": dataset["FormTable", "form"].name,
-    }
-    for property in ["segments", "segmentSlice", "cognatesetReference", "alignment"]:
-        try:
-            columns[property] = dataset["FormTable", property].name
-        except KeyError:
-            pass
     cognate_judgements = []
-    forms = cache_table(dataset, columns=columns)
+    forms = cache_table(dataset)
     forms_without_segments = 0
     warned_about_morphemes = False
     warned_about_inconsistent_morphemes = False
+    counter = 0
     for f, form in cli.tq(
         forms.items(), task="Extracting cognate judgements from forms…"
     ):
         if form.get("cognatesetReference"):
             if split:
                 cogset = [
-                    util.string_to_id("{:}-{:}".format(form["concept"], c))
+                    util.string_to_id("{:}-{:}".format(form["parameterReference"], c))
                     for c in ensure_list(form["cognatesetReference"])
                 ]
             else:
                 cogset = ensure_list(form["cognatesetReference"])
             segment_slice = form.get("segmentSlice")
-            if "segments" not in form:
+            if not form.get("segments"):
                 forms_without_segments += 1
                 if forms_without_segments < 5:
                     logger.warning(
                         f"No segments found for form {form['id']} ({form['form']})."
                     )
-            elif "+" in form["segments"]:
+                continue
+            else:
                 if segment_slice is None:
                     form["segments"], segment_slice = morphemes(form["segments"])
                 else:
@@ -151,14 +147,15 @@ def add_cognate_table(
                         )
                         warned_about_inconsistent_morphemes = True
             if "alignment" not in form:
-                alignments = [form["segments"] for _ in cogset]
-            elif "+" in form["alignment"]:
+                alignments = [[form["segments"][a] for a in s] for s in segment_slice]
+            else:
                 alignments = split_at_markers(form["alignment"])
 
-            if len(alignments) == cogset == len(segment_slice):
+            if len(alignments) == len(cogset) == len(segment_slice):
                 for cogset_id, segments, alignment in zip(
                     cogset, segment_slice, alignments
                 ):
+                    counter += 1
                     cognate_judgements.append(
                         {
                             "ID": f"{form['id']}-{cogset_id}",
@@ -168,6 +165,10 @@ def add_cognate_table(
                             "Alignment": alignment,
                         }
                     )
+            else:
+                logger.warning(
+                    f"In form {form['id']}, you had {len(cogset)} cognate judgements, but {len(alignments)} alignments and {len(segment_slice)} different morphemes or segment slices. I don't know how to deal with that discrepancy, so I skipped that form."
+                )
 
     if forms_without_segments >= 5:
         logger.warning(
@@ -183,19 +184,22 @@ def add_cognate_table(
         if ("FormTable", c) in dataset
     }
 
-    def clean_form(form):
-        for c in remove:
-            form.pop(c, None)
-        return form
-
-    forms = [clean_form(form) for form in dataset["FormTable"]]
+    forms = [
+        {
+            dataset["FormTable", key].name: value
+            for key, value in form.items()
+            if key not in ["cognatesetReference", "segmentSlice", "alignment"]
+        }
+        for form in forms.values()
+    ]
     for c in remove:
         ix = cols.index(dataset["FormTable", c])
         del cols[ix]
 
     dataset.write(FormTable=forms)
-
     dataset.write(CognateTable=cognate_judgements)
+
+    return counter
 
 
 if __name__ == "__main__":

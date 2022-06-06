@@ -203,6 +203,7 @@ def check_cognate_table(
                         f, j, alignment_length, judgement[c_cognateset], lengths
                     ),
                 )
+                lengths.add(alignment_length)
                 all_judgements_okay = False
             elif not lengths:
                 lengths.add(alignment_length)
