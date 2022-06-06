@@ -678,7 +678,7 @@ This was however not the only issue with the data. ::
     WARNING:lexedata:In cognates.csv, row 122: Alignment has length 1, other alignments of cognateset die_1 have length(s) {2}
     WARNING:lexedata:In cognates.csv, row 127: Alignment has length 4, other alignments of cognateset eat_1 have length(s) {2}
     WARNING:lexedata:In cognates.csv, row 133: Alignment has length 6, other alignments of cognateset feather_19 have length(s) {4}
-    WARNING:lexedata:In cognates.csv, row 138: Alignment has length 4, other alignments of cognateset full_8 have length(s) {7}
+    WARNING:lexedata:In cognates.csv, row 138: Alignment has length 4, other alignments of cognateset full_8 have length(s) {6}
     WARNING:lexedata:In cognates.csv, row 151: Alignment has length 6, other alignments of cognateset knee_13 have length(s) {7}
     WARNING:lexedata:In cognates.csv, row 166: Alignment has length 3, other alignments of cognateset name_1 have length(s) {4}
     [...]
@@ -1011,7 +1011,6 @@ generated initially, we can use one of the reports::
     | ǎ       |             2 |              |
     | ə       |             2 |              |
     | r       |             1 |              |
-    | _       |             1 | Marker       |
     | î       |             1 |              |
 
 The reports fulfill different functions. Some, as you have seen, focus on issues
@@ -1084,7 +1083,7 @@ and all languages::
     1	duala_come	Duala	come	pɔ		p ɔ			127	p ɔ -	come
     2	duala_go_to	Duala	go_to	ala		a l a			236	a l a	go_to
     3	duala_path	Duala	path	ngea		n g e a			424	n g e a - -	path
-    4	duala_stand	Duala	stand	tɛ́mɛ̀ mɔ́ny		t ɛ́ m ɛ̀ _ m ɔ́ n y			564	t ɛ́ m ɛ̀ _ m ɔ́ n y	stand
+    4	duala_stand	Duala	stand	tɛ́mɛ̀ mɔ́ny		t ɛ́ m ɛ̀  m ɔ́ n y			564	t ɛ́ m ɛ̀  m ɔ́ n y	stand
     5	duala_walk	Duala	walk	ɗangwa		ɗ a n g w a			610	ɗ a n g w a	walk
     6	ntomba_come	Ntomba	come	yá		y á			125	y á - - - - -	come
     7	ntomba_go_to	Ntomba	go_to	ha		h a			235	h a - - -	go_to
