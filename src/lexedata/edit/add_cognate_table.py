@@ -9,8 +9,66 @@ from pathlib import Path
 
 import pycldf
 
+import typing as t
 from lexedata import cli, util
-from lexedata.util import cache_table
+from lexedata.util import cache_table, ensure_list
+
+S = t.TypeVar("S")
+
+
+def split_at_markers(
+    segments: t.Sequence[S], markers: t.Container[S] = {"+", "_"}
+) -> t.Tuple[t.Sequence[range], t.Sequence[t.Sequence[S]]]:
+    """Split a list of segments at the markers.
+
+    Return the segments without markers, and the sequence of morphemes (groups
+    of segments between markers) in terms of indices into the segments result.
+
+    >>> split_at_markers("test")
+    [['t', 'e', 's', 't']]
+    >>> split_at_markers("test+ing")
+    [['t', 'e', 's', 't'], ['i', 'n', 'g']]
+    >>> split_at_markers(["th"]+list("is is a test+i")+["ng"]+list(" example"), {" ", "+"})
+    [['th', 'i', 's'], ['i', 's'], ['a'], ['t', 'e', 's', 't'], ['i', 'ng'], ['e', 'x', 'a', 'm', 'p', 'l', 'e']]
+    """
+    split = []
+    start = 0
+    i = 0
+    for i, c in enumerate(segments):
+        if c in markers:
+            split.append([segments[j] for j in range(start, i)])
+            start = i + 1
+    split.append([segments[j] for j in range(start, len(segments))])
+    return split
+
+
+def morphemes(
+    segments: t.Sequence[S], markers: t.Container[S] = {"+", "_"}
+) -> t.Tuple[t.Sequence[range], t.Sequence[t.Sequence[S]]]:
+    """Split a list of segments at the markers.
+
+    Return the segments without markers, and the sequence of morphemes (groups
+    of segments between markers) in terms of indices into the segments result.
+
+    >>> morphemes("test")
+    (['t', 'e', 's', 't'], [range(0, 4)])
+    >>> morphemes("test+ing")
+    (['t', 'e', 's', 't', 'i', 'n', 'g'], [range(0, 4), range(4, 7)])
+    >>> s, r = morphemes(["th"]+list("is is a test+ing example"), {" ", "+"})
+    >>> s[:3]
+    ['th', 'i', 's']
+    >>> r
+    [range(0, 3), range(3, 5), range(5, 6), range(6, 10), range(10, 13), range(13, 20)]
+    """
+    split = split_at_markers(segments, markers)
+    segment_slices = []
+    segments = []
+    start = 0
+    for s in split:
+        segment_slices.append(range(start, start + len(s)))
+        start = start + len(s)
+        segments.extend(s)
+    return segments, segment_slices
 
 
 def add_cognate_table(
@@ -18,6 +76,14 @@ def add_cognate_table(
     split: bool = True,
     logger: cli.logging.Logger = cli.logger,
 ) -> None:
+    """Add a cognate (judgment) table.
+
+    split: bool
+        Make sure that the same raw cognate code in different concepts gives
+        rise to different cognate set ids, because raw cognate codes are not
+        globally unique, only within each concept.
+
+    """
     if "CognateTable" in dataset:
         return
     dataset.add_component("CognateTable")
@@ -41,49 +107,67 @@ def add_cognate_table(
     cognate_judgements = []
     forms = cache_table(dataset, columns=columns)
     forms_without_segments = 0
+    warned_about_morphemes = False
+    warned_about_inconsistent_morphemes = False
     for f, form in cli.tq(
         forms.items(), task="Extracting cognate judgements from forms…"
     ):
         if form.get("cognatesetReference"):
             if split:
-                cogset = util.string_to_id(
-                    "{:}-{:}".format(form["concept"], form["cognatesetReference"])
-                )
+                cogset = [
+                    util.string_to_id("{:}-{:}".format(form["concept"], c))
+                    for c in ensure_list(form["cognatesetReference"])
+                ]
             else:
-                cogset = form["cognatesetReference"]
-            judgement = {
-                "ID": f,
-                "Form_ID": f,
-                "Cognateset_ID": cogset,
-            }
-            try:
-                judgement["Segment_Slice"] = form["segmentSlice"]
-            except KeyError:
-                try:
-                    if not form["segments"]:
-                        raise ValueError("No segments")
-                    if (
-                        "+" in form["segments"]
-                        and dataset["FormTable", "cognatesetReference"].separator
-                    ):
+                cogset = ensure_list(form["cognatesetReference"])
+            segment_slice = form.get("segmentSlice")
+            if "segments" not in form:
+                forms_without_segments += 1
+                if forms_without_segments < 5:
+                    logger.warning(
+                        f"No segments found for form {form['id']} ({form['form']})."
+                    )
+            elif "+" in form["segments"]:
+                if segment_slice is None:
+                    form["segments"], segment_slice = morphemes(form["segments"])
+                else:
+                    # If we have got here, we have both segment slices given in
+                    # the data and by '+'s in the segments. Check whether they
+                    # are the same. But how? Should we assume that
+                    # form["segmentSlice"] counts the "+"s or not? The least we
+                    # can check is that they at least have the same length.
+                    form["segments"], segment_slices = morphemes(form["segments"])
+
+                    if not warned_about_morphemes:
                         logger.warning(
-                            "You seem to have morpheme annotations in your cognates. I will probably mess them up a bit, because I have not been taught properly how to deal with them. Sorry!"
+                            "You have morphemes with cognate codes specified in two ways: Your form table contains a #segmentSlice column, but also have morphemes separated using '+' in the form's segments. I will take the #segmentSlice value."
                         )
-                    judgement["Segment_Slice"] = [
-                        "1:{:d}".format(len(form["segments"]))
-                    ]
-                except (KeyError, TypeError, ValueError):
-                    forms_without_segments += 1
-                    if forms_without_segments >= 5:
-                        pass
-                    else:
+                        warned_about_morphemes = True
+                    if not warned_about_inconsistent_morphemes and len(
+                        segment_slice
+                    ) != len(segment_slices):
                         logger.warning(
-                            f"No segments found for form {f} ({form['form']})."
+                            "You have *incompatible* morphemes between the #segmentSlice column, and the '+'s in the form's segments."
                         )
-            # What does an alignment mean without segments or their slices?
-            # Doesn't matter, if we were given one, we take it.
-            judgement["Alignment"] = form.get("alignment")
-            cognate_judgements.append(judgement)
+                        warned_about_inconsistent_morphemes = True
+            if "alignment" not in form:
+                alignments = [form["segments"] for _ in cogset]
+            elif "+" in form["alignment"]:
+                alignments = split_at_markers(form["alignment"])
+
+            if len(alignments) == cogset == len(segment_slice):
+                for cogset_id, segments, alignment in zip(
+                    cogset, segment_slice, alignments
+                ):
+                    cognate_judgements.append(
+                        {
+                            "ID": f"{form['id']}-{cogset_id}",
+                            "Form_ID": form["id"],
+                            "Cognateset_ID": cogset_id,
+                            "Segment_Slice": util.indices_to_segment_slice(segments),
+                            "Alignment": alignment,
+                        }
+                    )
 
     if forms_without_segments >= 5:
         logger.warning(
