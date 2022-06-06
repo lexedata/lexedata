@@ -165,6 +165,19 @@ def add_cognate_table(
                             "Alignment": alignment,
                         }
                     )
+            elif len(cogset) == 1:
+                counter += 1
+                cognate_judgements.append(
+                    {
+                        "ID": f"{form['id']}-{cogset_id}",
+                        "Form_ID": form["id"],
+                        "Cognateset_ID": cogset[0],
+                        "Segment_Slice": util.indices_to_segment_slice(
+                            [s for r in segment_slice for s in r]
+                        ),
+                        "Alignment": sum(alignments, start=[]),
+                    }
+                )
             else:
                 logger.warning(
                     f"In form {form['id']}, you had {len(cogset)} cognate judgements, but {len(alignments)} alignments and {len(segment_slice)} different morphemes or segment slices. I don't know how to deal with that discrepancy, so I skipped that form."

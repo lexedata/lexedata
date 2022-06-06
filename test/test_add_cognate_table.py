@@ -97,7 +97,7 @@ def test_add_cognate_table_no_alignments(caplog):
     )
     with caplog.at_level(logging.WARNING):
         n = add_cognate_table(ds, split=True)
-    assert n == 3
+    assert n == 4
     assert list(ds["CognateTable"]) == [
         {
             "ID": "good-form-c1_s1",
@@ -116,6 +116,14 @@ def test_add_cognate_table_no_alignments(caplog):
             "Source": [],
         },
         {
+            "ID": "bad-form-c1_s2",
+            "Form_ID": "bad-form",
+            "Cognateset_ID": "c1_s1",
+            "Segment_Slice": ["1:3"],
+            "Alignment": ["w", "a", "n"],
+            "Source": [],
+        },
+        {
             "ID": "simple-form-c2_s2",
             "Form_ID": "simple-form",
             "Cognateset_ID": "c2_s2",
@@ -124,32 +132,8 @@ def test_add_cognate_table_no_alignments(caplog):
             "Source": [],
         },
     ]
-    assert list(ds["FormTable"]) == [
-        {
-            "ID": "good-form",
-            "Language_ID": "l1",
-            "Parameter_ID": "c1",
-            "Form": "good form",
-            "Segments": ["g", "u", "d", "f", "o", "m"],
-            "Comment": None,
-            "Source": [],
-        },
-        {
-            "ID": "bad-form",
-            "Language_ID": "l1",
-            "Parameter_ID": "c1",
-            "Form": "one",
-            "Segments": ["w", "a", "n"],
-            "Comment": None,
-            "Source": [],
-        },
-        {
-            "ID": "simple-form",
-            "Language_ID": "l1",
-            "Parameter_ID": "c2",
-            "Form": "two",
-            "Segments": ["t", "u"],
-            "Comment": None,
-            "Source": [],
-        },
+    assert [f["Segments"] for f in ds["FormTable"]] == [
+        ["g", "u", "d", "f", "o", "m"],
+        ["w", "a", "n"],
+        ["t", "u"],
     ]
