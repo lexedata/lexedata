@@ -57,6 +57,7 @@ def import_data_from_sheet(
     language_id: str,
     implicit: t.Mapping[Literal["languageReference", "id", "value"], str] = {},
     concept_column: t.Tuple[str, str] = ("Concept_ID", "Concept_ID"),
+    skip_if_questionmark: t.Container[str] = set(),
 ) -> t.Iterable[Form]:
     row_iter = sheet.iter_rows()
 
@@ -71,7 +72,10 @@ def import_data_from_sheet(
 
     for row in row_iter:
         data = Form({k: clean_cell_value(cell) for k, cell in zip(sheet_header, row)})
-        if "?" in data.values():
+        for s in skip_if_questionmark:
+            if data[s] == "?":
+                data = {}
+        if not any(data.values()):
             continue
         if "value" in implicit:
             data[implicit["value"]] = "\t".join(map(str, data.values()))
@@ -242,6 +246,7 @@ def read_single_excel_sheet(
             implicit=implicit,
             language_id=language_id,
             concept_column=concept_columns,
+            skip_if_questionmark={c_f_form},
         ),
         task=f"Parsing cells of sheet {sheet.title}",
         total=sheet.max_row,
