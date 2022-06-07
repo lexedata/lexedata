@@ -71,7 +71,7 @@ def import_data_from_sheet(
 
     for row in row_iter:
         data = Form({k: clean_cell_value(cell) for k, cell in zip(sheet_header, row)})
-        if "?" in data.values():
+        if not data.values.any():
             continue
         if "value" in implicit:
             data[implicit["value"]] = "\t".join(map(str, data.values()))
