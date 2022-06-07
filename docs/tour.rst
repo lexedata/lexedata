@@ -53,11 +53,6 @@ way the testing system also knows where to find the file.) ::
 
     $ python -c 'import pkg_resources; open("bantu.xlsx", "wb").write(pkg_resources.resource_stream("lexedata", "data/example-bantu.xlsx").read())'
 
-(curl is a command line tool to download files from URLs, available
-under Linux and Windows. You can, of course, download the file
-yourself using whatever method you are most comfortable with, and save
-it as ``Bantu.xlsx`` in this folder.)
-
 If you look at this data (we will do it in Python, but feel free to open it in
 Excel), you will see that ::
 
@@ -172,11 +167,13 @@ This is the point where it really makes sense to start working with ``git``. ::
     $ git init
     [...]
     Initialized empty Git repository in [...]bantu/.git/
+    $ git config core.autocrlf false
+    $ git branch -m main
     $ git config user.name 'Lexedata'
     $ git config user.email 'lexedata@example.com'
     $ git add forms.csv
     $ git commit -m "Initial import"
-    [master (root-commit) [...]] Initial import
+    [main (root-commit) [...]] Initial import
      1 file changed, 1593 insertions(+)
      create mode 100644 forms.csv
 
@@ -238,7 +235,7 @@ point to create a new commit. ::
 
     $ git add Wordlist-metadata.json
     $ git commit -m "Add metadata file"
-    [master [...]] Add metadata file
+    [main [...]] Add metadata file
      1 file changed, 87 insertions(+)
      create mode 100644 Wordlist-metadata.json
 
@@ -370,7 +367,7 @@ good. ::
 
     $ git add languages.csv parameters.csv
     $ git commit -am "Add language and concept tables"
-    [master [...]] Add language and concept tables
+    [main [...]] Add language and concept tables
      3 files changed, 246 insertions(+), 1 deletion(-)
      create mode 100644 languages.csv
      create mode 100644 parameters.csv
@@ -392,10 +389,10 @@ for 'arm', so we need to tell ``add_cognate_table`` that these IDs are only uniq
 within a concept::
 
     $ python -m lexedata.edit.add_cognate_table -q --unique-id concept
-    WARNING:lexedata:No segments found for form duala_all (ɓɛ́sɛ̃).
-    WARNING:lexedata:No segments found for form duala_arm (dia).
-    WARNING:lexedata:No segments found for form duala_ashes (mabúdú).
-    WARNING:lexedata:No segments found for form duala_bark (bwelé).
+    WARNING:lexedata:No segments found for form duala_all (ɓɛ́sɛ̃). Skipping its cognate judgements.
+    WARNING:lexedata:No segments found for form duala_arm (dia). Skipping its cognate judgements.
+    WARNING:lexedata:No segments found for form duala_ashes (mabúdú). Skipping its cognate judgements.
+    WARNING:lexedata:No segments found for form duala_bark (bwelé). Skipping its cognate judgements.
     WARNING:lexedata:No segments found for 1592 forms. You can generate segments using `lexedata.edit.segment_using_clts`.
 
 Clean the data
@@ -676,13 +673,14 @@ lexedata toolbox::
 This was however not the only issue with the data. ::
 
     $ python -m lexedata.report.extended_cldf_validate -q
-    WARNING:lexedata:In cognates.csv, row 2: Referenced segments in form resolve to ɓ ɛ́ s ɛ̃, while alignment contains segments .
-    WARNING:lexedata:In cognates.csv, row 3: Referenced segments in form resolve to d i a, while alignment contains segments .
-    WARNING:lexedata:In cognates.csv, row 4: Referenced segments in form resolve to m a b ú d ú, while alignment contains segments .
-    WARNING:lexedata:In cognates.csv, row 5: Referenced segments in form resolve to b w e l é, while alignment contains segments .
-    WARNING:lexedata:In cognates.csv, row 6: Referenced segments in form resolve to d i b u m, while alignment contains segments .
-    WARNING:lexedata:In cognates.csv, row 7: Referenced segments in form resolve to é n d ɛ̃ n ɛ̀, while alignment contains segments .
-    WARNING:lexedata:In cognates.csv, row 8: Referenced segments in form resolve to i n ɔ̌ n, while alignment contains segments .
+    WARNING:lexedata:In cognates.csv, row 110: Alignment has length 4, other alignments of cognateset big_1 have length(s) {6}
+    WARNING:lexedata:In cognates.csv, row 114: Alignment has length 6, other alignments of cognateset blood_11 have length(s) {4}
+    WARNING:lexedata:In cognates.csv, row 122: Alignment has length 1, other alignments of cognateset die_1 have length(s) {2}
+    WARNING:lexedata:In cognates.csv, row 127: Alignment has length 4, other alignments of cognateset eat_1 have length(s) {2}
+    WARNING:lexedata:In cognates.csv, row 133: Alignment has length 6, other alignments of cognateset feather_19 have length(s) {4}
+    WARNING:lexedata:In cognates.csv, row 138: Alignment has length 4, other alignments of cognateset full_8 have length(s) {6}
+    WARNING:lexedata:In cognates.csv, row 151: Alignment has length 6, other alignments of cognateset knee_13 have length(s) {7}
+    WARNING:lexedata:In cognates.csv, row 166: Alignment has length 3, other alignments of cognateset name_1 have length(s) {4}
     [...]
 
 The alignment column of the cognate table is empty, so there is no form for which
@@ -741,8 +739,8 @@ script has already done that for us::
 
     $ head -n3 cognates.csv
     ID,Form_ID,Cognateset_ID,Segment_Slice,Alignment,Source,Status_Column
-    duala_all,duala_all,all_1,1:4,ɓ ɛ́ s ɛ̃ - -,,automatically aligned
-    duala_arm,duala_arm,arm_7,1:3,d i a,,automatically aligned
+    duala_all-all_1,duala_all,all_1,1:4,ɓ ɛ́ s ɛ̃ - -,,automatically aligned
+    duala_arm-arm_7,duala_arm,arm_7,1:3,d i a,,automatically aligned
 
 Most scripts do not add a status column if there is none. To make use of this
 functionality, we therefore add status columns to all tables. ::
@@ -873,18 +871,18 @@ polysemous forms connected to multiple concepts. ::
     $ grep 'kikuyu_\(white\|new\)' forms.csv cognates.csv 
     forms.csv:kikuyu_new,Kikuyu,new,erũ,,e r ũ,,
     forms.csv:kikuyu_white,Kikuyu,white,erũ,,e r ũ,,
-    cognates.csv:kikuyu_new,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
-    cognates.csv:kikuyu_white,kikuyu_white,white_2,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_new-new_3,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_white-white_2,kikuyu_white,white_2,1:3,e r ũ,,automatically aligned
     $ python -m lexedata.edit.merge_homophones polysemies.txt
     WARNING:lexedata:I had to set a separator for your forms' concepts. I set it to ';'.
     INFO:lexedata:Going through forms and merging
     100%|██████████| 1592/1592 [...]
     $ grep 'kikuyu_\(white\|new\)' forms.csv cognates.csv 
     forms.csv:kikuyu_new,Kikuyu,new;white,erũ,,e r ũ,,
-    cognates.csv:kikuyu_new,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
-    cognates.csv:kikuyu_white,kikuyu_new,white_2,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_new-new_3,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_white-white_2,kikuyu_new,white_2,1:3,e r ũ,,automatically aligned
     $ git commit -am "Annotate polysemies"
-    [master [...]] Annotate polysemies
+    [main [...]] Annotate polysemies
      4 files changed, 3302 insertions(+), 3288 deletions(-)
      rewrite parameters.csv (100%)
 
@@ -1013,7 +1011,6 @@ generated initially, we can use one of the reports::
     | ǎ       |             2 |              |
     | ə       |             2 |              |
     | r       |             1 |              |
-    | _       |             1 | Marker       |
     | î       |             1 |              |
 
 The reports fulfill different functions. Some, as you have seen, focus on issues
@@ -1086,7 +1083,7 @@ and all languages::
     1	duala_come	Duala	come	pɔ		p ɔ			127	p ɔ -	come
     2	duala_go_to	Duala	go_to	ala		a l a			236	a l a	go_to
     3	duala_path	Duala	path	ngea		n g e a			424	n g e a - -	path
-    4	duala_stand	Duala	stand	tɛ́mɛ̀ mɔ́ny		t ɛ́ m ɛ̀ _ m ɔ́ n y			564	t ɛ́ m ɛ̀ _ m ɔ́ n y	stand
+    4	duala_stand	Duala	stand	tɛ́mɛ̀ mɔ́ny		t ɛ́ m ɛ̀  m ɔ́ n y			564	t ɛ́ m ɛ̀  m ɔ́ n y	stand
     5	duala_walk	Duala	walk	ɗangwa		ɗ a n g w a			610	ɗ a n g w a	walk
     6	ntomba_come	Ntomba	come	yá		y á			125	y á - - - - -	come
     7	ntomba_go_to	Ntomba	go_to	ha		h a			235	h a - - -	go_to
