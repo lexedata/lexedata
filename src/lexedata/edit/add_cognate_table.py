@@ -115,12 +115,18 @@ def add_cognate_table(
                 ]
             else:
                 cogset = ensure_list(form["cognatesetReference"])
-            segment_slice = form.get("segmentSlice")
+            if form.get("segmentSlice"):
+                segment_slice = [
+                    list(util.parse_segment_slices([s]))
+                    for s in ensure_list(form.get("segmentSlice"))
+                ]
+            else:
+                segment_slice = None
             if not form.get("segments"):
                 forms_without_segments += 1
                 if forms_without_segments < 5:
                     logger.warning(
-                        f"No segments found for form {form['id']} ({form['form']})."
+                        f"No segments found for form {form['id']} ({form['form']}). Skipping its cognate judgements."
                     )
                 continue
             else:
@@ -132,7 +138,7 @@ def add_cognate_table(
                     # are the same. But how? Should we assume that
                     # form["segmentSlice"] counts the "+"s or not? The least we
                     # can check is that they at least have the same length.
-                    form["segments"], segment_slices = morphemes(form["segments"])
+                    _, segment_slices = morphemes(form["segments"])
 
                     if not warned_about_morphemes:
                         logger.warning(
@@ -166,12 +172,13 @@ def add_cognate_table(
                         }
                     )
             elif len(cogset) == 1:
+                (cogset_id,) = cogset
                 counter += 1
                 cognate_judgements.append(
                     {
                         "ID": f"{form['id']}-{cogset_id}",
                         "Form_ID": form["id"],
-                        "Cognateset_ID": cogset[0],
+                        "Cognateset_ID": cogset_id,
                         "Segment_Slice": util.indices_to_segment_slice(
                             [s for r in segment_slice for s in r]
                         ),
