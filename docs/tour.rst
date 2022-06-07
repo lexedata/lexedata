@@ -389,10 +389,10 @@ for 'arm', so we need to tell ``add_cognate_table`` that these IDs are only uniq
 within a concept::
 
     $ python -m lexedata.edit.add_cognate_table -q --unique-id concept
-    WARNING:lexedata:No segments found for form duala_all (ɓɛ́sɛ̃).
-    WARNING:lexedata:No segments found for form duala_arm (dia).
-    WARNING:lexedata:No segments found for form duala_ashes (mabúdú).
-    WARNING:lexedata:No segments found for form duala_bark (bwelé).
+    WARNING:lexedata:No segments found for form duala_all (ɓɛ́sɛ̃). Skipping its cognate judgements.
+    WARNING:lexedata:No segments found for form duala_arm (dia). Skipping its cognate judgements.
+    WARNING:lexedata:No segments found for form duala_ashes (mabúdú). Skipping its cognate judgements.
+    WARNING:lexedata:No segments found for form duala_bark (bwelé). Skipping its cognate judgements.
     WARNING:lexedata:No segments found for 1592 forms. You can generate segments using `lexedata.edit.segment_using_clts`.
 
 Clean the data
