@@ -350,7 +350,7 @@ def read_single_excel_sheet(
 
 
 def add_single_languages(
-    metadata: Path,
+    dataset: pycldf.Dataset,
     sheets: t.Iterable[openpyxl.worksheet.worksheet.Worksheet],
     match_form: t.Optional[t.List[str]],
     concept_name: t.Optional[str],
@@ -363,14 +363,6 @@ def add_single_languages(
 ) -> t.Mapping[str, ImportLanguageReport]:
     if status_update == "None":
         status_update = None
-    # initiate dataset from meta
-    try:
-        dataset = pycldf.Dataset.from_metadata(metadata)
-    except FileNotFoundError:
-        cli.Exit.FILE_NOT_FOUND(
-            "No cldf metadata found, if you have no metadata, "
-            "export to csv from your excel file and run lexedata.edit.add_metadata"
-        )
     # create concept mapping
     concepts: t.Mapping[str, str]
     try:
@@ -526,7 +518,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     missing_concepts = set()
     report = add_single_languages(
-        metadata=args.metadata,
+        dataset=pycldf.Dataset.from_metadata(args.dataset),
         sheets=sheets,
         match_form=args.match_form,
         concept_name=args.concept_name,
