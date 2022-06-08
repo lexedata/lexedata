@@ -54,7 +54,6 @@ def get_headers_from_excel(
 def import_data_from_sheet(
     sheet,
     sheet_header,
-    language_id: str,
     implicit: t.Mapping[Literal["languageReference", "id", "value"], str] = {},
     concept_column: t.Tuple[str, str] = ("Concept_ID", "Concept_ID"),
     skip_if_questionmark: t.Container[str] = set(),
@@ -83,8 +82,6 @@ def import_data_from_sheet(
         data[concept_column[0]] = concept_entry
         if "id" in implicit:
             data[implicit["id"]] = None
-        if "languageReference" in implicit:
-            data[implicit["languageReference"]] = language_id
         yield data
 
 
@@ -203,40 +200,13 @@ def read_single_excel_sheet(
     # infer language from sheet data
     if language_name_column:
 
-        def language_name_from_row(row):
-            return language_name_to_language_id[
-                row[sheet_header.index(language_name_column)].value
-            ]
+        def language_name_from_row(form):
+            return language_name_to_language_id[form[language_name_column]]
 
     elif c_f_language in sheet_header:
 
-        def language_name_from_row(row):
-            return row[sheet_header.index(c_f_language)].value
-
-    else:
-
-        def language_name_from_row(row):
-            return normalize_string(sheet.title)
-
-    row = ""
-    for r in sheet.iter_rows(min_row=2):
-        row = r
-        break
-    language_name = language_name_from_row(row)
-    if language_name in language_name_to_language_id:
-        language_id = language_name_to_language_id[language_name]
-        report[language_id].is_new_language = False
-    else:
-        language_id = language_name
-        report[language_id].is_new_language = True
-        logger.warning(
-            "I am adding forms for a new language %s, but I don't know how to add languages to your LanguageTable. Please ensure to add this language to the LanguageTable manually.",
-            language_name,
-        )
-        logger.info(
-            "To add the new language, you may want to add a row with ID %s to the LanguageTable, even if that does not fit the intended ID format, and then fix language IDs using lexedata.edit.simplify_ids --tables LanguageTable",
-            language_id,
-        )
+        def language_name_from_row(form):
+            return form[c_f_language]
 
     # read new data from sheet
     for form in cli.tq(
@@ -244,13 +214,28 @@ def read_single_excel_sheet(
             sheet,
             sheet_header=sheet_header,
             implicit=implicit,
-            language_id=language_id,
             concept_column=concept_columns,
             skip_if_questionmark={c_f_form},
         ),
         task=f"Parsing cells of sheet {sheet.title}",
         total=sheet.max_row,
     ):
+        if form.get(c_f_language) is None:
+            form[c_f_language] = normalize_string(sheet.title)
+        try:
+            form[c_f_language] = language_name_from_row(form)
+            report[form[c_f_language]].is_new_language = False
+        except KeyError:
+            report[form[c_f_language]].is_new_language = True
+            logger.warning(
+                "I am adding forms for a new language %s, but I don't know how to add languages to your LanguageTable. Please ensure to add this language to the LanguageTable manually.",
+                form[c_f_language],
+            )
+            logger.info(
+                "To add the new language, you may want to add a row with ID %s to the LanguageTable, even if that does not fit the intended ID format, and then fix language IDs using lexedata.edit.simplify_ids --tables LanguageTable",
+                form[c_f_language],
+            )
+
         # else, look for candidates, link to existing form or add new form
         for item, value in form.items():
             try:
@@ -272,7 +257,7 @@ def read_single_excel_sheet(
                 f"The corresponding form {form[c_f_form]} was skipped and not imported."
             )
             missing_concepts.update(concept_entries)
-            report[language_id].skipped += 1
+            report[form[c_f_language]].skipped += 1
             continue
         elif not all(concepts):
             missing = {
@@ -326,12 +311,11 @@ def read_single_excel_sheet(
                 break
 
             if new_concept_added:
-                report[language_id].concepts += 1
+                report[form[c_f_language]].concepts += 1
             else:
-                report[language_id].existing += 1
+                report[form[c_f_language]].existing += 1
         else:
             # we land here after the break and keep adding existing forms to the dataset just with integer in id +1
-            form[c_f_language] = language_id
             if "id" in implicit:
                 # TODO: check for type of form id column
                 form_concept = form[c_f_concept]
@@ -343,7 +327,7 @@ def read_single_excel_sheet(
             if status_update:
                 form["Status_Column"] = status_update
             db.insert_into_db(form)
-            report[language_id].new += 1
+            report[form[c_f_language]].new += 1
     # write to cldf
     db.write_dataset_from_cache()
     return report
@@ -518,7 +502,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     missing_concepts = set()
     report = add_single_languages(
-        dataset=pycldf.Dataset.from_metadata(args.dataset),
+        dataset=pycldf.Dataset.from_metadata(args.metadata),
         sheets=sheets,
         match_form=args.match_form,
         concept_name=args.concept_name,
