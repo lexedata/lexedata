@@ -81,27 +81,27 @@ def test_backward_slice_is_wrong(caplog):
 
 
 def test_default_metathesis_is_okay(caplog):
-    ds = util.fs.new_wordlist(
-        FormTable=[
-            {
-                "ID": "f1",
-                "Language_ID": "l1",
-                "Parameter_ID": "c1",
-                "Form": "test",
-                "Segments": ["t", "e", "s", "t"],
-            }
-        ],
-        CognateTable=[
-            {
-                "ID": "j1",
-                "Cognateset_ID": "s1",
-                "Form_ID": "f1",
-                "Segment_Slice": ["1", "3", "2", "1"],
-                "Alignment": ["t", "s", "e", "t"],
-            }
-        ],
-    )
     with caplog.at_level(logging.WARNING):
+        ds = util.fs.new_wordlist(
+            FormTable=[
+                {
+                    "ID": "f1",
+                    "Language_ID": "l1",
+                    "Parameter_ID": "c1",
+                    "Form": "test",
+                    "Segments": ["t", "e", "s", "t"],
+                }
+            ],
+            CognateTable=[
+                {
+                    "ID": "j1",
+                    "Cognateset_ID": "s1",
+                    "Form_ID": "f1",
+                    "Segment_Slice": ["1", "3", "2", "1"],
+                    "Alignment": ["t", "s", "e", "t"],
+                }
+            ],
+        )
         lexedata.report.judgements.check_cognate_table(ds)
     assert not caplog.text
 
@@ -159,27 +159,27 @@ def test_alignments_must_match_segments(caplog):
 
 
 def test_alignments_must_match_segments_ignore_gaps(caplog):
-    ds = util.fs.new_wordlist(
-        FormTable=[
-            {
-                "ID": "f1",
-                "Language_ID": "l1",
-                "Parameter_ID": "c1",
-                "Form": "test",
-                "Segments": ["t", "e", "s", "t"],
-            }
-        ],
-        CognateTable=[
-            {
-                "ID": "j1",
-                "Cognateset_ID": "s1",
-                "Form_ID": "f1",
-                "Segment_Slice": ["1:4"],
-                "Alignment": ["t", "e", "s", "-", "t", "-"],
-            }
-        ],
-    )
     with caplog.at_level(logging.WARNING):
+        ds = util.fs.new_wordlist(
+            FormTable=[
+                {
+                    "ID": "f1",
+                    "Language_ID": "l1",
+                    "Parameter_ID": "c1",
+                    "Form": "test",
+                    "Segments": ["t", "e", "s", "t"],
+                }
+            ],
+            CognateTable=[
+                {
+                    "ID": "j1",
+                    "Cognateset_ID": "s1",
+                    "Form_ID": "f1",
+                    "Segment_Slice": ["1:4"],
+                    "Alignment": ["t", "e", "s", "-", "t", "-"],
+                }
+            ],
+        )
         lexedata.report.judgements.check_cognate_table(ds)
     assert not caplog.text
 
