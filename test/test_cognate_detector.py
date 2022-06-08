@@ -8,6 +8,7 @@ from lexedata.edit.detect_cognates import (
     filter_function_factory,
     get_partial_matrices,
     partial_cluster,
+    get_slices,
 )
 
 
@@ -132,15 +133,29 @@ def test_partial_matrices_compare_lingpy(lex, alignment_type):
 def test_partial_cluster_compare_lingpy(lex, alignment_type):
     # Test that our method of computing partial matrices matches the one implemented in LingPy.
     lex.get_scorer(runs=10000, ratio=(1, 0), threshold=0.7)
-    lingpy_matrices = lex.partial_cluster(
+    lex.partial_cluster(
         method="lexstat",
         mode=alignment_type,
         imap_mode=True,
     )
-    lexedata_matrices = partial_cluster(
+
+    lingpy_judgements = {}
+
+    partial_cognate_sets = lex.columns.index("partial_cognate_sets")
+    tokens = lex.columns.index("tokens")
+    for row_id in lex:
+        row = lex[row_id]
+        for slice, cognateclass in zip(
+            get_slices(row[tokens]), row[partial_cognate_sets]
+        ):
+            lingpy_judgements[row_id, slice.start, slice.stop] = cognateclass
+
+    judgements = {}
+    for form, slice, cognateclass in partial_cluster(
         lex,
         method="lexstat",
         mode=alignment_type,
-    )
+    ):
+        judgements[form, slice.start, slice.stop] = cognateclass
 
-    assert lingpy_matrices == lexedata_matrices
+    assert judgements == lingpy_judgements

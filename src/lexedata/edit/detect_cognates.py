@@ -307,7 +307,7 @@ def partial_cluster(
     factor=0.3,
     mode="overlap",
     cluster_function=lingpy.algorithm.extra.infomap_clustering,
-):
+) -> t.Iterable[t.Tuple[t.Hashable, slice, int]]:
 
     # check for parameters and add clustering, in order to make sure that
     # analyses are not repeated
@@ -329,8 +329,9 @@ def partial_cluster(
         c = cluster_function(
             threshold, matrix, taxa=list(range(len(matrix))), revert=True
         )
-        for i, (slc, idx) in enumerate(morphemes.items()):
-            yield idx, slc, c[i] + min_concept_cognateset
+        for form, form_morphemes in morphemes.items():
+            for slice, matrix_index in form_morphemes:
+                yield form, slice, c[matrix_index] + min_concept_cognateset
 
         min_concept_cognateset += len(matrix) + 1
 
