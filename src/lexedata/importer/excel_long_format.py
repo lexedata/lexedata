@@ -5,7 +5,7 @@ from pathlib import Path
 import attr
 import lexedata.cli as cli
 import openpyxl
-import pycldf
+import pycldf.dataset
 from lexedata.edit.add_status_column import add_status_column_to_table
 from lexedata.importer.excel_matrix import DB
 from lexedata.types import Form, KeyKeyDict
@@ -54,7 +54,9 @@ def get_headers_from_excel(
 def import_data_from_sheet(
     sheet,
     sheet_header,
-    implicit: t.Mapping[Literal["languageReference", "id", "value"], str] = {},
+    implicit: t.Mapping[
+        Literal["languageReference", "id", "value", "Status_Column"], str
+    ] = {},
     concept_column: t.Tuple[str, str] = ("Concept_ID", "Concept_ID"),
     skip_if_questionmark: t.Container[str] = set(),
 ) -> t.Iterable[Form]:
@@ -116,6 +118,7 @@ def read_single_excel_sheet(
     c_f_id = dataset["FormTable", "id"].name
     c_f_language = dataset["FormTable", "languageReference"].name
     c_f_form = dataset["FormTable", "form"].name
+    c_f_status = dataset["FormTable", "Status_Column"].name
     try:
         c_f_value = dataset["FormTable", "value"].name
     except KeyError:
@@ -144,13 +147,17 @@ def read_single_excel_sheet(
     form_header = list(dataset["FormTable"].tableSchema.columndict.keys())
 
     # These columns don't need to be given, we can infer them from the sheet title and from the other data:
-    implicit: t.Dict[Literal["languageReference", "id", "value"], str] = {}
+    implicit: t.Dict[
+        Literal["languageReference", "id", "value", "Status_Column"], str
+    ] = {}
     if c_f_language not in sheet_header:
         implicit["languageReference"] = c_f_language
     if c_f_id not in sheet_header:
         implicit["id"] = c_f_id
     if c_f_value is not None and c_f_value not in sheet_header:
         implicit["value"] = c_f_value
+    if c_f_status is not None and c_f_status not in sheet_header:
+        implicit["Status_Column"] = "Status_Column"
 
     found_columns = set(sheet_header) - {concept_column} - set(implicit.values())
     expected_columns = set(form_header) - {c_f_concept} - set(implicit.values())
@@ -229,15 +236,16 @@ def read_single_excel_sheet(
             form[c_f_language] = language_name_to_language_id[form[c_f_language]]
             report[form[c_f_language]].is_new_language = False
         except KeyError:
-            report[form[c_f_language]].is_new_language = True
-            logger.warning(
-                "I am adding forms for a new language %s, but I don't know how to add languages to your LanguageTable. Please ensure to add this language to the LanguageTable manually.",
-                form[c_f_language],
-            )
-            logger.info(
-                "To add the new language, you may want to add a row with ID %s to the LanguageTable, even if that does not fit the intended ID format, and then fix language IDs using lexedata.edit.simplify_ids --tables LanguageTable",
-                form[c_f_language],
-            )
+            if form[c_f_language] not in report:
+                report[form[c_f_language]].is_new_language = True
+                logger.warning(
+                    "I am adding forms for a new language %s, but I don't know how to add languages to your LanguageTable. Please ensure to add this language to the LanguageTable manually.",
+                    form[c_f_language],
+                )
+                logger.info(
+                    "To add the new language, you may want to add a row with ID %s to the LanguageTable, even if that does not fit the intended ID format, and then fix language IDs using lexedata.edit.simplify_ids --tables LanguageTable",
+                    form[c_f_language],
+                )
 
         # else, look for candidates, link to existing form or add new form
         for item, value in form.items():
