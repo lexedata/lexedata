@@ -194,7 +194,7 @@ def read_single_excel_sheet(
             language_name_to_language_id.update(
                 {row[c_l_id]: row[c_l_id] for row in dataset["LanguageTable"]}
             )
-    except pycldf.dataset.SchemaError:
+    except (pycldf.dataset.SchemaError, FileNotFoundError):
         # Actually, there is no language table.
         language_name_to_language_id = {
             form[c_f_language]: form[c_f_language] for form in dataset["FormTable"]

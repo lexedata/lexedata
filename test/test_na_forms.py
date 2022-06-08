@@ -121,7 +121,7 @@ def test_interleaved_import_skips_na():
 
 
 def test_single_excel_import_skips_na():
-    data = [  # noqa
+    data = [
         ["phonetic", "Form", "English"],
         ["aa", "e.ta.'kɾã", "one"],
         ["bb", "mĩ.'ɾõ1", "two"],
@@ -138,6 +138,7 @@ def test_single_excel_import_skips_na():
         Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     )
     dataset = pycldf.Dataset.from_metadata(metadata)
+    dataset.write(FormTable=[])
     _ = add_single_languages(
         dataset=dataset,
         sheets=sheets,
@@ -224,6 +225,7 @@ def test_single_excel_import_dash():
         Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     )
     dataset = pycldf.Dataset.from_metadata(metadata)
+    dataset.write(FormTable=[])
     _ = add_single_languages(
         dataset=dataset,
         sheets=sheets,
