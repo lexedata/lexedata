@@ -53,7 +53,179 @@ def test_concept_file_not_found(caplog):
     )
 
 
-def test_multi_sheet_import(caplog, single_import_parameters):
+def test_import_multi_languages_in_one_sheet_by_id(caplog, single_import_parameters):
+    dataset, original, excel, concept_name = single_import_parameters
+    excel = MockSingleExcelSheet(
+        [
+            [
+                "Language_ID",
+                "orthographic",
+                "phonemic",
+                "phonetic",
+                "Form",
+                "English",
+                "Comment",
+                "procedural_comment",
+                "Source",
+                "Segments",
+                "variants",
+            ],
+            [
+                "ache",
+                "",
+                "",
+                "e.ta.'kɾã",
+                "e.ta.'kɾã",
+                "one",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+            [
+                "ache",
+                "",
+                "",
+                "mĩ.'ɾõ1",
+                "mĩ.'ɾõ1",
+                "polysemy_concept",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+            [
+                "ache",
+                "dáhui",
+                "",
+                "dáhui",
+                "dáhui",
+                "one@",
+                "",
+                "",
+                "Meléndez2011",
+                "",
+                "",
+            ],
+            [
+                "ache",
+                "salíiri",
+                "",
+                "salí:ɻi",
+                "salí:ɻi",
+                "ADULT",
+                "",
+                "",
+                "Meléndez2011",
+                "",
+                "",
+            ],
+            [
+                "ache",
+                "káaɻu",
+                "",
+                "ká:ɻu",
+                "ká:ɻu",
+                "AFRAID",
+                "",
+                "ZJO: /ka:ru/ 'miedo' (Melendez2011)",
+                "Ramirez2001a",
+                "",
+                "",
+            ],
+            [
+                "ache",
+                "bánio",
+                "",
+                "bánio",
+                "bánio",
+                "again",
+                "",
+                "",
+                "Meléndez2011",
+                "",
+                "",
+            ],
+            [
+                "Canamari",
+                "nusu-chüa",
+                "",
+                "",
+                "nusu-c͡çɨa",
+                "ANKLE",
+                "",
+                "",
+                "Martius1867",
+                "",
+                "",
+            ],
+            [
+                "Canamari",
+                "nutzûma",
+                "",
+                "",
+                "nut͡suma",
+                "ANUS",
+                "",
+                "",
+                "Martius1867",
+                "",
+                "",
+            ],
+            [
+                "Canamari",
+                "nutanachy",
+                "",
+                "",
+                "nutanac͡çi",
+                "ARMPIT",
+                "",
+                "",
+                "Martius1867",
+                "",
+                "",
+            ],
+        ]
+    )
+    dataset.write(
+        ParameterTable=list(dataset["ParameterTable"])
+        + [
+            {"ID": x, "Name": x}
+            for x in [
+                "polysemy_concept",
+                "ADULT",
+                "AFRAID",
+                "again",
+                "ANKLE",
+                "ANUS",
+                "ARMPIT",
+            ]
+        ]
+    )
+    report = add_single_languages(
+        dataset=dataset,
+        sheets=[excel],
+        match_form=None,
+        concept_name="English",
+        language_name=None,
+        ignore_missing=True,
+        ignore_superfluous=True,
+        status_update=None,
+        logger=logger,
+    )
+    assert report == {
+        "ache": ImportLanguageReport(
+            is_new_language=False, new=4, existing=1, skipped=0, concepts=1
+        ),
+        "Canamari": ImportLanguageReport(
+            is_new_language=True, new=3, existing=0, skipped=0, concepts=0
+        ),
+    }
+
+
+def test_multi_sheet_import(single_import_parameters, caplog):
     dataset, original, excel, concept_name = single_import_parameters
     excel = openpyxl.load_workbook(excel)
     dataset.write(
