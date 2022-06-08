@@ -137,8 +137,9 @@ def test_single_excel_import_skips_na():
     metadata = copy_metadata(
         Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     )
+    dataset = pycldf.Dataset.from_metadata(metadata)
     _ = add_single_languages(
-        metadata=metadata,
+        dataset=dataset,
         sheets=sheets,
         match_form=[],
         concept_name="English",
@@ -148,7 +149,6 @@ def test_single_excel_import_skips_na():
         status_update=None,
         logger=cli.logger,
     )
-    dataset = pycldf.Dataset.from_metadata(metadata)
     forms = [f for f in dataset["FormTable"]]
     assert forms == [
         OrderedDict(
@@ -223,8 +223,9 @@ def test_single_excel_import_dash():
     metadata = copy_metadata(
         Path(__file__).parent / "data/cldf/minimal/cldf-metadata.json"
     )
+    dataset = pycldf.Dataset.from_metadata(metadata)
     _ = add_single_languages(
-        metadata=metadata,
+        dataset=dataset,
         sheets=sheets,
         match_form=[],
         concept_name="English",
@@ -234,7 +235,6 @@ def test_single_excel_import_dash():
         status_update=None,
         logger=cli.logger,
     )
-    dataset = pycldf.Dataset.from_metadata(metadata)
     forms = [f for f in dataset["FormTable"]]
     assert forms == [
         OrderedDict(
