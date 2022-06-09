@@ -118,7 +118,10 @@ def read_single_excel_sheet(
     c_f_id = dataset["FormTable", "id"].name
     c_f_language = dataset["FormTable", "languageReference"].name
     c_f_form = dataset["FormTable", "form"].name
-    c_f_status = dataset["FormTable", "Status_Column"].name
+    try:
+        c_f_status = dataset["FormTable", "Status_Column"].name
+    except KeyError:
+        c_f_status = None
     try:
         c_f_value = dataset["FormTable", "value"].name
     except KeyError:
