@@ -241,6 +241,66 @@ def test_import_multi_languages_in_one_sheet_by_id(caplog, single_import_paramet
     }
 
 
+def test_import_new_language_warn_once(caplog, single_import_parameters):
+    dataset, original, excel, concept_name = single_import_parameters
+    excel = MockSingleExcelSheet(
+        [
+            [
+                "Language",
+                "orthographic",
+                "phonemic",
+                "phonetic",
+                "Form",
+                "English",
+                "Comment",
+                "procedural_comment",
+                "Source",
+                "Segments",
+                "variants",
+            ],
+            [
+                "A",
+                "",
+                "",
+                "e",
+                "e",
+                "one",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+            [
+                "A",
+                "",
+                "",
+                "m",
+                "m",
+                "two",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+        ]
+    )
+    with caplog.at_level(logging.WARNING):
+        add_single_languages(
+            dataset=dataset,
+            sheets=[excel],
+            match_form=None,
+            concept_name="English",
+            language_name="Language",
+            ignore_missing=True,
+            ignore_superfluous=True,
+            status_update=None,
+            logger=logger,
+        )
+    assert caplog.text.count("new language A,") == 1
+
+
 def test_import_multi_languages_in_one_sheet_by_name(caplog, single_import_parameters):
     dataset, original, excel, concept_name = single_import_parameters
     excel = MockSingleExcelSheet(
