@@ -643,7 +643,7 @@ def excel_parser_from_dialect(
         output_dataset,
         element_semantics=dialect.cell_parser["cell_parser_semantics"],
         separation_pattern=rf"([{''.join(dialect.cell_parser['form_separator'])}])",
-        variant_separator=dialect.cell_parser["variant_separator"],
+        variant_separator=dialect.cell_parser.get("variant_separator", ["~", "%"]),
         add_default_source=dialect.cell_parser.get("add_default_source"),
     )
 
