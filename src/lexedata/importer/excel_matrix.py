@@ -35,7 +35,7 @@ def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
 
 
 class DB:
-    """An in-memobry cache of a dataset.
+    """An in-memory cache of a dataset.
 
     The cache_dataset method is only called in the load_dataset method, but
     also used for finer control by the cognates importer. This means that if
@@ -778,13 +778,24 @@ def load_dataset(
         if dialect:
             try:
                 EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
-            except (AttributeError, KeyError) as err:
-                field = re.match(r".*?'(.+?)'.+?'(.+?)'$", str(err)).group(2)
-                logger.warning(
-                    f"User-defined format specification in the json-file was missing the key {field}, "
-                    f"falling back to default parser"
+            except AttributeError as err:
+                (message,) = err.args
+                field = re.find(
+                    r"'(.+?)' object has no attribute '(.+?)'",
                 )
+                if field:
+                    logger.warning(
+                        f"User-defined format specification in the json-file was missing the key {field.group(2)}, falling back to default parser."
+                    )
+                else:
+                    logger.warning(
+                        f"User-defined format specification in the json-file was missing a key ({message}), falling back to default parser."
+                    )
                 EP = ExcelParser
+            except KeyError as err:
+                logger.warning(
+                    f"User-defined format specification in the json-file was missing the key {err.args[0]}, falling back to default parser."
+                )
         else:
             logger.warning(
                 "User-defined format specification in the json-file was missing, falling back to default parser"
