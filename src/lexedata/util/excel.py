@@ -289,6 +289,11 @@ class CellParser(NaiveCellParser):
             "(at least one of 'orthographic', 'phonemic', and 'phonetic') to derive a #form "
             "in #FormTable, but your metadata defines no such column."
         )
+        self.leftovers = self.element_semantics.pop("", None)
+        if self.bracket_pairs.pop("", ""):
+            logger.warning(
+                "Your ‘delimiter pair’ for forms outside delimiters should be the empty string for start and end, but your end string was not empty. I will ignore the end string you specificed."
+            )
 
         # Colums necessary for word list
         self.cc(short="source", long=("FormTable", "source"), dataset=dataset)
@@ -455,26 +460,34 @@ class CellParser(NaiveCellParser):
                 )
             # Check what kind of element we have.
             for start, (term, transcription) in self.element_semantics.items():
-                field = self.c[term]
                 if element.startswith(start):
+                    field = self.c[term]
                     break
             else:
-                # TODO: here an other if catchin '-' might be necessary
                 # The only thing we expect outside delimiters is the variant
-                # separators, '~' and '%'.
+                # separators, '~' and '%'. That is, unless we have some
+                # 'leftovers' specification.
                 if self.variant_separator and element in self.variant_separator:
                     expect_variant = element
+                    continue
+                elif self.leftovers:
+                    term, transcription = self.leftovers
+                    if any([v in element for v in self.variant_separator]):
+                        logger.warning(
+                            f"{cell_identifier} In form {form_string}: Element {element} contained variant separator, but you also specified that elements outside delimiters should be treated as {term}. Unexpected behaviour may follow."
+                        )
+                    field = self.c[term]
                 else:
                     logger.warning(
-                        f"{cell_identifier}In form {form_string}: Element {element} could not be parsed, ignored"
+                        f"{cell_identifier} In form {form_string}: Element {element} could not be parsed, ignored"
                     )
-                continue
+                    continue
 
             # If we encounter a field for the first time, we add it to the
             # dictionary. If repeatedly, to the variants, with a decorator that
-            # shows how expected the variant was.
-            # This drops sources and comments in variants, if more than one source or comment is provided
-            # clean this up in self.postprocess_form
+            # shows how expected the variant was. This drops sources and
+            # comments in variants, if more than one source or comment is
+            # provided – We clean this up in self.postprocess_form
 
             if field in properties:
                 if (
@@ -483,7 +496,7 @@ class CellParser(NaiveCellParser):
                     and field != self.c["source"]
                 ):
                     logger.warning(
-                        f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}"
+                        f"{cell_identifier} In form {form_string}: Element {element} was an unexpected variant for {field}"
                     )
                 properties.setdefault(c_variants, []).append(
                     (expect_variant or "") + element
