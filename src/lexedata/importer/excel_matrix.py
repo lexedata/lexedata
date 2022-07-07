@@ -780,7 +780,7 @@ def load_dataset(
                 EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
             except AttributeError as err:
                 (message,) = err.args
-                field = re.find(
+                field = re.search(
                     r"'(.+?)' object has no attribute '(.+?)'",
                 )
                 if field:
