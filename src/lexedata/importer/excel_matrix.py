@@ -780,9 +780,7 @@ def load_dataset(
                 EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
             except AttributeError as err:
                 (message,) = err.args
-                field = re.search(
-                    r"'(.+?)' object has no attribute '(.+?)'",
-                )
+                field = re.search(r"'(.+?)' object has no attribute '(.+?)'", message)
                 if field:
                     logger.warning(
                         f"User-defined format specification in the json-file was missing the key {field.group(2)}, falling back to default parser."
