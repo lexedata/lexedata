@@ -474,12 +474,12 @@ class CellParser(NaiveCellParser):
                     term, transcription = self.leftovers
                     if any([v in element for v in self.variant_separator]):
                         logger.warning(
-                            f"{cell_identifier} In form {form_string}: Element {element} contained variant separator, but you also specified that elements outside delimiters should be treated as {term}. Unexpected behaviour may follow."
+                            f"{cell_identifier}In form {form_string}: Element {element} contained variant separator, but you also specified that elements outside delimiters should be treated as {term}. Unexpected behaviour may follow."
                         )
                     field = self.c[term]
                 else:
                     logger.warning(
-                        f"{cell_identifier} In form {form_string}: Element {element} could not be parsed, ignored"
+                        f"{cell_identifier}In form {form_string}: Element {element} could not be parsed, ignored"
                     )
                     continue
 
@@ -496,7 +496,7 @@ class CellParser(NaiveCellParser):
                     and field != self.c["source"]
                 ):
                     logger.warning(
-                        f"{cell_identifier} In form {form_string}: Element {element} was an unexpected variant for {field}"
+                        f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}"
                     )
                 properties.setdefault(c_variants, []).append(
                     (expect_variant or "") + element
