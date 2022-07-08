@@ -236,7 +236,7 @@ point to create a new commit. ::
     $ git add Wordlist-metadata.json
     $ git commit -m "Add metadata file"
     [main [...]] Add metadata file
-     1 file changed, 87 insertions(+)
+     1 file changed, 84 insertions(+)
      create mode 100644 Wordlist-metadata.json
 
 Now that we have a good starting point, we can start working with the data and
@@ -368,7 +368,7 @@ good. ::
     $ git add languages.csv parameters.csv
     $ git commit -am "Add language and concept tables"
     [main [...]] Add language and concept tables
-     3 files changed, 246 insertions(+), 1 deletion(-)
+     3 files changed, 246 insertions(+), 4 deletions(-)
      create mode 100644 languages.csv
      create mode 100644 parameters.csv
 
