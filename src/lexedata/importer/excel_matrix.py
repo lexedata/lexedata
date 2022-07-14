@@ -197,6 +197,18 @@ class DB:
         pass
 
 
+class Dialect:
+    def __init__(self, **kwargs):
+        self.check_for_match = kwargs["check_for_match"]
+        self.check_for_row_match = kwargs["check_for_row_match"]
+        self.check_for_language_match = kwargs["check_for_language_match"]
+        self.row_cell_regexes = kwargs["row_cell_regexes"]
+        self.row_comment_regexes = kwargs.get("row_comment_regexes", [".*"])
+        self.lang_cell_regexes = kwargs["lang_cell_regexes"]
+        self.lang_comment_regexes = kwargs.get("lang_comment_regexes", [".*"])
+        self.cell_parser = kwargs["cell_parser"]
+
+
 class ExcelParser(t.Generic[R]):
     def __init__(
         self,
@@ -616,7 +628,7 @@ class ExcelCognateParser(ExcelParser[CogSet]):
 
 
 def excel_parser_from_dialect(
-    output_dataset: pycldf.Wordlist, dialect: t.NamedTuple, cognate: bool
+    output_dataset: pycldf.Wordlist, dialect: Dialect, cognate: bool
 ) -> t.Type[ExcelParser]:
     Row: t.Type[RowObject]
     Parser: t.Type[ExcelParser]
@@ -762,9 +774,7 @@ def load_dataset(
     dataset = pycldf.Dataset.from_metadata(metadata)
     # load dialect from metadata
     try:
-        dialect = argparse.Namespace(
-            **dataset.tablegroup.common_props["special:fromexcel"]
-        )
+        dialect = Dialect(**dataset.tablegroup.common_props["special:fromexcel"])
     except KeyError:
         dialect = None
 

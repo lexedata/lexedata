@@ -250,7 +250,8 @@ class NaiveCellParser:
         ):
             try:
                 form = self.parse_form(element, language_id, cell_identifier)
-            except (KeyError, ValueError):
+            except (KeyError, ValueError) as e:
+                logger.warning(f"Could not import form {element}: {e}")
                 continue
             if form:
                 yield form
@@ -688,6 +689,8 @@ class MawetiCellParser(CellParser):
             variant_separator=variant_separator,
             add_default_source=add_default_source,
         )
+
+        # TODO: We might not have this
         self.cc("procedural_comment", ("FormTable", "procedural_comment"), dataset)
 
     def postprocess_form(
