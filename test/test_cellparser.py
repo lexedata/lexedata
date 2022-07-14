@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-import argparse
 from pathlib import Path
 import json
 import logging
@@ -9,8 +8,9 @@ import re
 import pycldf
 
 
+from lexedata.importer.excel_matrix import Dialect
 from lexedata.edit.normalize_unicode import n
-from lexedata.util import excel as c
+from lexedata.util import excel as c, fs
 from helper_functions import copy_metadata
 
 
@@ -394,7 +394,7 @@ def test_cellparser_no_real_variant(parser, caplog):
 def mawetiparser():
     metadata = Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
     dataset = pycldf.Dataset.from_metadata(metadata)
-    dialect = argparse.Namespace(
+    dialect = Dialect(
         **json.load(metadata.open("r", encoding="utf8"))["special:fromexcel"]
     )
     initialized_cell_parser = getattr(c, dialect.cell_parser["name"])(
@@ -457,4 +457,88 @@ def test_mawetiparser_postprocessing(mawetiparser):
         "GAK: We should pick one of those names, I'm 80% sure it should be the first",
         "Source": {"abui1241_s1"},
         "Form": "lεksedata",
+    }
+
+
+@pytest.fixture
+def no_delimiters_parser():
+    dialect = Dialect(
+        cell_parser={
+            "name": "MawetiCellParser",
+            "form_separator": [","],
+            "add_default_source": "BEGINSOURCE1ENDSOURCE",
+            "cell_parser_semantics": [
+                ["(", ")", "comment", False],
+                ["", "", "form", False],
+                ["{", "}", "form", False],
+                ["[", "]", "phonetic", True],
+                ["BEGINSOURCE", "ENDSOURCE", "source", True],
+            ],
+            "variant_separator": ["~"],
+        },
+        check_for_match=[],
+        check_for_row_match=[],
+        check_for_language_match=[],
+    )
+    initialized_cell_parser = getattr(c, dialect.cell_parser["name"])(
+        fs.new_wordlist(
+            FormTable=[
+                {
+                    "phonetic": None,
+                    "value": None,
+                    "procedural_comment": None,
+                    "variants": [],
+                }
+            ]
+        ),
+        element_semantics=dialect.cell_parser["cell_parser_semantics"],
+        separation_pattern=rf"([{''.join(dialect.cell_parser['form_separator'])}])",
+        variant_separator=dialect.cell_parser["variant_separator"],
+        add_default_source=dialect.cell_parser["add_default_source"],
+    )
+    return initialized_cell_parser
+
+
+def test_outside_delimiters_parser(no_delimiters_parser):
+    form = no_delimiters_parser.parse_form("form", "language")
+    assert form == {
+        "Language_ID": "language",
+        "Source": {"language_s1"},
+        "Value": "form",
+        "variants": [],
+        "Form": "form",
+    }
+
+
+def test_outside_delimiters_parser_sep(no_delimiters_parser):
+    form = no_delimiters_parser.parse_form("form ~ forn", "language")
+    assert form == {
+        "Language_ID": "language",
+        "Source": {"language_s1"},
+        "Value": "form ~ forn",
+        "variants": ["~forn"],
+        "Form": "form",
+    }
+
+
+def test_outside_delimiters_parser_alt_form(no_delimiters_parser):
+    form = no_delimiters_parser.parse_form("form {forn}", "language")
+    assert form == {
+        "Language_ID": "language",
+        "Source": {"language_s1"},
+        "Value": "form {forn}",
+        "variants": ["forn"],
+        "Form": "form",
+    }
+
+
+def test_outside_delimiters_parser_pair_of_pairs(no_delimiters_parser):
+    form = no_delimiters_parser.parse_form("form ~ {forn} [form] ~ [forn]", "language")
+    assert form == {
+        "Language_ID": "language",
+        "Source": {"language_s1"},
+        "Value": "form {forn}",
+        "variants": ["~forn", "~[forn]"],
+        "Form": "form",
+        "phonetic": "form",
     }

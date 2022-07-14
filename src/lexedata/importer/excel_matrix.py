@@ -198,7 +198,7 @@ class DB:
 
 
 class Dialect:
-    def __init__(self, logger, **kwargs):
+    def __init__(self, logger: cli.logging.Logger = cli.logger, **kwargs):
         try:
             self.row_cell_regexes = kwargs["row_cell_regexes"]
         except KeyError:
@@ -225,7 +225,7 @@ class Dialect:
         self.check_for_language_match = kwargs["check_for_language_match"]
 
         self.cell_parser = kwargs["cell_parser"]
-        self.cognates = kwargs["cognates"]
+        self.cognates = kwargs.get("cognates")
 
 
 class ExcelParser(t.Generic[R]):
