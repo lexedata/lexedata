@@ -270,7 +270,7 @@ class CellParser(NaiveCellParser):
         ],
         separation_pattern: str = r"([;,])",
         variant_separator: t.Optional[t.List[str]] = ["~", "%"],
-        add_default_source: t.Optional[str] = "{1}",
+        add_default_source: t.Optional[str] = "1",
         logger: cli.logging.Logger = cli.logger,
     ):
         super().__init__(dataset)
@@ -327,31 +327,33 @@ class CellParser(NaiveCellParser):
         self,
         source_string: str,
         language_id: t.Optional[str],
+        delimiters: t.Tuple[str, str] = ("{", "}"),
         logger: cli.logging.Logger = cli.logger,
     ) -> str:
         """Parse a string referencing a language-specific source"""
+        if source_string.startswith(delimiters[0]) and source_string.endswith(
+            delimiters[1]
+        ):
+            source_string = source_string[len(delimiters[0]) : -len(delimiters[1])]
+        elif source_string.startswith(delimiters[0]):
+            logger.warning(
+                f"In source {source_string}: Closing bracket '{delimiters[1]}' is missing."
+            )
+            source_string = source_string[len(delimiters[0]) :]
+
         context: t.Optional[str]
         if ":" in source_string:
-            source_part, context = source_string.split(":", maxsplit=1)
-            if not context.endswith("}"):
-                logger.warning(
-                    f"In source {source_string}: Closing bracket '}}' is missing, split into source and page/context may be wrong"
-                )
-            source_string = source_part + "}"
-            context = context[:-1].strip()
-
-            context = context.replace(":", "").replace(",", "")
+            source_string, context = source_string.split(":", maxsplit=1)
+            source_string = source_string.strip()
+            context = context.strip()
+            context = context.replace("]", "")
         else:
             context = None
 
-        if source_string.startswith("{") and source_string.endswith("}"):
-            source_string = source_string[1:-1]
         if language_id is None:
             source_id = string_to_id(source_string)
         else:
             source_id = string_to_id(f"{language_id:}_s{source_string:}")
-
-        source_id = source_id.replace(":", "").replace(",", "")
 
         if context:
             return f"{source_id}[{context}]"
@@ -474,8 +476,8 @@ class CellParser(NaiveCellParser):
                 elif self.leftovers:
                     term, transcription = self.leftovers
                     if any([v in element for v in self.variant_separator]):
-                        logger.warning(
-                            f"{cell_identifier}In form {form_string}: Element {element} contained variant separator, but you also specified that elements outside delimiters should be treated as {term}. Unexpected behaviour may follow."
+                        logger.info(
+                            f"{cell_identifier}In form {form_string}: Element {element} contained variant separator, but you also specified that elements outside delimiters should be treated as {term}. Please check your output."
                         )
                     field = self.c[term]
                 else:

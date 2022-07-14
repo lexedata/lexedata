@@ -198,15 +198,34 @@ class DB:
 
 
 class Dialect:
-    def __init__(self, **kwargs):
+    def __init__(self, logger, **kwargs):
+        try:
+            self.row_cell_regexes = kwargs["row_cell_regexes"]
+        except KeyError:
+            logger.warning(
+                "User-defined format specification in the json-file was missing the key `row_cell_regexes`. I assume you have one column of row names, i.e. 'row_cell_regexes': ['(?P<Name.*)']."
+            )
+            self.row_cell_regexes = ["(?P<Name>.*)"]
+        self.row_comment_regexes = kwargs.get(
+            "row_comment_regexes", [".*"] * len(self.row_cell_regexes)
+        )
+        try:
+            self.lang_cell_regexes = kwargs["lang_cell_regexes"]
+        except KeyError:
+            logger.warning(
+                "User-defined format specification in the json-file was missing the key `lang_cell_regexes`. I assume you have one row of language names, i.e. 'lang_cell_regexes': ['(?P<Name.*)']."
+            )
+            self.row_cell_regexes = ["(?P<Name>.*)"]
+        self.lang_comment_regexes = kwargs.get(
+            "lang_comment_regexes", [".*"] * len(self.lang_cell_regexes)
+        )
+
         self.check_for_match = kwargs["check_for_match"]
         self.check_for_row_match = kwargs["check_for_row_match"]
         self.check_for_language_match = kwargs["check_for_language_match"]
-        self.row_cell_regexes = kwargs["row_cell_regexes"]
-        self.row_comment_regexes = kwargs.get("row_comment_regexes", [".*"])
-        self.lang_cell_regexes = kwargs["lang_cell_regexes"]
-        self.lang_comment_regexes = kwargs.get("lang_comment_regexes", [".*"])
+
         self.cell_parser = kwargs["cell_parser"]
+        self.cognates = kwargs["cognates"]
 
 
 class ExcelParser(t.Generic[R]):
@@ -774,8 +793,13 @@ def load_dataset(
     dataset = pycldf.Dataset.from_metadata(metadata)
     # load dialect from metadata
     try:
-        dialect = Dialect(**dataset.tablegroup.common_props["special:fromexcel"])
-    except KeyError:
+        dialect = Dialect(
+            logger=logger, **dataset.tablegroup.common_props["special:fromexcel"]
+        )
+    except KeyError as err:
+        logger.warning(
+            f"User-defined format specification in the json-file was missing the key {err.args[0]}, falling back to default parser."
+        )
         dialect = None
 
     if not lexicon and not cognate_lexicon:
@@ -786,24 +810,7 @@ def load_dataset(
     if lexicon:
         # load dialect from metadata
         if dialect:
-            try:
-                EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
-            except AttributeError as err:
-                (message,) = err.args
-                field = re.search(r"'(.+?)' object has no attribute '(.+?)'", message)
-                if field:
-                    logger.warning(
-                        f"User-defined format specification in the json-file was missing the key {field.group(2)}, falling back to default parser."
-                    )
-                else:
-                    logger.warning(
-                        f"User-defined format specification in the json-file was missing a key ({message}), falling back to default parser."
-                    )
-                EP = ExcelParser
-            except KeyError as err:
-                logger.warning(
-                    f"User-defined format specification in the json-file was missing the key {err.args[0]}, falling back to default parser."
-                )
+            EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
         else:
             logger.warning(
                 "User-defined format specification in the json-file was missing, falling back to default parser"
