@@ -77,7 +77,7 @@ def test_dialect_missing_key_excel_parser(tmp_path, caplog, empty_excel):
     with pytest.raises(ValueError):
         f.load_dataset(path, lexicon=empty_excel)
     assert re.search(
-        "User-defined format specification in the json-file was missing the key lang_cell_regexes",
+        "User-defined format specification.*missing.*lang_cell_regexes",
         caplog.text,
     )
 

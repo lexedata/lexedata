@@ -215,7 +215,7 @@ class Dialect:
             logger.warning(
                 "User-defined format specification in the json-file was missing the key `lang_cell_regexes`. I assume you have one row of language names, i.e. 'lang_cell_regexes': ['(?P<Name.*)']."
             )
-            self.row_cell_regexes = ["(?P<Name>.*)"]
+            self.lang_cell_regexes = ["(?P<Name>.*)"]
         self.lang_comment_regexes = kwargs.get(
             "lang_comment_regexes", [".*"] * len(self.lang_cell_regexes)
         )
