@@ -80,6 +80,7 @@ def test_form_association(minimal_parser_with_dialect):
             "Source": {"l1_s1"},
             "ID": "l1_c1",
             "Parameter_ID": ["c1"],
+            "Comment": "",
         },
         {
             "Language_ID": "l2",
@@ -88,6 +89,7 @@ def test_form_association(minimal_parser_with_dialect):
             "Source": {"l2_s1"},
             "ID": "l2_c1",
             "Parameter_ID": ["c1"],
+            "Comment": "",
         },
         {
             "Language_ID": "l1",
@@ -96,6 +98,7 @@ def test_form_association(minimal_parser_with_dialect):
             "Source": {"l1_s1"},
             "ID": "l1_c2",
             "Parameter_ID": ["c2"],
+            "Comment": "",
         },
         {
             "Language_ID": "l2",
@@ -104,6 +107,7 @@ def test_form_association(minimal_parser_with_dialect):
             "Source": {"l2_s1"},
             "ID": "l2_c2",
             "Parameter_ID": ["c2"],
+            "Comment": "",
         },
     ]
 
@@ -133,6 +137,7 @@ def test_source_context(minimal_parser_with_dialect):
         "Source": {"l1_s1[p. 34]"},
         "ID": "l1_c1",
         "Parameter_ID": ["c1"],
+        "Comment": "",
     }
 
 
@@ -154,6 +159,7 @@ def test_form_association_identical(minimal_parser_with_dialect):
             "Source": {"l1_s1"},
             "ID": "l1_c1",
             "Parameter_ID": ["c1", "c2"],
+            "Comment": "",
         },
         {
             "Language_ID": "l2",
@@ -162,6 +168,7 @@ def test_form_association_identical(minimal_parser_with_dialect):
             "Source": {"l2_s1"},
             "ID": "l2_c1",
             "Parameter_ID": ["c1"],
+            "Comment": "",
         },
         {
             "Language_ID": "l2",
@@ -170,6 +177,7 @@ def test_form_association_identical(minimal_parser_with_dialect):
             "Source": {"l2_s1"},
             "ID": "l2_c2",
             "Parameter_ID": ["c2"],
+            "Comment": "",
         },
     ]
 

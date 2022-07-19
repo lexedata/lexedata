@@ -271,19 +271,19 @@ def test_cellparser_form_3(parser):
         "Source": {"language_s2"},
         "Value": "[dʒi'tɨka] {2} ~ [ʒi'tɨka] {2}",
         "phonetic": "dʒi'tɨka",
-        "variants": ["~[ʒi'tɨka]", "{2}"],
+        "variants": ["~[ʒi'tɨka]"],
         "Form": "dʒi'tɨka",
+        "Comment": "",
     }
 
 
 def test_cellparser_form_4(parser):
     form = parser.parse_form("[iɾũndɨ] (H.F.) (parir)", "language")
     assert form == {
-        "Comment": "H.F.",
+        "Comment": "H.F.\tparir",
         "Source": {"language_s1"},
         "Value": "[iɾũndɨ] (H.F.) (parir)",
         "phonetic": "iɾũndɨ",
-        "variants": ["(parir)"],
         "Form": "iɾũndɨ",
         "Language_ID": "language",
     }
@@ -308,8 +308,9 @@ def test_cellparser_form_6(parser):
         "Source": {"language_s2"},
         "Value": "[dʒi'tɨka] ~ [ʒi'tɨka] {2} {2}",
         "phonetic": "dʒi'tɨka",
-        "variants": ["~[ʒi'tɨka]", "{2}"],
+        "variants": ["~[ʒi'tɨka]"],
         "Form": "dʒi'tɨka",
+        "Comment": "",
     }
 
 
@@ -355,14 +356,16 @@ def test_parser_variant_lands_in_comment(caplog):
             ("(", ")", "comment", False),
         ],
     )
-    form = parser.parse_form(" {2} [dʒi'tɨka] ~[ʒi'tɨka] {2}", "language")
+    form = parser.parse_form(
+        " {2} [dʒi'tɨka] ~[ʒi'tɨka] (already a comment)", "language"
+    )
     assert re.search(
         "No 'variants' column found .* will be added to #comment.*", caplog.text
     ) and form == {
         "Language_ID": "language",
-        "Value": " {2} [dʒi'tɨka] ~[ʒi'tɨka] {2}",
+        "Value": " {2} [dʒi'tɨka] ~[ʒi'tɨka] (already a comment)",
         "phonetic": "dʒi'tɨka",
-        "Comment": "~[ʒi'tɨka]\t2",
+        "Comment": "~[ʒi'tɨka]\talready a comment",
         "Source": {"language_s2"},
         "Form": "dʒi'tɨka",
     }
@@ -416,6 +419,7 @@ def test_mawetiparser_no_duplicate_sources(mawetiparser):
         "phonetic": "dʒi'tɨka",
         "variants": ["~[ʒi'tɨka]"],
         "Form": "dʒi'tɨka",
+        "Comment": "",
     }
 
 
@@ -441,20 +445,22 @@ def test_mawetiparser_multiple_comments(mawetiparser):
 
 def test_mawetiparser_postprocessing(mawetiparser):
     form = {
-        "orthographic": "<lexedata % lexidata>",
-        "phonemic": "/lεksedata ~ lεksidata/",
-        "variants": ["(from lexicon + edit + data)", "(another comment)"],
-        "Comment": ""
-        "(GAK: We should pick one of those names, I'm 80% sure it should be the first)",
+        "orthographic": "lexedata % lexidata",
+        "phonemic": "lεksedata ~ lεksidata",
+        "Comment": [
+            "GAK: We should pick one of those names, I'm 80% sure it should be the first",
+            "Another comment",
+        ],
     }
     mawetiparser.postprocess_form(form, "abui1241")
     assert form == {
         "orthographic": "lexedata",
         "phonemic": "lεksedata",
         "variants": ["~/lεksidata/", "%<lexidata>"],
-        "Comment": "from lexicon + edit + data\tanother comment",
-        "procedural_comment": ""
-        "GAK: We should pick one of those names, I'm 80% sure it should be the first",
+        "Comment": "Another comment",
+        "procedural_comment": [
+            "GAK: We should pick one of those names, I'm 80% sure it should be the first"
+        ],
         "Source": {"abui1241_s1"},
         "Form": "lεksedata",
     }
@@ -469,10 +475,10 @@ def no_delimiters_parser():
             "add_default_source": "BEGINSOURCE1ENDSOURCE",
             "cell_parser_semantics": [
                 ["(", ")", "comment", False],
-                ["", "", "form", False],
-                ["{", "}", "form", False],
+                ["", "", "form", True],
+                ["{", "}", "form", True],
                 ["[", "]", "phonetic", True],
-                ["BEGINSOURCE", "ENDSOURCE", "source", True],
+                ["BEGINSOURCE", "ENDSOURCE", "source", False],
             ],
             "variant_separator": ["~"],
         },
@@ -504,8 +510,8 @@ def test_outside_delimiters_parser(no_delimiters_parser):
     assert form == {
         "Language_ID": "language",
         "Source": {"language_s1"},
-        "Value": "form",
-        "variants": [],
+        "value": "form",
+        "Comment": "",
         "Form": "form",
     }
 
@@ -515,9 +521,10 @@ def test_outside_delimiters_parser_sep(no_delimiters_parser):
     assert form == {
         "Language_ID": "language",
         "Source": {"language_s1"},
-        "Value": "form ~ forn",
-        "variants": ["~forn"],
+        "value": "form ~ forn",
+        "variants": ["~{forn}"],
         "Form": "form",
+        "Comment": "",
     }
 
 
@@ -526,9 +533,10 @@ def test_outside_delimiters_parser_alt_form(no_delimiters_parser):
     assert form == {
         "Language_ID": "language",
         "Source": {"language_s1"},
-        "Value": "form {forn}",
-        "variants": ["forn"],
+        "value": "form {forn}",
+        "variants": ["{forn}"],
         "Form": "form",
+        "Comment": "",
     }
 
 
@@ -537,8 +545,64 @@ def test_outside_delimiters_parser_pair_of_pairs(no_delimiters_parser):
     assert form == {
         "Language_ID": "language",
         "Source": {"language_s1"},
-        "Value": "form {forn}",
-        "variants": ["~forn", "~[forn]"],
+        "value": "form ~ {forn} [form] ~ [forn]",
+        "variants": ["{forn}", "~[forn]"],
         "Form": "form",
         "phonetic": "form",
+        "Comment": "",
+    }
+
+
+@pytest.fixture
+def long_delimiters_parser():
+    dialect = Dialect(
+        cell_parser={
+            "name": "MawetiCellParser",
+            "form_separator": [","],
+            "add_default_source": "BEGINSOURCE1ENDSOURCE",
+            "cell_parser_semantics": [
+                ["((", "))", "comment", False],
+                ["<<", ">>", "orthographic", True],
+                ["[[", "]]", "phonetic", True],
+                ["BEGINSOURCE", "ENDSOURCE", "source", False],
+            ],
+            "variant_separator": ["~"],
+        },
+        check_for_match=[],
+        check_for_row_match=[],
+        check_for_language_match=[],
+    )
+    initialized_cell_parser = getattr(c, dialect.cell_parser["name"])(
+        fs.new_wordlist(
+            FormTable=[
+                {
+                    "phonetic": None,
+                    "orthographic": None,
+                    "value": None,
+                    "procedural_comment": None,
+                    "variants": [],
+                }
+            ]
+        ),
+        element_semantics=dialect.cell_parser["cell_parser_semantics"],
+        separation_pattern=rf"([{''.join(dialect.cell_parser['form_separator'])}])",
+        variant_separator=dialect.cell_parser["variant_separator"],
+        add_default_source=dialect.cell_parser["add_default_source"],
+    )
+    return initialized_cell_parser
+
+
+def test_long_delimiters_parser(long_delimiters_parser):
+    form = long_delimiters_parser.parse_form(
+        "<<((f))orm>> [[fom]] ((comment)) ((GAK: Procedural))", "language"
+    )
+    assert form == {
+        "Language_ID": "language",
+        "Source": {"language_s1"},
+        "value": "<<((f))orm>> [[fom]] ((comment)) ((GAK: Procedural))",
+        "Form": "((f))orm",
+        "orthographic": "((f))orm",
+        "phonetic": "fom",
+        "Comment": "comment",
+        "procedural_comment": ["GAK: Procedural"],
     }
