@@ -884,7 +884,6 @@ polysemous forms connected to multiple concepts. ::
     $ git commit -am "Annotate polysemies"
     [main [...]] Annotate polysemies
      4 files changed, 3302 insertions(+), 3288 deletions(-)
-     rewrite parameters.csv (100%)
 
 Improve Cognatesets
 ===================
