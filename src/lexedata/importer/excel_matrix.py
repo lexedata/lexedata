@@ -455,6 +455,7 @@ class ExcelParser(t.Generic[R]):
         if c_f_id not in form:
             # create candidate for form[id]
             form[c_f_id] = "{:}_{:}".format(form[c_f_language], row_object[c_r_id])
+            self.db.make_id_unique(form)
         candidate_forms = iter(self.db.find_db_candidates(form, self.check_for_match))
         try:
             # if a candidate for form already exists, don't add the form
