@@ -18,7 +18,7 @@ LEXEDATA_COLUMNS = {
     "Status": Column(
         datatype=Datatype(base="string"),
         default="",
-        lang="eng",
+        lang="en",
         null=[""],
         name="Value",
         aboutUrl="...",
@@ -26,6 +26,7 @@ LEXEDATA_COLUMNS = {
     "Orthographic": Column(
         datatype=Datatype(base="string"),
         default="",
+        lang="mul",
         null=[""],
         name="Orthographic",
         aboutUrl="...",
@@ -33,6 +34,7 @@ LEXEDATA_COLUMNS = {
     "Phonemic": Column(
         datatype=Datatype(base="string"),
         default="",
+        lang="mul",
         null=[""],
         name="Phonemic",
         aboutUrl="...",
@@ -40,6 +42,7 @@ LEXEDATA_COLUMNS = {
     "Phonetic": Column(
         datatype=Datatype(base="string"),
         default="",
+        lang="mul",
         null=[""],
         name="Phonetic",
         aboutUrl="...",
@@ -48,6 +51,7 @@ LEXEDATA_COLUMNS = {
         datatype=Datatype(base="string", format=r"\s*(~|)\s*[/(<[].*[]/)>]\s*"),
         separator=",",
         default="",
+        lang="mul",
         null=[""],
         name="variants",
     ),
@@ -55,6 +59,7 @@ LEXEDATA_COLUMNS = {
         datatype=Datatype(base="string"),
         separator=",",
         default="",
+        lang="en",
         null=[""],
         name="Tags",
     ),
@@ -76,6 +81,7 @@ OTHER_KNOWN_COLUMNS = {
     "Form_according_to_Source": Column(
         datatype=Datatype(base="string"),
         default="",
+        lang="mul",
         null=[""],
         name="Form_according_to_Source",
         required=True,
