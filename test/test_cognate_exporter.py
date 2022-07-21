@@ -232,8 +232,12 @@ def test_adding_singleton_cognatesets(caplog):
         "four1",
         "four8",
         "five5",
+        "X_ache_one_1_1",
+        "X_ache_two_1_1",
         "X_old_paraguayan_guarani_two_1",
+        "X_ache_three_1_1",
         "X_paraguayan_guarani_five_1",
+        "X_kaiwa_five_1_1",
     ]
 
 
@@ -281,6 +285,10 @@ def test_adding_singleton_cognatesets_with_status(caplog):
         "NEW",
         "NEW",
         "NEW",
+        "NEW",
+        "NEW",
+        "NEW",
+        "NEW",
     ]
 
 
@@ -323,7 +331,7 @@ def test_no_comment_column():
     )
     forms = util.cache_table(dataset).values()
     for form in forms:
-        assert writer.form_to_cell_value(form).strip() == "{ e t a k ɾ ã } ‘one, one’"
+        assert writer.form_to_cell_value(form).strip() == "{ e t a k ɾ ã } ‘one’"
         break
 
 

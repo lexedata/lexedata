@@ -33,7 +33,9 @@
             ".*"
         ],
         "check_for_match": [
-            "Form", "Parameter_ID", "Language_ID"
+            "Form",
+            "Parameter_ID",
+            "Language_ID"
         ],
         "check_for_row_match": [
             "Name"
@@ -169,13 +171,10 @@
             }
         }
     },
-    "dialect": {
-        "commentPrefix": null
-    },
     "tables": [
         {
             "dc:conformsTo": "http://cldf.clld.org/v1.0/terms.rdf#FormTable",
-            "dc:extent": 34,
+            "dc:extent": 22,
             "tableSchema": {
                 "columns": [
                     {
@@ -225,8 +224,8 @@
                     },
                     {
                         "datatype": "string",
-			"separator": " ",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#segments",
+                        "separator": " ",
                         "name": "Segments"
                     },
                     {
@@ -398,14 +397,14 @@
                     {
                         "datatype": "string",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#segmentSlice",
-                        "name": "Segment_Slice",
-                        "separator": ","
+                        "separator": ",",
+                        "name": "Segment_Slice"
                     },
                     {
                         "datatype": "string",
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#alignment",
-                        "name": "Alignment",
-                        "separator": " "
+                        "separator": " ",
+                        "name": "Alignment"
                     },
                     {
                         "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#cognatesetReference",
