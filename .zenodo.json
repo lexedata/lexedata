@@ -8,7 +8,7 @@
         }
     ],
     "upload_type": "software",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "publication_date": "2022-04-28",
     "creators": [
         {
@@ -30,7 +30,7 @@
     "related_identifiers": [
         {
             "scheme": "url",
-            "identifier": "https://github.com/Anaphory/lexedata/tree/v1.0.5",
+            "identifier": "https://github.com/Anaphory/lexedata/tree/v1.0.6",
             "relation": "isSupplementTo"
         },
         {
