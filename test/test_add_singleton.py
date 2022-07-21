@@ -468,24 +468,70 @@ def test_singletons():
     cogsets = [c for c in all_cogsets if c[c_cs_id].startswith("X")]
     assert cognates == [
         {
+            "ID": "X_ache_one_1_1",
+            "Form_ID": "ache_one_1",
+            "Comment": None,
+            "Segment_Slice": ["1:0"],
+            "Alignment": [],
+            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_ache_one_1_1",
+        },
+        {
+            "ID": "X_ache_two_1_1",
+            "Form_ID": "ache_two_1",
+            "Comment": None,
+            "Segment_Slice": ["1:0"],
+            "Alignment": [],
+            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_ache_two_1_1",
+        },
+        {
             "ID": "X_old_paraguayan_guarani_two_1",
             "Form_ID": "old_paraguayan_guarani_two",
             "Comment": None,
-            "Segment_Slice": ["1:5"],
-            "Alignment": ["p", "a", "t", "h", "á"],
+            "Segment_Slice": ["1:0"],
+            "Alignment": [],
             "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_old_paraguayan_guarani_two_1",
+        },
+        {
+            "ID": "X_ache_three_1_1",
+            "Form_ID": "ache_three_1",
+            "Comment": None,
+            "Segment_Slice": ["1:0"],
+            "Alignment": [],
+            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_ache_three_1_1",
         },
         {
             "ID": "X_paraguayan_guarani_five_1",
             "Form_ID": "paraguayan_guarani_five",
             "Comment": None,
-            "Segment_Slice": ["1:2"],
-            "Alignment": ["p", "o"],
+            "Segment_Slice": ["1:0"],
+            "Alignment": [],
             "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_paraguayan_guarani_five_1",
+        },
+        {
+            "ID": "X_kaiwa_five_1_1",
+            "Form_ID": "kaiwa_five_1",
+            "Comment": None,
+            "Segment_Slice": ["1:0"],
+            "Alignment": [],
+            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_kaiwa_five_1_1",
         },
     ]
 
     assert cogsets == [
+        {
+            "ID": "X_ache_one_1_1",
+            "Set": None,
+            "Comment": None,
+            "Name": "one",
+            "Status_Column": "automatic singleton",
+        },
+        {
+            "ID": "X_ache_two_1_1",
+            "Set": None,
+            "Comment": None,
+            "Name": "two",
+            "Status_Column": "automatic singleton",
+        },
         {
             "ID": "X_old_paraguayan_guarani_two_1",
             "Set": None,
@@ -494,7 +540,21 @@ def test_singletons():
             "Status_Column": "automatic singleton",
         },
         {
+            "ID": "X_ache_three_1_1",
+            "Set": None,
+            "Comment": None,
+            "Name": "three",
+            "Status_Column": "automatic singleton",
+        },
+        {
             "ID": "X_paraguayan_guarani_five_1",
+            "Set": None,
+            "Comment": None,
+            "Name": "five",
+            "Status_Column": "automatic singleton",
+        },
+        {
+            "ID": "X_kaiwa_five_1_1",
             "Set": None,
             "Comment": None,
             "Name": "five",

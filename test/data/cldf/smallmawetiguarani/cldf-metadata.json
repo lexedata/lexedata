@@ -33,7 +33,7 @@
             ".*"
         ],
         "check_for_match": [
-            "ID"
+            "Form", "Parameter_ID", "Language_ID"
         ],
         "check_for_row_match": [
             "Name"
