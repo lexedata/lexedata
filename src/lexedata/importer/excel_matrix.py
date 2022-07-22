@@ -410,24 +410,19 @@ class ExcelParser(t.Generic[R]):
                 except KeyError:
                     continue
 
-                c_f_form = self.db.dataset["FormTable", "form"].name
-
                 # Parse the cell, which results (potentially) in multiple forms
                 for params in self.cell_parser.parse(
                     cell_with_forms,
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
-                    if params.__table__ == "ParameterTable" and params[c_f_form] == "?":
-                        continue
-                    else:
-                        self.handle_form(
-                            params,
-                            row_object,
-                            cell_with_forms,
-                            this_lan,
-                            status_update,
-                        )
+                    self.handle_form(
+                        params,
+                        row_object,
+                        cell_with_forms,
+                        this_lan,
+                        status_update,
+                    )
         self.db.commit()
 
     def handle_form(
