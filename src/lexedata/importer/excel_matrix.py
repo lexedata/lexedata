@@ -411,31 +411,18 @@ class ExcelParser(t.Generic[R]):
                     continue
 
                 # Parse the cell, which results (potentially) in multiple forms
-                if row_object.__table__ == "FormTable":
-                    raise NotImplementedError(
-                        "TODO: I am confused why what I'm doing right now ever landed on my agenda, but you seem to have gotten me to attempt it. Please contact the developers and tell them what you did, so they can implement the thing you tried to do properly!"
-                    )
-                    c_f_form = self.db.dataset[row_object.__table__, "form"].name
                 for params in self.cell_parser.parse(
                     cell_with_forms,
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
-                    if row_object.__table__ == "FormTable":
-                        if params[c_f_form] == "?":
-                            continue
-                        else:
-                            self.handle_form(
-                                params,
-                                row_object,
-                                cell_with_forms,
-                                this_lan,
-                                status_update,
-                            )
-                    else:
-                        self.handle_form(
-                            params, row_object, cell_with_forms, this_lan, status_update
-                        )
+                    self.handle_form(
+                        params,
+                        row_object,
+                        cell_with_forms,
+                        this_lan,
+                        status_update,
+                    )
         self.db.commit()
 
     def handle_form(
@@ -455,6 +442,7 @@ class ExcelParser(t.Generic[R]):
         if c_f_id not in form:
             # create candidate for form[id]
             form[c_f_id] = "{:}_{:}".format(form[c_f_language], row_object[c_r_id])
+            self.db.make_id_unique(form)
         candidate_forms = iter(self.db.find_db_candidates(form, self.check_for_match))
         try:
             # if a candidate for form already exists, don't add the form

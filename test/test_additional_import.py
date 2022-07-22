@@ -561,8 +561,11 @@ def test_add_new_forms_maweti(single_import_parameters):
             concept_column=concept_name,
         )
     new_form_ids = {row[c_f_id] for row in dataset["FormTable"]}
-    assert new_form_ids - old_form_ids == {"ache_one_1"}
-    (new_form,) = [row for row in dataset["FormTable"] if row[c_f_id] == "ache_one_1"]
+    new_forms = new_form_ids - old_form_ids
+    assert len(new_forms) == 1
+    for f in new_forms:
+        assert f.startswith("ache_one")
+    (new_form,) = [row for row in dataset["FormTable"] if row[c_f_id] in new_forms]
     assert new_form[c_f_concept] == ["one_1"]
 
 
