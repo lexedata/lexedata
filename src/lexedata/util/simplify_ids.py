@@ -26,7 +26,7 @@ def clean_mapping(
     {'A': 'a', 'a': 'a_x2'}
 
     >>> clean_mapping({"A": {}, "a": {}}, str.upper)
-    {'A': 'a', 'a': 'A_x2'}
+    {'A': 'A', 'a': 'A_x2'}
     """
     avoid = {id.lower() for id in rows}
 
