@@ -692,7 +692,7 @@ def format_nexus(
 
     sequences = [
         "{} {} {}".format(lang, " " * (max_length - len(str(lang))), seq)
-        for lang, seq in zip(languages, sequences)
+        for lang, seq in sorted(zip(languages, sequences))
     ]
 
     if partitions:
@@ -756,7 +756,7 @@ def fill_beast(data_object: ET.Element, languages, sequences) -> None:
     data_object.attrib["dataType"] = "integer"
     data_object.attrib["spec"] = "Alignment"
     data_object.text = "\n"
-    for language, sequence in zip(languages, sequences):
+    for language, sequence in sorted(zip(languages, sequences)):
         seq = "".join(sequence)
         ET.SubElement(
             data_object,
@@ -799,20 +799,20 @@ def add_partitions(data_object: ET.Element, partitions):
         indices_string = ",".join(
             "{:d}-{:d}".format(s.start + 1, s.stop) for s in indices_set
         )
-        previous_alignment.addnext(
-            data_object.makeelement(
-                "data",
-                {
-                    "id": "concept:" + name,
-                    "spec": "FilteredAlignment",
-                    "filter": "1," + indices_string,
-                    "data": "@" + data_object.attrib["id"],
-                    "ascertained": "true",
-                    "excludefrom": "0",
-                    "excludeto": "1",
-                },
-            )
+        e = data_object.makeelement(
+            "data",
+            {
+                "id": "concept:" + name,
+                "spec": "FilteredAlignment",
+                "filter": "1," + indices_string,
+                "data": "@" + data_object.attrib["id"],
+                "ascertained": "true",
+                "excludefrom": "0",
+                "excludeto": "1",
+            },
         )
+        previous_alignment.addnext(e)
+        previous_alignment = e
 
 
 def parser():
@@ -863,7 +863,7 @@ def parser():
     parser.add_argument(
         "--coding",
         action=cli.enum_from_lower(CodingProcedure),
-        default="RootMeaning",
+        default=CodingProcedure.ROOTMEANING,
         help="""Coding method: In the `RootMeaning` coding method, every character
         describes the presence or absence of a particular root morpheme or
         cognate class in the word(s) for a given meaning; In the
