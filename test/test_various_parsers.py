@@ -13,6 +13,7 @@ from lexedata.exporter.phylogenetics import (
 )
 from lexedata.exporter.cognates import parser as cex_parser
 from lexedata.importer.excel_long_format import parser as ilong_parser
+from lexedata.edit.simplify_ids import parser as sid_parser
 
 
 def test_setorfromfile_list():
@@ -56,6 +57,18 @@ def test_loglevel_parser():
     # Optional positional argument ("FormTable") after optional switch ("-q",
     # but also "-V" which uses a builtin action) does not seem to work.
     assert parameters.loglevel == logging.ERROR
+
+
+def test_sid_parser():
+    parameters = sid_parser().parse_args(
+        ["-v", "--tables", "ParameterTable", "CognatesetTable", "--uppercase"]
+    )
+    # Optional positional argument ("FormTable") after optional switch ("-q",
+    # but also "-V" which uses a builtin action) does not seem to work.
+    assert parameters.loglevel == logging.DEBUG
+    assert parameters.tables == ["ParameterTable", "CognatesetTable"]
+    assert parameters.uppercase
+    assert not parameters.transparent
 
 
 def test_phylo_parser():

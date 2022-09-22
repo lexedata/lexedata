@@ -11,7 +11,9 @@ import lexedata.cli as cli
 import pycldf
 from lexedata.util.simplify_ids import simplify_table_ids_and_references
 
-if __name__ == "__main__":
+
+def parser():
+    """Construct the CLI argument parser for this script."""
     parser = cli.parser(__package__ + "." + Path(__file__).stem, __doc__)
     parser.add_argument(
         "--transparent",
@@ -30,7 +32,11 @@ if __name__ == "__main__":
         nargs="+",
         help="Only fix the IDs of these tables.",
     )
-    args = parser.parse_args()
+    return parser
+
+
+if __name__ == "__main__":
+    args = parser().parse_args()
     logger = cli.setup_logging(args)
 
     if args.uppercase:
