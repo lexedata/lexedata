@@ -908,7 +908,7 @@ if __name__ == "__main__":
         if language in args.languages
     }
 
-    logger.info(f"Imported languages {set(ds)}.")
+    logger.info(f"Exported languages {set(ds)}.")
 
     # Step 2: Code the data
     n_symbols, datatype = 2, "binary"
