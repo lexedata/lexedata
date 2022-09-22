@@ -792,12 +792,29 @@ def compress_indices(indices: t.Set[int]) -> t.Iterator[slice]:
         yield sl
 
 
-def add_partitions(data_object: ET.Element, partitions):
+def add_partitions(data_object: ET.Element, partitions: t.Dict[str, t.Iterable[int]]):
+    """Add partitions after the <data> object
+
+    >>> xml = ET.fromstring("<beast><data id='alignment'/></beast>")
+    >>> data = xml.find(".//data")
+    >>> partitions = {"a": [1, 2, 3, 5], "b": [4, 6, 7]}
+    >>> add_partitions(data, partitions)
+    >>> print(ET.tostring(xml).decode("utf-8").replace(">", ">\n"))
+    <beast>
+    <data id="alignment"/>
+    <data id="concept:a" spec="FilteredAlignment" filter="1,2-4,6" data="@alignment" ascertained="true" excludefrom="0" excludeto="1"/>
+    <data id="concept:b" spec="FilteredAlignment" filter="1,5,7-8" data="@alignment" ascertained="true" excludefrom="0" excludeto="1"/>
+    </beast>
+
+    """
     previous_alignment = data_object
     for name, indices in partitions.items():
         indices_set = compress_indices(set(indices))
         indices_string = ",".join(
-            "{:d}-{:d}".format(s.start + 1, s.stop) for s in indices_set
+            "{:d}-{:d}".format(s.start + 1, s.stop)
+            if s.start + 1 != s.stop
+            else "{:d}".format(s.stop)
+            for s in indices_set
         )
         e = data_object.makeelement(
             "data",
