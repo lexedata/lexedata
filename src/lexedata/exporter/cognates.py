@@ -258,11 +258,16 @@ class ExcelWriter(BaseExcelWriter):
                 raise NotImplementedError(
                     "You expect central conceps in your cognate set table, but you don't have any central concepts stored with your cognate sets"
                 )
-            try:
-                value = self.separators[db_name].join([str(v) for v in cogset[db_name]])
-            except KeyError:
-                # No separator
-                value = cogset.get(db_name, "")
+            if cogset[db_name] is None:
+                value = ""
+            else:
+                try:
+                    value = self.separators[db_name].join(
+                        [str(v) for v in cogset[db_name]]
+                    )
+                except KeyError:
+                    # No separator
+                    value = cogset.get(db_name, "")
             cell = self.ws.cell(row=row_number, column=col, value=value)
             # Transfer the cognateset comment to the first Excel cell.
             if col == 1 and cogset.get("comment"):
