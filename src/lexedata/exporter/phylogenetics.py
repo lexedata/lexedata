@@ -799,7 +799,7 @@ def add_partitions(data_object: ET.Element, partitions: t.Dict[str, t.Iterable[i
     >>> data = xml.find(".//data")
     >>> partitions = {"a": [1, 2, 3, 5], "b": [4, 6, 7]}
     >>> add_partitions(data, partitions)
-    >>> print(ET.tostring(xml).decode("utf-8").replace(">", ">\n"))
+    >>> print(ET.tostring(xml).decode("utf-8").replace(">", ">\\n"))
     <beast>
     <data id="alignment"/>
     <data id="concept:a" spec="FilteredAlignment" filter="1,2-4,6" data="@alignment" ascertained="true" excludefrom="0" excludeto="1"/>
