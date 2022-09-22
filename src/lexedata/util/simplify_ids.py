@@ -13,7 +13,10 @@ ID_COMPONENTS: t.Mapping[str, t.Sequence[str]] = {
 }
 
 
-def clean_mapping(rows: t.Mapping[str, t.Mapping[str, str]]) -> t.Mapping[str, str]:
+def clean_mapping(
+    rows: t.Mapping[str, t.Mapping[str, str]],
+    additional_normalize: t.Callable[[str], str] = str.lower,
+) -> t.Mapping[str, str]:
     """Create unique normalized IDs.
 
     >>> clean_mapping({"A": {}, "B": {}})
@@ -21,6 +24,9 @@ def clean_mapping(rows: t.Mapping[str, t.Mapping[str, str]]) -> t.Mapping[str, s
 
     >>> clean_mapping({"A": {}, "a": {}})
     {'A': 'a', 'a': 'a_x2'}
+
+    >>> clean_mapping({"A": {}, "a": {}}, str.upper)
+    {'A': 'a', 'a': 'A_x2'}
     """
     avoid = {id.lower() for id in rows}
 
@@ -31,6 +37,7 @@ def clean_mapping(rows: t.Mapping[str, t.Mapping[str, str]]) -> t.Mapping[str, s
             base = string_to_id("_".join(row.values()))
         else:
             base = string_to_id(id)
+        base = additional_normalize(base)
 
         if base in avoid and base not in mapping.values():
             # I kept a spot for you!
@@ -198,6 +205,7 @@ def simplify_table_ids_and_references(
     table: csvw.Table,
     transparent: bool = True,
     logger: cli.logging.Logger = cli.logger,
+    additional_normalize: t.Callable[[str], str] = str.lower,
 ) -> bool:
     """Simplify the IDs of the given table."""
     ttype = ds.get_tabletype(table)
@@ -219,9 +227,14 @@ def simplify_table_ids_and_references(
 
     if transparent and ttype in ID_COMPONENTS:
         cols = {prop: ds[ttype, prop].name for prop in ID_COMPONENTS[ttype]}
-        mapping = clean_mapping(cache_table(ds, ttype, cols))
+        mapping = clean_mapping(
+            cache_table(ds, ttype, cols), additional_normalize=additional_normalize
+        )
     else:
-        mapping = clean_mapping(cache_table(ds, table.url.string, {}))
+        mapping = clean_mapping(
+            cache_table(ds, table.url.string, {}),
+            additional_normalize=additional_normalize,
+        )
 
     update_ids(ds, table, mapping)
     return True

@@ -34,8 +34,9 @@ if __name__ == "__main__":
     logger = cli.setup_logging(args)
 
     if args.uppercase:
-        # TODO: implement this
-        raise NotImplementedError
+        normalize = str.upper
+    else:
+        normalize = str.lower
 
     ds = pycldf.Wordlist.from_metadata(args.metadata)
 
@@ -51,6 +52,8 @@ if __name__ == "__main__":
 
     for table in tables:
         logger.info(f"Handling table {table.url.string}…")
-        simplify_table_ids_and_references(ds, table, args.transparent, logger)
+        simplify_table_ids_and_references(
+            ds, table, args.transparent, logger, additional_normalize=normalize
+        )
 
     ds.write_metadata()
