@@ -125,10 +125,10 @@ def create_singletons(
         )
     for form, slice in forms_and_segments:
         i = 1
-        singleton_id = f"X_{form}_{i:d}"
+        singleton_id = f"x_{form}_{i:d}"
         while singleton_id in all_cognatesets:
             i += 1
-            singleton_id = f"X_{form}_{i:d}"
+            singleton_id = f"x_{form}_{i:d}"
         all_cognatesets[singleton_id] = types.CogSet({})
         properties = {
             c_s_name: util.ensure_list(forms[form]["parameterReference"])[0],
