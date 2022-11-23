@@ -43,7 +43,8 @@ def get_cell_comment(cell: op.cell.Cell) -> str:
 
     Get the normalized comment of a cell: Guaranteed to be a string (empty if
     no comment), with lines joined by spaces instead and all 'lexedata' author
-    annotations stripped.
+    annotations stripped. We also remove equal signs from the beginning of
+    comments so that they don't get interpreted as formulas by excel.
 
 
     >>> from openpyxl.comments import Comment
@@ -58,7 +59,7 @@ def get_cell_comment(cell: op.cell.Cell) -> str:
     >>> get_cell_comment(ws["A2"])
     ''
     """
-    raw_comment = cell.comment.text.strip() if cell.comment else ""
+    raw_comment = cell.comment.text.lstrip().lstrip("=").strip() if cell.comment else ""
     lines = [
         line for line in raw_comment.split("\n") if line.strip() != "-lexedata.exporter"
     ]
