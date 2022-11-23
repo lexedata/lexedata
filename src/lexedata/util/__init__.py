@@ -16,7 +16,10 @@ from . import fs
 
 __all__ = ["fs", "KeyKeyDict"]
 
-ID_FORMAT = re.compile("[a-z0-9_]+")
+# Following https://github.com/cldf/cldf/#identifier and thus RFC2986,
+# URLs should be alphanumeric with underscores and hyphens, so we
+# restrict them to be that here.
+ID_FORMAT = re.compile("[A-Za-z0-9_-]+")
 
 MI = t.TypeVar("MI")
 
