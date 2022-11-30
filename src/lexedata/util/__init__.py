@@ -49,7 +49,7 @@ def string_to_id(string: str) -> str:
     >>> string_to_id("trivial")
     'trivial'
     >>> string_to_id("Just 4 non-alphanumerical characters.")
-    'just_4_non_alphanumerical_characters'
+    'just_4_non-alphanumerical_characters'
     >>> string_to_id("Это русский.")
     'eto_russkii'
     >>> string_to_id("该语言有一个音节。")
