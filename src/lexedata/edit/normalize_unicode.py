@@ -32,7 +32,7 @@ if __name__ == "__main__":
         "file",
         nargs="*",
         type=Path,
-        help="The file(s) to re-encode. Default: All table files included by the metadata file, though not the sources.",
+        help="The file(s) to re-encode. Default: All table files included in the metadata file, though not the sources.",
     )
     parser.add_argument("--from-encoding", default="utf-8", help="original encoding")
     args = parser.parse_args()
