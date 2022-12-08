@@ -100,7 +100,7 @@ Linguistic data come with a lot of special characters especially for the forms, 
 ```
 python -m lexedata.edit.normalize_unicode
 ```
-You can find more info about what unicode normalization [here](https://towardsdatascience.com/what-on-earth-is-unicode-normalization-56c005c55ad0).
+You can find more info about unicode normalization [here](https://towardsdatascience.com/what-on-earth-is-unicode-normalization-56c005c55ad0).
 
 #### Workflow and tracking aid (add_status_column)
 When developing and editing a comparative dataset for historical linguistics, you may need to keep track of operations, such as manual checks, input by collaborators etc. You may also wish to inspect manually some of the automatic operations of lexedata. To facilitate such tasks, you can add a "status column" in any of the CLDF tables using the command 
