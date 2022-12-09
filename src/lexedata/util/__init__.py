@@ -210,7 +210,7 @@ def cache_table(
     We can also use it to look up a specific set of columns, and change the index column.
     This allows us, for example, to get language IDs by name:
     >>> _ = ds.add_component("LanguageTable")
-    >>> ds.write(LanguageTable=[
+    >>> _ = ds.write(LanguageTable=[
     ...     ['ache', 'Aché', 'South America', -25.59, -56.47, "ache1246", "guq"],
     ...     ['paraguayan_guarani', 'Paraguayan Guaraní', None, None, None, None, None]])
     >>> languages = cache_table(ds, "LanguageTable", {"id": "ID"}, index_column="Name")

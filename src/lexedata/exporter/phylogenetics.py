@@ -368,7 +368,7 @@ def apply_heuristics(
     ...         name="Central_Concept",
     ...         propertyUrl="http://cldf.clld.org/v1.0/terms.rdf#parameterReference"))
     >>> ds.auto_constraints(cst)
-    >>> ds.write(CognatesetTable=[
+    >>> _= ds.write(CognatesetTable=[
     ...     {"ID": "cognateset1", "Central_Concept": "concept1"}
     ... ])
     >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CENTRALCONCEPT) == {'cognateset1': {'concept1'}}
@@ -384,7 +384,7 @@ def apply_heuristics(
     ...         propertyUrl="http://cldf.clld.org/v1.0/terms.rdf#parameterReference",
     ...         separator=","))
     >>> ds.auto_constraints(cst)
-    >>> ds.write(CognatesetTable=[
+    >>> _ = ds.write(CognatesetTable=[
     ...     {"ID": "cognateset1", "Central_Concepts": ["concept1", "concept2"]}
     ... ])
     >>> apply_heuristics(ds, heuristic=AbsenceHeuristic.CENTRALCONCEPT) == {
