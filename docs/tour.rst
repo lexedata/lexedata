@@ -46,7 +46,7 @@ For this tutorial, we will be using lexical data from the Bantu family,
 collected by Hilde Gunnink. The dataset is a subset of an earlier version
 (deliberately, so this tour can show some steps in the cleaning process) of her
 lexical dataset. The data is stored in an Excel file which you can download from
-https://github.com/Anaphory/lexedata/blob/master/src/lexeadata/data/example-bantu.xlsx
+https://github.com/Anaphory/lexedata/blob/master/src/lexedata/data/example-bantu.xlsx
 in the lexedata repository. (We will use the most recent version here, which
 comes shipped with lexedata. Sorry this looks a bit cryptic, but as we said, this
 way the testing system also knows where to find the file.) ::
