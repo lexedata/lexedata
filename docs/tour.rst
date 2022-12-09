@@ -155,9 +155,7 @@ A well-structured ``forms.csv`` is a valid, `“metadata-free”
 this case, the data contains a column that CLDF does not know out-of-the-box,
 but otherwise the dataset is fine. ::
 
-    $ cldf validate forms.csv 
-    [...] UserWarning: Unspecified column "Cognateset_ID" in table forms.csv
-      warnings.warn(
+    $ cldf validate forms.csv
 
 Working with git
 ================
