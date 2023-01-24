@@ -38,11 +38,11 @@ def parse_cognatesets_report(
 
     The format of the input file is the same as the output of the homophones report
     >>> from io import StringIO
-    >>> file = StringIO("Cluster of overlapping cognate sets:"
+    >>> file = StringIO("Cluster of overlapping cognate sets:\n"
     ... "    bark-22\n"
-    ... "    skin-27\n")
+    ... "    skin-27")
     >>> parse_cognatesets_report(file)
-    [{'bark-22', 'skin-27'}]
+    [['bark-22', 'skin-27']]
     """
     cognateset_groups: t.List[t.List] = []
     next_group = []
@@ -60,7 +60,8 @@ def parse_cognatesets_report(
             if next_group:
                 cognateset_groups.append(next_group)
             next_group = []
-    cognateset_groups.append(next_group)
+    if next_group:
+        cognateset_groups.append(next_group)
     return cognateset_groups
 
 
