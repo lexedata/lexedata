@@ -156,6 +156,8 @@ this case, the data contains a column that CLDF does not know out-of-the-box,
 but otherwise the dataset is fine. ::
 
     $ cldf validate forms.csv
+    [...]: UserWarning: Unspecified column "Cognateset_ID" in table forms.csv
+      warnings.warn(
 
 Working with git
 ================
@@ -163,7 +165,6 @@ Working with git
 This is the point where it really makes sense to start working with ``git``. ::
 
     $ git init
-    [...]
     Initialized empty Git repository in [...]bantu/.git/
     $ git config core.autocrlf false
     $ git branch -m main
@@ -348,13 +349,17 @@ scaffold for metadata about languages etc. with another tool. ::
 
     $ python -m lexedata.edit.add_table LanguageTable
     INFO:lexedata:Found 14 different entries for your new LanguageTable.
-    $ python -m lexedata.edit.add_table ParameterTable
-    INFO:lexedata:Found 100 different entries for your new ParameterTable.
+    $ python -m lexedata.edit.add_table ParameterTable --but-not-column ColumnSpec
+    [...]
     WARNING:lexedata:Some of your reference values are not valid as IDs: ['go to', 'rain (v)', 'sick, be', 'sleep (v)']. You can transform them into valid ids by running lexedata.edit.simplify_ids
 
 “Parameter” is CLDF speak for the things sampled per-language. In a
 StructureDataset this might be typological features, in a Wordlist the
-ParameterTable contains the concepts. We will ignore the warning about IDs for now.
+ParameterTable contains the concepts. We will ignore the warning about IDs for
+now. Because ‘parameters’ can have very different data types, the ParameterTable
+by default has a column that allows the specification of a distinct data type
+for each parameter. We don't need this for a word list, so we told the table
+adding tool to not add that column.
 
 Every form belongs to one language, and every language has multiple forms. This
 is a simple 1:n relationship. Every form has one or more concepts associated
@@ -366,7 +371,7 @@ good. ::
     $ git add languages.csv parameters.csv
     $ git commit -am "Add language and concept tables"
     [main [...]] Add language and concept tables
-     3 files changed, 246 insertions(+), 4 deletions(-)
+     3 files changed, [...] insertions(+), 4 deletions(-)
      create mode 100644 languages.csv
      create mode 100644 parameters.csv
 
@@ -671,14 +676,14 @@ lexedata toolbox::
 This was however not the only issue with the data. ::
 
     $ python -m lexedata.report.extended_cldf_validate -q
-    WARNING:lexedata:In cognates.csv, row 110: Alignment has length 4, other alignments of cognateset big_1 have length(s) {6}
-    WARNING:lexedata:In cognates.csv, row 114: Alignment has length 6, other alignments of cognateset blood_11 have length(s) {4}
-    WARNING:lexedata:In cognates.csv, row 122: Alignment has length 1, other alignments of cognateset die_1 have length(s) {2}
-    WARNING:lexedata:In cognates.csv, row 127: Alignment has length 4, other alignments of cognateset eat_1 have length(s) {2}
-    WARNING:lexedata:In cognates.csv, row 133: Alignment has length 6, other alignments of cognateset feather_19 have length(s) {4}
-    WARNING:lexedata:In cognates.csv, row 138: Alignment has length 4, other alignments of cognateset full_8 have length(s) {6}
-    WARNING:lexedata:In cognates.csv, row 151: Alignment has length 6, other alignments of cognateset knee_13 have length(s) {7}
-    WARNING:lexedata:In cognates.csv, row 166: Alignment has length 3, other alignments of cognateset name_1 have length(s) {4}
+    WARNING:lexedata:In cognates.csv, row 110: Alignment has length 4, other alignments of cognateset big-1 have length(s) {6}
+    WARNING:lexedata:In cognates.csv, row 114: Alignment has length 6, other alignments of cognateset blood-11 have length(s) {4}
+    WARNING:lexedata:In cognates.csv, row 122: Alignment has length 1, other alignments of cognateset die-1 have length(s) {2}
+    WARNING:lexedata:In cognates.csv, row 127: Alignment has length 4, other alignments of cognateset eat-1 have length(s) {2}
+    WARNING:lexedata:In cognates.csv, row 133: Alignment has length 6, other alignments of cognateset feather-19 have length(s) {4}
+    WARNING:lexedata:In cognates.csv, row 138: Alignment has length 4, other alignments of cognateset full-8 have length(s) {6}
+    WARNING:lexedata:In cognates.csv, row 151: Alignment has length 6, other alignments of cognateset knee-13 have length(s) {7}
+    WARNING:lexedata:In cognates.csv, row 166: Alignment has length 3, other alignments of cognateset name-1 have length(s) {4}
     [...]
 
 The alignment column of the cognate table is empty, so there is no form for which
@@ -737,8 +742,8 @@ script has already done that for us::
 
     $ head -n3 cognates.csv
     ID,Form_ID,Cognateset_ID,Segment_Slice,Alignment,Source,Status_Column
-    duala_all-all_1,duala_all,all_1,1:4,ɓ ɛ́ s ɛ̃ - -,,automatically aligned
-    duala_arm-arm_7,duala_arm,arm_7,1:3,d i a,,automatically aligned
+    duala_all-all-1,duala_all,all-1,1:4,ɓ ɛ́ s ɛ̃ - -,,automatically aligned
+    duala_arm-arm-7,duala_arm,arm-7,1:3,d i a,,automatically aligned
 
 Most scripts do not add a status column if there is none. To make use of this
 functionality, we therefore add status columns to all tables. ::
