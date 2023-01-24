@@ -874,16 +874,16 @@ polysemous forms connected to multiple concepts. ::
     $ grep 'kikuyu_\(white\|new\)' forms.csv cognates.csv 
     forms.csv:kikuyu_new,Kikuyu,new,erũ,,e r ũ,,
     forms.csv:kikuyu_white,Kikuyu,white,erũ,,e r ũ,,
-    cognates.csv:kikuyu_new-new_3,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
-    cognates.csv:kikuyu_white-white_2,kikuyu_white,white_2,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_new-new-3,kikuyu_new,new-3,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_white-white-2,kikuyu_white,white-2,1:3,e r ũ,,automatically aligned
     $ python -m lexedata.edit.merge_homophones polysemies.txt
     WARNING:lexedata:I had to set a separator for your forms' concepts. I set it to ';'.
     INFO:lexedata:Going through forms and merging
     100%|██████████| 1592/1592 [...]
     $ grep 'kikuyu_\(white\|new\)' forms.csv cognates.csv 
     forms.csv:kikuyu_new,Kikuyu,new;white,erũ,,e r ũ,,
-    cognates.csv:kikuyu_new-new_3,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
-    cognates.csv:kikuyu_white-white_2,kikuyu_new,white_2,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_new-new-3,kikuyu_new,new-3,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_white-white-2,kikuyu_new,white-2,1:3,e r ũ,,automatically aligned
     $ git commit -am "Annotate polysemies"
     [main [...]] Annotate polysemies
      4 files changed, 3302 insertions(+), 3288 deletions(-)
@@ -906,29 +906,29 @@ There is a script that reports such cases. ::
     $ python -m lexedata.report.nonconcatenative_morphemes > overlapping_cogsets
     [...]
     WARNING:lexedata:In form ntomba_skin, segments are associated with multiple cognate sets.
-    INFO:lexedata:In form ntomba_skin, segments 1:6 (l o p o h o) are in both cognate sets bark_22 and skin_27.
+    INFO:lexedata:In form ntomba_skin, segments 1:6 (l o p o h o) are in both cognate sets bark-22 and skin-27.
     WARNING:lexedata:In form ngombe_big, segments are associated with multiple cognate sets.
-    INFO:lexedata:In form ngombe_big, segments 1:4 (n ɛ́ n ɛ) are in both cognate sets big_1 and many_12.
+    INFO:lexedata:In form ngombe_big, segments 1:4 (n ɛ́ n ɛ) are in both cognate sets big-1 and many-12.
     WARNING:lexedata:In form bushoong_go_to, segments are associated with multiple cognate sets.
-    INFO:lexedata:In form bushoong_go_to, segments 1:4 (y ɛ ɛ n) are in both cognate sets go_to_1 and walk_1.
+    INFO:lexedata:In form bushoong_go_to, segments 1:4 (y ɛ ɛ n) are in both cognate sets go_to-1 and walk-1.
     WARNING:lexedata:In form lega_go_to, segments are associated with multiple cognate sets.
-    INFO:lexedata:In form lega_go_to, segments 1:4 (ɛ n d a) are in both cognate sets go_to_2 and walk_1.
+    INFO:lexedata:In form lega_go_to, segments 1:4 (ɛ n d a) are in both cognate sets go_to-2 and walk-1.
     WARNING:lexedata:In form kikuyu_new, segments are associated with multiple cognate sets.
-    INFO:lexedata:In form kikuyu_new, segments 1:3 (e r ũ) are in both cognate sets new_3 and white_2.
+    INFO:lexedata:In form kikuyu_new, segments 1:3 (e r ũ) are in both cognate sets new-3 and white-2.
     $ cat overlapping_cogsets # doctest: +NORMALIZE_WHITESPACE
     Cluster of overlapping cognate sets:
-    	bark_22
-    	skin_27
+    	bark-22
+    	skin-27
     Cluster of overlapping cognate sets:
-    	big_1
-    	many_12
+    	big-1
+    	many-12
     Cluster of overlapping cognate sets:
-    	go_to_1
-    	go_to_2
-    	walk_1
+    	go_to-1
+    	go_to-2
+    	walk-1
     Cluster of overlapping cognate sets:
-    	new_3
-    	white_2
+    	new-3
+    	white-2
 
 
 There are other ways to merge cognate sets, which we will see in a moment, but
