@@ -35,7 +35,7 @@ def cells_are_empty(cells: t.Iterable[openpyxl.cell.Cell]) -> bool:
 
 
 class DB:
-    """An in-memobry cache of a dataset.
+    """An in-memory cache of a dataset.
 
     The cache_dataset method is only called in the load_dataset method, but
     also used for finer control by the cognates importer. This means that if
@@ -195,6 +195,37 @@ class DB:
 
     def commit(self):
         pass
+
+
+class Dialect:
+    def __init__(self, logger: cli.logging.Logger = cli.logger, **kwargs):
+        try:
+            self.row_cell_regexes = kwargs["row_cell_regexes"]
+        except KeyError:
+            logger.warning(
+                "User-defined format specification in the json-file was missing the key `row_cell_regexes`. I assume you have one column of row names, i.e. 'row_cell_regexes': ['(?P<Name.*)']."
+            )
+            self.row_cell_regexes = ["(?P<Name>.*)"]
+        self.row_comment_regexes = kwargs.get(
+            "row_comment_regexes", [".*"] * len(self.row_cell_regexes)
+        )
+        try:
+            self.lang_cell_regexes = kwargs["lang_cell_regexes"]
+        except KeyError:
+            logger.warning(
+                "User-defined format specification in the json-file was missing the key `lang_cell_regexes`. I assume you have one row of language names, i.e. 'lang_cell_regexes': ['(?P<Name.*)']."
+            )
+            self.lang_cell_regexes = ["(?P<Name>.*)"]
+        self.lang_comment_regexes = kwargs.get(
+            "lang_comment_regexes", [".*"] * len(self.lang_cell_regexes)
+        )
+
+        self.check_for_match = kwargs["check_for_match"]
+        self.check_for_row_match = kwargs["check_for_row_match"]
+        self.check_for_language_match = kwargs["check_for_language_match"]
+
+        self.cell_parser = kwargs["cell_parser"]
+        self.cognates = kwargs.get("cognates")
 
 
 class ExcelParser(t.Generic[R]):
@@ -380,31 +411,18 @@ class ExcelParser(t.Generic[R]):
                     continue
 
                 # Parse the cell, which results (potentially) in multiple forms
-                if row_object.__table__ == "FormTable":
-                    raise NotImplementedError(
-                        "TODO: I am confused why what I'm doing right now ever landed on my agenda, but you seem to have gotten me to attempt it. Please contact the developers and tell them what you did, so they can implement the thing you tried to do properly!"
-                    )
-                    c_f_form = self.db.dataset[row_object.__table__, "form"].name
                 for params in self.cell_parser.parse(
                     cell_with_forms,
                     this_lan,
                     f"{sheet.title}.{cell_with_forms.coordinate}",
                 ):
-                    if row_object.__table__ == "FormTable":
-                        if params[c_f_form] == "?":
-                            continue
-                        else:
-                            self.handle_form(
-                                params,
-                                row_object,
-                                cell_with_forms,
-                                this_lan,
-                                status_update,
-                            )
-                    else:
-                        self.handle_form(
-                            params, row_object, cell_with_forms, this_lan, status_update
-                        )
+                    self.handle_form(
+                        params,
+                        row_object,
+                        cell_with_forms,
+                        this_lan,
+                        status_update,
+                    )
         self.db.commit()
 
     def handle_form(
@@ -424,6 +442,7 @@ class ExcelParser(t.Generic[R]):
         if c_f_id not in form:
             # create candidate for form[id]
             form[c_f_id] = "{:}_{:}".format(form[c_f_language], row_object[c_r_id])
+            self.db.make_id_unique(form)
         candidate_forms = iter(self.db.find_db_candidates(form, self.check_for_match))
         try:
             # if a candidate for form already exists, don't add the form
@@ -616,7 +635,7 @@ class ExcelCognateParser(ExcelParser[CogSet]):
 
 
 def excel_parser_from_dialect(
-    output_dataset: pycldf.Wordlist, dialect: t.NamedTuple, cognate: bool
+    output_dataset: pycldf.Wordlist, dialect: Dialect, cognate: bool
 ) -> t.Type[ExcelParser]:
     Row: t.Type[RowObject]
     Parser: t.Type[ExcelParser]
@@ -643,7 +662,7 @@ def excel_parser_from_dialect(
         output_dataset,
         element_semantics=dialect.cell_parser["cell_parser_semantics"],
         separation_pattern=rf"([{''.join(dialect.cell_parser['form_separator'])}])",
-        variant_separator=dialect.cell_parser["variant_separator"],
+        variant_separator=dialect.cell_parser.get("variant_separator", ["~", "%"]),
         add_default_source=dialect.cell_parser.get("add_default_source"),
     )
 
@@ -762,10 +781,13 @@ def load_dataset(
     dataset = pycldf.Dataset.from_metadata(metadata)
     # load dialect from metadata
     try:
-        dialect = argparse.Namespace(
-            **dataset.tablegroup.common_props["special:fromexcel"]
+        dialect = Dialect(
+            logger=logger, **dataset.tablegroup.common_props["special:fromexcel"]
         )
-    except KeyError:
+    except KeyError as err:
+        logger.warning(
+            f"User-defined format specification in the json-file was missing the key {err.args[0]}, falling back to default parser."
+        )
         dialect = None
 
     if not lexicon and not cognate_lexicon:
@@ -776,15 +798,7 @@ def load_dataset(
     if lexicon:
         # load dialect from metadata
         if dialect:
-            try:
-                EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
-            except (AttributeError, KeyError) as err:
-                field = re.match(r".*?'(.+?)'.+?'(.+?)'$", str(err)).group(2)
-                logger.warning(
-                    f"User-defined format specification in the json-file was missing the key {field}, "
-                    f"falling back to default parser"
-                )
-                EP = ExcelParser
+            EP = excel_parser_from_dialect(dataset, dialect, cognate=False)
         else:
             logger.warning(
                 "User-defined format specification in the json-file was missing, falling back to default parser"

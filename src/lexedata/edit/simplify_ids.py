@@ -11,7 +11,9 @@ import lexedata.cli as cli
 import pycldf
 from lexedata.util.simplify_ids import simplify_table_ids_and_references
 
-if __name__ == "__main__":
+
+def parser():
+    """Construct the CLI argument parser for this script."""
     parser = cli.parser(__package__ + "." + Path(__file__).stem, __doc__)
     parser.add_argument(
         "--transparent",
@@ -30,12 +32,17 @@ if __name__ == "__main__":
         nargs="+",
         help="Only fix the IDs of these tables.",
     )
-    args = parser.parse_args()
+    return parser
+
+
+if __name__ == "__main__":
+    args = parser().parse_args()
     logger = cli.setup_logging(args)
 
     if args.uppercase:
-        # TODO: implement this
-        raise NotImplementedError
+        normalize = str.upper
+    else:
+        normalize = str.lower
 
     ds = pycldf.Wordlist.from_metadata(args.metadata)
 
@@ -56,7 +63,7 @@ if __name__ == "__main__":
     for table in tables:
         logger.info(f"Handling table {table.url.string}…")
         try:
-            simplify_table_ids_and_references(ds, table, args.transparent, logger)
+            simplify_table_ids_and_references(ds, table, args.transparent, logger, additional_normalize=normalize)
         except ValueError:
             logger.critical(
                 f"I could not simplify your {table}. Maybe try specifying the table with specific ID issues first, using --tables?"

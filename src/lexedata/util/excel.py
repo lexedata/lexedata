@@ -67,10 +67,6 @@ def get_cell_comment(cell: op.cell.Cell) -> str:
 
 def normalize_header(row: t.Iterable[op.cell.Cell]) -> t.Iterable[str]:
     header = [unicodedata.normalize("NFC", (n.value or "").strip()) for n in row]
-    header = [h.replace(" ", "_") for h in header]
-    header = [h.replace("(", "") for h in header]
-    header = [h.replace(")", "") for h in header]
-
     return header
 
 
@@ -200,15 +196,19 @@ class NaiveCellParser:
     c: t.Dict[str, str]
 
     def __init__(self, dataset: pycldf.Dataset):
+        self.separators = {}
         self.c = {}
         self.cc(short="value", long=("FormTable", "value"), dataset=dataset)
         self.cc(short="form", long=("FormTable", "form"), dataset=dataset)
         self.cc(short="lang", long=("FormTable", "languageReference"), dataset=dataset)
 
-    def cc(self, short, long, dataset):
+    def cc(self, short, dataset, long=None):
         """Cache the name of a column, or complain if it doesn't exist"""
+        if long is None:
+            long = ("FormTable", short)
         try:
             self.c[short] = dataset[long].name
+            self.separators[self.c[short]] = dataset[long].separator
         except KeyError:
             raise ValueError(
                 "Your metadata json file and your cell parser don’t match: "
@@ -254,7 +254,8 @@ class NaiveCellParser:
         ):
             try:
                 form = self.parse_form(element, language_id, cell_identifier)
-            except (KeyError, ValueError):
+            except (KeyError, ValueError) as e:
+                logger.warning(f"Could not import form {element}: {e}")
                 continue
             if form:
                 yield form
@@ -273,7 +274,7 @@ class CellParser(NaiveCellParser):
         ],
         separation_pattern: str = r"([;,])",
         variant_separator: t.Optional[t.List[str]] = ["~", "%"],
-        add_default_source: t.Optional[str] = "{1}",
+        add_default_source: t.Optional[str] = "1",
         logger: cli.logging.Logger = cli.logger,
     ):
         super().__init__(dataset)
@@ -287,34 +288,46 @@ class CellParser(NaiveCellParser):
         for start, end, term, transcription in element_semantics:
             # Ensure that all terms required by the element semantics are fields we can write to.
             self.cc(short=term, long=("FormTable", term), dataset=dataset)
+            if ("FormTable", "source") in dataset and dataset[
+                "FormTable", term
+            ].name == dataset["FormTable", "source"].name:
+                self.source_delimiter = (start, end)
+            if ("FormTable", "comment") in dataset and dataset[
+                "FormTable", term
+            ].name == dataset["FormTable", "comment"].name:
+                self.comment_delimiter = (start, end)
         assert self.transcriptions, (
             "Your metadata json file and your cell parser don’t match: Your cell parser "
             f"{self.__class__.__name__} expects to work with transcriptions "
             "(at least one of 'orthographic', 'phonemic', and 'phonetic') to derive a #form "
             "in #FormTable, but your metadata defines no such column."
         )
+        self.leftovers = self.element_semantics.pop("", None)
+        if self.bracket_pairs.pop("", ""):
+            logger.warning(
+                "Your ‘delimiter pair’ for forms outside delimiters should be the empty string for start and end, but your end string was not empty. I will ignore the end string you specificed."
+            )
 
         # Colums necessary for word list
         self.cc(short="source", long=("FormTable", "source"), dataset=dataset)
         self.cc(short="comment", long=("FormTable", "comment"), dataset=dataset)
-
-        try:
-            self.comment_separator = dataset["FormTable", "comment"].separator or "\t"
-        except KeyError:
-            logger.info("No #comment column found.")
-            self.comment_separator = ""
+        # Pretend that the comment field has a separator, but keep track of the original one.
+        self.comment_separator = self.separators[self.c["comment"]]
+        self.separators[self.c["comment"]] = self.separators[self.c["comment"]] or "\t"
 
         try:
             # As long as there is no CLDF term #variants, this will either be
             # 'variants' or raise a KeyError. However, it is a transparent
             # re-use of an otherwise established idiom in this module, so we
             # use this minor overhead.
-            self.c["variants"] = dataset["FormTable", "variants"].name
-        except KeyError:
+            self.cc(short="variants", long=("FormTable", "variants"), dataset=dataset)
+            # Assert that #variants has a separator?
+        except ValueError:
             logger.warning(
                 "No 'variants' column found for FormTable in Wordlist-metadata.json. "
                 "Form variants will be added to #comment."
             )
+            self.c["variants"] = self.c["comment"]
 
         # Other class attributes
         self.separation_pattern = separation_pattern
@@ -325,31 +338,33 @@ class CellParser(NaiveCellParser):
         self,
         source_string: str,
         language_id: t.Optional[str],
+        delimiters: t.Tuple[str, str] = ("{", "}"),
         logger: cli.logging.Logger = cli.logger,
     ) -> str:
         """Parse a string referencing a language-specific source"""
+        if source_string.startswith(delimiters[0]) and source_string.endswith(
+            delimiters[1]
+        ):
+            source_string = source_string[len(delimiters[0]) : -len(delimiters[1])]
+        elif source_string.startswith(delimiters[0]):
+            logger.warning(
+                f"In source {source_string}: Closing bracket '{delimiters[1]}' is missing."
+            )
+            source_string = source_string[len(delimiters[0]) :]
+
         context: t.Optional[str]
         if ":" in source_string:
-            source_part, context = source_string.split(":", maxsplit=1)
-            if not context.endswith("}"):
-                logger.warning(
-                    f"In source {source_string}: Closing bracket '}}' is missing, split into source and page/context may be wrong"
-                )
-            source_string = source_part + "}"
-            context = context[:-1].strip()
-
-            context = context.replace(":", "").replace(",", "")
+            source_string, context = source_string.split(":", maxsplit=1)
+            source_string = source_string.strip()
+            context = context.strip()
+            context = context.replace("]", "")
         else:
             context = None
 
-        if source_string.startswith("{") and source_string.endswith("}"):
-            source_string = source_string[1:-1]
         if language_id is None:
             source_id = string_to_id(source_string)
         else:
             source_id = string_to_id(f"{language_id:}_s{source_string:}")
-
-        source_id = source_id.replace(":", "").replace(",", "")
 
         if context:
             return f"{source_id}[{context}]"
@@ -459,44 +474,86 @@ class CellParser(NaiveCellParser):
                 )
             # Check what kind of element we have.
             for start, (term, transcription) in self.element_semantics.items():
-                field = self.c[term]
                 if element.startswith(start):
+                    field = self.c[term]
+                    delimiters = start, self.bracket_pairs[start]
                     break
             else:
-                # TODO: here an other if catchin '-' might be necessary
                 # The only thing we expect outside delimiters is the variant
-                # separators, '~' and '%'.
+                # separators, '~' and '%'. That is, unless we have some
+                # 'leftovers' specification.
                 if self.variant_separator and element in self.variant_separator:
                     expect_variant = element
+                    continue
+                elif self.leftovers:
+                    # Check whether the stuff outside ends with a variant
+                    # separator, because that is problematic.
+                    maybe_sep = [
+                        v for v in self.variant_separator if element.endswith(v)
+                    ]
+                    if maybe_sep:
+                        element = element[: -len(maybe_sep[0])].strip()
+                        # XXX Can we do better? We'd need to keep the variant separator around for *next* loop iteration
+                        logger.warning(
+                            f"{cell_identifier}In form {form_string}: Element {element} ended with a variant separator, which is not reflected in the output."
+                        )
+                    elif any([v in element for v in self.variant_separator]):
+                        logger.info(
+                            f"{cell_identifier}In form {form_string}: Element {element} contained variant separator, but you also specified that elements outside delimiters should be treated as {term}. Please check your output."
+                        )
+
+                    # If there are delimiters for this kind of element, use
+                    # those instead.
+                    for start, semantics in self.element_semantics.items():
+                        if self.leftovers == semantics:
+                            delimiters = start, self.bracket_pairs[start]
+                            element = f"{delimiters[0]}{element}{delimiters[1]}"
+                            break
+                    else:
+                        delimiters = ("", "")
+                    term, transcription = self.leftovers
+                    field = self.c[term]
                 else:
                     logger.warning(
                         f"{cell_identifier}In form {form_string}: Element {element} could not be parsed, ignored"
                     )
-                continue
+                    continue
 
             # If we encounter a field for the first time, we add it to the
             # dictionary. If repeatedly, to the variants, with a decorator that
-            # shows how expected the variant was.
-            # This drops sources and comments in variants, if more than one source or comment is provided
-            # clean this up in self.postprocess_form
+            # shows how expected the variant was. This drops sources and
+            # comments in variants, if more than one source or comment is
+            # provided – We clean this up in self.postprocess_form
 
-            if field in properties:
+            if self.separators[field]:
+                element = element[len(delimiters[0]) :]
+                if element.endswith(delimiters[1]):
+                    element = element[: -len(delimiters[1])]
+                properties.setdefault(field, []).append(element)
+            elif field in properties:
                 if (
                     not expect_variant
                     and field != c_comment
-                    and field != self.c["source"]
+                    and not self.separators[field]
                 ):
                     logger.warning(
                         f"{cell_identifier}In form {form_string}: Element {element} was an unexpected variant for {field}"
                     )
-                properties.setdefault(c_variants, []).append(
-                    (expect_variant or "") + element
-                )
+                    properties.setdefault(c_variants, []).append(
+                        (expect_variant or "") + element
+                    )
+                else:
+                    properties.setdefault(c_variants, []).append(
+                        (expect_variant or "") + element
+                    )
             else:
                 if expect_variant:
                     logger.warning(
                         f"{cell_identifier}In form {form_string}: Element {element} was supposed to be a variant, but there is no earlier {field}"
                     )
+                element = element[len(delimiters[0]) :]
+                if element.endswith(delimiters[1]):
+                    element = element[: -len(delimiters[1])]
                 properties[field] = element
 
             expect_variant = None
@@ -512,14 +569,13 @@ class CellParser(NaiveCellParser):
         for candidate in self.transcriptions:
             if candidate in properties:
                 return properties[candidate]
-            else:
-                continue
         return None
 
     def postprocess_form(
         self,
         properties: t.Dict[str, t.Any],
         language_id: str,
+        source_delimiters: t.Tuple[str, str] = ("{", "}"),
     ) -> None:
         """Modify the form in-place
 
@@ -527,54 +583,25 @@ class CellParser(NaiveCellParser):
         sources, cut of delimiters, split unmarked variants, etc.
 
         """
-        # remove delimiters from transcriptions
-        for key in self.transcriptions:
-            try:
-                value = properties[key]
-                if (
-                    value[0] in self.bracket_pairs
-                    and value[-1] == self.bracket_pairs[value[0]]
-                ):
-                    properties[key] = value[1:-1]
-            except KeyError:
-                continue
-
         # remove delimiters from comment
-        try:
-            cm = self.c["comment"]
-            comment = properties[cm]
-            try:
-                comment = comment.split(self.comment_separator)
-            except AttributeError:  # It's a list or None, and therefore has no .split()
-                pass
-            clean_comment = []
-            for c in comment:
-                c = c.strip()
-                if c[0] in self.bracket_pairs and c.endswith(self.bracket_pairs[c[0]]):
-                    c = c[1:-1]
-                clean_comment.append(c)
-            properties[cm] = self.comment_separator.join(clean_comment)
-        except KeyError:
-            pass
+        if self.comment_separator is None:
+            properties[self.c["comment"]] = self.separators[self.c["comment"]].join(
+                properties.get(self.c["comment"], [])
+            )
 
-        source = properties.pop(self.c["source"], None)
-        if self.add_default_source and source is None:
-            source = self.add_default_source
+        source = properties.pop(self.c["source"], [])
+        if self.add_default_source and not source:
+            source = [self.add_default_source]
         # if source is already a set with source, don't change anything
-        if source is None:
-            del properties[self.c["source"]]
-        elif not isinstance(source, set):
-            properties[self.c["source"]] = {
-                self.source_from_source_string(source, language_id)
-            }
-        else:
-            properties[self.c["source"]] = {
-                self.source_from_source_string(s, language_id) for s in source
-            }
+        properties[self.c["source"]] = {
+            self.source_from_source_string(
+                s, language_id, delimiters=self.source_delimiter
+            )
+            for s in source
+        }
 
         # add form to properties
-        if self.c["form"] not in properties:
-            properties[self.c["form"]] = self.create_cldf_form(properties)
+        properties.setdefault(self.c["form"], self.create_cldf_form(properties))
 
 
 def alignment_from_braces(text, start=0):
@@ -679,7 +706,9 @@ class MawetiCellParser(CellParser):
             variant_separator=variant_separator,
             add_default_source=add_default_source,
         )
-        self.cc("procedural_comment", ("FormTable", "procedural_comment"), dataset)
+
+        # TODO: We might not have this
+        self.cc("procedural_comment", dataset=dataset)
 
     def postprocess_form(
         self,
@@ -689,106 +718,62 @@ class MawetiCellParser(CellParser):
         """
         Post processing specific to the Maweti dataset
         """
-        super().postprocess_form(properties, language_id)
+
+        # catch procedural comments (e.g. NPC: ...) in #comment and add to
+        # corresponding procedural comment.
+        for i, subcomment in enumerate(properties.get(self.c["comment"], [])[::-1], 1):
+            if re.match(r"^[A-Z]{2,}:", subcomment):
+                properties.setdefault(self.c["procedural_comment"], []).insert(
+                    0, subcomment
+                )
+                del properties[self.c["comment"]][-i]
 
         # TODO: Currently "..." lands in the forms, with empty other entries
         # (and non-empty source). This is not too bad for now, how should it
         # be?
 
-        # catch procedural comments (e.g. NPC: ...) in #comment and add to
-        # corresponding procedural comment.
-        try:
-            comment = properties[self.c["comment"]]
-            if re.search(r"^[A-Z]{2,}:", comment):
-                properties[self.c["procedural_comment"]] = comment  # strip delimiters
-                del properties[self.c["comment"]]
-        except KeyError:
-            pass
-
-        start_of_comment = ""
-        start_of_source = ""
-        for k, v in self.element_semantics.items():
-            if v[0] == "comment":
-                start_of_comment = k
-            if v[0] == "source":
-                start_of_source = k
-        try:
-            actual_variants = []
-            for variant in properties[self.c["variants"]]:
-                start = variant[0]
-                # check for actual variants
-                if start in self.variant_separator:
-                    actual_variants.append(variant)
-
-                # check for misplaced comments
-                elif start == start_of_comment:
-                    # check if it s a procedural comment
-                    if re.search(r"^[A-Z]{2,}:", variant):
-                        try:
-                            properties["procedural_comment"] += (
-                                self.comment_separator + variant[1:-1]
-                            )
-                        except KeyError:
-                            properties["procedural_comment"] = variant[1:-1]
-                    else:
-                        try:
-                            properties[self.c["comment"]] += (
-                                self.comment_separator + variant[1:-1]
-                            )
-                        except KeyError:
-                            properties[self.c["comment"]] = variant[1:-1]
-
-                # check for misplaced sources
-                elif start == start_of_source:
-                    properties.setdefault(self.c["source"], set()).add(
-                        self.source_from_source_string(variant, language_id)
-                    )
-
-            properties[self.c["variants"]] = actual_variants
-        except KeyError:
-            pass
-
-        # Split transcriptions of form that contain '%' or '~', drop the variant in
-        # if variants not in properties, add default list
-        variants = properties.setdefault(self.c["variants"], [])
+        # Split transcriptions of form that contain '%' or '~', drop the
+        # variant in the #variants column. if variants not in properties, add
+        # default list
         for key in self.transcriptions:
             try:
                 property_value = properties[key]
             except KeyError:
                 continue
             # if any separator is in this value, split value. add first as key and rest to variants.
-            if self.variant_separator:
-                for separator in self.variant_separator:
-                    if separator in property_value:
-                        # split string with variants
-                        # add first transcription as transcription, rest to variants
-                        # ensure correct opening and closing for transcription and variants
-                        values = property_value.split(separator)
-                        first_value = values.pop(0)
-                        first_value = first_value.strip()
-                        opening = [
-                            start
-                            for start, (
-                                term,
-                                transcription,
-                            ) in self.element_semantics.items()
-                            if term == key
-                        ][0]
-                        closing = self.bracket_pairs[opening]
-                        properties[key] = first_value
-                        for value in values:
-                            while value.startswith(" "):
-                                value = value.lstrip(" ")
-                            while value.endswith(" "):
-                                value = value.rstrip(" ")
-                            if not value[0] == opening:
-                                value = opening + value
-                            if not value[-1] == closing:
-                                value = value + closing
-                            variants.append(separator + value)
+            for separator in self.variant_separator:
+                if separator in property_value:
+                    # split string with variants
+                    # add first transcription as transcription, rest to variants
+                    # ensure correct opening and closing for transcription and variants
+                    values = property_value.split(separator)
+                    first_value = values.pop(0)
+                    first_value = first_value.strip()
+                    opening = [
+                        start
+                        for start, (
+                            term,
+                            transcription,
+                        ) in self.element_semantics.items()
+                        if self.c[term] == key
+                    ][0]
+                    closing = self.bracket_pairs[opening]
+                    properties[key] = first_value
+                    for value in values:
+                        while value.startswith(" "):
+                            value = value.lstrip(" ")
+                        while value.endswith(" "):
+                            value = value.rstrip(" ")
+                        if not value[0] == opening:
+                            value = opening + value
+                        if not value[-1] == closing:
+                            value = value + closing
+                        properties.setdefault(self.c["variants"], []).append(
+                            separator + value
+                        )
 
-        # Overwrite form
-        properties[self.c["form"]] = self.create_cldf_form(properties)
+        properties.setdefault(self.c["form"], self.create_cldf_form(properties))
+        super().postprocess_form(properties, language_id)
 
 
 class MawetiCognateCellParser(MawetiCellParser):

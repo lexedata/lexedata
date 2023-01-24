@@ -110,40 +110,82 @@ def test_cogsets_and_judgements():
 
 
 def test_cogsets_and_judgements_with_singletons():
-    dataset = get_dataset(
-        Path(__file__).parent / "data/cldf/smallmawetiguarani/cldf-metadata.json"
+    dataset = util.fs.new_wordlist(
+        FormTable=[
+            {
+                "ID": "paraguayan_guarani_four",
+                "Language_ID": "paraguayan_guarani",
+                "Parameter_ID": "four",
+                "Form": "irundy",
+                "Segments": ["i", "r", "u", "n", "d", "y"],
+            },
+            {
+                "ID": "kaiwa_three",
+                "Language_ID": "kaiwa",
+                "Parameter_ID": "three",
+                "Form": "mbohaˈpɨ",
+                "Segments": ["m", "b", "o", "h", "a", "p", "ɨ"],
+            },
+            {
+                "ID": "kaiwa_four",
+                "Language_ID": "kaiwa",
+                "Parameter_ID": "four",
+                "Form": "iɾũndɨ",
+                "Segments": ["i", "ɾ", "ũ", "n", "d", "ɨ"],
+            },
+        ],
+        CognatesetTable=[
+            {
+                "ID": "four1",
+            },
+        ],
+        CognateTable=[
+            {"ID": "kaiwa_four", "Form_ID": "kaiwa_four", "Cognateset_ID": "four1"},
+            {
+                "ID": "paraguayan_guarani_four",
+                "Form_ID": "paraguayan_guarani_four",
+                "Cognateset_ID": "four1",
+            },
+        ],
     )
+    dataset.add_columns("CognatesetTable", "Status_Column")
+
     cogsets, judgements = cogsets_and_judgements(dataset, "NEW", by_segment=True)
-    assert list(cogsets)[0] == {
-        "id": "one1",
-        "Set": None,
-        "comment": None,
-        "name": "ONE1",
-    }
-    assert list(cogsets)[-1] == {
-        "Set": None,
-        "id": "X_paraguayan_guarani_five_1",
-        "comment": None,
-        "name": "five",
-    }
-    assert len(cogsets) == 14
-    assert list(judgements)[0] == {
-        "id": "paraguayan_guarani_one-one1",
-        "formReference": "paraguayan_guarani_one",
-        "comment": None,
-        "segmentSlice": ["1:5"],
-        "alignment": ["p", "e", "t", "e", "ĩ", "-", "-"],
-        "cognatesetReference": "one1",
-    }
-    assert list(judgements)[-1] == {
-        "id": "X_paraguayan_guarani_five_1",
-        "formReference": "paraguayan_guarani_five",
-        "comment": None,
-        "segmentSlice": ["1:2"],
-        "alignment": ["p", "o"],
-        "cognatesetReference": "X_paraguayan_guarani_five_1",
-    }
-    assert len(judgements) == 21
+    assert list(cogsets) == [
+        {"Status_Column": None, "id": "four1", "description": None, "source": []},
+        {
+            "Status_Column": "NEW",
+            "id": "X_kaiwa_three_1",
+            "description": None,
+            "source": None,
+        },
+    ]
+    assert list(judgements) == [
+        {
+            "id": "kaiwa_four",
+            "formReference": "kaiwa_four",
+            "cognatesetReference": "four1",
+            "segmentSlice": [],
+            "alignment": [],
+            "source": [],
+        },
+        {
+            "id": "paraguayan_guarani_four",
+            "formReference": "paraguayan_guarani_four",
+            "cognatesetReference": "four1",
+            "segmentSlice": [],
+            "alignment": [],
+            "source": [],
+        },
+        {
+            "id": "X_kaiwa_three_1",
+            "formReference": "kaiwa_three",
+            "cognatesetReference": "X_kaiwa_three_1",
+            "segmentSlice": ["1:7"],
+            "alignment": ["m", "b", "o", "h", "a", "p", "ɨ"],
+            "source": None,
+        },
+    ]
 
 
 def test_adding_singleton_cognatesets(caplog):
@@ -190,8 +232,12 @@ def test_adding_singleton_cognatesets(caplog):
         "four1",
         "four8",
         "five5",
+        "X_ache_one_1_1",
+        "X_ache_two_1_1",
         "X_old_paraguayan_guarani_two_1",
+        "X_ache_three_1_1",
         "X_paraguayan_guarani_five_1",
+        "X_kaiwa_five_1_1",
     ]
 
 
@@ -224,17 +270,21 @@ def test_adding_singleton_cognatesets_with_status(caplog):
     # when accessing the row as a tuple the index is not 1-based as for excel sheets
     status = [row[cogset_index].value for row in excel_writer.ws.iter_rows(min_row=2)]
     assert status == [
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "NEW",
+        "NEW",
+        "NEW",
+        "NEW",
         "NEW",
         "NEW",
         "NEW",
@@ -281,7 +331,7 @@ def test_no_comment_column():
     )
     forms = util.cache_table(dataset).values()
     for form in forms:
-        assert writer.form_to_cell_value(form).strip() == "{ e t a k ɾ ã } ‘one, one’"
+        assert writer.form_to_cell_value(form).strip() == "{ e t a k ɾ ã } ‘one’"
         break
 
 
