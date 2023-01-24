@@ -915,7 +915,7 @@ There is a script that reports such cases. ::
     INFO:lexedata:In form lega_go_to, segments 1:4 (ɛ n d a) are in both cognate sets go_to-2 and walk-1.
     WARNING:lexedata:In form kikuyu_new, segments are associated with multiple cognate sets.
     INFO:lexedata:In form kikuyu_new, segments 1:3 (e r ũ) are in both cognate sets new-3 and white-2.
-    $ cat overlapping_cogsets # doctest: +NORMALIZE_WHITESPACE
+    $ cat overlapping_cogsets
     Cluster of overlapping cognate sets:
     	bark-22
     	skin-27
@@ -929,7 +929,6 @@ There is a script that reports such cases. ::
     Cluster of overlapping cognate sets:
     	new-3
     	white-2
-
 
 There are other ways to merge cognate sets, which we will see in a moment, but
 this kind of structured report is suitable for automatic merging, in the same
