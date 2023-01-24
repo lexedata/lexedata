@@ -904,7 +904,7 @@ not represent disjoint, consecutive groups of segments also occur when morpheme
 boundaries have been eroded or when a language has non-concatenative morphemes.
 There is a script that reports such cases. ::
 
-    $ python -m lexedata.report.nonconcatenative_morphemes > overlapping_cogsets # doctest: +NORMALIZE_WHITESPACE
+    $ python -m lexedata.report.nonconcatenative_morphemes > overlapping_cogsets  # doctest: +NORMALIZE_WHITESPACE
     [...]
     WARNING:lexedata:In form ntomba_skin, segments are associated with multiple cognate sets.
     INFO:lexedata:In form ntomba_skin, segments 1:6 (l o p o h o) are in both cognate sets bark-22 and skin-27.
