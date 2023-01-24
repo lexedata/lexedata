@@ -155,7 +155,7 @@ def test_cogsets_and_judgements_with_singletons():
         {"Status_Column": None, "id": "four1", "description": None, "source": []},
         {
             "Status_Column": "NEW",
-            "id": "X_kaiwa_three_1",
+            "id": "x_kaiwa_three_1",
             "description": None,
             "source": None,
         },
@@ -178,9 +178,9 @@ def test_cogsets_and_judgements_with_singletons():
             "source": [],
         },
         {
-            "id": "X_kaiwa_three_1",
+            "id": "x_kaiwa_three_1",
             "formReference": "kaiwa_three",
-            "cognatesetReference": "X_kaiwa_three_1",
+            "cognatesetReference": "x_kaiwa_three_1",
             "segmentSlice": ["1:7"],
             "alignment": ["m", "b", "o", "h", "a", "p", "ɨ"],
             "source": None,
@@ -232,12 +232,12 @@ def test_adding_singleton_cognatesets(caplog):
         "four1",
         "four8",
         "five5",
-        "X_ache_one_1_1",
-        "X_ache_two_1_1",
-        "X_old_paraguayan_guarani_two_1",
-        "X_ache_three_1_1",
-        "X_paraguayan_guarani_five_1",
-        "X_kaiwa_five_1_1",
+        "x_ache_one_1_1",
+        "x_ache_two_1_1",
+        "x_old_paraguayan_guarani_two_1",
+        "x_ache_three_1_1",
+        "x_paraguayan_guarani_five_1",
+        "x_kaiwa_five_1_1",
     ]
 
 
