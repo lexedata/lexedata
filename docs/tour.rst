@@ -11,10 +11,11 @@ exporting the dataset as a phylogenetic alignment.
 
 (To prevent this tutorial from becoming obsolete, our continuous integration
 testing system ‘follows’ this tutorial when we update the software. So if it
-appears overly verbose or rigid to you at times, it is because it has a secondary
-function as test case. This is also the reason we use the command line where we
-can, even in places where a GUI tool would be handy: Our continuous integration
-tester cannot use the GUI.) ::
+appears overly verbose or rigid to you at times, it is because it has a
+secondary function as test case. This is also the reason we use the command line
+where we can, even in places where a GUI tool would be handy: Our continuous
+integration tester cannot use the GUI. We need to prepare this a bit to avoid
+confusing output later.) ::
 
     $ python -m lexedata.importer.excel_interleaved --help
     [...]
@@ -78,7 +79,7 @@ contains cognacy judgements for those forms.
 This is one of several formats supported by lexedata for import. The
 corresponding importer is called ``excel_interleaved`` and it works like this::
 
-    $ python -m lexedata.importer.excel_interleaved --help
+    $ python -m lexedata.importer.excel_interleaved --help # doctest: +NORMALIZE_WHITESPACE
     usage: python -m lexedata.importer.excel_interleaved [-h]
                                                          [--sheets SHEET [SHEET ...]]
                                                          [--directory DIRECTORY]
@@ -156,8 +157,7 @@ this case, the data contains a column that CLDF does not know out-of-the-box,
 but otherwise the dataset is fine. ::
 
     $ cldf validate forms.csv
-    [...]: UserWarning: Unspecified column "Cognateset_ID" in table forms.csv
-      warnings.warn(
+    [...]
 
 Working with git
 ================
@@ -165,6 +165,7 @@ Working with git
 This is the point where it really makes sense to start working with ``git``. ::
 
     $ git init
+    [...]
     Initialized empty Git repository in [...]bantu/.git/
     $ git config core.autocrlf false
     $ git branch -m main
@@ -903,7 +904,7 @@ not represent disjoint, consecutive groups of segments also occur when morpheme
 boundaries have been eroded or when a language has non-concatenative morphemes.
 There is a script that reports such cases. ::
 
-    $ python -m lexedata.report.nonconcatenative_morphemes > overlapping_cogsets
+    $ python -m lexedata.report.nonconcatenative_morphemes > overlapping_cogsets # doctest: +NORMALIZE_WHITESPACE
     [...]
     WARNING:lexedata:In form ntomba_skin, segments are associated with multiple cognate sets.
     INFO:lexedata:In form ntomba_skin, segments 1:6 (l o p o h o) are in both cognate sets bark-22 and skin-27.
