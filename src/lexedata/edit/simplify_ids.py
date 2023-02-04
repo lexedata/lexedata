@@ -4,6 +4,7 @@ Take every ID column and convert it to either an integer-valued or a restricted-
 
 Optionally, create ‘transparent’ IDs, that is alphanumerical IDs which are derived from the characteristic columns of the corresponding table. For example, the ID of a FormTable would be derived from language and concept; for a CognatesetTable from the central concept if there is one.
 
+I currently have problems reading data that is not clean, so if I read your FormTable first, but you have IDs that need simplification in your LanguageTable which appear in your FormTable, I will fail with a confusing error. If I do, please try to specify the tables you need simplified using --tables. List the tables whose IDs appear in other tables first and tables that contain the references later.
 """
 from pathlib import Path
 
@@ -47,17 +48,16 @@ if __name__ == "__main__":
     ds = pycldf.Wordlist.from_metadata(args.metadata)
 
     if args.tables:
-        logger.warning(
-            "I currently have problems reading data that is not clean, so if I read your FormTable first, but you have IDs that need simplification in your LanguageTable which appear in your FormTable, I will fail with a confusing error. If I do, please try to specify the tables you need simplified using --tables."
-        )
         tables = []
         for table in args.tables:
             try:
-                ds[table]
-                tables.append()
+                tables.append(ds[table])
             except KeyError:
                 cli.Exit.INVALID_TABLE_NAME(f"No table {table} in dataset.")
     else:
+        logger.warning(
+            "I currently have problems reading data that is not clean, so if I read your FormTable first, but you have IDs that need simplification in your LanguageTable which appear in your FormTable, I will fail with a confusing error. If I do, please try to specify the tables you need simplified using --tables."
+        )
         tables = ds.tables
 
     for table in tables:
