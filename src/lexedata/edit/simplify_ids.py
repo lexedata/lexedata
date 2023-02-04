@@ -4,6 +4,7 @@ Take every ID column and convert it to either an integer-valued or a restricted-
 
 Optionally, create ‘transparent’ IDs, that is alphanumerical IDs which are derived from the characteristic columns of the corresponding table. For example, the ID of a FormTable would be derived from language and concept; for a CognatesetTable from the central concept if there is one.
 
+When you use the --tables argument, put tables with IDs that are contained in other tables first, and tables that contain these references later.
 """
 from pathlib import Path
 
