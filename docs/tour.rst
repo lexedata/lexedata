@@ -11,10 +11,11 @@ exporting the dataset as a phylogenetic alignment.
 
 (To prevent this tutorial from becoming obsolete, our continuous integration
 testing system ‘follows’ this tutorial when we update the software. So if it
-appears overly verbose or rigid to you at times, it is because it has a secondary
-function as test case. This is also the reason we use the command line where we
-can, even in places where a GUI tool would be handy: Our continuous integration
-tester cannot use the GUI.) ::
+appears overly verbose or rigid to you at times, it is because it has a
+secondary function as test case. This is also the reason we use the command line
+where we can, even in places where a GUI tool would be handy: Our continuous
+integration tester cannot use the GUI. We need to prepare this a bit to avoid
+confusing output later.) ::
 
     $ python -m lexedata.importer.excel_interleaved --help
     [...]
@@ -46,7 +47,7 @@ For this tutorial, we will be using lexical data from the Bantu family,
 collected by Hilde Gunnink. The dataset is a subset of an earlier version
 (deliberately, so this tour can show some steps in the cleaning process) of her
 lexical dataset. The data is stored in an Excel file which you can download from
-https://github.com/Anaphory/lexedata/blob/master/src/lexeadata/data/example-bantu.xlsx
+https://github.com/Anaphory/lexedata/blob/master/src/lexedata/data/example-bantu.xlsx
 in the lexedata repository. (We will use the most recent version here, which
 comes shipped with lexedata. Sorry this looks a bit cryptic, but as we said, this
 way the testing system also knows where to find the file.) ::
@@ -78,7 +79,7 @@ contains cognacy judgements for those forms.
 This is one of several formats supported by lexedata for import. The
 corresponding importer is called ``excel_interleaved`` and it works like this::
 
-    $ python -m lexedata.importer.excel_interleaved --help
+    $ python -m lexedata.importer.excel_interleaved --help # doctest: +NORMALIZE_WHITESPACE
     usage: python -m lexedata.importer.excel_interleaved [-h]
                                                          [--sheets SHEET [SHEET ...]]
                                                          [--directory DIRECTORY]
@@ -155,9 +156,8 @@ A well-structured ``forms.csv`` is a valid, `“metadata-free”
 this case, the data contains a column that CLDF does not know out-of-the-box,
 but otherwise the dataset is fine. ::
 
-    $ cldf validate forms.csv 
-    [...] UserWarning: Unspecified column "Cognateset_ID" in table forms.csv
-      warnings.warn(
+    $ cldf validate forms.csv
+    [...]
 
 Working with git
 ================
@@ -350,13 +350,17 @@ scaffold for metadata about languages etc. with another tool. ::
 
     $ python -m lexedata.edit.add_table LanguageTable
     INFO:lexedata:Found 14 different entries for your new LanguageTable.
-    $ python -m lexedata.edit.add_table ParameterTable
-    INFO:lexedata:Found 100 different entries for your new ParameterTable.
+    $ python -m lexedata.edit.add_table ParameterTable --but-not-column ColumnSpec
+    [...]
     WARNING:lexedata:Some of your reference values are not valid as IDs: ['go to', 'rain (v)', 'sick, be', 'sleep (v)']. You can transform them into valid ids by running lexedata.edit.simplify_ids
 
 “Parameter” is CLDF speak for the things sampled per-language. In a
 StructureDataset this might be typological features, in a Wordlist the
-ParameterTable contains the concepts. We will ignore the warning about IDs for now.
+ParameterTable contains the concepts. We will ignore the warning about IDs for
+now. Because ‘parameters’ can have very different data types, the ParameterTable
+by default has a column that allows the specification of a distinct data type
+for each parameter. We don't need this for a word list, so we told the table
+adding tool to not add that column.
 
 Every form belongs to one language, and every language has multiple forms. This
 is a simple 1:n relationship. Every form has one or more concepts associated
@@ -368,7 +372,7 @@ good. ::
     $ git add languages.csv parameters.csv
     $ git commit -am "Add language and concept tables"
     [main [...]] Add language and concept tables
-     3 files changed, 246 insertions(+), 4 deletions(-)
+     3 files changed, [...] insertions(+), 4 deletions(-)
      create mode 100644 languages.csv
      create mode 100644 parameters.csv
 
@@ -673,14 +677,14 @@ lexedata toolbox::
 This was however not the only issue with the data. ::
 
     $ python -m lexedata.report.extended_cldf_validate -q
-    WARNING:lexedata:In cognates.csv, row 110: Alignment has length 4, other alignments of cognateset big_1 have length(s) {6}
-    WARNING:lexedata:In cognates.csv, row 114: Alignment has length 6, other alignments of cognateset blood_11 have length(s) {4}
-    WARNING:lexedata:In cognates.csv, row 122: Alignment has length 1, other alignments of cognateset die_1 have length(s) {2}
-    WARNING:lexedata:In cognates.csv, row 127: Alignment has length 4, other alignments of cognateset eat_1 have length(s) {2}
-    WARNING:lexedata:In cognates.csv, row 133: Alignment has length 6, other alignments of cognateset feather_19 have length(s) {4}
-    WARNING:lexedata:In cognates.csv, row 138: Alignment has length 4, other alignments of cognateset full_8 have length(s) {6}
-    WARNING:lexedata:In cognates.csv, row 151: Alignment has length 6, other alignments of cognateset knee_13 have length(s) {7}
-    WARNING:lexedata:In cognates.csv, row 166: Alignment has length 3, other alignments of cognateset name_1 have length(s) {4}
+    WARNING:lexedata:In cognates.csv, row 110: Alignment has length 4, other alignments of cognateset big-1 have length(s) {6}
+    WARNING:lexedata:In cognates.csv, row 114: Alignment has length 6, other alignments of cognateset blood-11 have length(s) {4}
+    WARNING:lexedata:In cognates.csv, row 122: Alignment has length 1, other alignments of cognateset die-1 have length(s) {2}
+    WARNING:lexedata:In cognates.csv, row 127: Alignment has length 4, other alignments of cognateset eat-1 have length(s) {2}
+    WARNING:lexedata:In cognates.csv, row 133: Alignment has length 6, other alignments of cognateset feather-19 have length(s) {4}
+    WARNING:lexedata:In cognates.csv, row 138: Alignment has length 4, other alignments of cognateset full-8 have length(s) {6}
+    WARNING:lexedata:In cognates.csv, row 151: Alignment has length 6, other alignments of cognateset knee-13 have length(s) {7}
+    WARNING:lexedata:In cognates.csv, row 166: Alignment has length 3, other alignments of cognateset name-1 have length(s) {4}
     [...]
 
 The alignment column of the cognate table is empty, so there is no form for which
@@ -739,8 +743,8 @@ script has already done that for us::
 
     $ head -n3 cognates.csv
     ID,Form_ID,Cognateset_ID,Segment_Slice,Alignment,Source,Status_Column
-    duala_all-all_1,duala_all,all_1,1:4,ɓ ɛ́ s ɛ̃ - -,,automatically aligned
-    duala_arm-arm_7,duala_arm,arm_7,1:3,d i a,,automatically aligned
+    duala_all-all-1,duala_all,all-1,1:4,ɓ ɛ́ s ɛ̃ - -,,automatically aligned
+    duala_arm-arm-7,duala_arm,arm-7,1:3,d i a,,automatically aligned
 
 Most scripts do not add a status column if there is none. To make use of this
 functionality, we therefore add status columns to all tables. ::
@@ -871,16 +875,16 @@ polysemous forms connected to multiple concepts. ::
     $ grep 'kikuyu_\(white\|new\)' forms.csv cognates.csv 
     forms.csv:kikuyu_new,Kikuyu,new,erũ,,e r ũ,,
     forms.csv:kikuyu_white,Kikuyu,white,erũ,,e r ũ,,
-    cognates.csv:kikuyu_new-new_3,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
-    cognates.csv:kikuyu_white-white_2,kikuyu_white,white_2,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_new-new-3,kikuyu_new,new-3,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_white-white-2,kikuyu_white,white-2,1:3,e r ũ,,automatically aligned
     $ python -m lexedata.edit.merge_homophones polysemies.txt
     WARNING:lexedata:I had to set a separator for your forms' concepts. I set it to ';'.
     INFO:lexedata:Going through forms and merging
     100%|██████████| 1592/1592 [...]
     $ grep 'kikuyu_\(white\|new\)' forms.csv cognates.csv 
     forms.csv:kikuyu_new,Kikuyu,new;white,erũ,,e r ũ,,
-    cognates.csv:kikuyu_new-new_3,kikuyu_new,new_3,1:3,e r ũ,,automatically aligned
-    cognates.csv:kikuyu_white-white_2,kikuyu_new,white_2,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_new-new-3,kikuyu_new,new-3,1:3,e r ũ,,automatically aligned
+    cognates.csv:kikuyu_white-white-2,kikuyu_new,white-2,1:3,e r ũ,,automatically aligned
     $ git commit -am "Annotate polysemies"
     [main [...]] Annotate polysemies
      4 files changed, 3302 insertions(+), 3288 deletions(-)
@@ -900,33 +904,32 @@ not represent disjoint, consecutive groups of segments also occur when morpheme
 boundaries have been eroded or when a language has non-concatenative morphemes.
 There is a script that reports such cases. ::
 
-    $ python -m lexedata.report.nonconcatenative_morphemes > overlapping_cogsets
+    $ python -m lexedata.report.nonconcatenative_morphemes > overlapping_cogsets  # doctest: +NORMALIZE_WHITESPACE
     [...]
     WARNING:lexedata:In form ntomba_skin, segments are associated with multiple cognate sets.
-    INFO:lexedata:In form ntomba_skin, segments 1:6 (l o p o h o) are in both cognate sets bark_22 and skin_27.
+    INFO:lexedata:In form ntomba_skin, segments 1:6 (l o p o h o) are in both cognate sets bark-22 and skin-27.
     WARNING:lexedata:In form ngombe_big, segments are associated with multiple cognate sets.
-    INFO:lexedata:In form ngombe_big, segments 1:4 (n ɛ́ n ɛ) are in both cognate sets big_1 and many_12.
+    INFO:lexedata:In form ngombe_big, segments 1:4 (n ɛ́ n ɛ) are in both cognate sets big-1 and many-12.
     WARNING:lexedata:In form bushoong_go_to, segments are associated with multiple cognate sets.
-    INFO:lexedata:In form bushoong_go_to, segments 1:4 (y ɛ ɛ n) are in both cognate sets go_to_1 and walk_1.
+    INFO:lexedata:In form bushoong_go_to, segments 1:4 (y ɛ ɛ n) are in both cognate sets go_to-1 and walk-1.
     WARNING:lexedata:In form lega_go_to, segments are associated with multiple cognate sets.
-    INFO:lexedata:In form lega_go_to, segments 1:4 (ɛ n d a) are in both cognate sets go_to_2 and walk_1.
+    INFO:lexedata:In form lega_go_to, segments 1:4 (ɛ n d a) are in both cognate sets go_to-2 and walk-1.
     WARNING:lexedata:In form kikuyu_new, segments are associated with multiple cognate sets.
-    INFO:lexedata:In form kikuyu_new, segments 1:3 (e r ũ) are in both cognate sets new_3 and white_2.
-    $ cat overlapping_cogsets # doctest: +NORMALIZE_WHITESPACE
+    INFO:lexedata:In form kikuyu_new, segments 1:3 (e r ũ) are in both cognate sets new-3 and white-2.
+    $ cat overlapping_cogsets  # doctest: +NORMALIZE_WHITESPACE
     Cluster of overlapping cognate sets:
-    	bark_22
-    	skin_27
+    	bark-22
+    	skin-27
     Cluster of overlapping cognate sets:
-    	big_1
-    	many_12
+    	big-1
+    	many-12
     Cluster of overlapping cognate sets:
-    	go_to_1
-    	go_to_2
-    	walk_1
+    	go_to-1
+    	go_to-2
+    	walk-1
     Cluster of overlapping cognate sets:
-    	new_3
-    	white_2
-
+    	new-3
+    	white-2
 
 There are other ways to merge cognate sets, which we will see in a moment, but
 this kind of structured report is suitable for automatic merging, in the same

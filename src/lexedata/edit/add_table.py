@@ -24,6 +24,13 @@ if __name__ == "__main__":
     column.""",
         metavar="TABLE",
     )
+    parser.add_argument(
+        "--but-not-column",
+        type=str,
+        action="append",
+        default=[],
+        help="""Add the table, but without this column. (Can be specified multiple times.)""",
+    )
     args = parser.parse_args()
     logger = cli.setup_logging(args)
 
@@ -49,6 +56,17 @@ if __name__ == "__main__":
         cli.Exit.CLI_ARGUMENT_ERROR(
             f"I don't know how to add a {args.table:s}. Is it a well-defined CLDF component, according to https://cldf.clld.org/v1.0/terms.rdf#components ?"
         )
+
+    for skip_column in args.but_not_column:
+        try:
+            column_name = ds[args.table, skip_column].name
+            ds.remove_columns(args.table, skip_column)
+        except KeyError:
+            logger.warning(
+                "Table %s has no column %s to be not added, so it didn't get added anyway.",
+                args.table,
+                skip_column,
+            )
 
     invalid_ids = []
 

@@ -8,6 +8,7 @@ What other columns give warnings, what other columns give errors?
 *Optionally*, merge cognate sets that get merged by this procedure.
 """
 
+import re
 import argparse
 import typing as t
 from collections import defaultdict
@@ -24,10 +25,45 @@ from lexedata.edit.merge_homophones import (
     first,
     format_mergers,
     must_be_equal,
-    parse_homophones_report,
     parse_merge_override,
 )
 from lexedata.util.simplify_ids import update_ids
+
+
+def parse_cognatesets_report(
+    report: t.TextIO,
+    logger: cli.logging.Logger = cli.logger,
+) -> t.List[t.List[types.Cognateset_ID]]:
+    r"""Parse cognateset merge instructions
+
+    The format of the input file is the same as the output of the homophones report
+    >>> from io import StringIO
+    >>> file = StringIO("Cluster of overlapping cognate sets:\n"
+    ... "    bark-22\n"
+    ... "    skin-27")
+    >>> parse_cognatesets_report(file)
+    [['bark-22', 'skin-27']]
+    """
+    cognateset_groups: t.List[t.List] = []
+    next_group = []
+    for line in report:
+        line = line.rstrip()
+        match = re.match(r"\s+?([\w-]+?)( \(.*\))?$", line)
+        if match:
+            next_group.append(match.group(1))
+        else:
+            if "luster" not in line:
+                logger.warning(
+                    "I assume '%s' is the header of a cluster of cognatesets to be merged, but it does not say ‘cluster’ so I am not sure.",
+                    line,
+                )
+            if next_group:
+                cognateset_groups.append(next_group)
+            next_group = []
+    if next_group:
+        cognateset_groups.append(next_group)
+    return cognateset_groups
+
 
 # TODO: Options given on the command line should have preference over defaults,
 # no matter whether they are given in terms of names ("Parameter_ID") or
@@ -221,10 +257,12 @@ The following merge functions are predefined, each takes the given entries for o
         "The cognatet set merger was initialized as follows\n Column : merger function\n"
         + "\n".join("{}: {}".format(k, m.__name__) for k, m in mergers.items())
     )
-    # Parse the homophones instructions!
-    cogset_groups = parse_homophones_report(
+    # Parse the cognatesets instructions!
+    report: t.List[t.List[str]] = parse_cognatesets_report(
         args.merge_file.open("r", encoding="utf8"),
     )
+    print(report)
+    cogset_groups = {variants[0]: variants for variants in report}
     if cogset_groups == defaultdict(list):
         cli.Exit.INVALID_INPUT(
             f"The provided report {args.merge_file} is empty or does not have the correct format."
