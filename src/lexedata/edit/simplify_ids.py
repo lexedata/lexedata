@@ -2,7 +2,9 @@
 
 Take every ID column and convert it to either an integer-valued or a restricted-string-valued (only containing a-z, 0-9, or _) column, maintaining uniqueness of IDs, and keeping IDs as they are where they fit the format.
 
-Optionally, create ‘transparent’ IDs, that is alphanumerical IDs which are derived from the characteristic columns of the corresponding table. For example, the ID of a FormTable would be derived from language and concept; for a CognatesetTable from the central concept if there is one.
+Optionally, create ‘transparent’ IDs, that is alphanumerical IDs which are derived from the characteristic columns of the corresponding table. 
+
+For example, the ID of a FormTable would be derived from language and concept; for a CognatesetTable from the central concept if there is one.
 
 I currently have problems reading data that is not clean, so if I read your FormTable first, but you have IDs that need simplification in your LanguageTable which appear in your FormTable, I will fail with a confusing error. If I do, please try to specify the tables you need simplified using --tables. List the tables whose IDs appear in other tables first and tables that contain the references later.
 """
