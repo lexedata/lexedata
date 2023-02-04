@@ -63,7 +63,9 @@ if __name__ == "__main__":
     for table in tables:
         logger.info(f"Handling table {table.url.string}…")
         try:
-            simplify_table_ids_and_references(ds, table, args.transparent, logger, additional_normalize=normalize)
+            simplify_table_ids_and_references(
+                ds, table, args.transparent, logger, additional_normalize=normalize
+            )
         except ValueError:
             logger.critical(
                 f"I could not simplify your {table}. Maybe try specifying the table with specific ID issues first, using --tables?"
