@@ -1,9 +1,9 @@
 name: Publish ${package_name} to PyPI / GitHub
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build-n-publish:
