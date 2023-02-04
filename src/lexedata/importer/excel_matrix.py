@@ -47,13 +47,11 @@ class DB:
     """
 
     cache: t.Dict[str, t.Dict[t.Hashable, t.Dict[str, t.Any]]]
-    source_ids: t.Set[str]
 
     def __init__(self, output_dataset: pycldf.Wordlist):
         """Create a new *empty* cache associated with a dataset."""
         self.dataset = output_dataset
         self.cache = {}
-        self.source_ids = set()
 
     @classmethod
     def from_dataset(k, dataset, logger: cli.logging.Logger = cli.logger):
@@ -84,17 +82,11 @@ class DB:
             except FileNotFoundError:
                 self.cache[table_type] = {}
 
-        for source in self.dataset.sources:
-            self.source_ids.add(source.id)
-
     def drop_from_cache(self, table: str):
         self.cache[table] = {}
 
     def retrieve(self, table_type: str):
         return self.cache[table_type].values()
-
-    def add_source(self, source_id):
-        self.source_ids.add(source_id)
 
     def empty_cache(self):
         self.cache = {
@@ -112,10 +104,6 @@ class DB:
                 table_type
             ].write(self.retrieve(table_type))
         self.dataset.write_metadata()
-        # TODO: Write BIB file, without pycldf
-        with self.dataset.bibpath.open("w", encoding="utf-8") as bibfile:
-            for source in self.source_ids:
-                print("@misc{" + source + ", title={" + source + "} }", file=bibfile)
 
     def associate(
         self, form_id: str, row: RowObject, comment: t.Optional[str] = None

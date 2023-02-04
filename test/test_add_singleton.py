@@ -134,7 +134,7 @@ def test_create_singletons_no_slices(caplog):
         {"ID": "j2", "Form_ID": "f3", "Cognateset_ID": "s1", "Source": []},
         {"ID": "j3", "Form_ID": "f4", "Cognateset_ID": "s1", "Source": []},
         {"ID": "j4", "Form_ID": "f4", "Cognateset_ID": "s2", "Source": []},
-        {"ID": "X_f2_1", "Form_ID": "f2", "Cognateset_ID": "X_f2_1", "Source": None},
+        {"ID": "x_f2_1", "Form_ID": "f2", "Cognateset_ID": "x_f2_1", "Source": None},
     ]
 
 
@@ -242,7 +242,7 @@ def test_create_singletons_affix(caplog):
     assert list(cognatesets) == [
         {"ID": "s1", "Description": None, "Source": []},
         {"ID": "s2", "Description": None, "Source": []},
-        {"ID": "X_f2_1", "Description": None, "Source": None},
+        {"ID": "x_f2_1", "Description": None, "Source": None},
     ]
     assert judgements == [
         {
@@ -278,9 +278,9 @@ def test_create_singletons_affix(caplog):
             "Source": [],
         },
         {
-            "ID": "X_f2_1",
+            "ID": "x_f2_1",
             "Form_ID": "f2",
-            "Cognateset_ID": "X_f2_1",
+            "Cognateset_ID": "x_f2_1",
             "Segment_Slice": ["1:1"],
             "Alignment": ["f"],
             "Source": None,
@@ -338,10 +338,10 @@ def test_create_singletons_affix_by_segment(caplog):
     assert list(cognatesets) == [
         {"ID": "s1", "Description": None, "Source": []},
         {"ID": "s2", "Description": None, "Source": []},
-        {"ID": "X_f2_1", "Description": None, "Source": None},
-        {"ID": "X_f3_1", "Description": None, "Source": None},
-        {"ID": "X_f4_1", "Description": None, "Source": None},
-        {"ID": "X_f4_2", "Description": None, "Source": None},
+        {"ID": "x_f2_1", "Description": None, "Source": None},
+        {"ID": "x_f3_1", "Description": None, "Source": None},
+        {"ID": "x_f4_1", "Description": None, "Source": None},
+        {"ID": "x_f4_2", "Description": None, "Source": None},
     ]
     assert judgements == [
         {
@@ -377,33 +377,33 @@ def test_create_singletons_affix_by_segment(caplog):
             "Source": [],
         },
         {
-            "ID": "X_f2_1",
+            "ID": "x_f2_1",
             "Form_ID": "f2",
-            "Cognateset_ID": "X_f2_1",
+            "Cognateset_ID": "x_f2_1",
             "Segment_Slice": ["1:1"],
             "Alignment": ["f"],
             "Source": None,
         },
         {
-            "ID": "X_f3_1",
+            "ID": "x_f3_1",
             "Form_ID": "f3",
-            "Cognateset_ID": "X_f3_1",
+            "Cognateset_ID": "x_f3_1",
             "Segment_Slice": ["1:1"],
             "Alignment": ["f"],
             "Source": None,
         },
         {
-            "ID": "X_f4_1",
+            "ID": "x_f4_1",
             "Form_ID": "f4",
-            "Cognateset_ID": "X_f4_1",
+            "Cognateset_ID": "x_f4_1",
             "Segment_Slice": ["1:1"],
             "Alignment": ["t"],
             "Source": None,
         },
         {
-            "ID": "X_f4_2",
+            "ID": "x_f4_2",
             "Form_ID": "f4",
-            "Cognateset_ID": "X_f4_2",
+            "Cognateset_ID": "x_f4_2",
             "Segment_Slice": ["4:4"],
             "Alignment": ["t"],
             "Source": None,
@@ -464,97 +464,97 @@ def test_singletons():
     )
     c_c_id = dataset["CognateTable", "id"].name
     c_cs_id = dataset["CognatesetTable", "id"].name
-    cognates = [c for c in judgements if c[c_c_id].startswith("X")]
-    cogsets = [c for c in all_cogsets if c[c_cs_id].startswith("X")]
+    cognates = [c for c in judgements if c[c_c_id].startswith("x")]
+    cogsets = [c for c in all_cogsets if c[c_cs_id].startswith("x")]
     assert cognates == [
         {
-            "ID": "X_ache_one_1_1",
+            "ID": "x_ache_one_1_1",
             "Form_ID": "ache_one_1",
             "Comment": None,
             "Segment_Slice": ["1:6"],
             "Alignment": ["e", "t", "a", "k", "r", "ã"],
-            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_ache_one_1_1",
+            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "x_ache_one_1_1",
         },
         {
-            "ID": "X_ache_two_1_1",
+            "ID": "x_ache_two_1_1",
             "Form_ID": "ache_two_1",
             "Comment": None,
             "Segment_Slice": ["1:4"],
             "Alignment": ["m", "i", "r", "õ"],
-            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_ache_two_1_1",
+            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "x_ache_two_1_1",
         },
         {
-            "ID": "X_old_paraguayan_guarani_two_1",
+            "ID": "x_old_paraguayan_guarani_two_1",
             "Form_ID": "old_paraguayan_guarani_two",
             "Comment": None,
             "Segment_Slice": ["1:5"],
             "Alignment": ["p", "a", "t", "h", "á"],
-            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_old_paraguayan_guarani_two_1",
+            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "x_old_paraguayan_guarani_two_1",
         },
         {
-            "ID": "X_ache_three_1_1",
+            "ID": "x_ache_three_1_1",
             "Form_ID": "ache_three_1",
             "Comment": None,
             "Segment_Slice": ["1:5"],
             "Alignment": ["b", "u", "ǰ", "a", "¹"],
-            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_ache_three_1_1",
+            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "x_ache_three_1_1",
         },
         {
-            "ID": "X_paraguayan_guarani_five_1",
+            "ID": "x_paraguayan_guarani_five_1",
             "Form_ID": "paraguayan_guarani_five",
             "Comment": None,
             "Segment_Slice": ["1:2"],
             "Alignment": ["p", "o"],
-            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_paraguayan_guarani_five_1",
+            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "x_paraguayan_guarani_five_1",
         },
         {
-            "ID": "X_kaiwa_five_1_1",
+            "ID": "x_kaiwa_five_1_1",
             "Form_ID": "kaiwa_five_1",
             "Comment": None,
             "Segment_Slice": ["1:6"],
             "Alignment": ["t", "e", "ɲ", "o", "ʔ", "a"],
-            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "X_kaiwa_five_1_1",
+            "FIXME_IF_you_set_this_column_name_to_Value_it_messes_up_translations_due_to_conflict": "x_kaiwa_five_1_1",
         },
     ]
 
     assert cogsets == [
         {
-            "ID": "X_ache_one_1_1",
+            "ID": "x_ache_one_1_1",
             "Set": None,
             "Comment": None,
             "Name": "one",
             "Status_Column": "automatic singleton",
         },
         {
-            "ID": "X_ache_two_1_1",
+            "ID": "x_ache_two_1_1",
             "Set": None,
             "Comment": None,
             "Name": "two",
             "Status_Column": "automatic singleton",
         },
         {
-            "ID": "X_old_paraguayan_guarani_two_1",
+            "ID": "x_old_paraguayan_guarani_two_1",
             "Set": None,
             "Comment": None,
             "Name": "two",
             "Status_Column": "automatic singleton",
         },
         {
-            "ID": "X_ache_three_1_1",
+            "ID": "x_ache_three_1_1",
             "Set": None,
             "Comment": None,
             "Name": "three",
             "Status_Column": "automatic singleton",
         },
         {
-            "ID": "X_paraguayan_guarani_five_1",
+            "ID": "x_paraguayan_guarani_five_1",
             "Set": None,
             "Comment": None,
             "Name": "five",
             "Status_Column": "automatic singleton",
         },
         {
-            "ID": "X_kaiwa_five_1_1",
+            "ID": "x_kaiwa_five_1_1",
             "Set": None,
             "Comment": None,
             "Name": "five",

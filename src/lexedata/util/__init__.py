@@ -16,7 +16,10 @@ from . import fs
 
 __all__ = ["fs", "KeyKeyDict"]
 
-ID_FORMAT = re.compile("[a-z0-9_]+")
+# Following https://github.com/cldf/cldf/#identifier and thus RFC2986,
+# URLs should be alphanumeric with underscores and hyphens, so we
+# restrict them to be that here.
+ID_FORMAT = re.compile("[A-Za-z0-9_-]+")
 
 MI = t.TypeVar("MI")
 
@@ -46,7 +49,7 @@ def string_to_id(string: str) -> str:
     >>> string_to_id("trivial")
     'trivial'
     >>> string_to_id("Just 4 non-alphanumerical characters.")
-    'just_4_non_alphanumerical_characters'
+    'just_4_non-alphanumerical_characters'
     >>> string_to_id("Это русский.")
     'eto_russkii'
     >>> string_to_id("该语言有一个音节。")
@@ -207,7 +210,7 @@ def cache_table(
     We can also use it to look up a specific set of columns, and change the index column.
     This allows us, for example, to get language IDs by name:
     >>> _ = ds.add_component("LanguageTable")
-    >>> ds.write(LanguageTable=[
+    >>> _ = ds.write(LanguageTable=[
     ...     ['ache', 'Aché', 'South America', -25.59, -56.47, "ache1246", "guq"],
     ...     ['paraguayan_guarani', 'Paraguayan Guaraní', None, None, None, None, None]])
     >>> languages = cache_table(ds, "LanguageTable", {"id": "ID"}, index_column="Name")

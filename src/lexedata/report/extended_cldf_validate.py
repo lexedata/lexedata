@@ -63,6 +63,7 @@ def check_id_format(dataset: pycldf.Dataset, logger: cli.logging.Logger = cli.lo
                 if datatype.format not in {
                     "[a-zA-Z0-9_\\-]+",
                     "[a-zA-Z0-9_-]+",
+                    "[A-Za-z0-9_-]+",
                     "[a-zA-Z0-9\\-_]+",
                     "[a-z0-9_]+",
                 }:

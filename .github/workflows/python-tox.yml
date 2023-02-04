@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8", "3.9", "3.10"]
+        python: ["3.8", "3.9", "3.10", "3.11"]
         pycldf: ["1.24.0", "1.21.0", "NEWEST"]
     steps:
     - uses: actions/checkout@v2
@@ -36,6 +36,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install catalogs
       run: |
+        git config --global init.defaultBranch main
         mkdir -p ~/.config/cldf/
         (cd ~/.config/cldf/ && [ -d glottolog ] || git clone --depth 1 https://github.com/glottolog/glottolog.git)
         (cd ~/.config/cldf/ && [ -d concepticon-data ] || git clone --depth 1 https://github.com/concepticon/concepticon-data.git concepticon)

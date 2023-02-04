@@ -43,17 +43,17 @@ def test_add_cognate_table_sets_only():
     assert add_cognate_table(ds, split=True) == 2
     assert list(ds["CognateTable"]) == [
         {
-            "ID": "l1c1-c1_s1",
+            "ID": "l1c1-c1-s1",
             "Form_ID": "l1c1",
-            "Cognateset_ID": "c1_s1",
+            "Cognateset_ID": "c1-s1",
             "Segment_Slice": ["1:3"],
             "Alignment": ["w", "a", "n"],
             "Source": [],
         },
         {
-            "ID": "l1c2-c2_s2",
+            "ID": "l1c2-c2-s2",
             "Form_ID": "l1c2",
-            "Cognateset_ID": "c2_s2",
+            "Cognateset_ID": "c2-s2",
             "Segment_Slice": ["1:2"],
             "Alignment": ["t", "u"],
             "Source": [],
@@ -105,33 +105,33 @@ def test_add_cognate_table_with_slices(caplog):
     assert n == 4
     assert list(ds["CognateTable"]) == [
         {
-            "ID": "good-form-c1_s1",
+            "ID": "good-form-c1-s1",
             "Form_ID": "good-form",
-            "Cognateset_ID": "c1_s1",
+            "Cognateset_ID": "c1-s1",
             "Segment_Slice": ["1:3"],
             "Alignment": ["g", "u", "d"],
             "Source": [],
         },
         {
-            "ID": "good-form-c1_s2",
+            "ID": "good-form-c1-s2",
             "Form_ID": "good-form",
-            "Cognateset_ID": "c1_s2",
+            "Cognateset_ID": "c1-s2",
             "Segment_Slice": ["5:7"],
             "Alignment": ["f", "o", "m"],
             "Source": [],
         },
         {
-            "ID": "bad-form-c1_s1",
+            "ID": "bad-form-c1-s1",
             "Form_ID": "bad-form",
-            "Cognateset_ID": "c1_s1",
+            "Cognateset_ID": "c1-s1",
             "Segment_Slice": ["1:4"],
             "Alignment": ["w", "a", "+", "n"],
             "Source": [],
         },
         {
-            "ID": "simple-form-c2_s2",
+            "ID": "simple-form-c2-s2",
             "Form_ID": "simple-form",
-            "Cognateset_ID": "c2_s2",
+            "Cognateset_ID": "c2-s2",
             "Segment_Slice": ["1:2"],
             "Alignment": ["t", "u"],
             "Source": [],

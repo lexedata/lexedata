@@ -326,7 +326,6 @@ def write_edictor_file(
         delimiter="\t",
     )
     out.writerow({column: rename(column) for column in tsv_header})
-    out_cognatesets: t.List[t.Optional[str]]
     for f, (id, form) in enumerate(forms.items(), 1):
         # store original form id in other field and get cogset integer id
         this_form = dict(form)
