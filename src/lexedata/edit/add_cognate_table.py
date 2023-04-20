@@ -4,6 +4,7 @@ If the dataset has a CognateTable, do nothing.
 If the dataset has no cognatesetReference column anywhere, add an empty CognateTable.
 If the dataset has a cognatesetReference in the FormTable, extract that to a separate cognateTable, also transferring alignments if they exist.
 If the dataset has a cognatesetReference anywhere else, admit you don't know what is going on and die.
+If your dataset has partial cognate sets, make sure that a proper separator is declared in the metadata file.
 """
 from pathlib import Path
 
@@ -187,7 +188,7 @@ def add_cognate_table(
                 )
             else:
                 logger.warning(
-                    f"In form {form['id']}, you had {len(cogset)} cognate judgements, but {len(alignments)} alignments and {len(segment_slice)} different morphemes or segment slices. I don't know how to deal with that discrepancy, so I skipped that form."
+                    f"In form {form['id']}, you had {len(cogset)} cognate judgements, but {len(alignments)} alignments and {len(segment_slice)} different morphemes or segment slices. I don't know how to deal with that discrepancy, so I skipped the cognate judgements for that form."
                 )
 
     if forms_without_segments >= 5:
