@@ -1,5 +1,5 @@
 """
-Adds a metadata.json file automatically starting from a forms.csv file. Lexedata can guess metadata for a number of columns, including, but not limited to, all default CLDF properties (e.g. Language, Form) and CLDF reference properties (e.g. parameterReference). We recommend that you check the metadata file created and adjust if necessary.
+Adds a metadata.json file automatically starting from a forms.csv file. Lexedata can guess metadata for a number of columns, including, but not limited to, all default CLDF properties (e.g. Language, Form) and CLDF reference properties (e.g. parameterReference). We recommend that you check the metadata file created and adjust if necessary. If using a LingPy output .tsv file, convert it to a .csv before proceeding.
 """
 
 from pathlib import Path
