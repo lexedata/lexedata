@@ -85,7 +85,6 @@ def treat_brackets(
     bracket_pairs=[("(", ")")],
     logger: cli.logging.Logger = cli.logger,
 ) -> t.Iterator[R]:
-
     """Make sure forms contain no brackets.
 
     >>> for row in treat_brackets([

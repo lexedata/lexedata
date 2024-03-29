@@ -78,9 +78,7 @@ class SetOrFromFile(argparse.Action):
                 # Mandatory argument, can be not given as default.
                 pass
             else:
-                raise ValueError(
-                    "Optional SetOrFromFile makes sense only with variable argument count ('+')"
-                )
+                ...
 
         if metavar is None:
             metavar = option_strings[0].upper()

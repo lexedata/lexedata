@@ -656,7 +656,8 @@ The following merge functions are predefined, each takes the given entries for o
     mergers: t.Dict[str, Merger] = dict(default_mergers)
     for column, merger in args.merge:
         # TODO: catch error of unkown merger, and generally treat this better
-        mergers[column] = eval(merger)
+        mergers[column] = merger
+
     logger.debug(
         "The homophones merger was initialized as follows\n Column : merger function\n"
         + "\n".join("{}: {}".format(k, m.__name__) for k, m in mergers.items())

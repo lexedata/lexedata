@@ -662,7 +662,7 @@ def format_nexus(
     This function only formats and performs no further validity checks!
 
     >>> print(format_nexus(
-    ...   ["l1", "l2"],
+    ...   ["l2", "l1"],
     ...   ["0010", "0111"],
     ...   2, 3,
     ...   "binary",
@@ -678,8 +678,8 @@ def format_nexus(
       Format Datatype=Restriction Missing=? Gap=- Symbols="0 1" ;
       Matrix
         [The first column is constant zero, for programs with ascertainment correction]
-        l1  0010
-        l2  0111
+        l1  0111
+        l2  0010
       ;
     End;
     Begin Sets;
@@ -727,7 +727,7 @@ End;
 {charsets}
 """.format(
         len_taxa=len(languages),
-        taxa=" ".join([str(language) for language in languages]),
+        taxa=" ".join(sorted([str(language) for language in languages])),
         charsets=charsets,
         len_alignment=n_characters,
         datatype="Restriction" if datatype == "binary" else "Standard",

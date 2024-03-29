@@ -6,6 +6,7 @@ import pytest
 
 from lexedata import util
 from helper_functions import empty_copy_of_cldf_wordlist, copy_to_temp
+from lexedata.util import cache_table
 from lexedata.util.fs import get_dataset
 from lexedata.exporter.cognates import (
     ExcelWriter,
@@ -331,7 +332,10 @@ def test_no_comment_column():
     )
     forms = util.cache_table(dataset).values()
     for form in forms:
-        assert writer.form_to_cell_value(form).strip() == "{ e t a k ɾ ã } ‘one’"
+        assert (
+            writer.form_to_cell_value(form, {"id": 0}).strip()
+            == "{ e t a k ɾ ã } ‘one’"
+        )
         break
 
 
@@ -355,7 +359,7 @@ def test_missing_required_column():
 def test_included_segments(caplog):
     ds = util.fs.new_wordlist(FormTable=[], CognatesetTable=[], CognateTable=[])
     E = ExcelWriter(dataset=ds)
-    E.form_to_cell_value({"form": "f", "parameterReference": "c"})
+    E.form_to_cell_value({"form": "f", "parameterReference": "c"}, {})
     with caplog.at_level(logging.WARNING):
         cell = E.form_to_cell_value(
             {
@@ -364,9 +368,54 @@ def test_included_segments(caplog):
                 "form": "fo",
                 "parameterReference": "c",
                 "segments": ["f", "o"],
-                "segmentSlice": ["3:1"],
-            }
+            },
+            {"segmentSlice": ["3:1"], "id": 5},
         )
         assert cell == "{ f o } ‘c’"
 
     assert re.search("segment slice '3:1' is invalid", caplog.text) is None
+
+
+def test_alignment_in_cognate_excel_export():
+    """Regression test for the cognate exporter not caring about segments."""
+    ds = util.fs.new_wordlist(
+        FormTable=[
+            {
+                "ID": "f1",
+                "Language_ID": "lang",
+                "Parameter_ID": "concept",
+                "Form": "for",
+                "value": "for",
+                "segments": ["f", "o", "r"],
+            }
+        ],
+        CognatesetTable=[
+            {"ID": "s1", "Source": "3", "Description": "A", "comment": None},
+        ],
+        CognateTable=[
+            {
+                "ID": "f1-s1",
+                "Cognateset_ID": "s1",
+                "Form_ID": "f1",
+                "Segment_Slice": ["2:3"],
+                "Alignment": ["o", "", "r"],
+            }
+        ],
+        LanguageTable=[{"ID": "lang", "Name": "Lang"}],
+    )
+
+    E = ExcelWriter(ds, database_url="https://example.org/lexicon/{:}")
+
+    cogsets, judgements = cogsets_and_judgements(ds, status=None)
+    languages = list(util.cache_table(ds, "LanguageTable").values())
+    forms = util.cache_table(ds)
+
+    E.create_excel(
+        size_sort=False,
+        languages=languages,
+        rows=cogsets,
+        judgements=judgements,
+        forms=forms,
+    )
+    cell = E.wb.active["D2"]
+    assert "".join(cell.value.split()) == "f{o-r}‘concept’"
