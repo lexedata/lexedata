@@ -48,9 +48,3 @@ jobs:
       run: |
         tox
         codecov
-    - uses: codecov/codecov-action@v2
-      with:
-        files: ./coverage.xml
-        name: codecov-umbrella
-        fail_ci_if_error: false
-        verbose: true
