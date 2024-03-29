@@ -6,7 +6,6 @@ import pytest
 
 from lexedata import util
 from helper_functions import empty_copy_of_cldf_wordlist, copy_to_temp
-from lexedata.util import cache_table
 from lexedata.util.fs import get_dataset
 from lexedata.exporter.cognates import (
     ExcelWriter,

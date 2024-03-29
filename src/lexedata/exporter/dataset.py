@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
-import abc
-import argparse
-import re
 import typing as t
-import urllib.parse
 from pathlib import Path
 from typing import List, Any, Mapping
 
-import openpyxl as op
 import pycldf
 
-from lexedata import cli, types, util
-from lexedata.edit.add_singleton_cognatesets import create_singletons
+from lexedata import cli
 from lexedata.util import cache_table, ensure_list
-from lexedata.util.fs import new_wordlist
 
 
 def parser():
@@ -159,7 +152,7 @@ if __name__ == "__main__":  # pragma: no cover
 
         def form_filter(form_row: Mapping[str, t.Any]) -> bool:
             concept = form_row[c_f_concept]
-            if type(concept) == list:
+            if isinstance(concept, list):
                 concept = [c for c in concept if c in relevant_concept_ids]
                 if len(concept) == 0:
                     return False

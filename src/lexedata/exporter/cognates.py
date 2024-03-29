@@ -314,23 +314,22 @@ class ExcelWriter(BaseExcelWriter):
 
         >>> ds = util.fs.new_wordlist(FormTable=[], CognatesetTable=[], CognateTable=[])
         >>> E = ExcelWriter(dataset=ds)
-        >>> E.form_to_cell_value({"form": "f", "parameterReference": "c"}, {})
+        >>> E.form_to_cell_value({"form": "f", "parameterReference": "c"}, {"id": 0})
         'f ‘c’'
         >>> E.form_to_cell_value(
-        ...   {"form": "f", "parameterReference": "c", "comment": "Not empty"}, {})
+        ...   {"form": "f", "parameterReference": "c", "comment": "Not empty"}, {"id": 0})
         'f ‘c’ ⚠'
         >>> E.form_to_cell_value(
-        ...   {"form": "fo", "parameterReference": "c", "segments": ["f", "o"]}, {})
+        ...   {"form": "fo", "parameterReference": "c", "segments": ["f", "o"]}, {"id": 0})
         '{ f o } ‘c’'
         >>> E.form_to_cell_value(
         ...   {"form": "fo",
         ...    "parameterReference": "c",
         ...    "segments": ["f", "o"]},
-        ...    {"segmentSlice": ["1:1"]})
-        '{ f }o ‘c’'
+        ...    {"segmentSlice": ["1:1"], "id": 0})
+        '{ f } o ‘c’'
 
-        TODO: This function should at some point support alignments, so that
-        the following call will return '{ - f - }o ‘c’' instead.
+        This function supports alignments:
 
         >>> E.form_to_cell_value(
         ...   {"form": "fo",
@@ -338,7 +337,7 @@ class ExcelWriter(BaseExcelWriter):
         ...    "segments": ["f", "o"]},
         ...    {"segmentSlice": ["1:1"],
         ...    "alignment": ["", "f", ""]})
-        '{ f }o ‘c’'
+        '{ - f - } o ‘c’'
 
         """
         segments = form.get("segments")

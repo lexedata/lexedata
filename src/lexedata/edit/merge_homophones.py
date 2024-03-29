@@ -349,7 +349,7 @@ def default(
     """
     if isiterable(sequence[0]):
         return union(sequence, target)
-    elif type(sequence[0]) == str or sequence[0] is None:
+    elif isinstance(sequence[0], str) or sequence[0] is None:
         return union(sequence, target)
     else:
         return must_be_equal(sequence, target)
