@@ -383,7 +383,9 @@ class ExcelWriter(BaseExcelWriter):
                 included_segments = range(len(form["segments"]))
 
             included = False
-            segments_in_alignment= [s for s in metadata.get("alignment", []) if s and s!='-']
+            segments_in_alignment = [
+                s for s in metadata.get("alignment", []) if s and s != "-"
+            ]
             try:
                 segments_in_segment_slice = [segments[i] for i in included_segments]
             except IndexError:
@@ -405,7 +407,7 @@ class ExcelWriter(BaseExcelWriter):
                     transcription += " } " + s
                     included = False
                 elif not included and i in included_segments:
-                    transcription += " { " + " ".join([s or '-' for s in alignment])
+                    transcription += " { " + " ".join([s or "-" for s in alignment])
                     included = True
                 elif i in included_segments:
                     continue
