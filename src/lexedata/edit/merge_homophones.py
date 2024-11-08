@@ -494,7 +494,7 @@ def merge_forms(
         if id in merge_targets:
             unknown.add(id)
             target_id = merge_targets[id]
-            group = homophone_groups[target_id]
+            group: t.Sequence[types.Form_ID] = homophone_groups[target_id]
             if all(i in buffer for i in group):
                 try:
                     buffer[target_id] = merge_group(
@@ -510,9 +510,9 @@ def merge_forms(
                             del buffer[i]
                 except Skip:
                     logger.info(
-                        f"Merging form {id} with forms {[f[c_f_id] for f in group]} was skipped."
+                        f"Merging form {id} with forms {group} was skipped."
                     )
-                    del homophone_groups[id]
+                    del homophone_groups[target_id]
                     pass
                 for i in group:
                     unknown.remove(i)
