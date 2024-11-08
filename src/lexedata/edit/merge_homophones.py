@@ -509,9 +509,7 @@ def merge_forms(
                         if i != target_id:
                             del buffer[i]
                 except Skip:
-                    logger.info(
-                        f"Merging form {id} with forms {group} was skipped."
-                    )
+                    logger.info(f"Merging form {id} with forms {group} was skipped.")
                     del homophone_groups[target_id]
                     pass
                 for i in group:
