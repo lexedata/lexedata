@@ -117,7 +117,7 @@ class BaseExcelWriter:
 
     def create_formcells(
         self,
-        row_forms: t.Iterable[types.Form],
+        row_forms: t.Iterable[tuple[types.Form, types.Judgement]],
         row_index: int,
     ) -> int:
         """Writes all forms for given cognate set to Excel.
@@ -148,7 +148,12 @@ class BaseExcelWriter:
 
         return row_index
 
-    def create_formcell(self, form: types.Form, column: int, row: int) -> None:
+    def create_formcell(
+        self,
+        form_and_judgement: tuple[types.Form, types.Judgement],
+        column: int,
+        row: int,
+    ) -> None:
         """Fill the given cell with the form's data.
 
         In the cell described by ws, column, row, dump the data for the form:
@@ -156,8 +161,8 @@ class BaseExcelWriter:
         if there is one.
 
         """
-        form, metadata = form
-        cell_value = self.form_to_cell_value(form)
+        form, metadata = form_and_judgement
+        cell_value = self.form_to_cell_value(form, metadata)
         form_cell = self.ws.cell(row=row, column=column, value=cell_value)
         comment = metadata.get("comment")
         if comment:
@@ -177,7 +182,7 @@ class BaseExcelWriter:
     ) -> t.Mapping[
         types.Cognateset_ID, t.Mapping[types.Form_ID, t.Sequence[types.Judgement]]
     ]:
-        "Collect forms by row object (ie. concept or cognate set)"
+        """Collect forms by row object (ie. concept or cognate set)."""
         all_forms: t.MutableMapping[
             types.Cognateset_ID, t.Mapping[types.Form_ID, t.List[types.Judgement]]
         ] = t.DefaultDict(lambda: t.DefaultDict(list))
@@ -289,7 +294,7 @@ class ExcelWriter(BaseExcelWriter):
         c_id = dataset["CognatesetTable", "id"].name
         try:
             c_comment = dataset["CognatesetTable", "comment"].name
-        except (KeyError):
+        except KeyError:
             c_comment = None
         self.header = []
         for column in dataset["CognatesetTable"].tableSchema.columns:
@@ -301,7 +306,7 @@ class ExcelWriter(BaseExcelWriter):
                 property = util.cldf_property(column.propertyUrl) or column.name
                 self.header.append((property, column.name))
 
-    def form_to_cell_value(self, form: types.Form) -> str:
+    def form_to_cell_value(self, form: types.Form, metadata: types.Judgement) -> str:
         """Build a string describing the form itself
 
         Provide the best transcription and all translations of the form strung
@@ -309,43 +314,48 @@ class ExcelWriter(BaseExcelWriter):
 
         >>> ds = util.fs.new_wordlist(FormTable=[], CognatesetTable=[], CognateTable=[])
         >>> E = ExcelWriter(dataset=ds)
-        >>> E.form_to_cell_value({"form": "f", "parameterReference": "c"})
+        >>> E.form_to_cell_value({"form": "f", "parameterReference": "c"}, {"id": 0})
         'f ‘c’'
         >>> E.form_to_cell_value(
-        ...   {"form": "f", "parameterReference": "c", "formComment": "Not empty"})
+        ...   {"form": "f", "parameterReference": "c", "comment": "Not empty"}, {"id": 0})
         'f ‘c’ ⚠'
         >>> E.form_to_cell_value(
-        ...   {"form": "fo", "parameterReference": "c", "segments": ["f", "o"]})
+        ...   {"form": "fo", "parameterReference": "c", "segments": ["f", "o"]}, {"id": 0})
         '{ f o } ‘c’'
         >>> E.form_to_cell_value(
         ...   {"form": "fo",
         ...    "parameterReference": "c",
-        ...    "segments": ["f", "o"],
-        ...    "segmentSlice": ["1:1"]})
-        '{ f }o ‘c’'
+        ...    "segments": ["f", "o"]},
+        ...    {"segmentSlice": ["1:1"], "id": 0})
+        '{ f } o ‘c’'
 
-        TODO: This function should at some point support alignments, so that
-        the following call will return '{ - f - }o ‘c’' instead.
+        This function supports alignments:
 
         >>> E.form_to_cell_value(
         ...   {"form": "fo",
         ...    "parameterReference": "c",
-        ...    "segments": ["f", "o"],
-        ...    "segmentSlice": ["1:1"],
+        ...    "segments": ["f", "o"]},
+        ...    {"segmentSlice": ["1:1"],
         ...    "alignment": ["", "f", ""]})
-        '{ f }o ‘c’'
+        '{ - f - } o ‘c’'
 
         """
         segments = form.get("segments")
         if not segments:
             transcription = form["form"]
         else:
+            if not all(segments):
+                self.logger.warning(
+                    "In form %s, there were empty segments. Check for spurious trailing spaces and double spaces!",
+                    form["id"],
+                )
+                segments = [s for s in segments if s]
             transcription = ""
             # TODO: use CLDF property instead of column name
             included_segments: t.Iterable[int]
             try:
                 included_segments = set(
-                    parse_segment_slices(form["segmentSlice"], enforce_ordered=True)
+                    parse_segment_slices(metadata["segmentSlice"], enforce_ordered=True)
                 )
             except TypeError:
                 self.logger.warning(
@@ -365,24 +375,43 @@ class ExcelWriter(BaseExcelWriter):
                 # whole segment and warn.
                 self.logger.warning(
                     "In judgement %s, for form %s, segment slice %s is invalid. I will use the whole form.",
-                    form["cognateReference"],
+                    metadata["id"],
                     form["id"],
-                    ",".join(form["segmentSlice"]),
+                    ",".join(metadata["segmentSlice"]),
                 )
                 included_segments = range(len(form["segments"]))
 
             included = False
+            segments_in_alignment = [
+                s for s in metadata.get("alignment", []) if s and s != "-"
+            ]
+            try:
+                segments_in_segment_slice = [segments[i] for i in included_segments]
+            except IndexError:
+                segments_in_segment_slice = segments
+            if segments_in_alignment != segments_in_segment_slice:
+                self.logger.warning(
+                    "Mismatch between segment slice and alignment in judgement %s: "
+                    "Found segments %s in alignment but segments %s from the segment slice. "
+                    "Trusting the latter – your alignment will be reset when you import.",
+                    metadata["id"],
+                    " ".join(segments_in_alignment),
+                    " ".join(segments_in_segment_slice),
+                )
+                alignment = segments_in_segment_slice
+            else:
+                alignment = metadata["alignment"]
             for i, s in enumerate(segments):
                 if included and i not in included_segments:
-                    transcription += " }" + s
+                    transcription += " } " + s
                     included = False
                 elif not included and i in included_segments:
-                    transcription += "{ " + s
+                    transcription += " { " + " ".join([s or "-" for s in alignment])
                     included = True
                 elif i in included_segments:
-                    transcription += " " + s
+                    continue
                 else:
-                    transcription += s
+                    transcription += " " + s
             if included:
                 transcription += " }"
 
@@ -391,9 +420,9 @@ class ExcelWriter(BaseExcelWriter):
 
         suffix = ""
         try:
-            if form.get("formComment"):
+            if form.get("comment"):
                 suffix = f" {WARNING:}"
-        except (KeyError):
+        except KeyError:
             pass
 
         # corresponding concepts
@@ -522,7 +551,7 @@ if __name__ == "__main__":  # pragma: no cover
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
     try:
         cogsets = list(dataset["CognatesetTable"])
-    except (KeyError):
+    except KeyError:
         cli.Exit.INVALID_DATASET(
             "Dataset has no explicit CognatesetTable. Add one using `lexedata.edit.add_table CognatesetTable`."
         )
@@ -544,7 +573,7 @@ if __name__ == "__main__":  # pragma: no cover
                 )
                 or dataset["CognatesetTable", args.sort_cognatesets_by].name
             )
-        except (KeyError):
+        except KeyError:
             cli.Exit.INVALID_COLUMN_NAME(
                 f"No column '{args.sort_cognatesets_by}' in your CognatesetTable."
             )

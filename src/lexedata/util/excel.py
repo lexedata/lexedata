@@ -20,17 +20,19 @@ def clean_cell_value(cell: op.cell.cell.Cell, logger=cli.logger):
     """Return the value of an Excel cell in a useful format and normalized."""
     if cell.value is None:
         return ""
-    if type(cell.value) == float:
+    elif isinstance(cell.value, float):
         if cell.value == int(cell.value):
             return int(cell.value)
         return cell.value
-    elif type(cell.value) == int:
+    elif isinstance(cell.value, int):
         return cell.value
-    elif type(cell.value) == datetime.datetime:  # pragma: no cover
+    elif isinstance(cell.value, datetime.datetime):  # pragma: no cover
         logger.warning(
             "Encountered Date/Time value %s in cell %s.", cell.value, cell.coordinate
         )
         cell.value = str(cell.value)
+    else:
+        assert isinstance(cell.value, str)
     try:
         v = unicodedata.normalize("NFC", (cell.value or "").strip())
         return v.replace("\n", ";\t")
@@ -613,24 +615,36 @@ def alignment_from_braces(text, start=0):
 
     If opening or closing brackets are missing, the slice goes until the end of the form.
 
+    >>> alignment_from_braces("t{e x}t")
+    ([(2, 3)], ['e', 'x'])
+    >>> alignment_from_braces("t{e - x}t")
+    ([(2, 3)], ['e', '-', 'x'])
     >>> alignment_from_braces("t{e x t")
     ([(2, 4)], ['e', 'x', 't'])
     >>> alignment_from_braces("t e x}t")
     ([(1, 3)], ['t', 'e', 'x'])
     >>> alignment_from_braces("t e x t")
     ([(1, 4)], ['t', 'e', 'x', 't'])
+    >>> alignment_from_braces("tʰ{e x}t")
+    ([(2, 3)], ['e', 'x'])
+    >>> alignment_from_braces("tʰ {e x} t")
+    ([(2, 3)], ['e', 'x'])
+    >>> alignment_from_braces("tʰ { e x } t")
+    ([(2, 3)], ['e', 'x'])
     """
     # TODO: Should we warn/error instead?
     try:
         before, remainder = text.split("{", 1)
     except ValueError:
         before, remainder = "", text
+    before = before.strip()
     try:
         content, remainder = remainder.split("}", 1)
     except ValueError:
         content, remainder = remainder, ""
+    remainder = remainder.strip()
     content = content.strip()
-    i = len(before.strip())
+    i = len(before.strip().split())
     j = len([s for s in content.split() if s != "-"])
     slice = (start + i + 1, start + i + j)
     if "{" in remainder:

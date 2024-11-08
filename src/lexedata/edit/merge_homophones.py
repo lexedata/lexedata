@@ -349,7 +349,7 @@ def default(
     """
     if isiterable(sequence[0]):
         return union(sequence, target)
-    elif type(sequence[0]) == str or sequence[0] is None:
+    elif isinstance(sequence[0], str) or sequence[0] is None:
         return union(sequence, target)
     else:
         return must_be_equal(sequence, target)
@@ -494,7 +494,7 @@ def merge_forms(
         if id in merge_targets:
             unknown.add(id)
             target_id = merge_targets[id]
-            group = homophone_groups[target_id]
+            group: t.Sequence[types.Form_ID] = homophone_groups[target_id]
             if all(i in buffer for i in group):
                 try:
                     buffer[target_id] = merge_group(
@@ -509,10 +509,8 @@ def merge_forms(
                         if i != target_id:
                             del buffer[i]
                 except Skip:
-                    logger.info(
-                        f"Merging form {id} with forms {[f[c_f_id] for f in group]} was skipped."
-                    )
-                    del homophone_groups[id]
+                    logger.info(f"Merging form {id} with forms {group} was skipped.")
+                    del homophone_groups[target_id]
                     pass
                 for i in group:
                     unknown.remove(i)
@@ -656,7 +654,8 @@ The following merge functions are predefined, each takes the given entries for o
     mergers: t.Dict[str, Merger] = dict(default_mergers)
     for column, merger in args.merge:
         # TODO: catch error of unkown merger, and generally treat this better
-        mergers[column] = eval(merger)
+        mergers[column] = merger
+
     logger.debug(
         "The homophones merger was initialized as follows\n Column : merger function\n"
         + "\n".join("{}: {}".format(k, m.__name__) for k, m in mergers.items())
