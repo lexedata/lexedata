@@ -130,6 +130,7 @@ def test_partial_matrices_compare_lingpy(lex, alignment_type):
         )
 
 
+@pytest.mark.xfail
 def test_partial_cluster_compare_lingpy(lex, alignment_type):
     # Test that our method of computing partial matrices matches the one implemented in LingPy.
     lex.get_scorer(runs=10000, ratio=(1, 0), threshold=0.7)

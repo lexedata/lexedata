@@ -211,7 +211,6 @@ def test_merge_group_not_implemented(copy_dataset, caplog):
 
 
 def test_merge_group_assertion_error(copy_dataset, caplog):
-
     dataset, _ = copy_dataset
     forms = [
         {

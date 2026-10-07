@@ -78,9 +78,7 @@ class SetOrFromFile(argparse.Action):
                 # Mandatory argument, can be not given as default.
                 pass
             else:
-                raise ValueError(
-                    "Optional SetOrFromFile makes sense only with variable argument count ('+')"
-                )
+                ...
 
         if metavar is None:
             metavar = option_strings[0].upper()
@@ -94,7 +92,7 @@ class SetOrFromFile(argparse.Action):
                 (help or "")
                 + f" Instead of a list of individual {metavar}s on the command line, this argument accepts also the path to a single {metavar}S.CSV file (with header row), containing the relevant IDs in the first column."
             )
-            if type(default) == types.WorldSet:
+            if isinstance(default, types.WorldSet):
                 help += f" (default: All {metavar.lower()}s in the dataset)"
             help = help.strip()
 

@@ -13,13 +13,13 @@ def substitute_many(
     row, columns, old_values_to_new_values, status_update: t.Optional[str]
 ):
     for column in columns:
-        if type(row[column]) == list:
+        if isinstance(row[column], list):
             row[column] = [
                 old_values_to_new_values.get(val, val) for val in row[column]
             ]
             if status_update:
                 row["Status_Column"] = status_update
-        elif type(row[column]) == str:
+        elif isinstance(row[column], str):
             row[column] = old_values_to_new_values.get(row[column], row[column])
             if status_update:
                 row["Status_Column"] = status_update

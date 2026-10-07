@@ -9,7 +9,7 @@ import pycldf
 import lexedata.util.excel as cell_parsers
 from lexedata import cli
 from lexedata.importer.excel_matrix import ExcelCognateParser
-from lexedata.types import CogSet, Language, RowObject
+from lexedata.types import CogSet, Language, RowObject, Judgement
 from lexedata.util.excel import clean_cell_value, get_cell_comment
 
 
@@ -64,6 +64,25 @@ class CognateEditParser(ExcelCognateParser):
         properties[self.db.dataset["CognatesetTable", "comment"].name] = comment
 
         return CogSet(properties)
+
+    def associate(
+        self, form_id: str, row: RowObject, comment: t.Optional[str] = None
+    ) -> bool:
+        c_id = self.db.dataset[self.row_type.__table__, "id"].name
+        assert (
+            row.__table__ == "CognatesetTable"
+        ), "Expected CognateSet, but got {:}".format(row.__class__)
+        row_id = row[c_id]
+        judgement = Judgement(
+            cldf_id=f"{form_id}-{row_id}",
+            cldf_formReference=form_id,
+            cldf_cognatesetReference=row_id,
+            cldf_comment=comment or "",
+            cldf_segmentSlice=...,
+            cldf_alignment=...,
+        )
+        self.db.make_id_unique(judgement)
+        return self.db.insert_into_db(judgement)
 
 
 def header_from_cognate_excel(

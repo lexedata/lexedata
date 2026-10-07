@@ -148,7 +148,7 @@ def load_forms_from_tsv(
             # One of Edictor's comment rows, storing settings
             continue
 
-        for (key, value) in line.items():
+        for key, value in line.items():
             value = value.replace("\\!t", "\t").replace("\\!n", "\n")
             sep = separators[key]
             if sep is not None:

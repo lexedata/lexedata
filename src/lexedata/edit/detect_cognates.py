@@ -308,7 +308,6 @@ def partial_cluster(
     mode="overlap",
     cluster_function=lingpy.algorithm.extra.infomap_clustering,
 ) -> t.Iterable[t.Tuple[t.Hashable, slice, int]]:
-
     # check for parameters and add clustering, in order to make sure that
     # analyses are not repeated
 

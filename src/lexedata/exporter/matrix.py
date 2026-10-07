@@ -84,11 +84,12 @@ if __name__ == "__main__":
         type=Path,
         help="File path for the generated cognate excel file.",
     )
-    parser.add_argument(
-        "--concepts",
-        action=cli.SetOrFromFile,
-        help="Concepts to output.",
-    )
+    # ??? IS THIS EVEN USED?
+    # parser.add_argument(
+    #     "--concepts",
+    #     action=cli.SetOrFromFile,
+    #     help="Concepts to output.",
+    # )
     parser.add_argument(
         "--sort-languages-by",
         help="The name of a column in the LanguageTable to sort languages by in the output",

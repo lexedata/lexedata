@@ -178,7 +178,7 @@ if __name__ == "__main__":
     dataset = pycldf.Wordlist.from_metadata(args.metadata)
     try:
         cogsets = list(dataset["CognatesetTable"])
-    except (KeyError):
+    except KeyError:
         cli.Exit.INVALID_DATASET(
             "Dataset has no explicit CognatesetTable. Add one using `lexedata.edit.add_table CognatesetTable`."
         )

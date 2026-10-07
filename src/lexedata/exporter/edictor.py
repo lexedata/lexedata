@@ -201,7 +201,7 @@ def forms_to_tsv(
 
             # 2. No tabs, newlines in entries
             for c, v in form.items():
-                if type(v) == str:
+                if isinstance(v, str):
                     if "\\!t" in form[c] or "\\!n" in form[c]:
                         logger.warning(
                             "Your data contains the special characters '\\!t' or '\\!n', which I will introduce for escaping tabs and newlines for edictor. These characters will not survive the back-import."
@@ -337,7 +337,7 @@ def write_edictor_file(
             this_form[col] = d.join(form[col])
         # 2. No tabs, newlines in entries, they make Edictor mad.
         for c, v in form.items():
-            if type(v) == str:
+            if isinstance(v, str):
                 this_form[c] = (
                     form[c].replace("\t", "  ;t  ").replace("\n", "    ;n    ")
                 )

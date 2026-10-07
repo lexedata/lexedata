@@ -53,6 +53,7 @@ comes shipped with lexedata. Sorry this looks a bit cryptic, but as we said, thi
 way the testing system also knows where to find the file.) ::
 
     $ python -c 'import pkg_resources; open("bantu.xlsx", "wb").write(pkg_resources.resource_stream("lexedata", "data/example-bantu.xlsx").read())'
+    [...]
 
 If you look at this data (we will do it in Python, but feel free to open it in
 Excel), you will see that ::
@@ -695,9 +696,9 @@ working on the cognate data in detail is a later step. ::
 
     $ python -m lexedata.edit.align
     INFO:lexedata:Caching table FormTable
-    100%|██████████| 1592/1592 [...]
+    100%|█████[...]███| 1592/1592 [...]
     INFO:lexedata:Aligning the cognate segments
-    100%|██████████| 1592/1592 [...]
+    100%|█████[...]███| 1592/1592 [...]
     $ git commit -am "Align"
     [...]
 
@@ -783,7 +784,7 @@ here. Our “Name” column in the ParameterTable contains English (“en”) gl
 so pass that information to the script::
 
     $ python -m lexedata.edit.add_concepticon -q -l Name=en --add-concept-set-names --add-definitions
-    OrderedDict([('ID', 'bark'), ('Name', 'bark'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('1204', 3), ('1206', 1)]
+    OrderedDict([('ID', 'bark'), ('Name', 'bark'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('1204', 3), ('3865', 1), ('1206', 1)]
     OrderedDict([('ID', 'breast'), ('Name', 'breast'), ('Description', None), ('Status_Column', None), ('Concepticon_ID', None)]) 2 [('1402', 3), ('1592', 1)]
     [...]
     
@@ -794,8 +795,8 @@ The output shows the concepts in our dataset with some ambiguous mappings to con
     all,all,,automatic Concepticon link,98,ALL,The totality of.
     arm,arm,,automatic Concepticon link,1673,ARM,"The upper limb, extending from the shoulder to the wrist and sometimes including the hand."
     [...]
-    $ sed -i.bak -s 's/^go_to.*/go_to,go to,,Concepticon link checked,695,GO,To get from one place to another by any means./' parameters.csv
-    $ sed -i.bak -s 's/automatic Concepticon link/Concepticon link checked/' parameters.csv
+    $ sed -i.bak 's/^go_to.*/go_to,go to,,Concepticon link checked,695,GO,To get from one place to another by any means./' parameters.csv
+    $ sed -i.bak 's/automatic Concepticon link/Concepticon link checked/' parameters.csv
 
 Merging polysemous forms
 ------------------------
@@ -880,8 +881,15 @@ polysemous forms connected to multiple concepts. ::
     $ python -m lexedata.edit.merge_homophones polysemies.txt
     WARNING:lexedata:I had to set a separator for your forms' concepts. I set it to ';'.
     INFO:lexedata:Going through forms and merging
-    100%|██████████| 1592/1592 [...]
-    $ grep 'kikuyu_\(white\|new\)' forms.csv cognates.csv 
+    100%|██████[...]████| 1592/1592 [...]
+    INFO:lexedata:Updating ids of forms.csv
+    100%|██████[...]████| 1587/1587 [...]
+    INFO:lexedata:Writing forms.csv back to file…
+    INFO:lexedata:Applying changed foreign key to columns {'Form_ID'} in cognates.csv…
+    INFO:lexedata:Replacing changed IDs
+    100%|██████[...]████| 1592/1592 [...]
+    INFO:lexedata:Writing cognates.csv back to file…
+    $ grep 'kikuyu_\(white\|new\)' forms.csv cognates.csv
     forms.csv:kikuyu_new,Kikuyu,new;white,erũ,,e r ũ,,
     cognates.csv:kikuyu_new-new-3,kikuyu_new,new-3,1:3,e r ũ,,automatically aligned
     cognates.csv:kikuyu_white-white-2,kikuyu_new,white-2,1:3,e r ũ,,automatically aligned

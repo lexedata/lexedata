@@ -92,8 +92,8 @@ def test_phylo_parser():
     assert parameters.format == "beast"
     assert parameters.output_file.absolute() == Path(ofname).absolute()
     assert parameters.languages == {"l1", "l2", "l3"}
-    assert type(parameters.concepts) == types.WorldSet
-    assert type(parameters.cognatesets) == types.WorldSet
+    assert isinstance(parameters.concepts, types.WorldSet)
+    assert isinstance(parameters.cognatesets, types.WorldSet)
     assert parameters.coding == CodingProcedure.ROOTPRESENCE
     assert parameters.absence_heuristic == AbsenceHeuristic.CENTRALCONCEPT
 

@@ -7,6 +7,7 @@ import zipfile
 import csvw
 import networkx
 import pkg_resources
+import pycldf
 import unidecode as uni
 from lexedata.cli import logger, tq
 from lingpy.compare.strings import ldn_swap
@@ -176,7 +177,7 @@ def indices_to_segment_slice(
 
 
 def cache_table(
-    dataset,
+    dataset: pycldf.Dataset,
     table: t.Optional[str] = None,
     columns: t.Optional[t.Mapping[str, str]] = None,
     index_column: str = "id",
